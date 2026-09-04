@@ -70,13 +70,16 @@ header>*{position:relative;z-index:1}
 .act-btn .gear-hint{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--ink-mute);white-space:nowrap;opacity:0;transition:opacity .2s}
 .act-btn:hover .gear-hint{opacity:1}
 
-.conn-toggle{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .25s;-webkit-appearance:none}
-.conn-toggle:active{transform:scale(.95)}
-.conn-toggle.off{border:none;color:#fff;background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 6px 18px rgba(139,92,246,.35)}
-.conn-toggle.ing{color:var(--amber)} .conn-toggle.on{color:var(--green)}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-mute)}
-.conn-toggle.on .status-dot{background:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.25);animation:breathe 2.2s infinite}
-.conn-toggle.ing .status-dot{background:var(--amber);animation:blink .8s infinite}
+.conn-toggle{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;border:1px solid var(--glass-line);background:var(--glass-hi);cursor:pointer;transition:all .25s;-webkit-appearance:none;font-family:var(--font)}
+.conn-toggle:active{transform:scale(.96)}
+.conn-toggle.ing{border-color:var(--amber)}
+.conn-rows{display:flex;flex-direction:column;gap:4px}
+.conn-line{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--ink-mute)}
+.conn-line .conn-txt{white-space:nowrap}
+.conn-line.up{color:var(--green)} .conn-line.down{color:var(--ink-mute)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-mute);flex-shrink:0;transition:background .2s}
+.conn-line.up .status-dot{background:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.22)}
+.conn-toggle.ing .conn-line .status-dot{background:var(--amber);animation:blink .8s infinite}
 @keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .hdr-group{display:flex;align-items:center;gap:9px}
@@ -141,14 +144,14 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 
 /* Current profile hero */
 /* Profile album carousel (current + favorites merged) */
-.carousel-card{padding:14px 16px 16px;flex-shrink:0;display:flex;flex-direction:column}
+.carousel-card{padding:12px 16px 12px;flex-shrink:0;display:flex;flex-direction:column}
 .cc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .cur-tag{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase}
 .cur-browse{font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;-webkit-appearance:none}
-.carousel{position:relative;height:180px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
+.carousel{position:relative;height:150px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
 .carousel-stage{position:relative;width:100%;height:100%}
 .car-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--ink-mute);font-size:12px}
-.album{position:absolute;top:50%;left:50%;width:150px;height:130px;margin:-65px 0 0 -75px;border-radius:16px;cursor:pointer;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
+.album{position:absolute;top:50%;left:50%;width:146px;height:118px;margin:-59px 0 0 -73px;border-radius:16px;cursor:pointer;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
 .album.side{opacity:.55}
 .album.center{box-shadow:0 14px 32px rgba(80,70,160,.3);border-color:rgba(255,255,255,.6)}
 .album .al-curve{flex:1;position:relative;min-height:0}
@@ -160,12 +163,12 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .car-nav{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:1px solid var(--glass-line);background:rgba(255,255,255,.9);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:transform .15s;-webkit-appearance:none}
 .car-nav:hover{background:#fff;transform:translateY(-50%) scale(1.1)} .car-nav:active{transform:translateY(-50%) scale(.92)}
 .car-nav.prev{left:0} .car-nav.next{right:0}
-.cc-name{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:center;line-height:1.15;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-name{font-size:16px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:center;line-height:1.15;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-meta{font-size:10px;color:var(--ink-mute);font-weight:500;text-align:center;margin-top:2px}
-.cc-hint{margin-top:10px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
+.cc-hint{margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
 .cc-hint.current{color:var(--green)}
 /* card navigation strip: tap to load instantly */
-.nav-cards{display:flex;justify-content:center;gap:7px;margin-top:12px;overflow-x:auto;padding:2px 0 4px}
+.nav-cards{display:flex;justify-content:center;gap:7px;margin-top:8px;overflow-x:auto;padding:2px 0 2px}
 .nav-cards::-webkit-scrollbar{height:0}
 .nav-card{flex-shrink:0;width:58px;height:44px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:9px;font-weight:800;color:#fff;line-height:1.1;overflow:hidden;transition:transform .15s,box-shadow .15s;border:2px solid transparent;background-color:#4f46e5}
 .nav-card:hover{transform:translateY(-2px)}
@@ -173,7 +176,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .nav-card span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* Recipe / ratio */
-.recipe{padding:16px 18px;flex-shrink:0}
+.recipe{padding:12px 18px;flex-shrink:0}
 .recipe-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
 .recipe-title .bean-link{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer}
 .dose-row{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}
@@ -196,16 +199,28 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ms-btn:active{transform:scale(.9)}
 .ms-val{min-width:36px;text-align:center;font-size:13px;font-weight:700}
 
-.bean-info{padding:14px 18px;flex-shrink:0}
+.bean-info{padding:14px 18px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .bean-row{display:flex;align-items:center;gap:10px}
 .bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-.grind-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--glass-line)}
+.grind-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
 .grind-label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-soft);min-width:0}
 .grind-label .gr-ico{font-size:15px}
 .grind-label #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .grind-val{min-width:52px;text-align:center;font-size:18px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 6px;transition:background .15s}
 .grind-val:hover{background:var(--glass-hi)}
+.bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;max-height:52px;overflow:hidden}
+.bean-chips:empty{display:none}
+.bean-chip{font-size:10px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
+.bean-chip .k{color:var(--ink-mute);margin-right:4px}
+.bean-spacer{flex:1;min-height:4px}
+.last-shot{border-top:1px solid var(--glass-line);padding-top:10px;margin-top:10px;flex-shrink:0}
+.ls-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ls-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ls-stat{text-align:center;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:9px 4px}
+.ls-stat .v{font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.ls-stat .l{font-size:9px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
+.ls-empty{grid-column:1/-1;text-align:center;font-size:12px;color:var(--ink-mute);padding:8px 0}
 .bean-txt{flex:1;min-width:0}
 .bean-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bean-sub{font-size:11px;color:var(--ink-mute);font-weight:500}
@@ -437,7 +452,10 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
         <span class="ico">🌙</span><span>Sleep</span>
       </button>
       <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()">
-        <span class="status-dot" id="statusDot"></span><span id="statusLabel">Connect</span>
+        <div class="conn-rows">
+          <span class="conn-line" id="connMachineRow"><span class="status-dot" id="dotMachine"></span><span class="conn-txt" id="lblMachine">Machine</span></span>
+          <span class="conn-line" id="connScaleRow"><span class="status-dot" id="dotScale"></span><span class="conn-txt" id="lblScale">Scale</span></span>
+        </div>
       </button>
       <button class="icon-btn" id="btnSettings" onclick="openSettings()" title="Settings">⚙</button>
     </div>
@@ -468,7 +486,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
     </div>
 
     <div class="chart-card glass">
-      <div class="chart-head"><span class="chart-title" id="chartTitle">Extraction Graph</span>
+      <div class="chart-head"><span class="chart-title" id="chartTitle" onclick="exitReview()" style="cursor:pointer">Extraction Graph</span>
         <button class="cur-browse" onclick="openShotLog()" style="margin-right:auto;margin-left:12px">Shot Log ▤</button>
         <div class="chart-legend" id="chartLegend">
           <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>
@@ -527,9 +545,15 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="bean-txt"><div class="bean-name" id="beanName">No bean selected</div><div class="bean-sub" id="beanSub">Tap edit to add beans &amp; grinder</div></div>
         <button class="bean-edit" onclick="openBeanModal()">Edit</button>
       </div>
+      <div class="bean-chips" id="beanChips"></div>
       <div class="grind-row" id="grindRow" style="display:none">
         <div class="grind-label"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></div>
         <div class="grind-stepper"><button class="ms-btn" onclick="adjustGrind(-1)">−</button><span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span><button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
+      </div>
+      <div class="bean-spacer"></div>
+      <div class="last-shot" id="lastShot">
+        <div class="ls-head"><span>Last Shot</span><button class="cur-browse" onclick="viewLastShotGraph()">View Graph ↗</button></div>
+        <div class="ls-stats" id="lsStats"><div class="ls-empty">No shots recorded yet</div></div>
       </div>
     </div>
   </div>
@@ -692,9 +716,9 @@ var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='htt
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
   connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
-  water:{current:0,refill:0}, ghc:false, lastShotId:null, dyeStars:0 };
+  water:{current:0,refill:0}, ghc:false, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
-var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[], mode:'espresso', max:600 };
+var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[], groupTemp:[], mixTemp:[], targetTemp:[], mode:'espresso', max:600 };
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
 var beans=[], grinders=[], context={};
 
@@ -708,20 +732,21 @@ function openWs(name,path,onMsg){ var url=GATEWAY.ws+path;
   connect(); }
 function initWebSockets(){
   openWs('machine','/ws/v1/machine/snapshot',function(s){
-    state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame);
+    state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.targetGroupTemp=(s.targetGroupTemperature!=null?s.targetGroupTemperature:state.targetGroupTemp); state.targetMixTemp=(s.targetMixTemperature!=null?s.targetMixTemperature:state.targetMixTemp); state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame);
     var ms=s.state||{state:'idle',substate:'idle'}; var prev=state.machine.state; state.machine=ms; onMachineState(ms,prev); updateMachineUI(); });
-  openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); return; }
+  openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); updateConnUI(state.connected?'on':'off'); return; }
     if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); if(chart.weight.length>chart.max) chart.weight.shift(); } } });
   openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
   openWs('devices','/ws/v1/devices',function(m){
     var phase=m.connectionStatus&&m.connectionStatus.phase;
     var scanning=(phase==='scanning'||phase==='connectingMachine'||phase==='connectingScale');
     // A connected machine in the device list means we're connected, regardless of phase.
-    var machineConnected=false, scaleConnected=false, machineName=null;
+    var machineConnected=false, scaleConnected=false, machineName=null, scaleName=null;
     if(m.devices){ m.devices.forEach(function(d){
-      if(d.type==='machine'){ if(!machineName) machineName=d.name; if(d.state==='connected') machineConnected=true; }
-      if(d.type==='scale'&&d.state==='connected') scaleConnected=true;
+      if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; }
+      if(d.type==='scale'){ if(!scaleName||d.state==='connected') scaleName=d.name; if(d.state==='connected') scaleConnected=true; }
     }); }
+    state.machineName=machineName; state.scaleName=scaleName;
     var wasConnected=state.connected;
     state.connected=machineConnected||(phase==='ready');
     state.scaleConnected=scaleConnected;
@@ -773,7 +798,7 @@ function onMachineState(ms,prev){
   var pouring=(ms.state==='espresso');
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
-  function resetChart(mode){ chart.mode=mode; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[]; }
+  function resetChart(mode){ chart.mode=mode; chartReviewing=false; _chartLegendMode=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[]; }
   // Espresso session lifecycle (records + DYE afterwards)
   if(pouring&&!state.shotRunning){ startTimer(); resetChart('espresso'); }
   if(!pouring&&state.shotRunning){ stopTimer(); setTimeout(afterShot,1500); }
@@ -787,14 +812,14 @@ function onMachineState(ms,prev){
   if(!watering&&state.waterRunning){ stopTimer(); drawChart(); }
   state.waterRunning=watering;
 
-  if(pouring){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0);
-    if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); drawChart(); }
+  if(pouring){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetTemp.push(state.targetMixTemp||state.targetGroupTemp||0);
+    if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); if(chart.targetTemp.length>chart.max)chart.targetTemp.shift(); drawChart(); }
   else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
   else if(watering){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); drawChart(); }
 }
-function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } }).catch(function(){}); }
+function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } loadLastShot(); }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
 function setGauge(nameEl,valEl,barEl,label,value,unit,frac){
@@ -851,8 +876,13 @@ function updateShotBtn(){ var st=state.machine.state;
   flush.classList.toggle('active', st==='flush');
   water.classList.toggle('active', st==='hotWater');
   sleep.classList.toggle('active', st==='sleeping'); }
-function updateConnUI(s){ var lbl=document.getElementById('statusLabel'),btn=document.getElementById('btnConnect');
-  if(s==='on'){ lbl.textContent='Connected'; btn.className='conn-toggle on'; } else if(s==='ing'){ lbl.textContent='Scanning…'; btn.className='conn-toggle ing'; } else { lbl.textContent='Connect'; btn.className='conn-toggle off'; } }
+function updateConnUI(s){ var btn=document.getElementById('btnConnect');
+  btn.className='conn-toggle'+(s==='ing'?' ing':'');
+  var mUp=state.connected, sUp=state.scaleConnected;
+  var mRow=document.getElementById('connMachineRow'), sRow=document.getElementById('connScaleRow');
+  mRow.className='conn-line'+(mUp?' up':' down'); sRow.className='conn-line'+(sUp?' up':' down');
+  document.getElementById('lblMachine').textContent=state.machineName||'DE1';
+  document.getElementById('lblScale').textContent=state.scaleName||'Scale'; }
 
 // ── Timer & chart ───────────────────────────────────────────────────
 function startTimer(){ state.shotStart=Date.now(); if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
@@ -865,20 +895,20 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   // Only resize the backing store when dimensions actually change (resize is expensive).
   if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
   var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
-  var isSteam=(chart.mode==='steam'), isWater=(chart.mode==='water'), hasTempAxis=(isSteam||isWater);
+  var isSteam=(chart.mode==='steam'), isWater=(chart.mode==='water'), isEsp=(!isSteam&&!isWater), hasTempAxis=true;
   // title + legend reflect the current mode (only rewritten when the mode changes)
   if(_chartLegendMode!==chart.mode){ _chartLegendMode=chart.mode;
     var titleEl=document.getElementById('chartTitle'), legEl=document.getElementById('chartLegend');
-    if(titleEl) titleEl.textContent=isSteam?'Steam Graph':(isWater?'Hot Water Graph':'Extraction Graph');
+    if(titleEl) titleEl.textContent=isSteam?'Steam Graph':(isWater?'Hot Water Graph':(chartReviewing?'Last Shot ↩':'Extraction Graph'));
     if(legEl) legEl.innerHTML=isSteam
       ? '<span class="legend-item"><span class="legend-dot" style="background:#f472b6"></span>Steam Temp</span><span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span><span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>'
       : isWater
       ? '<span class="legend-item"><span class="legend-dot" style="background:#0ea5e9"></span>Water Temp</span><span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span><span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>'
-      : '<span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span><span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span><span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Weight</span>'; }
+      : '<span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span><span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span><span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Weight</span><span class="legend-item"><span class="legend-dot" style="background:#f97316"></span>Group</span><span class="legend-item"><span class="legend-dot" style="background:#60a5fa"></span>Mix</span><span class="legend-item"><span class="legend-dot" style="background:#94a3b8"></span>Target</span>'; }
   var padL=34, padR=hasTempAxis?34:8, padT=18, padB=22; // steam/water add a right gutter for the temp axis
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
   var PMAX=12;
-  var TMAX=isWater?100:165; // temperature axis max (°C): water ~100, steam ~165
+  var TMAX=isSteam?165:100; // temperature axis max (°C): steam ~165, espresso/water ~100
   var N=chart.pressure.length;
   var steps=(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[];
   function px(i){ return X0+(N<2?0:(i/(N-1))*PW); }
@@ -888,12 +918,12 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   ctx.strokeStyle='rgba(139,92,246,.08)'; ctx.lineWidth=1; ctx.font='600 11px Inter,sans-serif'; ctx.fillStyle='#6b6890'; ctx.textAlign='right'; ctx.textBaseline='middle';
   for(var i=0;i<=4;i++){ var y=Y0+(i/4)*PH; ctx.beginPath(); ctx.moveTo(X0,y); ctx.lineTo(X0+PW,y); ctx.stroke(); ctx.fillText(String(Math.round(PMAX-(i/4)*PMAX)), X0-4, y); }
 
-  // steam/water mode: right-side temperature axis labels
-  if(hasTempAxis){ ctx.fillStyle=isWater?'#0284c7':'#d1477f'; ctx.font='600 10px Inter,sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  // right-side temperature axis labels (°C)
+  if(hasTempAxis){ ctx.fillStyle=isWater?'#0284c7':(isSteam?'#d1477f':'#c2620b'); ctx.font='600 10px Inter,sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
     for(var ti=0;ti<=4;ti++){ var ty=Y0+(ti/4)*PH; ctx.fillText(String(Math.round(TMAX-(ti/4)*TMAX)),X0+PW+4,ty); } }
 
   // step boundaries (espresso only; steam/water have no profile frames)
-  if(!hasTempAxis && N>1 && chart.frame.length===N){
+  if(isEsp && N>1 && chart.frame.length===N){
     var segStart=0, curFrame=chart.frame[0];
     for(var k=1;k<=N;k++){
       if(k===N || chart.frame[k]!==curFrame){
@@ -930,6 +960,10 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
     line(chart.flow,'#38bdf8',PMAX,null);                          // water flow
     line(chart.pressure,'#6366f1',PMAX,null);                      // water pressure
   } else {
+    // target temperature (dashed) on the right (°C) axis
+    if(chart.targetTemp.length>1){ ctx.save(); ctx.setLineDash([4,4]); ctx.beginPath(); for(var ti2=0;ti2<chart.targetTemp.length;ti2++){ var xt=px(ti2),yt=py(chart.targetTemp[ti2],TMAX); if(ti2===0)ctx.moveTo(xt,yt);else ctx.lineTo(xt,yt); } ctx.strokeStyle='rgba(148,163,184,.85)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore(); }
+    // group/mix temperature on the right (°C) axis, drawn under the pressure/flow lines
+    line(chart.groupTemp,'#f97316',TMAX,null); line(chart.mixTemp,'#60a5fa',TMAX,null);
     line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',PMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
   }
 
@@ -1053,16 +1087,18 @@ function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
 function openGateway(){ window.open(GATEWAY.http+'/','_blank'); }
 
 // ── Curve simulation ────────────────────────────────────────────────
-function simulateProfile(profile){ var steps=(profile&&profile.steps)||[]; var pts=[]; var t=0; var prevP=0,prevF=0;
-  steps.forEach(function(st){ var dur=Math.max(st.seconds||0,0.5); var isP=(st.pump==='pressure'); var tP=isP?(st.pressure||0):prevP; var tF=!isP?(st.flow||0):prevF; var smooth=(st.transition==='smooth'); var seg=Math.max(2,Math.round(dur*2));
-    for(var i=1;i<=seg;i++){ var f=i/seg; var p=isP?(prevP+(tP-prevP)*(smooth?f:1)):tP; var fl=!isP?(prevF+(tF-prevF)*(smooth?f:1)):tF; var showP=isP?p:Math.min(9,fl*1.6); var showF=!isP?fl:Math.max(0,8-p*0.4); pts.push({t:t+dur*f,p:showP,f:showF}); }
-    t+=dur; prevP=isP?tP:Math.min(9,tF*1.6); prevF=!isP?tF:Math.max(0,8-tP*0.4); });
+function simulateProfile(profile){ var steps=(profile&&profile.steps)||[]; var pts=[]; var t=0; var prevP=0,prevF=0,prevT=null;
+  steps.forEach(function(st){ var dur=Math.max(st.seconds||0,0.5); var isP=(st.pump==='pressure'); var tP=isP?(st.pressure||0):prevP; var tF=!isP?(st.flow||0):prevF; var smooth=(st.transition==='smooth'); var seg=Math.max(2,Math.round(dur*2)); var tempT=(st.temperature!=null?st.temperature:prevT); if(prevT===null) prevT=(tempT!=null?tempT:93);
+    for(var i=1;i<=seg;i++){ var f=i/seg; var p=isP?(prevP+(tP-prevP)*(smooth?f:1)):tP; var fl=!isP?(prevF+(tF-prevF)*(smooth?f:1)):tF; var showP=isP?p:Math.min(9,fl*1.6); var showF=!isP?fl:Math.max(0,8-p*0.4); var tp=prevT+((tempT!=null?tempT:prevT)-prevT)*f; pts.push({t:t+dur*f,p:showP,f:showF,temp:tp}); }
+    t+=dur; prevP=isP?tP:Math.min(9,tF*1.6); prevF=!isP?tF:Math.max(0,8-tP*0.4); prevT=(tempT!=null?tempT:prevT); });
   return {pts:pts,total:t}; }
 function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
   canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
   var sim=simulateProfile(profile); if(sim.pts.length<2||sim.total<=0) return;
   var pC=onColor?'rgba(255,255,255,.95)':'#6366f1', fC=onColor?'rgba(190,235,255,.9)':'#38bdf8', pFill=onColor?'rgba(255,255,255,.22)':'rgba(99,102,241,.15)';
+  var tC=onColor?'rgba(255,214,170,.85)':'#f97316'; // temperature line
   function draw(field,color,mx,fill){ ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-6)-3; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
+  draw('temp',tC,110,null); // temperature (0-110C scale), drawn first (background)
   draw('p',pC,12,pFill); draw('f',fC,8,null); }
 
 // ── Profiles ────────────────────────────────────────────────────────
@@ -1361,7 +1397,44 @@ function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:
 function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRoaster, g=context.grinderModel, gs=context.grinderSetting;
   if(name){ document.getElementById('beanName').textContent=(roaster?roaster+' · ':'')+name; document.getElementById('beanSub').textContent=g?(g+(gs?' @ '+gs:'')):'No grinder'; }
   else { document.getElementById('beanName').textContent='No bean selected'; document.getElementById('beanSub').textContent='Tap edit to add beans & grinder'; }
+  // detail chips from the current bean context
+  var chips=document.getElementById('beanChips'); if(chips){ chips.innerHTML='';
+    function chip(k,v){ if(!v) return; var c=document.createElement('span'); c.className='bean-chip'; c.innerHTML='<span class="k">'+k+'</span>'+escapeHtml(String(v)); chips.appendChild(c); }
+    chip('Origin',context.coffeeCountry); chip('Process',context.coffeeProcessing); chip('Roast',context.coffeeRoastLevel);
+    chip('Dose',settings.doseIn.toFixed(1)+'g'); chip('Yield',settings.doseOut.toFixed(1)+'g'); }
   updateGrindRow(); }
+// Populate the "Last Shot" mini panel + today's count from the shot history.
+function loadLastShot(){ api('GET','/api/v1/shots?limit=20').then(function(r){ var items=(r&&(r.items||r.shots))||[];
+  var box=document.getElementById('lsStats'); if(!box) return;
+  lastShotSummary=items.length?items[0]:null;
+  if(!items.length){ box.innerHTML='<div class="ls-empty">No shots recorded yet</div>'; return; }
+  var s=items[0], an=s.annotations||{};
+  var today=new Date(); var cnt=items.filter(function(x){ var d=new Date(x.createdAt||x.timestamp); return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate(); }).length;
+  var ratio=(an.actualDoseWeight&&an.actualYield)?('1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'—';
+  function stat(v,l){ return '<div class="ls-stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; }
+  box.innerHTML=stat(an.actualYield!=null?an.actualYield+'g':'—','Last Yield')+stat(ratio,'Last Ratio')+stat(an.enjoyment?('★'+an.enjoyment):'—','Last ★')+stat(cnt,"Today's shots");
+}).catch(function(){}); }
+// Load the last shot's recorded measurements into the main Extraction Graph.
+var chartReviewing=false;
+function viewLastShotGraph(){ if(!lastShotSummary){ toast('No shots recorded yet','err'); return; }
+  if(state.shotRunning||state.steamRunning||state.waterRunning){ toast('Busy — finish current action first','err'); return; }
+  api('GET','/api/v1/shots/'+lastShotSummary.id).then(function(s){ if(!s){ toast('Shot not found','err'); return; }
+    var m=s.measurements||[]; if(m.length<2){ toast('No measurement data for this shot','err'); return; }
+    chart.mode='espresso'; chartReviewing=true;
+    chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[];
+    m.forEach(function(pt,i){ var mac=pt.machine||{}; var sc=pt.scale||{};
+      chart.pressure.push(mac.pressure||0); chart.flow.push(mac.flow||0);
+      chart.frame.push(mac.profileFrame||0); chart.groupTemp.push(mac.groupTemperature||0); chart.mixTemp.push(mac.mixTemperature||0);
+      chart.targetTemp.push(mac.targetMixTemperature||mac.targetGroupTemperature||0);
+      if(sc.weight!=null) chart.weight.push(sc.weight); });
+    _chartLegendMode=null; drawChart();
+    var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot');
+    toast('Showing last shot: '+st.name,'ok');
+  }).catch(function(){ toast('Failed to load shot','err'); }); }
+// Leave last-shot review and return the graph to live extraction data.
+function exitReview(){ if(!chartReviewing) return; chartReviewing=false; chart.mode='espresso';
+  chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[];
+  _chartLegendMode=null; drawChart(); }
 // Resolve the workflow's current grinder entity (for step size / preset positions).
 function currentGrinder(){ if(!context.grinderId) return null; return grinders.find(function(x){ return x.id===context.grinderId; })||null; }
 function updateGrindRow(){ var row=document.getElementById('grindRow'); if(!row) return;
@@ -1397,7 +1470,7 @@ function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return
   api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast('Shot logged','ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast('Log failed','err'); }); }
 
 // ── Shot Log history page ───────────────────────────────────────────
-var shotList=[], slSel=null;
+var shotList=[], slSel=null, lastShotSummary=null;
 function openShotLog(){ document.getElementById('shotLogPage').classList.add('show'); loadShotList(); }
 function closeShotLog(){ document.getElementById('shotLogPage').classList.remove('show'); }
 function fmtShotDate(s){ var d=new Date(s.createdAt||s.timestamp); if(isNaN(d)) return s.timestamp||''; return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
@@ -1474,8 +1547,9 @@ function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(funct
 function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
   console.log('[Aurora] loadDevices response:', list);
   if(!Array.isArray(list)){ toast('devices: unexpected response','err'); return; }
-  var machineConnected=false, scaleConnected=false, machineName=null;
-  list.forEach(function(d){ if(d.type==='machine'){ if(!machineName) machineName=d.name; if(d.state==='connected') machineConnected=true; } if(d.type==='scale'&&d.state==='connected') scaleConnected=true; });
+  var machineConnected=false, scaleConnected=false, machineName=null, scaleName=null;
+  list.forEach(function(d){ if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; } if(d.type==='scale'){ if(!scaleName||d.state==='connected') scaleName=d.name; if(d.state==='connected') scaleConnected=true; } });
+  state.machineName=machineName; state.scaleName=scaleName;
   state.connected=machineConnected; state.scaleConnected=scaleConnected;
   if(machineName) document.getElementById('machineName').textContent=machineName;
   updateConnUI(state.connected?'on':'off'); updateShotBtn();
@@ -1500,6 +1574,7 @@ window.addEventListener('load', function(){
   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
+  loadLastShot();
   // load profiles first, then workflow so we can match the current profile to a real list entry
   loadProfiles();
   setTimeout(loadWorkflow, 700);
