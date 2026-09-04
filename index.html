@@ -19,6 +19,23 @@ html,body{width:100%;height:100%;font-family:var(--font);color:var(--ink);overfl
 body::before{content:'';position:fixed;inset:0;z-index:-2;
   background:radial-gradient(circle at 18% 22%,rgba(139,92,246,.42),transparent 46%),radial-gradient(circle at 84% 18%,rgba(56,189,248,.38),transparent 48%),radial-gradient(circle at 78% 84%,rgba(236,72,153,.32),transparent 48%),radial-gradient(circle at 22% 90%,rgba(99,102,241,.38),transparent 48%),linear-gradient(135deg,#e8ecff,#f5edff)}
 
+/* Night mode: dark liquid-glass palette */
+body.night{--ink:#e8e6f5; --ink-soft:#b8b4d8; --ink-mute:#7d7aa0;
+  --glass:rgba(40,36,66,.55); --glass-hi:rgba(255,255,255,.06); --glass-line:rgba(255,255,255,.1);
+  --shadow:0 8px 32px rgba(0,0,0,.35); --shadow-lg:0 20px 60px rgba(0,0,0,.5); background:#0c0a18}
+body.night::before{background:radial-gradient(circle at 18% 22%,rgba(99,102,241,.28),transparent 46%),radial-gradient(circle at 84% 18%,rgba(56,189,248,.22),transparent 48%),radial-gradient(circle at 78% 84%,rgba(236,72,153,.2),transparent 48%),linear-gradient(135deg,#0d0b1c,#140f26)}
+body.night .glass{background:rgba(30,27,54,.72);border-color:rgba(255,255,255,.08)}
+body.night.overlay-active .app .glass{background:rgba(30,27,54,.9)}
+body.night .modal{background:#1a1730;border-color:rgba(255,255,255,.1)}
+body.night .modal-head{background:#1a1730}
+body.night .editpage{background:linear-gradient(135deg,#14111f,#1a1526)}
+body.night .ep-head{background:rgba(20,17,34,.6)}
+body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn{background:rgba(255,255,255,.06);color:var(--ink)}
+body.night .ep-group-head{background:linear-gradient(135deg,#14111f,#1a1526)}
+body.night .bg-tab{background:rgba(255,255,255,.06)}
+body.night .album .al-curve,body.night .ep-item .thmb{background:rgba(255,255,255,.05)}
+body.night .dose-num.tap:hover,body.night .rv.tap:hover,body.night .grind-val:hover{background:rgba(255,255,255,.08)}
+
 .stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 .app{width:1280px;height:800px;display:grid;grid-template-columns:1fr 400px;grid-template-rows:78px 1fr;gap:14px;padding:14px;flex-shrink:0}
 .glass{background:rgba(255,255,255,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-line);border-radius:var(--r-md);box-shadow:var(--shadow)}
@@ -55,6 +72,11 @@ header>*{position:relative;z-index:1}
 .water-nums .pct{font-size:20px;font-weight:800;color:var(--accent)}
 .water-nums .lbl{font-size:9px;font-weight:600;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
 .water-warn{color:var(--red);font-weight:700;font-size:11px;margin-left:6px}
+.temps-bar{display:flex;align-items:center;justify-content:space-around;gap:10px;padding:9px 16px;flex-shrink:0}
+.htemp{display:flex;align-items:center;gap:6px;cursor:help}
+.htemp .ht-ico{font-size:14px}
+.htemp .ht-v{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.htemp .ht-l{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em}
 
 .hdr-actions{display:flex;align-items:center;gap:9px}
 .act-btn{position:relative;display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);-webkit-appearance:none;user-select:none}
@@ -463,6 +485,11 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 
   <!-- ── Center ────────────────────────────────────────────────── -->
   <div class="center">
+    <div class="temps-bar glass">
+      <div class="htemp" title="Group head temperature"><span class="ht-ico">🔥</span><span class="ht-v"><span id="groupTemp">—</span>°</span><span class="ht-l">Group</span></div>
+      <div class="htemp" title="Mix (blended water) temperature"><span class="ht-ico">💧</span><span class="ht-v"><span id="mixTemp">—</span>°</span><span class="ht-l">Mix</span></div>
+      <div class="htemp" title="Steam boiler temperature"><span class="ht-ico">♨️</span><span class="ht-v"><span id="steamTempDisp">—</span>°</span><span class="ht-l">Steam</span></div>
+    </div>
     <div class="live glass">
       <div class="live-top">
         <div>
@@ -477,11 +504,6 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
       <div class="gauges">
         <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge1Name">Pressure</span><span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span></div><div class="gauge-track"><div class="gauge-fill pressure" id="pressureBar" style="width:0%"></div></div></div>
         <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge2Name">Flow</span><span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span></div><div class="gauge-track"><div class="gauge-fill flow" id="flowBar" style="width:0%"></div></div></div>
-      </div>
-      <div class="temps">
-        <div class="temp-pill" title="Group head temperature — the brew group where coffee is extracted."><div class="temp-ico group">🔥</div><div class="temp-info"><div class="lbl">Group</div><div class="val"><span id="groupTemp">—</span><span class="u">°C</span></div></div></div>
-        <div class="temp-pill" title="Mix temperature — final blended water temperature delivered to the puck."><div class="temp-ico mix">💧</div><div class="temp-info"><div class="lbl">Mix</div><div class="val"><span id="mixTemp">—</span><span class="u">°C</span></div></div></div>
-        <div class="temp-pill" title="Steam boiler temperature — for milk steaming."><div class="temp-ico steam">♨️</div><div class="temp-info"><div class="lbl">Steam</div><div class="val"><span id="steamTempDisp">—</span><span class="u">°C</span></div></div></div>
       </div>
     </div>
 
@@ -690,6 +712,14 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
   <div class="modal"><div class="modal-head"><div class="modal-title">⚙ Settings</div><button class="modal-close" onclick="closeModal(null,'settingsOverlay')">×</button></div>
   <div class="modal-body">
     <div class="set-row">
+      <div class="set-info"><div class="set-name">Night mode</div><div class="set-desc">Dark theme for low-light environments.</div></div>
+      <label class="switch"><input type="checkbox" id="setNight" onchange="toggleNight(this.checked)"><span class="track"></span></label>
+    </div>
+    <div class="set-row">
+      <div class="set-info"><div class="set-name">Auto night mode</div><div class="set-desc">Switch to night automatically after <span id="nightWindow">19:00–07:00</span>.</div></div>
+      <label class="switch"><input type="checkbox" id="setNightAuto" onchange="toggleNightAuto(this.checked)"><span class="track"></span></label>
+    </div>
+    <div class="set-row">
       <div class="set-info"><div class="set-name">Auto-open shot log</div><div class="set-desc">Show the Log Your Espresso form as soon as a shot ends.</div></div>
       <label class="switch"><input type="checkbox" id="setAutoDye" onchange="toggleAutoDye(this.checked)"><span class="track"></span></label>
     </div>
@@ -765,6 +795,8 @@ function applyActionMode(){
   // No GHC -> our buttons perform the ACTION; long-press opens settings.
   var steam=document.getElementById('btnSteam'), flush=document.getElementById('btnFlush'), water=document.getElementById('btnWater');
   var sh=document.getElementById('steamHint'), fh=document.getElementById('flushHint'), wh=document.getElementById('waterHint');
+  // GHC owns starting the shot from the physical buttons — hide our Start button.
+  document.getElementById('btnShot').style.display=state.ghc?'none':'';
   clearBtn(steam); clearBtn(flush); clearBtn(water);
   if(state.ghc){
     steam.onclick=openSteamModal; flush.onclick=openFlushModal; water.onclick=openWaterModal;
@@ -861,7 +893,7 @@ function waterFillGrad(){ var pct=state.water.current, st=state.machine.state;
   return 'linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4))';                     // idle: default
 }
 function updateWaterUI(){ var pct=state.water.current;
-  document.getElementById('waterPct').textContent=pct; document.getElementById('waterFill').style.height=Math.min(pct,100)+'%';
+  document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=Math.min(pct,100)+'%';
   document.getElementById('waterWarn').style.display=(pct<=state.water.refill||pct<15)?'inline':'none';
   document.getElementById('waterFill').style.background=waterFillGrad(); }
 function updateShotBtn(){ var st=state.machine.state;
@@ -1079,12 +1111,34 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true };
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; }catch(_){ } }
+var prefs={ autoDye:true, night:false, nightAuto:false };
+var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; }catch(_){ } applyNight(); }
 function savePrefs(){ try{ localStorage.setItem('aurora_prefs',JSON.stringify(prefs)); }catch(_){ } }
-function openSettings(){ document.getElementById('setAutoDye').checked=prefs.autoDye; document.getElementById('settingsOverlay').classList.add('show'); }
+function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
+// When Auto is on, night follows the clock; otherwise it follows the manual toggle.
+function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
+function openSettings(){ document.getElementById('setAutoDye').checked=prefs.autoDye; document.getElementById('setNight').checked=(prefs.nightAuto?isNightTime():prefs.night); document.getElementById('setNight').disabled=prefs.nightAuto; document.getElementById('setNightAuto').checked=prefs.nightAuto; document.getElementById('settingsOverlay').classList.add('show'); }
 function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
-function openGateway(){ window.open(GATEWAY.http+'/','_blank'); }
+function toggleNight(v){ prefs.night=!!v; savePrefs(); applyNight(); }
+function toggleNightAuto(v){ prefs.nightAuto=!!v; savePrefs(); applyNight();
+  // reflect the resulting mode + lock the manual toggle while Auto is on
+  document.getElementById('setNight').checked=(prefs.nightAuto?isNightTime():prefs.night); document.getElementById('setNight').disabled=prefs.nightAuto; }
+// Re-evaluate the time-based theme once a minute.
+setInterval(function(){ if(prefs.nightAuto) applyNight(); },60000);
+// The gateway on :8080 is a REST API (no browsable root). The browsable WebUI is a
+// separate static server — open it if it's running, otherwise start it first.
+function openGateway(){
+  api('GET','/api/v1/webui/server/status').then(function(st){
+    if(st&&st.serving&&st.ip&&st.port){ window.open('http://'+st.ip+':'+st.port+'/','_blank'); return; }
+    toast('Starting gateway WebUI…','ok');
+    api('POST','/api/v1/webui/server/start').then(function(){
+      return api('GET','/api/v1/webui/server/status'); }).then(function(st2){
+      if(st2&&st2.serving&&st2.ip&&st2.port){ window.open('http://'+st2.ip+':'+st2.port+'/','_blank'); }
+      else { toast('No default skin set on the gateway','err'); }
+    }).catch(function(){ toast('Could not start WebUI server','err'); });
+  }).catch(function(){ toast('Gateway not reachable','err'); });
+}
 
 // ── Curve simulation ────────────────────────────────────────────────
 function simulateProfile(profile){ var steps=(profile&&profile.steps)||[]; var pts=[]; var t=0; var prevP=0,prevF=0,prevT=null;
@@ -1225,7 +1279,7 @@ function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
 function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!editing){ wrap.innerHTML='<div class="ep-placeholder">← Select a profile</div>'; return; }
   var pr=editing.profile||{};
   wrap.innerHTML=''
-    +'<div class="ep-visual"><div class="ep-visual-title"><span>Pressure &amp; Flow Curve</span><span><span style="color:var(--accent)">■</span> pressure &nbsp;<span style="color:var(--steam)">■</span> flow</span></div><canvas id="epCurve"></canvas></div>'
+    +'<div class="ep-visual"><div class="ep-visual-title"><span>Pressure &amp; Flow Curve</span><span><span style="color:var(--accent)">■</span> pressure &nbsp;<span style="color:var(--steam)">■</span> flow &nbsp;<span style="color:#f97316">▬</span> temp</span></div><canvas id="epCurve"></canvas></div>'
     +'<input class="ep-name-input" id="epName" value="'+escapeAttr(pr.title||'')+'">'
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
     +'<div class="ep-steps-title"><span>Steps</span><button class="ep-step-add" onclick="addStep()">+ Add step</button></div>'
@@ -1280,8 +1334,13 @@ function drawEditCurve(){ var canvas=document.getElementById('epCurve'); if(!can
     tAcc+=dur; });
   // curve
   var sim=simulateProfile(editing.profile); if(sim.pts.length<2) return;
-  function draw(field,color,mx,fill){ ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-12)-6; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
+  function draw(field,color,mx,fill,dash){ ctx.save(); if(dash) ctx.setLineDash(dash); ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-12)-6; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=dash?1.5:2.5; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } ctx.restore(); }
+  // target temperature (dashed orange, right-side 0-110C scale)
+  draw('temp','#f97316',110,null,[4,4]);
   draw('p','#6366f1',12,'rgba(99,102,241,.15)'); draw('f','#38bdf8',8,null);
+  // right-side temperature axis labels
+  ctx.fillStyle='#c2620b'; ctx.font='600 10px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(var ti=0;ti<=4;ti++){ var ty=6+(ti/4)*(H-12); ctx.fillText(String(Math.round(110-(ti/4)*110)),W-3,ty); }
 }
 function saveProfilePage(){ if(!editing) return;
   var req=editing.isDefault?api('POST','/api/v1/profiles',{profile:editing.profile,metadata:{tags:['edited']}}):api('PUT','/api/v1/profiles/'+editing.id,{profile:editing.profile,metadata:editing.metadata||{}});
@@ -1400,8 +1459,7 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
   // detail chips from the current bean context
   var chips=document.getElementById('beanChips'); if(chips){ chips.innerHTML='';
     function chip(k,v){ if(!v) return; var c=document.createElement('span'); c.className='bean-chip'; c.innerHTML='<span class="k">'+k+'</span>'+escapeHtml(String(v)); chips.appendChild(c); }
-    chip('Origin',context.coffeeCountry); chip('Process',context.coffeeProcessing); chip('Roast',context.coffeeRoastLevel);
-    chip('Dose',settings.doseIn.toFixed(1)+'g'); chip('Yield',settings.doseOut.toFixed(1)+'g'); }
+    chip('Origin',context.coffeeCountry); chip('Process',context.coffeeProcessing); chip('Roast',context.coffeeRoastLevel); }
   updateGrindRow(); }
 // Populate the "Last Shot" mini panel + today's count from the shot history.
 function loadLastShot(){ api('GET','/api/v1/shots?limit=20').then(function(r){ var items=(r&&(r.items||r.shots))||[];
@@ -1438,9 +1496,8 @@ function exitReview(){ if(!chartReviewing) return; chartReviewing=false; chart.m
 // Resolve the workflow's current grinder entity (for step size / preset positions).
 function currentGrinder(){ if(!context.grinderId) return null; return grinders.find(function(x){ return x.id===context.grinderId; })||null; }
 function updateGrindRow(){ var row=document.getElementById('grindRow'); if(!row) return;
-  var g=context.grinderModel; if(!g){ row.style.display='none'; return; }
   row.style.display='flex';
-  document.getElementById('grindModel').textContent=g;
+  document.getElementById('grindModel').textContent=context.grinderModel||'Grind';
   document.getElementById('grindVal').textContent=(context.grinderSetting!=null&&context.grinderSetting!=='')?context.grinderSetting:'—'; }
 // Adjust the grind setting from the main screen and persist to the workflow.
 function adjustGrind(dir){ var gr=currentGrinder(); var cur=context.grinderSetting;
