@@ -333,6 +333,20 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ep-save-bar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#fbfaff 40%);padding:16px 0 4px;display:flex;justify-content:flex-end;gap:10px}
 .ep-section-title{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 
+/* AI bean-label scan */
+.ai-scan{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(56,189,248,.08));border:1px solid var(--glass-line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.ai-scan-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
+.ai-scan-head>span:first-child{font-size:13px;font-weight:800;color:var(--accent)}
+.ai-scan-sub{font-size:11px;color:var(--ink-mute)}
+.ai-thumbs{display:flex;flex-wrap:wrap;gap:8px}
+.ai-thumbs:empty{display:none}
+.ai-thumb{width:52px;height:52px;border-radius:10px;background-size:cover;background-position:center;position:relative;border:1px solid var(--glass-line)}
+.ai-thumb-x{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:12px;line-height:1;cursor:pointer;-webkit-appearance:none}
+.ai-scan-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ai-scan-actions .m-btn{padding:8px 14px;font-size:13px}
+.ai-status{font-size:11px;color:var(--ink-mute);margin-top:8px;min-height:14px}
+body.night .ai-scan{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(56,189,248,.1))}
+
 /* Shot log page */
 .sl-badge{width:44px;height:44px;border-radius:9px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--amber);flex-shrink:0;font-weight:700}
 .sl-detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
@@ -750,6 +764,10 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
       <div class="set-info"><div class="set-name">Auto-open shot log</div><div class="set-desc">Show the Log Your Espresso form as soon as a shot ends.</div></div>
       <label class="switch"><input type="checkbox" id="setAutoDye" onchange="toggleAutoDye(this.checked)"><span class="track"></span></label>
     </div>
+    <div class="set-row" style="display:block">
+      <div class="set-info" style="margin-bottom:8px"><div class="set-name">Gemini API key</div><div class="set-desc">Used to auto-fill bean details from a photo of the bag. Stored on this device only. <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">Get a key ↗</a></div></div>
+      <div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="AIza…" oninput="saveGeminiKey(this.value)"></div>
+    </div>
     <div class="set-row">
       <div class="set-info"><div class="set-name">Gateway</div><div class="set-desc">Open the Decaid gateway web interface in a new tab.</div></div>
       <button class="m-btn primary" onclick="openGateway()">Open ↗</button>
@@ -1163,14 +1181,15 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false };
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'' };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; }catch(_){ } applyNight(); }
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; }catch(_){ } applyNight(); }
 function savePrefs(){ try{ localStorage.setItem('aurora_prefs',JSON.stringify(prefs)); }catch(_){ } }
 function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
-function openSettings(){ document.getElementById('setAutoDye').checked=prefs.autoDye; document.getElementById('setNight').checked=(prefs.nightAuto?isNightTime():prefs.night); document.getElementById('setNight').disabled=prefs.nightAuto; document.getElementById('setNightAuto').checked=prefs.nightAuto; document.getElementById('settingsOverlay').classList.add('show'); }
+function openSettings(){ document.getElementById('setAutoDye').checked=prefs.autoDye; document.getElementById('setNight').checked=(prefs.nightAuto?isNightTime():prefs.night); document.getElementById('setNight').disabled=prefs.nightAuto; document.getElementById('setNightAuto').checked=prefs.nightAuto; document.getElementById('setGeminiKey').value=prefs.geminiKey||''; document.getElementById('settingsOverlay').classList.add('show'); }
+function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
 function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
 function toggleNight(v){ prefs.night=!!v; savePrefs(); applyNight(); }
 function toggleNightAuto(v){ prefs.nightAuto=!!v; savePrefs(); applyNight();
@@ -1446,11 +1465,23 @@ function renderBgListOLD(){ var list=document.getElementById('bgList'); list.inn
     it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(g.burrs||g.burrType||'grinder')+'</div></div>';
     it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
 }
-function bgSelectNew(type){ bgTab=type; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',roastLevel:'',processing:''}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:''}}; renderBgList(); renderBgEditor(); }
+function bgSelectNew(type){ bgTab=type; aiImages=[]; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',roastLevel:'',processing:''}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:''}}; renderBgList(); renderBgEditor(); }
 function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML='<div class="ep-placeholder">← Select or add an item</div>'; return; }
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Bean':'Edit Bean')+'</div>'
+      +'<div class="ai-scan" id="aiScan">'
+        +'<div class="ai-scan-head"><span>✨ Scan label with AI</span><span class="ai-scan-sub">Photograph or attach the bag; Gemini fills the fields.</span></div>'
+        +'<div class="ai-thumbs" id="aiThumbs"></div>'
+        +'<div class="ai-scan-actions">'
+          +'<button class="m-btn" onclick="document.getElementById(\'aiCam\').click()">📷 Camera</button>'
+          +'<button class="m-btn" onclick="document.getElementById(\'aiFile\').click()">🖼 Attach</button>'
+          +'<button class="m-btn primary" id="aiAnalyzeBtn" onclick="analyzeBeanImages()" disabled>Analyze</button>'
+          +'<input type="file" id="aiCam" accept="image/*" capture="environment" multiple style="display:none" onchange="onAiImages(this.files)">'
+          +'<input type="file" id="aiFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files)">'
+        +'</div>'
+        +'<div class="ai-status" id="aiStatus"></div>'
+      +'</div>'
       +'<div class="field-row"><div class="field"><label>Roaster</label><input id="bgRoaster" value="'+escapeAttr(o.roaster||'')+'"></div><div class="field"><label>Name</label><input id="bgName" value="'+escapeAttr(o.name||'')+'"></div></div>'
       +'<div class="field-row"><div class="field"><label>Origin</label><input id="bgCountry" value="'+escapeAttr(o.country||'')+'"></div><div class="field"><label>Process</label><input id="bgProcess" value="'+escapeAttr(o.processing||'')+'"></div></div>'
       +'<div class="field"><label>Roast level</label><input id="bgRoast" value="'+escapeAttr(o.roastLevel||'')+'"></div>'
@@ -1493,6 +1524,39 @@ function saveBean(){ var o=bgSel.obj; var body={roaster:document.getElementById(
   req.then(function(){ toast('Bean saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
 function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this bean?')) return; api('DELETE','/api/v1/beans/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
 function useBean(){ var o=bgSel.obj; api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:null}}).then(function(){ toast('Bean set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
+
+// ── AI bean-label scanning (Gemini) ─────────────────────────────────
+var aiImages=[]; // {mime, data(base64), url}
+function onAiImages(files){ if(!files) return;
+  Array.prototype.forEach.call(files,function(f){ if(!/^image\//.test(f.type)) return; if(aiImages.length>=5){ toast('Up to 5 images','err'); return; }
+    var rd=new FileReader(); rd.onload=function(){ var s=String(rd.result); var comma=s.indexOf(','); aiImages.push({mime:f.type,data:s.slice(comma+1),url:s}); renderAiThumbs(); }; rd.readAsDataURL(f); });
+}
+function renderAiThumbs(){ var wrap=document.getElementById('aiThumbs'); if(!wrap) return; wrap.innerHTML='';
+  aiImages.forEach(function(im,i){ var d=document.createElement('div'); d.className='ai-thumb'; d.style.backgroundImage='url('+im.url+')';
+    var x=document.createElement('button'); x.className='ai-thumb-x'; x.textContent='×'; x.onclick=function(){ aiImages.splice(i,1); renderAiThumbs(); }; d.appendChild(x); wrap.appendChild(d); });
+  var btn=document.getElementById('aiAnalyzeBtn'); if(btn) btn.disabled=aiImages.length===0;
+}
+function analyzeBeanImages(){ if(!aiImages.length) return;
+  var key=(prefs.geminiKey||'').trim(); if(!key){ toast('Set a Gemini API key in Settings','err'); openSettings(); return; }
+  var statusEl=document.getElementById('aiStatus'); statusEl.textContent='Analyzing… ✨'; var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Extract the bean details and respond ONLY with JSON using these keys (empty string if unknown): {"roaster":"","name":"","country":"","processing":"","roastLevel":"","notes":""}. name is the coffee/blend name (not the roaster). roastLevel is one of light, medium-light, medium, medium-dark, dark if determinable. notes = brief tasting notes if printed.'}];
+  aiImages.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
+  var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:0.1}};
+  var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(key);
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error((j.error&&j.error.message)||('HTTP '+r.status)); return j; }); })
+    .then(function(j){ var txt=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
+      if(!txt) throw new Error('Empty response'); var data; try{ data=JSON.parse(txt); }catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
+      if(!data) throw new Error('Could not parse result');
+      function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
+      put('bgRoaster',data.roaster); put('bgName',data.name); put('bgCountry',data.country); put('bgProcess',data.processing); put('bgRoast',data.roastLevel);
+      var notesEl=document.getElementById('bgNotes'); if(notesEl&&data.notes){ notesEl.value=data.notes; }
+      // reflect into the working object so Save picks it up
+      var o=bgSel.obj; o.roaster=data.roaster||o.roaster; o.name=data.name||o.name; o.country=data.country||o.country; o.processing=data.processing||o.processing; o.roastLevel=data.roastLevel||o.roastLevel; o.notes=data.notes||o.notes;
+      statusEl.textContent='Filled from label ✓ — review & Save'; toast('Bean details detected','ok');
+    })
+    .catch(function(e){ statusEl.textContent='Failed: '+e.message; toast('AI analyze failed','err'); })
+    .then(function(){ var b=document.getElementById('aiAnalyzeBtn'); if(b) b.disabled=aiImages.length===0; }); }
 function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
   if(!o.model){ toast('Model required','err'); return; }
   // grinderSetting is a per-shot workflow value, not a Grinder entity field — excluded here.
