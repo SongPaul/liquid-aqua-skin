@@ -1,6 +1,6 @@
 {
   "id": "liquid-aqua",
   "name": "Liquid Aqua",
-  "description": "A bright liquid-glass espresso UI with a live water-tank header, album carousel profiles, extraction graph, and shot log.",
-  "version": "1.0.0"
+  "description": "A bright liquid-glass espresso UI with a live water-tank header, album carousel profiles, action-aware extraction/steam/water graphs, recipe keypad, grinder settings, shot log, and a sleep screen-saver.",
+  "version": "1.1.0"
 }

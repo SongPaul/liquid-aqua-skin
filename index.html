@@ -22,6 +22,20 @@ body::before{content:'';position:fixed;inset:0;z-index:-2;
 .stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 .app{width:1280px;height:800px;display:grid;grid-template-columns:1fr 400px;grid-template-rows:78px 1fr;gap:14px;padding:14px;flex-shrink:0}
 .glass{background:rgba(255,255,255,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-line);border-radius:var(--r-md);box-shadow:var(--shadow)}
+/* While a modal/full-page overlay is open, the background is hidden behind it —
+   drop the (expensive) backdrop blur on background panels for a smoother modal. */
+body.overlay-active .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.85)}
+
+/* Sleep / screen-saver lock: dark, static, big clock. Tap to wake. */
+.lockscreen{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 120% at 50% 40%,#1a1730,#0a0814);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .4s;cursor:pointer;-webkit-user-select:none;user-select:none}
+.lockscreen.show{opacity:1;pointer-events:auto}
+.lock-clock{font-size:150px;font-weight:200;letter-spacing:-.03em;color:rgba(255,255,255,.92);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 4px 40px rgba(99,102,241,.3)}
+.lock-date{font-size:22px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.02em}
+.lock-hint{position:absolute;bottom:48px;font-size:13px;font-weight:600;color:rgba(255,255,255,.35);animation:lockpulse 2.8s ease-in-out infinite}
+@keyframes lockpulse{0%,100%{opacity:.35}50%{opacity:.7}}
+/* While asleep, stop the water-tank wave animation to save the panel/CPU. */
+body.asleep .wave-path,body.asleep .wave-path2{animation-play-state:paused!important}
+body.asleep .water-fill svg animate{display:none}
 
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
@@ -45,18 +59,19 @@ header>*{position:relative;z-index:1}
 .hdr-actions{display:flex;align-items:center;gap:9px}
 .act-btn{position:relative;display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);-webkit-appearance:none;user-select:none}
 .act-btn .ico{font-size:15px}
-.act-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shadow);background:#fff}
-.act-btn:active:not(:disabled){transform:scale(.96)}
+/* Press feedback only (no hover lift) — touch friendly */
+.act-btn:active:not(:disabled){transform:scale(.94);filter:brightness(.96)}
 .act-btn:disabled{opacity:.4;cursor:not-allowed}
 .act-btn.start{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;box-shadow:0 6px 18px rgba(99,102,241,.4);padding:10px 20px;font-size:13px}
 .act-btn.start.stop{background:linear-gradient(135deg,var(--red),var(--hot));box-shadow:0 6px 18px rgba(239,68,68,.4)}
 .act-btn.steam:not(:disabled){color:var(--steam)} .act-btn.flush:not(:disabled){color:var(--green)}
+.act-btn.water:not(:disabled){color:#0ea5e9}
 .act-btn .cfg-dot{position:absolute;top:5px;right:8px;width:5px;height:5px;border-radius:50%;background:var(--amber)}
 .act-btn .gear-hint{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--ink-mute);white-space:nowrap;opacity:0;transition:opacity .2s}
 .act-btn:hover .gear-hint{opacity:1}
 
 .conn-toggle{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .25s;-webkit-appearance:none}
-.conn-toggle:hover{transform:translateY(-2px)}
+.conn-toggle:active{transform:scale(.95)}
 .conn-toggle.off{border:none;color:#fff;background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 6px 18px rgba(139,92,246,.35)}
 .conn-toggle.ing{color:var(--amber)} .conn-toggle.on{color:var(--green)}
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-mute)}
@@ -65,11 +80,16 @@ header>*{position:relative;z-index:1}
 @keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .hdr-group{display:flex;align-items:center;gap:9px}
-/* active (running) action buttons: filled + pulsing */
-.act-btn.active{color:#fff;border:none;animation:actpulse 1.6s ease-in-out infinite}
-.act-btn.steam.active{background:linear-gradient(135deg,var(--steam),#0ea5e9);box-shadow:0 6px 18px rgba(56,189,248,.45)}
-.act-btn.flush.active{background:linear-gradient(135deg,var(--green),#059669);box-shadow:0 6px 18px rgba(16,185,129,.45)}
+/* active (running) action buttons: filled + pulsing.
+   Force white text/icon with a shadow for contrast against the bright fill,
+   overriding the steam/flush accent-color rules above. */
+.act-btn.active,.act-btn.steam.active,.act-btn.flush.active,.act-btn.water.active,.act-btn.sleep.active{color:#fff;border:none;text-shadow:0 1px 2px rgba(0,0,0,.28);animation:actpulse 1.6s ease-in-out infinite}
+.act-btn.active .ico{filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.act-btn.steam.active{background:linear-gradient(135deg,#0ea5e9,#0369a1);box-shadow:0 6px 18px rgba(14,165,233,.5)}
+.act-btn.flush.active{background:linear-gradient(135deg,#059669,#047857);box-shadow:0 6px 18px rgba(5,150,105,.5)}
+.act-btn.water.active{background:linear-gradient(135deg,#0284c7,#0369a1);box-shadow:0 6px 18px rgba(2,132,199,.5)}
 .act-btn.sleep.active{background:linear-gradient(135deg,#64748b,#475569);box-shadow:0 6px 18px rgba(100,116,139,.4)}
+.act-btn.start.stop{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
 @keyframes actpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
 
 /* ── Center column ───────────────────────────────────────────────── */
@@ -179,6 +199,13 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bean-info{padding:14px 18px;flex-shrink:0}
 .bean-row{display:flex;align-items:center;gap:10px}
 .bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.grind-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--glass-line)}
+.grind-label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-soft);min-width:0}
+.grind-label .gr-ico{font-size:15px}
+.grind-label #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.grind-val{min-width:52px;text-align:center;font-size:18px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 6px;transition:background .15s}
+.grind-val:hover{background:var(--glass-hi)}
 .bean-txt{flex:1;min-width:0}
 .bean-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bean-sub{font-size:11px;color:var(--ink-mute);font-weight:500}
@@ -207,6 +234,9 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ep-item .fav-btn{margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--glass-line);background:#fff;color:var(--ink-mute);font-size:15px;line-height:1;cursor:pointer;transition:all .15s;-webkit-appearance:none;display:flex;align-items:center;justify-content:center}
 .ep-item .fav-btn:hover{border-color:var(--amber);color:var(--amber)}
 .ep-item .fav-btn.on{color:var(--amber);border-color:var(--amber);background:rgba(245,158,11,.1)}
+.bg-tabs{display:flex;gap:6px;margin-bottom:10px;position:sticky;top:0;background:linear-gradient(135deg,#eef1ff,#f5edff);padding:2px 0 6px;z-index:1}
+.bg-tab{flex:1;padding:9px 8px;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;font-weight:800;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.bg-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.08)}
 .ep-group-head.fav{color:var(--amber)}
 .ep-group-head.fav{background:linear-gradient(135deg,#fff6e6,#fff0f0)}
 .ep-editor{overflow-y:auto}
@@ -261,12 +291,12 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ep-step-add{padding:6px 12px;border-radius:100px;border:1px dashed var(--glass-line);background:transparent;font-size:12px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
 
 /* ── Modal ───────────────────────────────────────────────────────── */
-.overlay{position:fixed;inset:0;background:rgba(30,27,58,.45);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;padding:24px}
+.overlay{position:fixed;inset:0;background:rgba(30,27,58,.72);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;padding:24px}
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{background:#fbfaff;border:1px solid var(--glass-line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:600px;max-width:94vw;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.98);transition:transform .25s}
 .modal.wide{width:1000px}
 .overlay.show .modal{transform:translateY(0) scale(1)}
-.modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 12px;position:sticky;top:0;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.5));backdrop-filter:blur(10px);z-index:2}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 12px;position:sticky;top:0;background:#fbfaff;z-index:2}
 .modal-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
 .modal-close{width:32px;height:32px;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-size:17px;cursor:pointer;-webkit-appearance:none}
 .modal-body{padding:0 24px 24px}
@@ -293,7 +323,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 
 /* Header icon button (settings gear) */
 .icon-btn{width:40px;height:40px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-size:18px;cursor:pointer;-webkit-appearance:none;transition:all .2s;display:flex;align-items:center;justify-content:center}
-.icon-btn:hover{background:#fff;transform:translateY(-1px) rotate(30deg)}
+.icon-btn:active{background:#fff;transform:scale(.92)}
 
 /* Numeric keypad */
 .keypad-modal{max-width:320px}
@@ -360,7 +390,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .star.on{color:var(--amber)}
 
 /* Toast */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);padding:13px 26px;border-radius:100px;font-size:14px;font-weight:700;color:var(--ink);background:var(--glass-hi);backdrop-filter:blur(24px);border:1px solid var(--glass-line);box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:all .3s;z-index:300}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);padding:13px 26px;border-radius:100px;font-size:14px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.95);border:1px solid var(--glass-line);box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:all .3s;z-index:300}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.ok{color:var(--green)}.toast.err{color:var(--red)}
 </style>
@@ -399,6 +429,10 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
         <span class="cfg-dot"></span><span class="ico">🚿</span><span>Flush</span>
         <span class="gear-hint" id="flushHint"></span>
       </button>
+      <button class="act-btn water" id="btnWater" disabled>
+        <span class="cfg-dot"></span><span class="ico">💧</span><span>Water</span>
+        <span class="gear-hint" id="waterHint"></span>
+      </button>
       <button class="act-btn sleep" id="btnSleep" onclick="doSleep()" disabled>
         <span class="ico">🌙</span><span>Sleep</span>
       </button>
@@ -423,8 +457,8 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div><div class="live-label" style="text-align:right">Timer</div><div class="timer-big" id="timerBig">0:00</div></div>
       </div>
       <div class="gauges">
-        <div class="gauge"><div class="gauge-head"><span class="gauge-name">Pressure</span><span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span></div><div class="gauge-track"><div class="gauge-fill pressure" id="pressureBar" style="width:0%"></div></div></div>
-        <div class="gauge"><div class="gauge-head"><span class="gauge-name">Flow</span><span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span></div><div class="gauge-track"><div class="gauge-fill flow" id="flowBar" style="width:0%"></div></div></div>
+        <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge1Name">Pressure</span><span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span></div><div class="gauge-track"><div class="gauge-fill pressure" id="pressureBar" style="width:0%"></div></div></div>
+        <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge2Name">Flow</span><span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span></div><div class="gauge-track"><div class="gauge-fill flow" id="flowBar" style="width:0%"></div></div></div>
       </div>
       <div class="temps">
         <div class="temp-pill" title="Group head temperature — the brew group where coffee is extracted."><div class="temp-ico group">🔥</div><div class="temp-info"><div class="lbl">Group</div><div class="val"><span id="groupTemp">—</span><span class="u">°C</span></div></div></div>
@@ -434,9 +468,9 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
     </div>
 
     <div class="chart-card glass">
-      <div class="chart-head"><span class="chart-title">Extraction Graph</span>
+      <div class="chart-head"><span class="chart-title" id="chartTitle">Extraction Graph</span>
         <button class="cur-browse" onclick="openShotLog()" style="margin-right:auto;margin-left:12px">Shot Log ▤</button>
-        <div class="chart-legend">
+        <div class="chart-legend" id="chartLegend">
           <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>
           <span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span>
           <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Weight</span>
@@ -493,10 +527,21 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="bean-txt"><div class="bean-name" id="beanName">No bean selected</div><div class="bean-sub" id="beanSub">Tap edit to add beans &amp; grinder</div></div>
         <button class="bean-edit" onclick="openBeanModal()">Edit</button>
       </div>
+      <div class="grind-row" id="grindRow" style="display:none">
+        <div class="grind-label"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></div>
+        <div class="grind-stepper"><button class="ms-btn" onclick="adjustGrind(-1)">−</button><span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span><button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
+      </div>
     </div>
   </div>
 
 </div>
+</div>
+
+<!-- ── Sleep / screen-saver lock ───────────────────────────────── -->
+<div class="lockscreen" id="lockScreen" onclick="wakeFromSleep()">
+  <div class="lock-clock" id="lockClock">0:00</div>
+  <div class="lock-date" id="lockDate"></div>
+  <div class="lock-hint">Tap anywhere to wake</div>
 </div>
 
 <!-- ── Profile Editor full page ────────────────────────────────── -->
@@ -536,6 +581,19 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
     <div class="opt-row"><div class="opt-label">Duration<span class="hint">flush seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushDur" min="1" max="20" step="1" oninput="optChange('flushDur',this.value)"><span class="opt-val"><span id="flushDurV">10</span>s</span></div></div>
     <div class="opt-row"><div class="opt-label">Flow<span class="hint">flush flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushFlow" min="1" max="10" step="0.5" oninput="optChange('flushFlow',this.value)"><span class="opt-val"><span id="flushFlowV">6.0</span></span></div></div>
     <div class="modal-actions" id="flushActions"><button class="m-btn" onclick="closeModal(null,'flushOverlay')">Close</button><button class="m-btn primary" onclick="saveFlush()">Save Options</button></div>
+  </div></div>
+</div>
+
+<!-- ── Hot Water modal ─────────────────────────────────────────── -->
+<div class="overlay" id="waterOverlay" onclick="closeModal(event,'waterOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title">💧 Hot Water Options</div><button class="modal-close" onclick="closeModal(null,'waterOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="preset-bar"><span class="preset-lbl">Presets</span><div class="preset-chips" id="waterPresets"></div></div>
+    <div class="opt-row"><div class="opt-label">Temperature<span class="hint">hot water temperature</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterTemp" min="20" max="100" step="1" oninput="optChange('waterTemp',this.value)"><span class="opt-val"><span id="waterTempV">75</span>°</span></div></div>
+    <div class="opt-row"><div class="opt-label">Volume<span class="hint">target milliliters</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterVol" min="0" max="500" step="5" oninput="optChange('waterVol',this.value)"><span class="opt-val"><span id="waterVolV">200</span>ml</span></div></div>
+    <div class="opt-row"><div class="opt-label">Duration<span class="hint">max seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterDur" min="0" max="120" step="1" oninput="optChange('waterDur',this.value)"><span class="opt-val"><span id="waterDurV">30</span>s</span></div></div>
+    <div class="opt-row"><div class="opt-label">Flow<span class="hint">flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterFlow" min="1" max="10" step="0.5" oninput="optChange('waterFlow',this.value)"><span class="opt-val"><span id="waterFlowV">10.0</span></span></div></div>
+    <div class="modal-actions" id="waterActions"><button class="m-btn" onclick="closeModal(null,'waterOverlay')">Close</button><button class="m-btn primary" onclick="saveWater()">Save Options</button></div>
   </div></div>
 </div>
 
@@ -633,10 +691,10 @@ window.addEventListener('resize', function(){ fitStage(); drawChart(); });
 var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='http://'+h+':8080'; return {http:b,ws:b.replace('http','ws')}; })();
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
-  connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotStart:null, shotTick:null,
+  connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
   water:{current:0,refill:0}, ghc:false, lastShotId:null, dyeStars:0 };
-var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0 };
-var chart={ pressure:[], flow:[], weight:[], frame:[], max:600 };
+var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
+var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[], mode:'espresso', max:600 };
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
 var beans=[], grinders=[], context={};
 
@@ -680,16 +738,17 @@ function loadMachineInfo(){ api('GET','/api/v1/machine/info').then(function(info
 function applyActionMode(){
   // GHC present -> physical buttons control the machine, so our buttons open SETTINGS.
   // No GHC -> our buttons perform the ACTION; long-press opens settings.
-  var steam=document.getElementById('btnSteam'), flush=document.getElementById('btnFlush');
-  var sh=document.getElementById('steamHint'), fh=document.getElementById('flushHint');
-  clearBtn(steam); clearBtn(flush);
+  var steam=document.getElementById('btnSteam'), flush=document.getElementById('btnFlush'), water=document.getElementById('btnWater');
+  var sh=document.getElementById('steamHint'), fh=document.getElementById('flushHint'), wh=document.getElementById('waterHint');
+  clearBtn(steam); clearBtn(flush); clearBtn(water);
   if(state.ghc){
-    steam.onclick=openSteamModal; flush.onclick=openFlushModal;
-    sh.textContent='opens options'; fh.textContent='opens options';
+    steam.onclick=openSteamModal; flush.onclick=openFlushModal; water.onclick=openWaterModal;
+    sh.textContent='opens options'; fh.textContent='opens options'; wh.textContent='opens options';
   } else {
     bindActionLongPress(steam, function(){ doSteamAction(); }, openSteamModal);
     bindActionLongPress(flush, function(){ doFlushAction(); }, openFlushModal);
-    sh.textContent='tap=run · hold=options'; fh.textContent='tap=run · hold=options';
+    bindActionLongPress(water, function(){ doWaterAction(); }, openWaterModal);
+    sh.textContent='tap=run · hold=options'; fh.textContent='tap=run · hold=options'; wh.textContent='tap=run · hold=options';
   }
 }
 function clearBtn(b){ b.onclick=null; b.onmousedown=null; b.onmouseup=null; b.onmouseleave=null; b.ontouchstart=null; b.ontouchend=null; }
@@ -703,27 +762,64 @@ function bindActionLongPress(btn, tapFn, holdFn){
 // tap toggles: if machine already in that state, stop (go idle); else start.
 function doSteamAction(){ if(state.machine.state==='steam') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Steam stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/steam').then(function(){toast('Steam started','ok');}).catch(function(){toast('Steam failed','err');}); }
 function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Flush stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/flush').then(function(){toast('Flush started','ok');}).catch(function(){toast('Flush failed','err');}); }
+function doWaterAction(){ if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Water stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast('Hot water started','ok');}).catch(function(){toast('Water failed','err');}); }
 
 // ── Machine state ───────────────────────────────────────────────────
 function onMachineState(ms,prev){
+  // Keep the screen-saver lock in sync with the machine's sleep state.
+  var lockShown=document.getElementById('lockScreen').classList.contains('show');
+  if(ms.state==='sleeping'&&!lockShown){ enterSleepLocalOnly(); }
+  else if(ms.state!=='sleeping'&&lockShown){ wakeLocalOnly(); }
   var pouring=(ms.state==='espresso');
-  if(pouring&&!state.shotRunning){ startTimer(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[]; }
+  var steaming=(ms.state==='steam');
+  var watering=(ms.state==='hotWater');
+  function resetChart(mode){ chart.mode=mode; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[]; }
+  // Espresso session lifecycle (records + DYE afterwards)
+  if(pouring&&!state.shotRunning){ startTimer(); resetChart('espresso'); }
   if(!pouring&&state.shotRunning){ stopTimer(); setTimeout(afterShot,1500); }
   state.shotRunning=pouring;
+  // Steam session lifecycle (records flow/pressure/steam temp; no DYE)
+  if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
+  if(!steaming&&state.steamRunning){ stopTimer(); drawChart(); }
+  state.steamRunning=steaming;
+  // Hot water session lifecycle (records flow/pressure/water temp; no DYE)
+  if(watering&&!state.waterRunning){ startTimer(); resetChart('water'); }
+  if(!watering&&state.waterRunning){ stopTimer(); drawChart(); }
+  state.waterRunning=watering;
+
   if(pouring){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); drawChart(); }
+  else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
+    if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
+  else if(watering){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
+    if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); drawChart(); }
 }
 function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
+function setGauge(nameEl,valEl,barEl,label,value,unit,frac){
+  document.getElementById(nameEl).textContent=label;
+  document.getElementById(valEl).innerHTML=value+'<span class="u"> '+unit+'</span>';
+  document.getElementById(barEl).style.width=Math.max(0,Math.min(frac,1))*100+'%'; }
 function updateMachineUI(){
   document.getElementById('groupTemp').textContent=state.groupTemp.toFixed(1);
   document.getElementById('mixTemp').textContent=state.mixTemp.toFixed(1);
   document.getElementById('steamTempDisp').textContent=state.steamTemp.toFixed(0);
-  document.getElementById('pressureVal').innerHTML=state.pressure.toFixed(1)+'<span class="u"> bar</span>';
-  document.getElementById('pressureBar').style.width=Math.min(state.pressure/12*100,100)+'%';
-  document.getElementById('flowVal').innerHTML=state.flow.toFixed(1)+'<span class="u"> ml/s</span>';
-  document.getElementById('flowBar').style.width=Math.min(state.flow/8*100,100)+'%';
+  // The two gauges adapt to the current action: steam/hot-water report no useful
+  // pressure, so we surface the relevant temperature instead.
+  var st=state.machine.state;
+  if(st==='steam'){
+    // steam reports no live flow — fall back to the configured steam flow setting
+    var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0);
+    setGauge('gauge1Name','pressureVal','pressureBar','Pressure',state.pressure.toFixed(1),'bar',state.pressure/12);
+    setGauge('gauge2Name','flowVal','flowBar','Steam Flow',sflow.toFixed(1),'ml/s',sflow/2.5);
+  } else if(st==='hotWater'){
+    setGauge('gauge1Name','pressureVal','pressureBar','Water Temp',state.mixTemp.toFixed(0),'°C',state.mixTemp/100);
+    setGauge('gauge2Name','flowVal','flowBar','Flow',state.flow.toFixed(1),'ml/s',state.flow/10);
+  } else {
+    setGauge('gauge1Name','pressureVal','pressureBar','Pressure',state.pressure.toFixed(1),'bar',state.pressure/12);
+    setGauge('gauge2Name','flowVal','flowBar','Flow',state.flow.toFixed(1),'ml/s',state.flow/8);
+  }
   document.getElementById('waterFill').style.background=waterFillGrad();
   updateShotBtn();
 }
@@ -747,12 +843,13 @@ function updateShotBtn(){ var st=state.machine.state;
   var btn=document.getElementById('btnShot'),ico=document.getElementById('shotIco'),lbl=document.getElementById('shotLbl');
   btn.disabled=!state.connected;
   if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent='Stop'; } else { btn.className='act-btn start'; ico.textContent='▶'; lbl.textContent='Start'; }
-  var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),sleep=document.getElementById('btnSleep');
-  steam.disabled=!state.connected; flush.disabled=!state.connected; sleep.disabled=!state.connected;
+  var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),water=document.getElementById('btnWater'),sleep=document.getElementById('btnSleep');
+  steam.disabled=!state.connected; flush.disabled=!state.connected; water.disabled=!state.connected; sleep.disabled=!state.connected;
   document.getElementById('btnTare').disabled=!state.scaleConnected;
   // reflect running state with an 'active' color (only meaningful when GHC-less / actions)
   steam.classList.toggle('active', st==='steam');
   flush.classList.toggle('active', st==='flush');
+  water.classList.toggle('active', st==='hotWater');
   sleep.classList.toggle('active', st==='sleeping'); }
 function updateConnUI(s){ var lbl=document.getElementById('statusLabel'),btn=document.getElementById('btnConnect');
   if(s==='on'){ lbl.textContent='Connected'; btn.className='conn-toggle on'; } else if(s==='ing'){ lbl.textContent='Scanning…'; btn.className='conn-toggle ing'; } else { lbl.textContent='Connect'; btn.className='conn-toggle off'; } }
@@ -763,14 +860,25 @@ function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.s
 function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000); document.getElementById('timerBig').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 var _chartRAF=null;
 function drawChart(){ if(_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
-var _chartDims={w:0,h:0};
+var _chartDims={w:0,h:0}; var _chartLegendMode=null;
 function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
   if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
   var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
-  var padL=34, padR=8, padT=18, padB=22; // gutters: top for step labels, bottom for time
+  var isSteam=(chart.mode==='steam'), isWater=(chart.mode==='water'), hasTempAxis=(isSteam||isWater);
+  // title + legend reflect the current mode (only rewritten when the mode changes)
+  if(_chartLegendMode!==chart.mode){ _chartLegendMode=chart.mode;
+    var titleEl=document.getElementById('chartTitle'), legEl=document.getElementById('chartLegend');
+    if(titleEl) titleEl.textContent=isSteam?'Steam Graph':(isWater?'Hot Water Graph':'Extraction Graph');
+    if(legEl) legEl.innerHTML=isSteam
+      ? '<span class="legend-item"><span class="legend-dot" style="background:#f472b6"></span>Steam Temp</span><span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span><span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>'
+      : isWater
+      ? '<span class="legend-item"><span class="legend-dot" style="background:#0ea5e9"></span>Water Temp</span><span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span><span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>'
+      : '<span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span><span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span><span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Weight</span>'; }
+  var padL=34, padR=hasTempAxis?34:8, padT=18, padB=22; // steam/water add a right gutter for the temp axis
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
   var PMAX=12;
+  var TMAX=isWater?100:165; // temperature axis max (°C): water ~100, steam ~165
   var N=chart.pressure.length;
   var steps=(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[];
   function px(i){ return X0+(N<2?0:(i/(N-1))*PW); }
@@ -780,8 +888,12 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   ctx.strokeStyle='rgba(139,92,246,.08)'; ctx.lineWidth=1; ctx.font='600 11px Inter,sans-serif'; ctx.fillStyle='#6b6890'; ctx.textAlign='right'; ctx.textBaseline='middle';
   for(var i=0;i<=4;i++){ var y=Y0+(i/4)*PH; ctx.beginPath(); ctx.moveTo(X0,y); ctx.lineTo(X0+PW,y); ctx.stroke(); ctx.fillText(String(Math.round(PMAX-(i/4)*PMAX)), X0-4, y); }
 
-  // step boundaries (from recorded profileFrame transitions) + names + current highlight
-  if(N>1 && chart.frame.length===N){
+  // steam/water mode: right-side temperature axis labels
+  if(hasTempAxis){ ctx.fillStyle=isWater?'#0284c7':'#d1477f'; ctx.font='600 10px Inter,sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    for(var ti=0;ti<=4;ti++){ var ty=Y0+(ti/4)*PH; ctx.fillText(String(Math.round(TMAX-(ti/4)*TMAX)),X0+PW+4,ty); } }
+
+  // step boundaries (espresso only; steam/water have no profile frames)
+  if(!hasTempAxis && N>1 && chart.frame.length===N){
     var segStart=0, curFrame=chart.frame[0];
     for(var k=1;k<=N;k++){
       if(k===N || chart.frame[k]!==curFrame){
@@ -809,13 +921,26 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   for(var j=0;j<=4;j++){ var xx=X0+(j/4)*PW; ctx.fillText(((j/4)*totalSec).toFixed(0)+'s', xx, Y0+PH+5); }
 
   function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx));else ctx.lineTo(px(i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
-  line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',PMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
+  if(isSteam){
+    line(chart.steamTemp,'#f472b6',TMAX,'rgba(244,114,182,.15)'); // steam temp (right axis scale)
+    line(chart.flow,'#38bdf8',PMAX,null);                          // steam flow
+    line(chart.pressure,'#6366f1',PMAX,null);                      // steam pressure
+  } else if(isWater){
+    line(chart.waterTemp,'#0ea5e9',TMAX,'rgba(14,165,233,.15)');   // water temp (right axis scale)
+    line(chart.flow,'#38bdf8',PMAX,null);                          // water flow
+    line(chart.pressure,'#6366f1',PMAX,null);                      // water pressure
+  } else {
+    line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',PMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
+  }
 
   // live readouts at the leading edge
-  if(N>=1 && state.shotRunning){
+  var running=state.shotRunning||state.steamRunning||state.waterRunning;
+  if(N>=1 && running){
     var lx=px(N-1);
     function tag(v,mx,color){ var y=py(v,mx); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(lx,y,3.5,0,Math.PI*2); ctx.fill(); ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(v.toFixed(1), lx-6, y); }
-    tag(chart.pressure[N-1],PMAX,'#6366f1'); tag(chart.flow[N-1],PMAX,'#38bdf8');
+    if(isSteam){ tag(chart.steamTemp[N-1],TMAX,'#f472b6'); tag(chart.flow[N-1],PMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
+    else if(isWater){ tag(chart.waterTemp[N-1],TMAX,'#0ea5e9'); tag(chart.flow[N-1],PMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
+    else { tag(chart.pressure[N-1],PMAX,'#6366f1'); tag(chart.flow[N-1],PMAX,'#38bdf8'); }
   }
 }
 
@@ -825,19 +950,35 @@ function api(method,path,body){ var o={method:method,headers:{}}; if(body){o.hea
 // ── Actions ─────────────────────────────────────────────────────────
 function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
 function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared','ok');}).catch(function(e){toast(e.message,'err');}); }
-function doSleep(){ if(state.machine.state==='sleeping') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Waking…','ok');}).catch(function(){toast('Wake failed','err');}); else api('PUT','/api/v1/machine/state/sleeping').then(function(){toast('Sleeping','ok');}).catch(function(){toast('Sleep failed','err');}); }
+function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
+// Show the screen-saver lock, pause background animation, and tell the machine to sleep.
+var _lockClockT=null;
+function enterSleep(){ document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show');
+  updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(updateLockClock,1000);
+  api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast('Sleep failed','err'); }); }
+function wakeFromSleep(){ document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show');
+  if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; }
+  if(state.machine.state==='sleeping') api('PUT','/api/v1/machine/state/idle').catch(function(){ toast('Wake failed','err'); }); }
+function updateLockClock(){ var d=new Date();
+  document.getElementById('lockClock').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('lockDate').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
+// Show/hide the lock without issuing a state change (used when the machine itself reports sleep).
+function enterSleepLocalOnly(){ document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(updateLockClock,1000); }
+function wakeLocalOnly(){ document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show'); if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; } }
 function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast('Scan failed','err');}); }
 
 // ── Steam/Flush modals ──────────────────────────────────────────────
 function openSteamModal(){ syncSteamModal(); renderPresets('steam'); document.getElementById('steamOverlay').classList.add('show'); }
 function openFlushModal(){ syncFlushModal(); renderPresets('flush'); document.getElementById('flushOverlay').classList.add('show'); }
+function openWaterModal(){ syncWaterModal(); renderPresets('water'); document.getElementById('waterOverlay').classList.add('show'); }
 function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show'); }
 
 // Presets (max 3 per kind), stored in localStorage.
-var presets={ steam:[], flush:[] };
-function loadPresets(){ try{ var p=JSON.parse(localStorage.getItem('aurora_presets')||'{}'); presets.steam=p.steam||[]; presets.flush=p.flush||[]; }catch(_){}
+var presets={ steam:[], flush:[], water:[] };
+function loadPresets(){ try{ var p=JSON.parse(localStorage.getItem('aurora_presets')||'{}'); presets.steam=p.steam||[]; presets.flush=p.flush||[]; presets.water=p.water||[]; }catch(_){}
   if(!presets.steam.length) presets.steam=[{n:'Latte',temp:150,dur:50,flow:0.8},{n:'Cappa',temp:155,dur:40,flow:1.0}];
-  if(!presets.flush.length) presets.flush=[{n:'Quick',temp:88,dur:5,flow:6},{n:'Deep',temp:92,dur:12,flow:6.5}]; }
+  if(!presets.flush.length) presets.flush=[{n:'Quick',temp:88,dur:5,flow:6},{n:'Deep',temp:92,dur:12,flow:6.5}];
+  if(!presets.water.length) presets.water=[{n:'Tea',temp:95,vol:250,dur:40,flow:10},{n:'Americano',temp:80,vol:120,dur:20,flow:8}]; }
 function savePresets(){ try{ localStorage.setItem('aurora_presets',JSON.stringify(presets)); }catch(_){} }
 function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); wrap.innerHTML='';
   presets[kind].forEach(function(ps,i){ var chip=document.createElement('button'); chip.className='preset-chip';
@@ -848,19 +989,24 @@ function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); 
     add.onclick=function(){ addPreset(kind); }; wrap.appendChild(add); }
 }
 function applyPreset(kind,ps){ if(kind==='steam'){ set('steamTemp',ps.temp,'steamTempV'); set('steamDur',ps.dur,'steamDurV'); set('steamFlow',ps.flow,'steamFlowV',1); }
+  else if(kind==='water'){ set('waterTemp',ps.temp,'waterTempV'); set('waterVol',ps.vol,'waterVolV'); set('waterDur',ps.dur,'waterDurV'); set('waterFlow',ps.flow,'waterFlowV',1); }
   else { set('flushTemp',ps.temp,'flushTempV'); set('flushDur',ps.dur,'flushDurV'); set('flushFlow',ps.flow,'flushFlowV',1); } toast('Preset "'+ps.n+'" applied','ok'); }
-function addPreset(kind){ var name=prompt('Preset name?',(kind==='steam'?'Steam ':'Flush ')+(presets[kind].length+1)); if(!name) return;
+function addPreset(kind){ var name=prompt('Preset name?',(kind==='steam'?'Steam ':kind==='water'?'Water ':'Flush ')+(presets[kind].length+1)); if(!name) return;
   if(kind==='steam') presets.steam.push({n:name,temp:+document.getElementById('steamTemp').value,dur:+document.getElementById('steamDur').value,flow:+document.getElementById('steamFlow').value});
+  else if(kind==='water') presets.water.push({n:name,temp:+document.getElementById('waterTemp').value,vol:+document.getElementById('waterVol').value,dur:+document.getElementById('waterDur').value,flow:+document.getElementById('waterFlow').value});
   else presets.flush.push({n:name,temp:+document.getElementById('flushTemp').value,dur:+document.getElementById('flushDur').value,flow:+document.getElementById('flushFlow').value});
   savePresets(); renderPresets(kind); toast('Preset saved','ok'); }
 function syncSteamModal(){ set('steamTemp',settings.steamTemp,'steamTempV'); set('steamDur',settings.steamDur,'steamDurV'); set('steamFlow',settings.steamFlow,'steamFlowV',1); }
+function syncWaterModal(){ set('waterTemp',settings.waterTemp,'waterTempV'); set('waterVol',settings.waterVol,'waterVolV'); set('waterDur',settings.waterDur,'waterDurV'); set('waterFlow',settings.waterFlow,'waterFlowV',1); }
 function syncFlushModal(){ set('flushTemp',settings.flushTemp,'flushTempV'); set('flushDur',settings.flushDur,'flushDurV'); set('flushFlow',settings.flushFlow,'flushFlowV',1); }
 function set(id,v,vid,dec){ document.getElementById(id).value=v; document.getElementById(vid).textContent=dec?(+v).toFixed(1):v; }
-function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v; }
+function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v; }
 function saveSteam(){ settings.steamTemp=+document.getElementById('steamTemp').value; settings.steamDur=+document.getElementById('steamDur').value; settings.steamFlow=+document.getElementById('steamFlow').value;
   api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){toast('Steam options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'steamOverlay'); }
 function saveFlush(){ settings.flushTemp=+document.getElementById('flushTemp').value; settings.flushDur=+document.getElementById('flushDur').value; settings.flushFlow=+document.getElementById('flushFlow').value;
   api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){toast('Flush options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'flushOverlay'); }
+function saveWater(){ settings.waterTemp=+document.getElementById('waterTemp').value; settings.waterVol=+document.getElementById('waterVol').value; settings.waterDur=+document.getElementById('waterDur').value; settings.waterFlow=+document.getElementById('waterFlow').value;
+  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){toast('Water options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'waterOverlay'); }
 
 // ── Recipe / ratio ──────────────────────────────────────────────────
 function adjust(key,delta){ settings[key]=parseFloat((settings[key]+delta).toFixed(1)); var c={doseIn:[5,30],doseOut:[10,80]}[key]; if(c) settings[key]=Math.max(c[0],Math.min(c[1],settings[key])); syncRecipe(); pushRecipe(); }
@@ -890,7 +1036,9 @@ function kpPress(k){
   else if(k==='.'){ if(KP.str.indexOf('.')<0) KP.str=(KP.str.length?KP.str:'0')+'.'; }
   else { KP.str+=k; if(KP.str.replace('.','').length>5) KP.str=KP.str.slice(0,6); }
   kpRender(); }
-function kpConfirm(){ var c=KP_CFG[KP.field]; var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'keypadOverlay'); return; }
+function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'keypadOverlay'); return; }
+  if(KP.field==='grind'){ setGrind(String(Math.max(0,parseFloat(v.toFixed(2))))); closeModal(null,'keypadOverlay'); return; }
+  var c=KP_CFG[KP.field];
   v=Math.max(c.min,Math.min(c.max,v));
   if(KP.field==='ratio'){ settings.doseOut=parseFloat((settings.doseIn*v).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); }
   else { settings[KP.field]=parseFloat(v.toFixed(1)); }
@@ -1115,7 +1263,31 @@ function loadBeansGrinders(){
   Promise.all([ api('GET','/api/v1/beans').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}) ])
     .then(function(res){ beans=res[0]||[]; grinders=res[1]||[]; renderBgList(); });
 }
+var bgTab='bean'; // which section is shown: 'bean' | 'grinder'
+function bgSetTab(t){ bgTab=t; renderBgList(); }
 function renderBgList(){ var list=document.getElementById('bgList'); list.innerHTML='';
+  // tab switcher: Beans / Grinders shown separately
+  var tabs=document.createElement('div'); tabs.className='bg-tabs';
+  tabs.innerHTML='<button class="bg-tab'+(bgTab==='bean'?' active':'')+'" onclick="bgSetTab(\'bean\')">🫘 Beans</button>'
+    +'<button class="bg-tab'+(bgTab==='grinder'?' active':'')+'" onclick="bgSetTab(\'grinder\')">⚙️ Grinders</button>';
+  list.appendChild(tabs);
+  if(bgTab==='bean'){
+    var addB=document.createElement('button'); addB.className='ep-step-add'; addB.style.cssText='margin:4px 0 8px'; addB.textContent='+ Add Bean'; addB.onclick=function(){ bgSelectNew('bean'); }; list.appendChild(addB);
+    if(!beans.length){ var e=document.createElement('div'); e.className='ep-placeholder'; e.style.marginTop='40px'; e.textContent='No beans yet'; list.appendChild(e); }
+    beans.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
+      it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(249,115,22,.12)">🫘</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(b.name||'')+'</div><div class="mt">'+escapeHtml(b.roaster||'')+'</div></div>';
+      it.onclick=function(){ bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
+  } else {
+    var addG=document.createElement('button'); addG.className='ep-step-add'; addG.style.cssText='margin:4px 0 8px'; addG.textContent='+ Add Grinder'; addG.onclick=function(){ bgSelectNew('grinder'); }; list.appendChild(addG);
+    if(!grinders.length){ var e2=document.createElement('div'); e2.className='ep-placeholder'; e2.style.marginTop='40px'; e2.textContent='No grinders yet'; list.appendChild(e2); }
+    grinders.forEach(function(g){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='grinder'&&bgSel.obj.id===g.id?' active':'');
+      var sub=(g.burrs||g.burrType||'grinder')+(g.grinderSetting?(' · @'+g.grinderSetting):'');
+      it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(sub)+'</div></div>';
+      it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
+  }
+  return;
+}
+function renderBgListOLD(){ var list=document.getElementById('bgList'); list.innerHTML='';
   var hb=document.createElement('div'); hb.style.cssText='font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 4px;display:flex;justify-content:space-between;align-items:center';
   hb.innerHTML='<span>🫘 Beans</span>'; var addB=document.createElement('button'); addB.className='ep-step-add'; addB.textContent='+ Bean'; addB.onclick=function(){ bgSelectNew('bean'); }; hb.appendChild(addB); list.appendChild(hb);
   beans.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
@@ -1127,7 +1299,7 @@ function renderBgList(){ var list=document.getElementById('bgList'); list.innerH
     it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(g.burrs||g.burrType||'grinder')+'</div></div>';
     it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
 }
-function bgSelectNew(type){ bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',roastLevel:'',processing:''}:{model:'',burrs:'',burrType:'conical'}}; renderBgList(); renderBgEditor(); }
+function bgSelectNew(type){ bgTab=type; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',roastLevel:'',processing:''}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:''}}; renderBgList(); renderBgEditor(); }
 function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML='<div class="ep-placeholder">← Select or add an item</div>'; return; }
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
@@ -1138,28 +1310,78 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field"><label>Notes</label><textarea id="bgNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">Delete</button>')+'<button class="m-btn" onclick="useBean()">Use for shot</button><button class="m-btn primary" onclick="saveBean()">Save</button></div>';
   } else {
+    var isPreset=(o.settingType==='preset');
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Grinder':'Edit Grinder')+'</div>'
       +'<div class="field"><label>Model</label><input id="bgModel" value="'+escapeAttr(o.model||'')+'"></div>'
       +'<div class="field-row"><div class="field"><label>Burrs</label><input id="bgBurrs" value="'+escapeAttr(o.burrs||'')+'"></div><div class="field"><label>Burr type</label><input id="bgBurrType" value="'+escapeAttr(o.burrType||'')+'"></div></div>'
+      +'<div class="field"><label>Burr size (mm)</label><input id="bgBurrSize" type="number" step="0.5" value="'+(o.burrSize!=null?o.burrSize:'')+'"></div>'
+      +'<div class="ep-section-title" style="margin-top:8px">Grind Setting</div>'
+      +'<div class="field"><label>Setting type</label>'
+        +'<div class="ep-pump-toggle" style="width:fit-content"><button class="'+(isPreset?'':'on')+'" onclick="bgSetGrindType(\'numeric\')">Numeric dial</button><button class="'+(isPreset?'on':'')+'" onclick="bgSetGrindType(\'preset\')">Named presets</button></div></div>'
+      +(isPreset
+        ? '<div class="field"><label>Preset positions (comma separated)</label><input id="bgSettingValues" value="'+escapeAttr((o.settingValues||[]).join(', '))+'" placeholder="Fine, Medium, Coarse"></div>'
+          +'<div class="field"><label>Current setting</label><input id="bgGrindSetting" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. Medium"></div>'
+        : '<div class="field-row"><div class="field"><label>Fine step</label><input id="bgSmallStep" type="number" step="0.1" value="'+(o.settingSmallStep!=null?o.settingSmallStep:0.1)+'"></div><div class="field"><label>Coarse step</label><input id="bgBigStep" type="number" step="0.1" value="'+(o.settingBigStep!=null?o.settingBigStep:1.0)+'"></div></div>'
+          +'<div class="field"><label>Current setting (dial)</label><input id="bgGrindSetting" type="text" inputmode="decimal" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. 5.2"></div>')
       +'<div class="field"><label>Notes</label><textarea id="bgGNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteGrinder()">Delete</button>')+'<button class="m-btn" onclick="useGrinder()">Use for shot</button><button class="m-btn primary" onclick="saveGrinder()">Save</button></div>';
   }
 }
+// Switch grinder setting type in-place (preserves other edited fields).
+function bgSetGrindType(t){ if(!bgSel||bgSel.type!=='grinder') return; bgReadGrinderForm(); bgSel.obj.settingType=t; renderBgEditor(); }
+// Read current grinder form values back into the selected object (before re-render).
+function bgReadGrinderForm(){ var o=bgSel.obj; var g=function(id){ var el=document.getElementById(id); return el?el.value:undefined; };
+  if(g('bgModel')!==undefined) o.model=g('bgModel').trim();
+  if(g('bgBurrs')!==undefined) o.burrs=g('bgBurrs').trim();
+  if(g('bgBurrType')!==undefined) o.burrType=g('bgBurrType').trim();
+  var bs=g('bgBurrSize'); if(bs!==undefined) o.burrSize=bs===''?null:parseFloat(bs);
+  var ss=g('bgSmallStep'); if(ss!==undefined) o.settingSmallStep=ss===''?null:parseFloat(ss);
+  var bg=g('bgBigStep'); if(bg!==undefined) o.settingBigStep=bg===''?null:parseFloat(bg);
+  var sv=g('bgSettingValues'); if(sv!==undefined) o.settingValues=sv.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var gs=g('bgGrindSetting'); if(gs!==undefined) o.grinderSetting=gs.trim();
+  var nt=g('bgGNotes'); if(nt!==undefined) o.notes=nt; }
 function saveBean(){ var o=bgSel.obj; var body={roaster:document.getElementById('bgRoaster').value.trim(),name:document.getElementById('bgName').value.trim(),country:document.getElementById('bgCountry').value.trim()||null,processing:document.getElementById('bgProcess').value.trim()||null,roastLevel:document.getElementById('bgRoast').value.trim()||null,notes:document.getElementById('bgNotes').value||null};
   if(!body.roaster||!body.name){ toast('Roaster and name required','err'); return; }
   var req=o.id?api('PUT','/api/v1/beans/'+o.id,body):api('POST','/api/v1/beans',body);
   req.then(function(){ toast('Bean saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
 function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this bean?')) return; api('DELETE','/api/v1/beans/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
 function useBean(){ var o=bgSel.obj; api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:null}}).then(function(){ toast('Bean set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
-function saveGrinder(){ var o=bgSel.obj; var body={model:document.getElementById('bgModel').value.trim(),burrs:document.getElementById('bgBurrs').value.trim()||null,burrType:document.getElementById('bgBurrType').value.trim()||null,notes:document.getElementById('bgGNotes').value||null};
-  if(!body.model){ toast('Model required','err'); return; }
+function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
+  if(!o.model){ toast('Model required','err'); return; }
+  // grinderSetting is a per-shot workflow value, not a Grinder entity field — excluded here.
+  var body={ model:o.model, burrs:o.burrs||null, burrType:o.burrType||null, burrSize:(o.burrSize!=null?o.burrSize:null), notes:o.notes||null,
+    settingType:o.settingType||'numeric' };
+  if(body.settingType==='preset'){ body.settingValues=o.settingValues&&o.settingValues.length?o.settingValues:null; }
+  else { body.settingSmallStep=(o.settingSmallStep!=null?o.settingSmallStep:null); body.settingBigStep=(o.settingBigStep!=null?o.settingBigStep:null); }
   var req=o.id?api('PUT','/api/v1/grinders/'+o.id,body):api('POST','/api/v1/grinders',body);
   req.then(function(){ toast('Grinder saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
 function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
-function useGrinder(){ var o=bgSel.obj; api('PUT','/api/v1/workflow',{context:{grinderId:o.id||null,grinderModel:o.model}}).then(function(){ toast('Grinder set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
+function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
+  api('PUT','/api/v1/workflow',{context:ctx}).then(function(){ toast('Grinder set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
 function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRoaster, g=context.grinderModel, gs=context.grinderSetting;
   if(name){ document.getElementById('beanName').textContent=(roaster?roaster+' · ':'')+name; document.getElementById('beanSub').textContent=g?(g+(gs?' @ '+gs:'')):'No grinder'; }
-  else { document.getElementById('beanName').textContent='No bean selected'; document.getElementById('beanSub').textContent='Tap edit to add beans & grinder'; } }
+  else { document.getElementById('beanName').textContent='No bean selected'; document.getElementById('beanSub').textContent='Tap edit to add beans & grinder'; }
+  updateGrindRow(); }
+// Resolve the workflow's current grinder entity (for step size / preset positions).
+function currentGrinder(){ if(!context.grinderId) return null; return grinders.find(function(x){ return x.id===context.grinderId; })||null; }
+function updateGrindRow(){ var row=document.getElementById('grindRow'); if(!row) return;
+  var g=context.grinderModel; if(!g){ row.style.display='none'; return; }
+  row.style.display='flex';
+  document.getElementById('grindModel').textContent=g;
+  document.getElementById('grindVal').textContent=(context.grinderSetting!=null&&context.grinderSetting!=='')?context.grinderSetting:'—'; }
+// Adjust the grind setting from the main screen and persist to the workflow.
+function adjustGrind(dir){ var gr=currentGrinder(); var cur=context.grinderSetting;
+  if(gr&&gr.settingType==='preset'){ var vals=gr.settingValues||[]; if(!vals.length){ toast('No preset positions','err'); return; }
+    var i=vals.indexOf(cur); i=(i<0?0:i)+dir; i=Math.max(0,Math.min(vals.length-1,i)); setGrind(vals[i]); }
+  else { var step=(gr&&gr.settingSmallStep)?gr.settingSmallStep:0.1; var n=parseFloat(cur); if(isNaN(n)) n=0;
+    n=Math.max(0,parseFloat((n+dir*step).toFixed(2))); setGrind(String(n)); } }
+function setGrind(v){ context.grinderSetting=String(v); updateGrindRow();
+  clearTimeout(setGrind._t); setGrind._t=setTimeout(function(){ api('PUT','/api/v1/workflow',{context:{grinderSetting:String(v)}}).catch(function(){}); },500); }
+function openGrindKeypad(){ var gr=currentGrinder();
+  if(gr&&gr.settingType==='preset'){ adjustGrind(1); return; } // preset: tapping cycles forward
+  var cur=parseFloat(context.grinderSetting); KP.field='grind'; KP.unit=''; KP.fresh=true; KP.str=isNaN(cur)?'0':String(cur);
+  document.getElementById('kpTitle').textContent='Grind Setting'; document.getElementById('kpUnit').textContent='';
+  kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 
 // ── DYE (post-shot log) ─────────────────────────────────────────────
 function openDyeModal(){ state.dyeStars=0; document.querySelectorAll('#dyeStars .star').forEach(function(s){s.classList.remove('on');});
@@ -1242,6 +1464,7 @@ function loadWorkflow(){ api('GET','/api/v1/workflow').then(function(w){ if(!w) 
     if(w.context.targetDoseWeight) settings.doseIn=w.context.targetDoseWeight; if(w.context.targetYield) settings.doseOut=w.context.targetYield; }
   if(w.steamSettings){ if(w.steamSettings.targetTemperature) settings.steamTemp=w.steamSettings.targetTemperature; if(w.steamSettings.duration) settings.steamDur=w.steamSettings.duration; if(w.steamSettings.flow) settings.steamFlow=w.steamSettings.flow; }
   if(w.rinseData){ if(w.rinseData.targetTemperature) settings.flushTemp=w.rinseData.targetTemperature; if(w.rinseData.duration) settings.flushDur=w.rinseData.duration; if(w.rinseData.flow) settings.flushFlow=w.rinseData.flow; }
+  if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.duration) settings.waterDur=w.hotWaterData.duration; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; }
   if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
     var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; }); if(match) curProfileObj=match; if(carItems.length) buildCarousel(); }
   syncRecipe(); updateBeanInfo(); }).catch(function(){}); }
@@ -1263,11 +1486,20 @@ function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
 var toastT=null; function toast(msg,type){ var el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); },2500); }
 setInterval(function(){ if(state.connected) api('POST','/api/v1/machine/heartbeat').catch(function(){}); },30000);
 
+// Toggle body.overlay-active whenever any modal/full-page is visible, so the
+// background glass panels can drop their backdrop-filter (a heavy per-frame cost).
+function watchOverlays(){ var els=[].slice.call(document.querySelectorAll('.overlay,.editpage'));
+  function refresh(){ var open=els.some(function(el){ return el.classList.contains('show'); }); document.body.classList.toggle('overlay-active',open); }
+  var mo=new MutationObserver(refresh);
+  els.forEach(function(el){ mo.observe(el,{attributes:true,attributeFilter:['class']}); });
+  refresh(); }
+
 // ── Init ─────────────────────────────────────────────────────────────
 window.addEventListener('load', function(){
-  fitStage(); loadFavs(); loadPrefs(); loadPresets(); initWebSockets();
+  fitStage(); loadFavs(); loadPrefs(); loadPresets(); initWebSockets(); watchOverlays();
   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
+  api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
   // load profiles first, then workflow so we can match the current profile to a real list entry
   loadProfiles();
   setTimeout(loadWorkflow, 700);
