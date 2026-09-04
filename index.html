@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Liquid Aqua</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#6366f1; --accent2:#8b5cf6; --accent3:#ec4899;
+  --hot:#f97316; --steam:#38bdf8; --green:#10b981; --red:#ef4444; --amber:#f59e0b;
+  --ink:#1e1b3a; --ink-soft:#4b4869; --ink-mute:#8b88a8;
+  --glass:rgba(255,255,255,.55); --glass-hi:rgba(255,255,255,.8); --glass-line:rgba(255,255,255,.7);
+  --shadow:0 8px 32px rgba(80,70,160,.12); --shadow-lg:0 20px 60px rgba(80,70,160,.2);
+  --r-lg:26px; --r-md:18px; --r-sm:13px; --font:'Inter',-apple-system,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;font-family:var(--font);color:var(--ink);overflow:hidden;background:#eef1ff}
+body::before{content:'';position:fixed;inset:0;z-index:-2;
+  background:radial-gradient(circle at 18% 22%,rgba(139,92,246,.42),transparent 46%),radial-gradient(circle at 84% 18%,rgba(56,189,248,.38),transparent 48%),radial-gradient(circle at 78% 84%,rgba(236,72,153,.32),transparent 48%),radial-gradient(circle at 22% 90%,rgba(99,102,241,.38),transparent 48%),linear-gradient(135deg,#e8ecff,#f5edff)}
+
+.stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.app{width:1280px;height:800px;display:grid;grid-template-columns:1fr 400px;grid-template-rows:78px 1fr;gap:14px;padding:14px;flex-shrink:0}
+.glass{background:rgba(255,255,255,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-line);border-radius:var(--r-md);box-shadow:var(--shadow)}
+
+/* ── Header: water tank + actions ────────────────────────────────── */
+header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.water-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:var(--r-md)}
+.water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1)}
+.water-fill svg{position:absolute;top:-16px;left:0;width:100%;height:18px;display:block}
+.wave-path{fill:rgba(56,189,248,.45)}
+.wave-path2{fill:rgba(99,102,241,.32)}
+header>*{position:relative;z-index:1}
+.brand{display:flex;align-items:baseline;gap:7px}
+.brand h1{font-size:19px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand span{font-size:10px;color:var(--ink-mute);font-weight:600}
+
+.water-readout{display:flex;align-items:center;gap:9px}
+.water-icon{font-size:18px}
+.water-nums{line-height:1.05}
+.water-nums .pct{font-size:20px;font-weight:800;color:var(--accent)}
+.water-nums .lbl{font-size:9px;font-weight:600;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
+.water-warn{color:var(--red);font-weight:700;font-size:11px;margin-left:6px}
+
+.hdr-actions{display:flex;align-items:center;gap:9px}
+.act-btn{position:relative;display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);-webkit-appearance:none;user-select:none}
+.act-btn .ico{font-size:15px}
+.act-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shadow);background:#fff}
+.act-btn:active:not(:disabled){transform:scale(.96)}
+.act-btn:disabled{opacity:.4;cursor:not-allowed}
+.act-btn.start{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;box-shadow:0 6px 18px rgba(99,102,241,.4);padding:10px 20px;font-size:13px}
+.act-btn.start.stop{background:linear-gradient(135deg,var(--red),var(--hot));box-shadow:0 6px 18px rgba(239,68,68,.4)}
+.act-btn.steam:not(:disabled){color:var(--steam)} .act-btn.flush:not(:disabled){color:var(--green)}
+.act-btn .cfg-dot{position:absolute;top:5px;right:8px;width:5px;height:5px;border-radius:50%;background:var(--amber)}
+.act-btn .gear-hint{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--ink-mute);white-space:nowrap;opacity:0;transition:opacity .2s}
+.act-btn:hover .gear-hint{opacity:1}
+
+.conn-toggle{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .25s;-webkit-appearance:none}
+.conn-toggle:hover{transform:translateY(-2px)}
+.conn-toggle.off{border:none;color:#fff;background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 6px 18px rgba(139,92,246,.35)}
+.conn-toggle.ing{color:var(--amber)} .conn-toggle.on{color:var(--green)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-mute)}
+.conn-toggle.on .status-dot{background:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.25);animation:breathe 2.2s infinite}
+.conn-toggle.ing .status-dot{background:var(--amber);animation:blink .8s infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hdr-group{display:flex;align-items:center;gap:9px}
+/* active (running) action buttons: filled + pulsing */
+.act-btn.active{color:#fff;border:none;animation:actpulse 1.6s ease-in-out infinite}
+.act-btn.steam.active{background:linear-gradient(135deg,var(--steam),#0ea5e9);box-shadow:0 6px 18px rgba(56,189,248,.45)}
+.act-btn.flush.active{background:linear-gradient(135deg,var(--green),#059669);box-shadow:0 6px 18px rgba(16,185,129,.45)}
+.act-btn.sleep.active{background:linear-gradient(135deg,#64748b,#475569);box-shadow:0 6px 18px rgba(100,116,139,.4)}
+@keyframes actpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
+
+/* ── Center column ───────────────────────────────────────────────── */
+.center{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:14px;min-height:0}
+.live{padding:18px 22px;flex-shrink:0}
+.live-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.live-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase;margin-bottom:4px}
+.weight-row{display:flex;align-items:center;gap:12px}
+.weight-num{font-size:66px;font-weight:800;line-height:.85;letter-spacing:-.04em;background:linear-gradient(135deg,var(--ink),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.weight-num.zero{-webkit-text-fill-color:var(--ink-mute)}
+.weight-unit{font-size:20px;font-weight:700;color:var(--ink-mute)}
+.tare-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:100px;border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
+.tare-btn:hover:not(:disabled){background:var(--accent);color:#fff;transform:translateY(-2px)}
+.tare-btn:disabled{opacity:.35;cursor:not-allowed}
+.timer-big{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+.timer-big.run{color:var(--hot)}
+
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.gauge{background:var(--glass-hi);border-radius:var(--r-sm);padding:12px 15px;border:1px solid var(--glass-line)}
+.gauge-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.gauge-name{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
+.gauge-val{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.gauge-val .u{font-size:11px;color:var(--ink-mute);font-weight:600}
+.gauge-val.pressure{color:var(--accent)} .gauge-val.flow{color:var(--steam)}
+.gauge-track{height:6px;background:rgba(139,92,246,.12);border-radius:100px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:100px;transition:width .3s cubic-bezier(.4,0,.2,1)}
+.gauge-fill.pressure{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.gauge-fill.flow{background:linear-gradient(90deg,var(--steam),#7dd3fc)}
+
+.temps{display:flex;gap:10px}
+.temp-pill{flex:1;background:var(--glass-hi);border-radius:var(--r-sm);padding:11px 13px;border:1px solid var(--glass-line);display:flex;align-items:center;gap:9px;cursor:help}
+.temp-ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.temp-ico.group{background:rgba(99,102,241,.15)} .temp-ico.mix{background:rgba(56,189,248,.15)} .temp-ico.steam{background:rgba(245,158,11,.15)}
+.temp-info .lbl{font-size:9px;font-weight:700;color:var(--ink-mute);text-transform:uppercase}
+.temp-info .val{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.temp-info .val .u{font-size:10px;color:var(--ink-mute);font-weight:600}
+
+.chart-card{padding:16px 20px;flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0}
+.chart-title{font-size:13px;font-weight:700}
+.chart-legend{display:flex;gap:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ink-soft)}
+.legend-dot{width:9px;height:9px;border-radius:3px}
+.chart-canvas-wrap{flex:1;min-height:0;position:relative}
+canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* ── Right column ────────────────────────────────────────────────── */
+.right{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:14px;min-height:0}
+
+/* Current profile hero */
+/* Profile album carousel (current + favorites merged) */
+.carousel-card{padding:14px 16px 16px;flex-shrink:0;display:flex;flex-direction:column}
+.cc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cur-tag{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase}
+.cur-browse{font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;-webkit-appearance:none}
+.carousel{position:relative;height:180px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
+.carousel-stage{position:relative;width:100%;height:100%}
+.car-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--ink-mute);font-size:12px}
+.album{position:absolute;top:50%;left:50%;width:150px;height:130px;margin:-65px 0 0 -75px;border-radius:16px;cursor:pointer;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
+.album.side{opacity:.55}
+.album.center{box-shadow:0 14px 32px rgba(80,70,160,.3);border-color:rgba(255,255,255,.6)}
+.album .al-curve{flex:1;position:relative;min-height:0}
+.album .al-curve canvas{position:absolute;inset:0;width:100%;height:100%}
+.album .al-name{flex-shrink:0;padding:6px 8px 8px;text-align:center;background:rgba(0,0,0,.3);-webkit-font-smoothing:antialiased}
+.album .al-group{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.72);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+.album .al-nametext{font-size:12px;font-weight:800;color:#fff;line-height:1.15;text-shadow:0 1px 2px rgba(0,0,0,.35);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.album.center .al-nametext{font-size:13px}
+.car-nav{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:1px solid var(--glass-line);background:rgba(255,255,255,.9);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:transform .15s;-webkit-appearance:none}
+.car-nav:hover{background:#fff;transform:translateY(-50%) scale(1.1)} .car-nav:active{transform:translateY(-50%) scale(.92)}
+.car-nav.prev{left:0} .car-nav.next{right:0}
+.cc-name{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:center;line-height:1.15;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-meta{font-size:10px;color:var(--ink-mute);font-weight:500;text-align:center;margin-top:2px}
+.cc-hint{margin-top:10px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
+.cc-hint.current{color:var(--green)}
+/* card navigation strip: tap to load instantly */
+.nav-cards{display:flex;justify-content:center;gap:7px;margin-top:12px;overflow-x:auto;padding:2px 0 4px}
+.nav-cards::-webkit-scrollbar{height:0}
+.nav-card{flex-shrink:0;width:58px;height:44px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:9px;font-weight:800;color:#fff;line-height:1.1;overflow:hidden;transition:transform .15s,box-shadow .15s;border:2px solid transparent;background-color:#4f46e5}
+.nav-card:hover{transform:translateY(-2px)}
+.nav-card.active{border-color:#fff;box-shadow:0 0 0 2px var(--accent),0 4px 12px rgba(99,102,241,.35)}
+.nav-card span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Recipe / ratio */
+.recipe{padding:16px 18px;flex-shrink:0}
+.recipe-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.recipe-title .bean-link{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer}
+.dose-row{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}
+.dose-block{text-align:center;flex:1}
+.dose-adj{display:flex;align-items:center;justify-content:center;gap:4px}
+.dose-num{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:56px}
+.dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
+.dose-num.tap,.rv.tap{cursor:pointer;border-radius:9px;padding:2px 4px;transition:background .15s,transform .1s}
+.dose-num.tap:hover,.rv.tap:hover{background:var(--glass-hi)}
+.dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
+.ratio-badge{display:flex;flex-direction:column;align-items:center;padding:0 2px}
+.ms-btn.sm{width:20px;height:20px;font-size:12px;border-radius:6px}
+.ratio-badge .rv{font-size:20px;font-weight:800;color:var(--accent2)}
+.ratio-badge .rl{font-size:9px;font-weight:700;color:var(--ink-mute);text-transform:uppercase}
+.mini-steppers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.mini-step{display:flex;align-items:center;justify-content:space-between;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:5px 7px}
+.mini-step .l{font-size:10px;font-weight:700;color:var(--ink-mute);padding-left:3px}
+.mini-step .c{display:flex;align-items:center;gap:5px}
+.ms-btn{width:25px;height:25px;border-radius:7px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.ms-btn:active{transform:scale(.9)}
+.ms-val{min-width:36px;text-align:center;font-size:13px;font-weight:700}
+
+.bean-info{padding:14px 18px;flex-shrink:0}
+.bean-row{display:flex;align-items:center;gap:10px}
+.bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.bean-txt{flex:1;min-width:0}
+.bean-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bean-sub{font-size:11px;color:var(--ink-mute);font-weight:500}
+.bean-edit{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;background:none;border:none;-webkit-appearance:none}
+
+/* ── Profile Editor full page ────────────────────────────────────── */
+.editpage{position:fixed;inset:0;z-index:250;background:linear-gradient(135deg,#eef1ff,#f5edff);display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:scale(1.02);transition:opacity .25s,transform .25s}
+.editpage.show{opacity:1;pointer-events:auto;transform:scale(1)}
+.ep-head{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--glass-line);background:rgba(255,255,255,.6)}
+.ep-title{font-size:20px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.ep-close{padding:10px 18px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
+.ep-close:hover{transform:translateY(-2px)}
+.ep-body{flex:1;display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
+.ep-list{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:9px}
+.ep-list::-webkit-scrollbar{width:6px}.ep-list::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
+.ep-group-head{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:6px 4px 2px;position:sticky;top:0;background:linear-gradient(135deg,#eef1ff,#f5edff);z-index:1}
+.ep-group-head:first-child{padding-top:0}
+.ep-item{background:#fff;border:1px solid var(--glass-line);border-radius:12px;padding:11px;cursor:pointer;transition:all .18s;display:flex;gap:10px;align-items:center}
+.ep-item:hover{transform:translateX(3px);box-shadow:var(--shadow)}
+.ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.18)}
+.ep-item .thmb{width:44px;height:44px;border-radius:9px;background:#f8f8ff;position:relative;overflow:hidden;flex-shrink:0}
+.ep-item .thmb canvas{position:absolute;inset:0;width:100%;height:100%}
+.ep-item .nm{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ep-item .mt{font-size:10px;color:var(--ink-mute);margin-top:1px}
+.ep-item .favmark{margin-left:auto;font-size:14px;color:var(--amber)}
+.ep-item .fav-btn{margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--glass-line);background:#fff;color:var(--ink-mute);font-size:15px;line-height:1;cursor:pointer;transition:all .15s;-webkit-appearance:none;display:flex;align-items:center;justify-content:center}
+.ep-item .fav-btn:hover{border-color:var(--amber);color:var(--amber)}
+.ep-item .fav-btn.on{color:var(--amber);border-color:var(--amber);background:rgba(245,158,11,.1)}
+.ep-group-head.fav{color:var(--amber)}
+.ep-group-head.fav{background:linear-gradient(135deg,#fff6e6,#fff0f0)}
+.ep-editor{overflow-y:auto}
+.ep-editor::-webkit-scrollbar{width:6px}.ep-editor::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
+.ep-editor-inner{padding:22px 26px}
+.ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
+.ep-visual{background:#fff;border:1px solid var(--glass-line);border-radius:16px;padding:16px;margin-bottom:18px}
+.ep-visual-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;justify-content:space-between}
+.ep-visual canvas{width:100%;height:200px;display:block}
+.ep-name-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:18px;font-weight:700;color:var(--ink);-webkit-appearance:none;margin-bottom:12px}
+.ep-notes{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;color:var(--ink-soft);-webkit-appearance:none;resize:vertical;margin-bottom:18px}
+.ep-steps-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.ep-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.ep-step{background:#fff;border:1px solid var(--glass-line);border-radius:13px;padding:14px 16px;position:relative;border-left:4px solid var(--accent)}
+.ep-step.flow{border-left-color:var(--steam)}
+.ep-step-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ep-step-name{font-size:14px;font-weight:700}
+.ep-pump-toggle{display:flex;border:1px solid var(--glass-line);border-radius:100px;overflow:hidden}
+.ep-pump-toggle button{padding:5px 12px;border:none;background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+.ep-pump-toggle button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.ep-sliders{display:flex;flex-direction:column;gap:12px}
+.ep-slider-row{display:flex;align-items:center;gap:12px}
+.ep-slider-row .lbl{font-size:11px;font-weight:700;color:var(--ink-mute);width:80px;flex-shrink:0}
+.ep-slider-row input[type=range]{flex:1;-webkit-appearance:none;height:6px;border-radius:100px;background:rgba(139,92,246,.18);outline:none}
+.ep-slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,.4)}
+.ep-slider-row .val{font-size:13px;font-weight:800;color:var(--accent);width:56px;text-align:right}
+.ep-save-bar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#fbfaff 40%);padding:16px 0 4px;display:flex;justify-content:flex-end;gap:10px}
+.ep-section-title{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+
+/* Shot log page */
+.sl-badge{width:44px;height:44px;border-radius:9px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--amber);flex-shrink:0;font-weight:700}
+.sl-detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.sl-dt-title{font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.sl-dt-sub{font-size:12px;color:var(--ink-mute);margin-top:3px}
+.sl-canvas-wrap{position:relative;height:150px;background:#f8f8ff;border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.sl-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.sl-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sl-metric{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:12px;padding:12px 8px;text-align:center}
+.sl-metric .v{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.sl-metric .l{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
+/* step carousel in editor */
+.ep-stepnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ep-stepnav .nav{width:34px;height:34px;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-size:16px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
+.ep-stepnav .nav:hover{background:#f0eeff}
+.ep-steptabs{flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px}
+.ep-steptabs::-webkit-scrollbar{height:0}
+.ep-steptab{flex-shrink:0;padding:6px 12px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;white-space:nowrap}
+.ep-steptab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none}
+.ep-steptab.flow.active{background:linear-gradient(135deg,var(--steam),#0ea5e9)}
+.ep-step-editor{background:#fff;border:1px solid var(--glass-line);border-radius:14px;padding:16px 18px;border-left:4px solid var(--accent)}
+.ep-step-editor.flow{border-left-color:var(--steam)}
+.ep-step-add{padding:6px 12px;border-radius:100px;border:1px dashed var(--glass-line);background:transparent;font-size:12px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+
+/* ── Modal ───────────────────────────────────────────────────────── */
+.overlay{position:fixed;inset:0;background:rgba(30,27,58,.45);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;padding:24px}
+.overlay.show{opacity:1;pointer-events:auto}
+.modal{background:#fbfaff;border:1px solid var(--glass-line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:600px;max-width:94vw;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.98);transition:transform .25s}
+.modal.wide{width:1000px}
+.overlay.show .modal{transform:translateY(0) scale(1)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 12px;position:sticky;top:0;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.5));backdrop-filter:blur(10px);z-index:2}
+.modal-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.modal-close{width:32px;height:32px;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-size:17px;cursor:pointer;-webkit-appearance:none}
+.modal-body{padding:0 24px 24px}
+.preset-bar{display:flex;align-items:center;gap:10px;padding:6px 0 12px;border-bottom:1px solid rgba(139,92,246,.1);margin-bottom:6px}
+.preset-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
+.preset-chips{display:flex;gap:8px;flex-wrap:wrap}
+.preset-chip{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .18s}
+.preset-chip:hover{border-color:var(--accent);color:var(--accent)}
+.preset-chip .pc-save{font-size:11px;color:var(--ink-mute);border:none;background:none;cursor:pointer;padding:0 2px}
+.preset-chip .pc-save:hover{color:var(--accent)}
+.opt-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(139,92,246,.1)}
+.opt-row:last-child{border-bottom:none}
+.opt-label{font-size:14px;font-weight:600}
+.opt-label .hint{display:block;font-size:11px;font-weight:500;color:var(--ink-mute);margin-top:2px}
+.opt-ctrl{display:flex;align-items:center;gap:10px}
+.slider{-webkit-appearance:none;width:180px;height:6px;border-radius:100px;background:rgba(139,92,246,.18);outline:none}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.4)}
+.opt-val{min-width:54px;text-align:right;font-size:16px;font-weight:800;color:var(--accent)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.m-btn{padding:11px 22px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
+.m-btn:hover{transform:translateY(-2px)}
+.m-btn.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3))}
+.m-btn.danger{border:none;color:#fff;background:var(--red)}
+
+/* Header icon button (settings gear) */
+.icon-btn{width:40px;height:40px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-size:18px;cursor:pointer;-webkit-appearance:none;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.icon-btn:hover{background:#fff;transform:translateY(-1px) rotate(30deg)}
+
+/* Numeric keypad */
+.keypad-modal{max-width:320px}
+.kp-display{display:flex;align-items:baseline;justify-content:center;gap:6px;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:14px;padding:16px;margin-bottom:14px}
+.kp-display #kpValue{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--accent);min-height:44px}
+.kp-display .kp-unit{font-size:16px;font-weight:700;color:var(--ink-mute)}
+.kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.kp-key{height:56px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:22px;font-weight:700;color:var(--ink);cursor:pointer;-webkit-appearance:none;transition:all .12s}
+.kp-key:hover{background:var(--glass-hi)} .kp-key:active{transform:scale(.94)}
+.kp-key.kp-del{color:var(--red);font-size:19px}
+
+/* Settings rows + toggle switch */
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--glass-line)}
+.set-row:last-child{border-bottom:none}
+.set-info{min-width:0}
+.set-name{font-size:14px;font-weight:800;color:var(--ink)}
+.set-desc{font-size:11px;color:var(--ink-mute);margin-top:2px;line-height:1.3}
+.switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .track{position:absolute;inset:0;background:var(--glass-line);border-radius:100px;transition:.25s;cursor:pointer}
+.switch .track:before{content:'';position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked+.track{background:linear-gradient(135deg,var(--accent),var(--accent3))}
+.switch input:checked+.track:before{transform:translateX(20px)}
+
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:10px 13px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:14px;color:var(--ink);-webkit-appearance:none;resize:vertical}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.edit-sim{background:#fff;border:1px solid var(--glass-line);border-radius:14px;padding:12px;margin:13px 0}
+.edit-sim-title{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-bottom:8px}
+.edit-sim canvas{width:100%;height:140px;display:block}
+.steps-list{display:flex;flex-direction:column;gap:8px}
+.step-card{background:#fff;border:1px solid var(--glass-line);border-radius:11px;padding:11px 13px}
+.step-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.step-name{font-size:13px;font-weight:700}
+.step-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:uppercase}
+.step-badge.flow{background:rgba(56,189,248,.15);color:var(--steam)}
+.step-badge.pressure{background:rgba(99,102,241,.15);color:var(--accent)}
+.step-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.step-in{display:flex;flex-direction:column;gap:3px}
+.step-in label{font-size:10px;font-weight:600;color:var(--ink-mute)}
+.step-in input{padding:6px 8px;border-radius:8px;border:1px solid var(--glass-line);background:#f8f8ff;font-family:var(--font);font-size:13px;font-weight:600;-webkit-appearance:none}
+
+/* Full profile browser grid */
+.browse-tabs{display:flex;gap:8px;margin-bottom:14px}
+.browse-tab{padding:8px 16px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-size:12px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+.browse-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none}
+.browse-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.browse-card{background:#fff;border:1px solid var(--glass-line);border-radius:14px;padding:13px;cursor:pointer;transition:all .2s;position:relative}
+.browse-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.browse-card.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.2)}
+.bc-thumb{width:100%;height:70px;border-radius:10px;background:#f8f8ff;position:relative;overflow:hidden;margin-bottom:9px}
+.bc-thumb canvas{position:absolute;inset:0;width:100%;height:100%}
+.bc-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-meta{font-size:10px;color:var(--ink-mute);margin-top:2px}
+.bc-actions{position:absolute;top:9px;right:9px;display:flex;gap:5px}
+.bc-btn{width:26px;height:26px;border-radius:8px;border:1px solid var(--glass-line);background:rgba(255,255,255,.9);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none}
+.bc-btn.fav.on{color:var(--amber)} .bc-btn.fav{color:var(--ink-mute)}
+
+/* Stars */
+.stars{display:flex;gap:5px}
+.star{font-size:26px;color:rgba(139,92,246,.25);cursor:pointer;transition:color .15s;line-height:1}
+.star.on{color:var(--amber)}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);padding:13px 26px;border-radius:100px;font-size:14px;font-weight:700;color:var(--ink);background:var(--glass-hi);backdrop-filter:blur(24px);border:1px solid var(--glass-line);box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:all .3s;z-index:300}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{color:var(--green)}.toast.err{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="stage-wrap">
+<div class="app">
+
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <header class="glass">
+    <div class="water-bg">
+      <div class="water-fill" id="waterFill" style="height:0%">
+        <svg viewBox="0 0 1280 18" preserveAspectRatio="none">
+          <path class="wave-path" d=""><animate attributeName="d" dur="5s" repeatCount="indefinite"
+            values="M0,9 Q160,16 320,9 T640,9 T960,9 T1280,9 V18 H0 Z;M0,9 Q160,2 320,9 T640,9 T960,9 T1280,9 V18 H0 Z;M0,9 Q160,16 320,9 T640,9 T960,9 T1280,9 V18 H0 Z"/></path>
+        </svg>
+      </div>
+    </div>
+    <div class="brand"><h1>Liquid Aqua</h1><span id="machineName">Espresso Studio</span></div>
+
+    <div class="water-readout">
+      <span class="water-icon">💧</span>
+      <div class="water-nums"><div class="pct"><span id="waterPct">—</span>%</div><div class="lbl">Tank Level</div></div>
+      <span class="water-warn" id="waterWarn" style="display:none">⚠ Refill</span>
+    </div>
+
+    <div class="hdr-group">
+      <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
+        <span class="ico" id="shotIco">▶</span><span id="shotLbl">Start</span>
+      </button>
+      <button class="act-btn steam" id="btnSteam" disabled>
+        <span class="cfg-dot"></span><span class="ico">♨️</span><span>Steam</span>
+        <span class="gear-hint" id="steamHint"></span>
+      </button>
+      <button class="act-btn flush" id="btnFlush" disabled>
+        <span class="cfg-dot"></span><span class="ico">🚿</span><span>Flush</span>
+        <span class="gear-hint" id="flushHint"></span>
+      </button>
+      <button class="act-btn sleep" id="btnSleep" onclick="doSleep()" disabled>
+        <span class="ico">🌙</span><span>Sleep</span>
+      </button>
+      <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()">
+        <span class="status-dot" id="statusDot"></span><span id="statusLabel">Connect</span>
+      </button>
+      <button class="icon-btn" id="btnSettings" onclick="openSettings()" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ── Center ────────────────────────────────────────────────── -->
+  <div class="center">
+    <div class="live glass">
+      <div class="live-top">
+        <div>
+          <div class="live-label">Live Weight</div>
+          <div class="weight-row">
+            <span class="weight-num zero" id="weightNum">0.0</span><span class="weight-unit">g</span>
+            <button class="tare-btn" id="btnTare" onclick="doTare()" disabled>⊘ Tare</button>
+          </div>
+        </div>
+        <div><div class="live-label" style="text-align:right">Timer</div><div class="timer-big" id="timerBig">0:00</div></div>
+      </div>
+      <div class="gauges">
+        <div class="gauge"><div class="gauge-head"><span class="gauge-name">Pressure</span><span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span></div><div class="gauge-track"><div class="gauge-fill pressure" id="pressureBar" style="width:0%"></div></div></div>
+        <div class="gauge"><div class="gauge-head"><span class="gauge-name">Flow</span><span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span></div><div class="gauge-track"><div class="gauge-fill flow" id="flowBar" style="width:0%"></div></div></div>
+      </div>
+      <div class="temps">
+        <div class="temp-pill" title="Group head temperature — the brew group where coffee is extracted."><div class="temp-ico group">🔥</div><div class="temp-info"><div class="lbl">Group</div><div class="val"><span id="groupTemp">—</span><span class="u">°C</span></div></div></div>
+        <div class="temp-pill" title="Mix temperature — final blended water temperature delivered to the puck."><div class="temp-ico mix">💧</div><div class="temp-info"><div class="lbl">Mix</div><div class="val"><span id="mixTemp">—</span><span class="u">°C</span></div></div></div>
+        <div class="temp-pill" title="Steam boiler temperature — for milk steaming."><div class="temp-ico steam">♨️</div><div class="temp-info"><div class="lbl">Steam</div><div class="val"><span id="steamTempDisp">—</span><span class="u">°C</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="chart-card glass">
+      <div class="chart-head"><span class="chart-title">Extraction Graph</span>
+        <button class="cur-browse" onclick="openShotLog()" style="margin-right:auto;margin-left:12px">Shot Log ▤</button>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Weight</span>
+        </div>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Right ─────────────────────────────────────────────────── -->
+  <div class="right">
+    <!-- Album carousel: center = current profile, sides = favorites -->
+    <div class="carousel-card glass">
+      <div class="cc-head"><span class="cur-tag">Profile</span><button class="cur-browse" onclick="openEditPage()">Edit ✎</button></div>
+      <div class="carousel">
+        <button class="car-nav prev" onclick="carouselMove(-1)">‹</button>
+        <div class="carousel-stage" id="carouselStage"><div class="car-empty">Loading…</div></div>
+        <button class="car-nav next" onclick="carouselMove(1)">›</button>
+      </div>
+      <div class="cc-name" id="curName">—</div>
+      <div class="cc-meta" id="curMeta">—</div>
+      <div class="cc-hint" id="ccHint">Tap center album to load</div>
+      <!-- card navigation: tap a card to load that profile instantly -->
+      <div class="nav-cards" id="navCards"></div>
+    </div>
+
+    <div class="recipe glass">
+      <div class="recipe-title">Recipe</div>
+      <div class="dose-row">
+        <div class="dose-block">
+          <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
+            <div class="dose-num tap" id="doseIn" onclick="openKeypad('doseIn')">18.0</div>
+            <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
+          <div class="dose-lbl">Dose g</div>
+        </div>
+        <div class="ratio-badge">
+          <div class="dose-adj"><button class="ms-btn sm" onclick="adjustRatio(-0.1)">−</button>
+            <div class="rv tap" onclick="openKeypad('ratio')">1:<span id="ratioTag">2.0</span></div>
+            <button class="ms-btn sm" onclick="adjustRatio(0.1)">+</button></div>
+          <div class="rl">Ratio</div>
+        </div>
+        <div class="dose-block">
+          <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
+            <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')">36.0</div>
+            <button class="ms-btn" onclick="adjust('doseOut',0.5)">+</button></div>
+          <div class="dose-lbl">Yield g</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bean-info glass">
+      <div class="bean-row">
+        <div class="bean-ico">🫘</div>
+        <div class="bean-txt"><div class="bean-name" id="beanName">No bean selected</div><div class="bean-sub" id="beanSub">Tap edit to add beans &amp; grinder</div></div>
+        <button class="bean-edit" onclick="openBeanModal()">Edit</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ── Profile Editor full page ────────────────────────────────── -->
+<div class="editpage" id="editPage">
+  <div class="ep-head">
+    <div class="ep-title">Profile Editor</div>
+    <button class="ep-close" onclick="closeEditPage()">✕ Close</button>
+  </div>
+  <div class="ep-body">
+    <div class="ep-list glass" id="epList"></div>
+    <div class="ep-editor glass">
+      <div class="ep-editor-inner" id="epEditor">
+        <div class="ep-placeholder">← Select a profile to edit</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Steam modal ─────────────────────────────────────────────── -->
+<div class="overlay" id="steamOverlay" onclick="closeModal(event,'steamOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title">♨️ Steam Options</div><button class="modal-close" onclick="closeModal(null,'steamOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="preset-bar"><span class="preset-lbl">Presets</span><div class="preset-chips" id="steamPresets"></div></div>
+    <div class="opt-row"><div class="opt-label">Target Temperature<span class="hint">135–160 °C · 0 = off</span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamTemp" min="0" max="165" step="1" oninput="optChange('steamTemp',this.value)"><span class="opt-val"><span id="steamTempV">150</span>°</span></div></div>
+    <div class="opt-row"><div class="opt-label">Duration<span class="hint">max steaming seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamDur" min="0" max="120" step="1" oninput="optChange('steamDur',this.value)"><span class="opt-val"><span id="steamDurV">50</span>s</span></div></div>
+    <div class="opt-row"><div class="opt-label">Flow<span class="hint">steam flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamFlow" min="0" max="2.5" step="0.1" oninput="optChange('steamFlow',this.value)"><span class="opt-val"><span id="steamFlowV">0.8</span></span></div></div>
+    <div class="modal-actions" id="steamActions"><button class="m-btn" onclick="closeModal(null,'steamOverlay')">Close</button><button class="m-btn primary" onclick="saveSteam()">Save Options</button></div>
+  </div></div>
+</div>
+
+<!-- ── Flush modal ─────────────────────────────────────────────── -->
+<div class="overlay" id="flushOverlay" onclick="closeModal(event,'flushOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title">🚿 Flush Options</div><button class="modal-close" onclick="closeModal(null,'flushOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="preset-bar"><span class="preset-lbl">Presets</span><div class="preset-chips" id="flushPresets"></div></div>
+    <div class="opt-row"><div class="opt-label">Temperature<span class="hint">flush water temperature</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushTemp" min="60" max="95" step="1" oninput="optChange('flushTemp',this.value)"><span class="opt-val"><span id="flushTempV">88</span>°</span></div></div>
+    <div class="opt-row"><div class="opt-label">Duration<span class="hint">flush seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushDur" min="1" max="20" step="1" oninput="optChange('flushDur',this.value)"><span class="opt-val"><span id="flushDurV">10</span>s</span></div></div>
+    <div class="opt-row"><div class="opt-label">Flow<span class="hint">flush flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushFlow" min="1" max="10" step="0.5" oninput="optChange('flushFlow',this.value)"><span class="opt-val"><span id="flushFlowV">6.0</span></span></div></div>
+    <div class="modal-actions" id="flushActions"><button class="m-btn" onclick="closeModal(null,'flushOverlay')">Close</button><button class="m-btn primary" onclick="saveFlush()">Save Options</button></div>
+  </div></div>
+</div>
+
+<!-- ── Bean / Grinder modal ────────────────────────────────────── -->
+<div class="overlay" id="beanOverlay" onclick="closeModal(event,'beanOverlay')">
+  <div class="modal"><div class="modal-body" style="padding:22px 24px"><div style="color:var(--ink-mute)">Opening manager…</div></div></div>
+</div>
+
+<!-- ── Beans & Grinder full page ───────────────────────────────── -->
+<div class="editpage" id="beanPage">
+  <div class="ep-head">
+    <div class="ep-title">Beans &amp; Grinders</div>
+    <button class="ep-close" onclick="closeBeanPage()">✕ Close</button>
+  </div>
+  <div class="ep-body">
+    <div class="ep-list glass" id="bgList"></div>
+    <div class="ep-editor glass"><div class="ep-editor-inner" id="bgEditor"><div class="ep-placeholder">← Select or add an item</div></div></div>
+  </div>
+</div>
+
+<!-- ── Shot Log history full page ──────────────────────────────── -->
+<div class="editpage" id="shotLogPage">
+  <div class="ep-head">
+    <div class="ep-title">Shot Log</div>
+    <button class="ep-close" onclick="closeShotLog()">✕ Close</button>
+  </div>
+  <div class="ep-body">
+    <div class="ep-list glass" id="slList"></div>
+    <div class="ep-editor glass"><div class="ep-editor-inner" id="slDetail"><div class="ep-placeholder">← Select a shot</div></div></div>
+  </div>
+</div>
+
+<!-- ── DYE (post-shot log) ─────────────────────────────────────── -->
+<div class="overlay" id="dyeOverlay" onclick="closeModal(event,'dyeOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title">☕ Log Your Espresso</div><button class="modal-close" onclick="closeModal(null,'dyeOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="field-row">
+      <div class="field"><label>Actual Dose (g)</label><input id="dyeDose" type="number" step="0.1"></div>
+      <div class="field"><label>Actual Yield (g)</label><input id="dyeYield" type="number" step="0.1"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>TDS %</label><input id="dyeTds" type="number" step="0.01" placeholder="optional"></div>
+      <div class="field"><label>Extraction Yield %</label><input id="dyeEy" type="number" step="0.1" placeholder="auto"></div>
+    </div>
+    <div class="field"><label>Enjoyment</label><div class="stars" id="dyeStars">
+      <span class="star" onclick="setDyeStar(1)">★</span><span class="star" onclick="setDyeStar(2)">★</span><span class="star" onclick="setDyeStar(3)">★</span><span class="star" onclick="setDyeStar(4)">★</span><span class="star" onclick="setDyeStar(5)">★</span>
+    </div></div>
+    <div class="field"><label>Notes</label><textarea id="dyeNotes" rows="2" placeholder="Tasting notes…"></textarea></div>
+    <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'dyeOverlay')">Skip</button><button class="m-btn primary" onclick="saveDye()">Save Log</button></div>
+  </div></div>
+</div>
+
+<!-- ── Numeric keypad ──────────────────────────────────────────── -->
+<div class="overlay" id="keypadOverlay" onclick="closeModal(event,'keypadOverlay')">
+  <div class="modal keypad-modal"><div class="modal-head"><div class="modal-title" id="kpTitle">Enter value</div><button class="modal-close" onclick="closeModal(null,'keypadOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="kp-display"><span id="kpValue">0</span><span class="kp-unit" id="kpUnit">g</span></div>
+    <div class="kp-grid">
+      <button class="kp-key" onclick="kpPress('7')">7</button><button class="kp-key" onclick="kpPress('8')">8</button><button class="kp-key" onclick="kpPress('9')">9</button>
+      <button class="kp-key" onclick="kpPress('4')">4</button><button class="kp-key" onclick="kpPress('5')">5</button><button class="kp-key" onclick="kpPress('6')">6</button>
+      <button class="kp-key" onclick="kpPress('1')">1</button><button class="kp-key" onclick="kpPress('2')">2</button><button class="kp-key" onclick="kpPress('3')">3</button>
+      <button class="kp-key" onclick="kpPress('.')">.</button><button class="kp-key" onclick="kpPress('0')">0</button><button class="kp-key kp-del" onclick="kpPress('del')">⌫</button>
+    </div>
+    <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'keypadOverlay')">Cancel</button><button class="m-btn primary" onclick="kpConfirm()">Set</button></div>
+  </div></div>
+</div>
+
+<!-- ── Settings ────────────────────────────────────────────────── -->
+<div class="overlay" id="settingsOverlay" onclick="closeModal(event,'settingsOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title">⚙ Settings</div><button class="modal-close" onclick="closeModal(null,'settingsOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="set-row">
+      <div class="set-info"><div class="set-name">Auto-open shot log</div><div class="set-desc">Show the Log Your Espresso form as soon as a shot ends.</div></div>
+      <label class="switch"><input type="checkbox" id="setAutoDye" onchange="toggleAutoDye(this.checked)"><span class="track"></span></label>
+    </div>
+    <div class="set-row">
+      <div class="set-info"><div class="set-name">Gateway</div><div class="set-desc">Open the Decaid gateway web interface in a new tab.</div></div>
+      <button class="m-btn primary" onclick="openGateway()">Open ↗</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── Fit 1280x800 ────────────────────────────────────────────────────
+function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window.innerWidth/1280,window.innerHeight/800,1.6);
+  // Snap near-1 scales to exactly 1 and drop the transform entirely so text stays pixel-crisp.
+  if(s>=0.97&&s<=1.04){ a.style.transform='none'; }
+  else { a.style.transform='scale('+s+')'; a.style.transformOrigin='center center'; } }
+window.addEventListener('resize', function(){ fitStage(); drawChart(); });
+
+var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='http://'+h+':8080'; return {http:b,ws:b.replace('http','ws')}; })();
+
+var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
+  connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotStart:null, shotTick:null,
+  water:{current:0,refill:0}, ghc:false, lastShotId:null, dyeStars:0 };
+var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0 };
+var chart={ pressure:[], flow:[], weight:[], frame:[], max:600 };
+var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
+var beans=[], grinders=[], context={};
+
+// ── WebSockets ──────────────────────────────────────────────────────
+var sockets={};
+function openWs(name,path,onMsg){ var url=GATEWAY.ws+path;
+  function connect(){ if(sockets[name]&&sockets[name].readyState<=1) return; var ws=new WebSocket(url); sockets[name]=ws;
+    ws.onopen=function(){ if(name==='display'){ ws.send(JSON.stringify({command:'requestWakeLock'})); ws.send(JSON.stringify({command:'setBrightness',brightness:92})); } };
+    ws.onmessage=function(e){ try{ onMsg(JSON.parse(e.data)); }catch(_){} };
+    ws.onclose=function(){ setTimeout(connect,2000); }; ws.onerror=function(){ ws.close(); }; }
+  connect(); }
+function initWebSockets(){
+  openWs('machine','/ws/v1/machine/snapshot',function(s){
+    state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame);
+    var ms=s.state||{state:'idle',substate:'idle'}; var prev=state.machine.state; state.machine=ms; onMachineState(ms,prev); updateMachineUI(); });
+  openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); return; }
+    if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); if(chart.weight.length>chart.max) chart.weight.shift(); } } });
+  openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
+  openWs('devices','/ws/v1/devices',function(m){
+    var phase=m.connectionStatus&&m.connectionStatus.phase;
+    var scanning=(phase==='scanning'||phase==='connectingMachine'||phase==='connectingScale');
+    // A connected machine in the device list means we're connected, regardless of phase.
+    var machineConnected=false, scaleConnected=false, machineName=null;
+    if(m.devices){ m.devices.forEach(function(d){
+      if(d.type==='machine'){ if(!machineName) machineName=d.name; if(d.state==='connected') machineConnected=true; }
+      if(d.type==='scale'&&d.state==='connected') scaleConnected=true;
+    }); }
+    var wasConnected=state.connected;
+    state.connected=machineConnected||(phase==='ready');
+    state.scaleConnected=scaleConnected;
+    updateConnUI(state.connected?'on':(scanning?'ing':'off'));
+    if(machineName) document.getElementById('machineName').textContent=machineName;
+    var err=m.connectionStatus&&m.connectionStatus.error; if(err&&err.suggestion) toast(err.suggestion,'err');
+    if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); }
+    updateShotBtn(); });
+  openWs('display','/ws/v1/display',function(){});
+}
+
+// ── GHC detection: decide Steam/Flush button behavior ───────────────
+function loadMachineInfo(){ api('GET','/api/v1/machine/info').then(function(info){ if(!info) return; state.ghc=!!info.GHC; applyActionMode(); }).catch(function(){}); }
+function applyActionMode(){
+  // GHC present -> physical buttons control the machine, so our buttons open SETTINGS.
+  // No GHC -> our buttons perform the ACTION; long-press opens settings.
+  var steam=document.getElementById('btnSteam'), flush=document.getElementById('btnFlush');
+  var sh=document.getElementById('steamHint'), fh=document.getElementById('flushHint');
+  clearBtn(steam); clearBtn(flush);
+  if(state.ghc){
+    steam.onclick=openSteamModal; flush.onclick=openFlushModal;
+    sh.textContent='opens options'; fh.textContent='opens options';
+  } else {
+    bindActionLongPress(steam, function(){ doSteamAction(); }, openSteamModal);
+    bindActionLongPress(flush, function(){ doFlushAction(); }, openFlushModal);
+    sh.textContent='tap=run · hold=options'; fh.textContent='tap=run · hold=options';
+  }
+}
+function clearBtn(b){ b.onclick=null; b.onmousedown=null; b.onmouseup=null; b.onmouseleave=null; b.ontouchstart=null; b.ontouchend=null; }
+function bindActionLongPress(btn, tapFn, holdFn){
+  var timer=null, held=false;
+  function start(){ held=false; timer=setTimeout(function(){ held=true; holdFn(); }, 550); }
+  function end(){ if(timer){ clearTimeout(timer); timer=null; } if(!held) tapFn(); }
+  btn.onmousedown=start; btn.onmouseup=end; btn.onmouseleave=function(){ if(timer){clearTimeout(timer);timer=null;} };
+  btn.ontouchstart=function(e){ e.preventDefault(); start(); }; btn.ontouchend=function(e){ e.preventDefault(); end(); };
+}
+// tap toggles: if machine already in that state, stop (go idle); else start.
+function doSteamAction(){ if(state.machine.state==='steam') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Steam stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/steam').then(function(){toast('Steam started','ok');}).catch(function(){toast('Steam failed','err');}); }
+function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Flush stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/flush').then(function(){toast('Flush started','ok');}).catch(function(){toast('Flush failed','err');}); }
+
+// ── Machine state ───────────────────────────────────────────────────
+function onMachineState(ms,prev){
+  var pouring=(ms.state==='espresso');
+  if(pouring&&!state.shotRunning){ startTimer(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[]; }
+  if(!pouring&&state.shotRunning){ stopTimer(); setTimeout(afterShot,1500); }
+  state.shotRunning=pouring;
+  if(pouring){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0);
+    if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); drawChart(); }
+}
+function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } }).catch(function(){}); }
+
+// ── UI ──────────────────────────────────────────────────────────────
+function updateMachineUI(){
+  document.getElementById('groupTemp').textContent=state.groupTemp.toFixed(1);
+  document.getElementById('mixTemp').textContent=state.mixTemp.toFixed(1);
+  document.getElementById('steamTempDisp').textContent=state.steamTemp.toFixed(0);
+  document.getElementById('pressureVal').innerHTML=state.pressure.toFixed(1)+'<span class="u"> bar</span>';
+  document.getElementById('pressureBar').style.width=Math.min(state.pressure/12*100,100)+'%';
+  document.getElementById('flowVal').innerHTML=state.flow.toFixed(1)+'<span class="u"> ml/s</span>';
+  document.getElementById('flowBar').style.width=Math.min(state.flow/8*100,100)+'%';
+  document.getElementById('waterFill').style.background=waterFillGrad();
+  updateShotBtn();
+}
+function updateScaleUI(){ var el=document.getElementById('weightNum');
+  if(!state.scaleConnected||state.scaleWeight===null){ el.textContent='0.0'; el.className='weight-num zero'; return; }
+  el.textContent=state.scaleWeight.toFixed(1); el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':''); }
+// Tank fill gradient reflects the active machine action (low-water warning overrides).
+function waterFillGrad(){ var pct=state.water.current, st=state.machine.state;
+  if(pct<15) return 'linear-gradient(180deg,rgba(239,68,68,.32),rgba(249,115,22,.42))';       // low water: red/orange
+  if(st==='espresso') return 'linear-gradient(180deg,rgba(245,158,11,.34),rgba(180,83,9,.46))'; // extraction: amber/brown
+  if(st==='steam')    return 'linear-gradient(180deg,rgba(244,114,182,.34),rgba(239,68,68,.46))';// steam: pink/red
+  if(st==='flush')    return 'linear-gradient(180deg,rgba(45,212,191,.34),rgba(6,182,212,.46))'; // flush: teal/cyan
+  if(st==='hotWater') return 'linear-gradient(180deg,rgba(56,189,248,.34),rgba(14,165,233,.46))';// hot water: bright blue
+  return 'linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4))';                     // idle: default
+}
+function updateWaterUI(){ var pct=state.water.current;
+  document.getElementById('waterPct').textContent=pct; document.getElementById('waterFill').style.height=Math.min(pct,100)+'%';
+  document.getElementById('waterWarn').style.display=(pct<=state.water.refill||pct<15)?'inline':'none';
+  document.getElementById('waterFill').style.background=waterFillGrad(); }
+function updateShotBtn(){ var st=state.machine.state;
+  var btn=document.getElementById('btnShot'),ico=document.getElementById('shotIco'),lbl=document.getElementById('shotLbl');
+  btn.disabled=!state.connected;
+  if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent='Stop'; } else { btn.className='act-btn start'; ico.textContent='▶'; lbl.textContent='Start'; }
+  var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),sleep=document.getElementById('btnSleep');
+  steam.disabled=!state.connected; flush.disabled=!state.connected; sleep.disabled=!state.connected;
+  document.getElementById('btnTare').disabled=!state.scaleConnected;
+  // reflect running state with an 'active' color (only meaningful when GHC-less / actions)
+  steam.classList.toggle('active', st==='steam');
+  flush.classList.toggle('active', st==='flush');
+  sleep.classList.toggle('active', st==='sleeping'); }
+function updateConnUI(s){ var lbl=document.getElementById('statusLabel'),btn=document.getElementById('btnConnect');
+  if(s==='on'){ lbl.textContent='Connected'; btn.className='conn-toggle on'; } else if(s==='ing'){ lbl.textContent='Scanning…'; btn.className='conn-toggle ing'; } else { lbl.textContent='Connect'; btn.className='conn-toggle off'; } }
+
+// ── Timer & chart ───────────────────────────────────────────────────
+function startTimer(){ state.shotStart=Date.now(); if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
+function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
+function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000); document.getElementById('timerBig').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+var _chartRAF=null;
+function drawChart(){ if(_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
+var _chartDims={w:0,h:0};
+function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
+  // Only resize the backing store when dimensions actually change (resize is expensive).
+  if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
+  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  var padL=34, padR=8, padT=18, padB=22; // gutters: top for step labels, bottom for time
+  var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
+  var PMAX=12;
+  var N=chart.pressure.length;
+  var steps=(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[];
+  function px(i){ return X0+(N<2?0:(i/(N-1))*PW); }
+  function py(v,mx){ return Y0+PH-Math.min(v/mx,1)*(PH-6)-3; }
+
+  // Y grid + labels
+  ctx.strokeStyle='rgba(139,92,246,.08)'; ctx.lineWidth=1; ctx.font='600 11px Inter,sans-serif'; ctx.fillStyle='#6b6890'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(var i=0;i<=4;i++){ var y=Y0+(i/4)*PH; ctx.beginPath(); ctx.moveTo(X0,y); ctx.lineTo(X0+PW,y); ctx.stroke(); ctx.fillText(String(Math.round(PMAX-(i/4)*PMAX)), X0-4, y); }
+
+  // step boundaries (from recorded profileFrame transitions) + names + current highlight
+  if(N>1 && chart.frame.length===N){
+    var segStart=0, curFrame=chart.frame[0];
+    for(var k=1;k<=N;k++){
+      if(k===N || chart.frame[k]!==curFrame){
+        var x0=px(segStart), x1=px(k-1);
+        var st=steps[curFrame];
+        var isCurrent=(curFrame===state.profileFrame && state.shotRunning);
+        if(isCurrent){ ctx.fillStyle='rgba(99,102,241,.1)'; ctx.fillRect(x0,Y0,x1-x0,PH); }
+        // boundary line at segment end
+        ctx.strokeStyle='rgba(139,92,246,.28)'; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(x1,Y0); ctx.lineTo(x1,Y0+PH); ctx.stroke(); ctx.setLineDash([]);
+        // step name at top
+        if(st){ ctx.fillStyle=isCurrent?'#6366f1':'#a8a5c4'; ctx.font=(isCurrent?'700':'600')+' 10px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+          var nm=(st.name||('Step '+(curFrame+1))); ctx.fillText(nm.length>10?nm.slice(0,10):nm,(x0+x1)/2,2); }
+        // end-of-step point label (pressure value at segment end)
+        if(k<N && chart.frame[k]!==curFrame){ var pv=chart.pressure[k-1]; var ptx=x1, pty=py(pv,PMAX);
+          ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(ptx,pty,3,0,Math.PI*2); ctx.fill();
+          ctx.font='700 9px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(pv.toFixed(1),ptx,pty-4); }
+        segStart=k; if(k<N) curFrame=chart.frame[k];
+      }
+    }
+  }
+
+  // X labels (time seconds)
+  var totalSec=Math.max(1,N/10);
+  ctx.fillStyle='#6b6890'; ctx.font='600 11px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+  for(var j=0;j<=4;j++){ var xx=X0+(j/4)*PW; ctx.fillText(((j/4)*totalSec).toFixed(0)+'s', xx, Y0+PH+5); }
+
+  function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx));else ctx.lineTo(px(i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
+  line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',PMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
+
+  // live readouts at the leading edge
+  if(N>=1 && state.shotRunning){
+    var lx=px(N-1);
+    function tag(v,mx,color){ var y=py(v,mx); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(lx,y,3.5,0,Math.PI*2); ctx.fill(); ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(v.toFixed(1), lx-6, y); }
+    tag(chart.pressure[N-1],PMAX,'#6366f1'); tag(chart.flow[N-1],PMAX,'#38bdf8');
+  }
+}
+
+// ── REST ────────────────────────────────────────────────────────────
+function api(method,path,body){ var o={method:method,headers:{}}; if(body){o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body);} return fetch(GATEWAY.http+path,o).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); if(r.status===204) return null; return r.json(); }); }
+
+// ── Actions ─────────────────────────────────────────────────────────
+function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
+function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared','ok');}).catch(function(e){toast(e.message,'err');}); }
+function doSleep(){ if(state.machine.state==='sleeping') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Waking…','ok');}).catch(function(){toast('Wake failed','err');}); else api('PUT','/api/v1/machine/state/sleeping').then(function(){toast('Sleeping','ok');}).catch(function(){toast('Sleep failed','err');}); }
+function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast('Scan failed','err');}); }
+
+// ── Steam/Flush modals ──────────────────────────────────────────────
+function openSteamModal(){ syncSteamModal(); renderPresets('steam'); document.getElementById('steamOverlay').classList.add('show'); }
+function openFlushModal(){ syncFlushModal(); renderPresets('flush'); document.getElementById('flushOverlay').classList.add('show'); }
+function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show'); }
+
+// Presets (max 3 per kind), stored in localStorage.
+var presets={ steam:[], flush:[] };
+function loadPresets(){ try{ var p=JSON.parse(localStorage.getItem('aurora_presets')||'{}'); presets.steam=p.steam||[]; presets.flush=p.flush||[]; }catch(_){}
+  if(!presets.steam.length) presets.steam=[{n:'Latte',temp:150,dur:50,flow:0.8},{n:'Cappa',temp:155,dur:40,flow:1.0}];
+  if(!presets.flush.length) presets.flush=[{n:'Quick',temp:88,dur:5,flow:6},{n:'Deep',temp:92,dur:12,flow:6.5}]; }
+function savePresets(){ try{ localStorage.setItem('aurora_presets',JSON.stringify(presets)); }catch(_){} }
+function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); wrap.innerHTML='';
+  presets[kind].forEach(function(ps,i){ var chip=document.createElement('button'); chip.className='preset-chip';
+    chip.innerHTML='<span>'+escapeHtml(ps.n)+'</span>';
+    chip.onclick=function(){ applyPreset(kind,ps); };
+    wrap.appendChild(chip); });
+  if(presets[kind].length<3){ var add=document.createElement('button'); add.className='preset-chip'; add.style.borderStyle='dashed'; add.textContent='+ Save current';
+    add.onclick=function(){ addPreset(kind); }; wrap.appendChild(add); }
+}
+function applyPreset(kind,ps){ if(kind==='steam'){ set('steamTemp',ps.temp,'steamTempV'); set('steamDur',ps.dur,'steamDurV'); set('steamFlow',ps.flow,'steamFlowV',1); }
+  else { set('flushTemp',ps.temp,'flushTempV'); set('flushDur',ps.dur,'flushDurV'); set('flushFlow',ps.flow,'flushFlowV',1); } toast('Preset "'+ps.n+'" applied','ok'); }
+function addPreset(kind){ var name=prompt('Preset name?',(kind==='steam'?'Steam ':'Flush ')+(presets[kind].length+1)); if(!name) return;
+  if(kind==='steam') presets.steam.push({n:name,temp:+document.getElementById('steamTemp').value,dur:+document.getElementById('steamDur').value,flow:+document.getElementById('steamFlow').value});
+  else presets.flush.push({n:name,temp:+document.getElementById('flushTemp').value,dur:+document.getElementById('flushDur').value,flow:+document.getElementById('flushFlow').value});
+  savePresets(); renderPresets(kind); toast('Preset saved','ok'); }
+function syncSteamModal(){ set('steamTemp',settings.steamTemp,'steamTempV'); set('steamDur',settings.steamDur,'steamDurV'); set('steamFlow',settings.steamFlow,'steamFlowV',1); }
+function syncFlushModal(){ set('flushTemp',settings.flushTemp,'flushTempV'); set('flushDur',settings.flushDur,'flushDurV'); set('flushFlow',settings.flushFlow,'flushFlowV',1); }
+function set(id,v,vid,dec){ document.getElementById(id).value=v; document.getElementById(vid).textContent=dec?(+v).toFixed(1):v; }
+function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v; }
+function saveSteam(){ settings.steamTemp=+document.getElementById('steamTemp').value; settings.steamDur=+document.getElementById('steamDur').value; settings.steamFlow=+document.getElementById('steamFlow').value;
+  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){toast('Steam options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'steamOverlay'); }
+function saveFlush(){ settings.flushTemp=+document.getElementById('flushTemp').value; settings.flushDur=+document.getElementById('flushDur').value; settings.flushFlow=+document.getElementById('flushFlow').value;
+  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){toast('Flush options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'flushOverlay'); }
+
+// ── Recipe / ratio ──────────────────────────────────────────────────
+function adjust(key,delta){ settings[key]=parseFloat((settings[key]+delta).toFixed(1)); var c={doseIn:[5,30],doseOut:[10,80]}[key]; if(c) settings[key]=Math.max(c[0],Math.min(c[1],settings[key])); syncRecipe(); pushRecipe(); }
+// Adjust the ratio directly -> recompute yield from current dose.
+function adjustRatio(delta){ var r=settings.doseIn>0?(settings.doseOut/settings.doseIn):2; r=Math.max(1,Math.min(4,parseFloat((r+delta).toFixed(2))));
+  settings.doseOut=parseFloat((settings.doseIn*r).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); syncRecipe(); pushRecipe(); }
+function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){ api('PUT','/api/v1/workflow',{context:{targetDoseWeight:settings.doseIn,targetYield:settings.doseOut}}).catch(function(){}); },600); }
+function syncRecipe(){
+  document.getElementById('doseIn').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOut').textContent=settings.doseOut.toFixed(1);
+  var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
+  document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—'; }
+
+// ── Numeric keypad (recipe editing) ─────────────────────────────────
+var KP={ field:null, str:'', unit:'g', fresh:true };
+var KP_CFG={ doseIn:{title:'Dose (g)',unit:'g',min:5,max:30}, doseOut:{title:'Yield (g)',unit:'g',min:10,max:80}, ratio:{title:'Ratio (1:x)',unit:'',min:1,max:4} };
+function openKeypad(field){ var c=KP_CFG[field]; if(!c) return; KP.field=field; KP.unit=c.unit; KP.fresh=true;
+  var cur=field==='ratio'?(settings.doseIn>0?(settings.doseOut/settings.doseIn):2):settings[field];
+  KP.str=String(parseFloat(cur.toFixed(field==='doseIn'?1:field==='ratio'?2:1)));
+  document.getElementById('kpTitle').textContent=c.title; document.getElementById('kpUnit').textContent=c.unit;
+  kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
+function kpRender(){ document.getElementById('kpValue').textContent=KP.str.length?KP.str:'0'; }
+function kpPress(k){
+  // first key press after opening replaces the pre-filled value
+  if(KP.fresh&&k!=='del'){ KP.str=''; KP.fresh=false; }
+  else { KP.fresh=false; }
+  if(k==='del'){ KP.str=KP.str.slice(0,-1); }
+  else if(k==='.'){ if(KP.str.indexOf('.')<0) KP.str=(KP.str.length?KP.str:'0')+'.'; }
+  else { KP.str+=k; if(KP.str.replace('.','').length>5) KP.str=KP.str.slice(0,6); }
+  kpRender(); }
+function kpConfirm(){ var c=KP_CFG[KP.field]; var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'keypadOverlay'); return; }
+  v=Math.max(c.min,Math.min(c.max,v));
+  if(KP.field==='ratio'){ settings.doseOut=parseFloat((settings.doseIn*v).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); }
+  else { settings[KP.field]=parseFloat(v.toFixed(1)); }
+  syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
+
+// ── Preferences & settings ──────────────────────────────────────────
+var prefs={ autoDye:true };
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; }catch(_){ } }
+function savePrefs(){ try{ localStorage.setItem('aurora_prefs',JSON.stringify(prefs)); }catch(_){ } }
+function openSettings(){ document.getElementById('setAutoDye').checked=prefs.autoDye; document.getElementById('settingsOverlay').classList.add('show'); }
+function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
+function openGateway(){ window.open(GATEWAY.http+'/','_blank'); }
+
+// ── Curve simulation ────────────────────────────────────────────────
+function simulateProfile(profile){ var steps=(profile&&profile.steps)||[]; var pts=[]; var t=0; var prevP=0,prevF=0;
+  steps.forEach(function(st){ var dur=Math.max(st.seconds||0,0.5); var isP=(st.pump==='pressure'); var tP=isP?(st.pressure||0):prevP; var tF=!isP?(st.flow||0):prevF; var smooth=(st.transition==='smooth'); var seg=Math.max(2,Math.round(dur*2));
+    for(var i=1;i<=seg;i++){ var f=i/seg; var p=isP?(prevP+(tP-prevP)*(smooth?f:1)):tP; var fl=!isP?(prevF+(tF-prevF)*(smooth?f:1)):tF; var showP=isP?p:Math.min(9,fl*1.6); var showF=!isP?fl:Math.max(0,8-p*0.4); pts.push({t:t+dur*f,p:showP,f:showF}); }
+    t+=dur; prevP=isP?tP:Math.min(9,tF*1.6); prevF=!isP?tF:Math.max(0,8-tP*0.4); });
+  return {pts:pts,total:t}; }
+function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
+  canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  var sim=simulateProfile(profile); if(sim.pts.length<2||sim.total<=0) return;
+  var pC=onColor?'rgba(255,255,255,.95)':'#6366f1', fC=onColor?'rgba(190,235,255,.9)':'#38bdf8', pFill=onColor?'rgba(255,255,255,.22)':'rgba(99,102,241,.15)';
+  function draw(field,color,mx,fill){ ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-6)-3; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
+  draw('p',pC,12,pFill); draw('f',fC,8,null); }
+
+// ── Profiles ────────────────────────────────────────────────────────
+// Titles use "{group}/{name}" — split into group (optional) + display name.
+function splitTitle(raw){ var t=String(raw||''); var i=t.indexOf('/'); if(i<0) return {group:'',name:t.trim()};
+  return {group:t.slice(0,i).trim(), name:t.slice(i+1).trim()||t.trim()}; }
+function profTitle(p){ return (p&&p.profile&&p.profile.title)||(p&&p.id)||''; }
+function loadFavs(){ try{ favIds=JSON.parse(localStorage.getItem('aurora_favs')||'{}'); }catch(_){ favIds={}; } }
+function saveFavs(){ try{ localStorage.setItem('aurora_favs',JSON.stringify(favIds)); }catch(_){} }
+function loadProfiles(){ api('GET','/api/v1/profiles?visibility=visible').then(function(data){ allProfiles=data||[];
+  if(Object.keys(favIds).length===0){ allProfiles.filter(function(p){return p.isDefault;}).slice(0,5).forEach(function(p){ favIds[p.id]=true; }); saveFavs(); }
+  buildCarousel(); }).catch(function(){ document.getElementById('carouselStage').innerHTML='<div class="car-empty">Connect to load</div>'; }); }
+
+// ── Album carousel (favorites; center = focused profile) ────────────
+var ALBUM_GRADS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#ec4899,#f97316)','linear-gradient(135deg,#38bdf8,#6366f1)','linear-gradient(135deg,#f59e0b,#ec4899)','linear-gradient(135deg,#10b981,#38bdf8)','linear-gradient(135deg,#8b5cf6,#ec4899)'];
+var carItems=[], carIndex=0;
+
+function carListProfiles(){ // favorites first; if none, first 6 profiles
+  var favs=allProfiles.filter(function(p){ return favIds[p.id]; });
+  if(!favs.length) favs=allProfiles.slice(0,6);
+  return favs;
+}
+function buildCarousel(){
+  carItems=carListProfiles();
+  var stage=document.getElementById('carouselStage'); stage.innerHTML='';
+  if(!carItems.length){ stage.innerHTML='<div class="car-empty">No profiles</div>'; return; }
+  carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id;
+    var el=document.createElement('div'); el.className='album';
+    el.style.background=ALBUM_GRADS[i%ALBUM_GRADS.length];
+    var curve=document.createElement('div'); curve.className='al-curve'; var cv=document.createElement('canvas'); curve.appendChild(cv);
+    var st=splitTitle(title);
+    var nm=document.createElement('div'); nm.className='al-name';
+    if(st.group){ var g=document.createElement('div'); g.className='al-group'; g.textContent=st.group; nm.appendChild(g); }
+    var nmt=document.createElement('div'); nmt.className='al-nametext'; nmt.textContent=st.name; nm.appendChild(nmt);
+    el.appendChild(curve); el.appendChild(nm);
+    el.onclick=function(){ if(i===carIndex) loadCentered(); else { carIndex=i; renderCarousel(); } };
+    stage.appendChild(el); p._el=el; p._curveCv=cv;
+    setTimeout(function(){ drawSimCurve(cv,p.profile,true); },0); });
+  // card navigation strip — tap a card to load that profile instantly
+  var nav=document.getElementById('navCards'); nav.innerHTML='';
+  carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id; var stn=splitTitle(title);
+    var c=document.createElement('div'); c.className='nav-card';
+    c.style.background='linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35)),'+ALBUM_GRADS[i%ALBUM_GRADS.length];
+    c.innerHTML='<span>'+escapeHtml(stn.name)+'</span>';
+    c.title=title;
+    c.onclick=function(){ carIndex=i; renderCarousel(); selectProfile(p); };
+    nav.appendChild(c); p._navEl=c; });
+  var curIdx=curProfileObj?carItems.findIndex(function(p){return p.id===curProfileObj.id;}):-1;
+  carIndex=curIdx>=0?curIdx:0;
+  renderCarousel();
+}
+function renderCarousel(){
+  carItems.forEach(function(p,i){ var off=i-carIndex; var abs=Math.abs(off);
+    if(off===0){
+      p._el.style.transform='translateX(0) scale(1.12)';
+    } else {
+      // flat slide: neighbours step out sideways, smaller (clipped at panel edge)
+      var tx=off*120, sc=Math.max(0.7,0.86-abs*0.09);
+      p._el.style.transform='translateX('+tx+'px) scale('+sc+')';
+    }
+    var op=abs>2?0:(off===0?1:0.55);
+    p._el.style.opacity=op; p._el.style.zIndex=100-abs; p._el.style.pointerEvents=abs>2?'none':'auto';
+    p._el.classList.toggle('center', off===0); p._el.classList.toggle('side', off!==0);
+    if(p._navEl) p._navEl.classList.toggle('active', i===carIndex); });
+  // redraw center curve crisp at its scaled size after transform applies
+  var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); }
+  var cur=carItems[carIndex]; if(cur){ var pr=cur.profile||{};
+    var stc=splitTitle(pr.title||cur.id);
+    document.getElementById('curName').textContent=stc.name;
+    document.getElementById('curMeta').textContent=(stc.group?stc.group+' · ':'')+(pr.author||'')+' · '+((pr.steps&&pr.steps.length)||0)+' steps';
+    var isCur=curProfileObj&&curProfileObj.id===cur.id;
+    var hint=document.getElementById('ccHint'); hint.textContent=isCur?'● Currently loaded':'Tap center card to load'; hint.className='cc-hint'+(isCur?' current':'');
+  }
+}
+function carouselMove(dir){ if(!carItems.length) return; carIndex=(carIndex+dir+carItems.length)%carItems.length; renderCarousel(); }
+function loadCentered(){ var p=carItems[carIndex]; if(p) selectProfile(p); }
+function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return; if(favIds[p.id]) delete favIds[p.id]; else favIds[p.id]=true; saveFavs(); buildCarousel(); }
+
+function selectProfile(p){ var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
+  api('PUT','/api/v1/workflow',{profile:p.profile}).then(function(){ toast('▶ '+title,'ok'); renderCarousel(); }).catch(function(){ toast('Profile error','err'); }); }
+function updateCurProfile(){ renderCarousel(); }
+
+// ── Profile Editor full page ────────────────────────────────────────
+var epSelected=null;
+function openEditPage(){ renderEpList(); document.getElementById('editPage').classList.add('show');
+  // open the currently centered profile by default
+  var c=carItems[carIndex]||allProfiles[0]; if(c) epSelect(c); }
+function closeEditPage(){ document.getElementById('editPage').classList.remove('show'); }
+var epItemEls={};       // id -> row element (to toggle .active without full rebuild)
+var epCurveObserver=null; // lazily draw curves only when a row scrolls into view
+function ensureCurveObserver(){ if(epCurveObserver||!('IntersectionObserver' in window)) return;
+  epCurveObserver=new IntersectionObserver(function(entries){ entries.forEach(function(en){ if(en.isIntersecting){ var cv=en.target; if(!cv._drawn){ cv._drawn=true; drawSimCurve(cv,cv._profile); } epCurveObserver.unobserve(cv); } }); }, {root:document.getElementById('epList'),rootMargin:'120px'}); }
+function renderEpList(){ var list=document.getElementById('epList'); list.innerHTML=''; epItemEls={}; ensureCurveObserver();
+  // Favorites first, then groups by "{group}/" prefix; ungrouped under "Other".
+  var favList=allProfiles.filter(function(p){ return favIds[p.id]; });
+  var groups={}, order=[];
+  allProfiles.forEach(function(p){ var st=splitTitle(profTitle(p)); var key=st.group||'Other';
+    if(!groups[key]){ groups[key]=[]; order.push(key); } groups[key].push({p:p,st:st}); });
+  order.sort(function(a,b){ if(a==='Other') return 1; if(b==='Other') return -1; return a.localeCompare(b); });
+  function addItem(p,st){ var author=(p.profile&&p.profile.author)||'';
+    var it=document.createElement('div'); it.className='ep-item'+(editing&&editing.id===p.id?' active':'');
+    var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
+    var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
+    body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(author)+' · '+((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' steps</div>';
+    var fav=document.createElement('button'); fav.className='fav-btn'+(favIds[p.id]?' on':''); fav.textContent=favIds[p.id]?'★':'☆'; fav.title='Toggle favorite';
+    fav.onclick=function(e){ e.stopPropagation(); toggleFav(p.id); };
+    it.appendChild(th); it.appendChild(body); it.appendChild(fav);
+    it.onclick=function(){ epSelect(p); };
+    list.appendChild(it); (epItemEls[p.id]=epItemEls[p.id]||[]).push(it);
+    if(epCurveObserver) epCurveObserver.observe(cv); else drawSimCurve(cv,p.profile); }
+  if(favList.length){ var fh=document.createElement('div'); fh.className='ep-group-head fav'; fh.textContent='★ Favorites · '+favList.length; list.appendChild(fh);
+    favList.forEach(function(p){ addItem(p,splitTitle(profTitle(p))); }); }
+  order.forEach(function(key){
+    var hd=document.createElement('div'); hd.className='ep-group-head'; hd.textContent=key+' · '+groups[key].length; list.appendChild(hd);
+    groups[key].forEach(function(rec){ addItem(rec.p,rec.st); }); }); }
+var FAV_MAX=5;
+function toggleFav(id){ if(favIds[id]){ delete favIds[id]; }
+  else { if(Object.keys(favIds).length>=FAV_MAX){ toast('Favorites limited to '+FAV_MAX,'err'); return; } favIds[id]=true; }
+  saveFavs(); renderEpList(); buildCarousel(); }
+function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
+  // just move the active highlight — no full list rebuild (keeps it fast)
+  Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.toggle('active', k===p.id); }); });
+  renderEpEditor(); }
+function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!editing){ wrap.innerHTML='<div class="ep-placeholder">← Select a profile</div>'; return; }
+  var pr=editing.profile||{};
+  wrap.innerHTML=''
+    +'<div class="ep-visual"><div class="ep-visual-title"><span>Pressure &amp; Flow Curve</span><span><span style="color:var(--accent)">■</span> pressure &nbsp;<span style="color:var(--steam)">■</span> flow</span></div><canvas id="epCurve"></canvas></div>'
+    +'<input class="ep-name-input" id="epName" value="'+escapeAttr(pr.title||'')+'">'
+    +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
+    +'<div class="ep-steps-title"><span>Steps</span><button class="ep-step-add" onclick="addStep()">+ Add step</button></div>'
+    +'<div class="ep-stepnav"><button class="nav" onclick="stepMove(-1)">‹</button><div class="ep-steptabs" id="epStepTabs"></div><button class="nav" onclick="stepMove(1)">›</button></div>'
+    +'<div id="epStepEditor"></div>'
+    +'<div class="ep-save-bar"><button class="m-btn" onclick="closeEditPage()">Cancel</button><button class="m-btn primary" onclick="saveProfilePage()">Save Profile</button></div>';
+  epStepIdx=Math.min(epStepIdx,(pr.steps&&pr.steps.length-1)||0); if(epStepIdx<0) epStepIdx=0;
+  renderEpSteps();
+  setTimeout(function(){ drawEditCurve(); },30);
+  document.getElementById('epName').oninput=function(){ editing.profile.title=this.value; };
+  document.getElementById('epNotes').oninput=function(){ editing.profile.notes=this.value; };
+}
+var epStepIdx=0;
+function stepMove(d){ var n=(editing.profile.steps||[]).length; if(!n) return; epStepIdx=(epStepIdx+d+n)%n; renderEpSteps(); drawEditCurve(); }
+function addStep(){ if(!editing.profile.steps) editing.profile.steps=[]; editing.profile.steps.push({name:'New step',pump:'pressure',transition:'smooth',pressure:6,temperature:90,seconds:10}); epStepIdx=editing.profile.steps.length-1; renderEpSteps(); drawEditCurve(); }
+function delStep(){ var s=editing.profile.steps; if(!s||s.length<=1) return; s.splice(epStepIdx,1); if(epStepIdx>=s.length) epStepIdx=s.length-1; renderEpSteps(); drawEditCurve(); }
+function renderEpSteps(){
+  var steps=editing.profile.steps||[];
+  // tabs
+  var tabs=document.getElementById('epStepTabs'); tabs.innerHTML='';
+  steps.forEach(function(st,i){ var isP=(st.pump==='pressure'); var t=document.createElement('button'); t.className='ep-steptab'+(isP?'':' flow')+(i===epStepIdx?' active':'');
+    t.textContent=(i+1)+'. '+(st.name||'Step'); t.onclick=function(){ epStepIdx=i; renderEpSteps(); drawEditCurve(); }; tabs.appendChild(t); });
+  // active step editor
+  var st=steps[epStepIdx]; var ed=document.getElementById('epStepEditor'); if(!st){ ed.innerHTML=''; return; }
+  var isP=(st.pump==='pressure'); var valLabel=isP?'Pressure':'Flow'; var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
+  ed.className='ep-step-editor'+(isP?'':' flow');
+  ed.innerHTML=''
+    +'<div class="ep-step-top"><input value="'+escapeAttr(st.name||'')+'" id="epStName" style="border:none;font-size:15px;font-weight:800;background:none;outline:none;width:60%">'
+    +'<div style="display:flex;gap:8px;align-items:center"><div class="ep-pump-toggle"><button class="'+(isP?'':'on')+'" data-pump="flow">Flow</button><button class="'+(isP?'on':'')+'" data-pump="pressure">Pressure</button></div>'
+    +'<button class="ep-step-add" style="border-color:var(--red);color:var(--red)" onclick="delStep()">✕</button></div></div>'
+    +'<div class="ep-sliders" style="margin-top:12px">'
+    +'<div class="ep-slider-row"><span class="lbl">'+valLabel+'</span><input type="range" min="0" max="'+valMax+'" step="0.1" value="'+valNow+'" data-k="'+(isP?'pressure':'flow')+'"><span class="val">'+valNow.toFixed(1)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">Temp °C</span><input type="range" min="80" max="96" step="0.5" value="'+(st.temperature||90)+'" data-k="temperature"><span class="val">'+(st.temperature||90).toFixed(1)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">Seconds</span><input type="range" min="0" max="60" step="0.5" value="'+(st.seconds||0)+'" data-k="seconds"><span class="val">'+(st.seconds||0).toFixed(1)+'</span></div>'
+    +'</div>';
+  ed.querySelector('#epStName').oninput=function(){ st.name=this.value; var tab=document.querySelectorAll('.ep-steptab')[epStepIdx]; if(tab) tab.textContent=(epStepIdx+1)+'. '+(st.name||'Step'); };
+  ed.querySelectorAll('input[type=range]').forEach(function(inp){ inp.oninput=function(){ st[inp.dataset.k]=parseFloat(inp.value)||0; inp.parentElement.querySelector('.val').textContent=(parseFloat(inp.value)||0).toFixed(1); drawEditCurve(); }; });
+  ed.querySelectorAll('.ep-pump-toggle button').forEach(function(b){ b.onclick=function(){ st.pump=b.dataset.pump; if(st.pump==='pressure'&&st.pressure===undefined) st.pressure=6; if(st.pump==='flow'&&st.flow===undefined) st.flow=2; renderEpSteps(); drawEditCurve(); }; });
+}
+// Curve with vertical step boundaries + highlight of the active step.
+function drawEditCurve(){ var canvas=document.getElementById('epCurve'); if(!canvas) return;
+  var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||400,height:200}; }
+  canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  var steps=editing.profile.steps||[]; var total=0; steps.forEach(function(s){ total+=Math.max(s.seconds||0,0.5); }); if(total<=0) return;
+  // step background bands + active highlight
+  var tAcc=0;
+  steps.forEach(function(s,i){ var dur=Math.max(s.seconds||0,0.5); var x0=(tAcc/total)*W, x1=((tAcc+dur)/total)*W;
+    if(i===epStepIdx){ ctx.fillStyle='rgba(99,102,241,.1)'; ctx.fillRect(x0,0,x1-x0,H); }
+    ctx.strokeStyle='rgba(139,92,246,.22)'; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(x1,0); ctx.lineTo(x1,H); ctx.stroke(); ctx.setLineDash([]);
+    // step number label
+    ctx.fillStyle=i===epStepIdx?'#6366f1':'#a8a5c4'; ctx.font='600 11px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(String(i+1),(x0+x1)/2,4);
+    tAcc+=dur; });
+  // curve
+  var sim=simulateProfile(editing.profile); if(sim.pts.length<2) return;
+  function draw(field,color,mx,fill){ ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-12)-6; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
+  draw('p','#6366f1',12,'rgba(99,102,241,.15)'); draw('f','#38bdf8',8,null);
+}
+function saveProfilePage(){ if(!editing) return;
+  var req=editing.isDefault?api('POST','/api/v1/profiles',{profile:editing.profile,metadata:{tags:['edited']}}):api('PUT','/api/v1/profiles/'+editing.id,{profile:editing.profile,metadata:editing.metadata||{}});
+  req.then(function(){ toast('Profile saved','ok'); loadProfiles(); renderEpList(); }).catch(function(e){ toast('Save failed: '+e.message,'err'); }); }
+
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+// ── Beans & Grinder ─────────────────────────────────────────────────
+function openBeanModal(){ loadBeansGrinders(); document.getElementById('beanOverlay').classList.add('show'); }
+var bgSel=null; // {type:'bean'|'grinder', obj}
+function openBeanModal(){ document.getElementById('beanPage').classList.add('show'); loadBeansGrinders(); }
+function closeBeanPage(){ document.getElementById('beanPage').classList.remove('show'); }
+function loadBeansGrinders(){
+  Promise.all([ api('GET','/api/v1/beans').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}) ])
+    .then(function(res){ beans=res[0]||[]; grinders=res[1]||[]; renderBgList(); });
+}
+function renderBgList(){ var list=document.getElementById('bgList'); list.innerHTML='';
+  var hb=document.createElement('div'); hb.style.cssText='font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 4px;display:flex;justify-content:space-between;align-items:center';
+  hb.innerHTML='<span>🫘 Beans</span>'; var addB=document.createElement('button'); addB.className='ep-step-add'; addB.textContent='+ Bean'; addB.onclick=function(){ bgSelectNew('bean'); }; hb.appendChild(addB); list.appendChild(hb);
+  beans.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
+    it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(249,115,22,.12)">🫘</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(b.name||'')+'</div><div class="mt">'+escapeHtml(b.roaster||'')+'</div></div>';
+    it.onclick=function(){ bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
+  var hg=document.createElement('div'); hg.style.cssText='font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px;display:flex;justify-content:space-between;align-items:center';
+  hg.innerHTML='<span>⚙️ Grinders</span>'; var addG=document.createElement('button'); addG.className='ep-step-add'; addG.textContent='+ Grinder'; addG.onclick=function(){ bgSelectNew('grinder'); }; hg.appendChild(addG); list.appendChild(hg);
+  grinders.forEach(function(g){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='grinder'&&bgSel.obj.id===g.id?' active':'');
+    it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(g.burrs||g.burrType||'grinder')+'</div></div>';
+    it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
+}
+function bgSelectNew(type){ bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',roastLevel:'',processing:''}:{model:'',burrs:'',burrType:'conical'}}; renderBgList(); renderBgEditor(); }
+function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML='<div class="ep-placeholder">← Select or add an item</div>'; return; }
+  var o=bgSel.obj; var isNew=!o.id;
+  if(bgSel.type==='bean'){
+    wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Bean':'Edit Bean')+'</div>'
+      +'<div class="field-row"><div class="field"><label>Roaster</label><input id="bgRoaster" value="'+escapeAttr(o.roaster||'')+'"></div><div class="field"><label>Name</label><input id="bgName" value="'+escapeAttr(o.name||'')+'"></div></div>'
+      +'<div class="field-row"><div class="field"><label>Origin</label><input id="bgCountry" value="'+escapeAttr(o.country||'')+'"></div><div class="field"><label>Process</label><input id="bgProcess" value="'+escapeAttr(o.processing||'')+'"></div></div>'
+      +'<div class="field"><label>Roast level</label><input id="bgRoast" value="'+escapeAttr(o.roastLevel||'')+'"></div>'
+      +'<div class="field"><label>Notes</label><textarea id="bgNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
+      +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">Delete</button>')+'<button class="m-btn" onclick="useBean()">Use for shot</button><button class="m-btn primary" onclick="saveBean()">Save</button></div>';
+  } else {
+    wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Grinder':'Edit Grinder')+'</div>'
+      +'<div class="field"><label>Model</label><input id="bgModel" value="'+escapeAttr(o.model||'')+'"></div>'
+      +'<div class="field-row"><div class="field"><label>Burrs</label><input id="bgBurrs" value="'+escapeAttr(o.burrs||'')+'"></div><div class="field"><label>Burr type</label><input id="bgBurrType" value="'+escapeAttr(o.burrType||'')+'"></div></div>'
+      +'<div class="field"><label>Notes</label><textarea id="bgGNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
+      +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteGrinder()">Delete</button>')+'<button class="m-btn" onclick="useGrinder()">Use for shot</button><button class="m-btn primary" onclick="saveGrinder()">Save</button></div>';
+  }
+}
+function saveBean(){ var o=bgSel.obj; var body={roaster:document.getElementById('bgRoaster').value.trim(),name:document.getElementById('bgName').value.trim(),country:document.getElementById('bgCountry').value.trim()||null,processing:document.getElementById('bgProcess').value.trim()||null,roastLevel:document.getElementById('bgRoast').value.trim()||null,notes:document.getElementById('bgNotes').value||null};
+  if(!body.roaster||!body.name){ toast('Roaster and name required','err'); return; }
+  var req=o.id?api('PUT','/api/v1/beans/'+o.id,body):api('POST','/api/v1/beans',body);
+  req.then(function(){ toast('Bean saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
+function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this bean?')) return; api('DELETE','/api/v1/beans/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
+function useBean(){ var o=bgSel.obj; api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:null}}).then(function(){ toast('Bean set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
+function saveGrinder(){ var o=bgSel.obj; var body={model:document.getElementById('bgModel').value.trim(),burrs:document.getElementById('bgBurrs').value.trim()||null,burrType:document.getElementById('bgBurrType').value.trim()||null,notes:document.getElementById('bgGNotes').value||null};
+  if(!body.model){ toast('Model required','err'); return; }
+  var req=o.id?api('PUT','/api/v1/grinders/'+o.id,body):api('POST','/api/v1/grinders',body);
+  req.then(function(){ toast('Grinder saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
+function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
+function useGrinder(){ var o=bgSel.obj; api('PUT','/api/v1/workflow',{context:{grinderId:o.id||null,grinderModel:o.model}}).then(function(){ toast('Grinder set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
+function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRoaster, g=context.grinderModel, gs=context.grinderSetting;
+  if(name){ document.getElementById('beanName').textContent=(roaster?roaster+' · ':'')+name; document.getElementById('beanSub').textContent=g?(g+(gs?' @ '+gs:'')):'No grinder'; }
+  else { document.getElementById('beanName').textContent='No bean selected'; document.getElementById('beanSub').textContent='Tap edit to add beans & grinder'; } }
+
+// ── DYE (post-shot log) ─────────────────────────────────────────────
+function openDyeModal(){ state.dyeStars=0; document.querySelectorAll('#dyeStars .star').forEach(function(s){s.classList.remove('on');});
+  document.getElementById('dyeDose').value=settings.doseIn.toFixed(1); document.getElementById('dyeYield').value=(state.scaleWeight&&state.scaleWeight>1)?state.scaleWeight.toFixed(1):settings.doseOut.toFixed(1);
+  document.getElementById('dyeTds').value=''; document.getElementById('dyeEy').value=''; document.getElementById('dyeNotes').value='';
+  document.getElementById('dyeOverlay').classList.add('show'); }
+function setDyeStar(n){ state.dyeStars=n; document.querySelectorAll('#dyeStars .star').forEach(function(s,i){ s.classList.toggle('on',i<n); }); }
+function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return; }
+  var dose=parseFloat(document.getElementById('dyeDose').value)||null, yld=parseFloat(document.getElementById('dyeYield').value)||null;
+  var tds=parseFloat(document.getElementById('dyeTds').value)||null; var ey=parseFloat(document.getElementById('dyeEy').value)||null;
+  if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1)); // EY% = TDS*beverage/dose
+  var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey, enjoyment:state.dyeStars||null, espressoNotes:document.getElementById('dyeNotes').value||null };
+  api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast('Shot logged','ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast('Log failed','err'); }); }
+
+// ── Shot Log history page ───────────────────────────────────────────
+var shotList=[], slSel=null;
+function openShotLog(){ document.getElementById('shotLogPage').classList.add('show'); loadShotList(); }
+function closeShotLog(){ document.getElementById('shotLogPage').classList.remove('show'); }
+function fmtShotDate(s){ var d=new Date(s.createdAt||s.timestamp); if(isNaN(d)) return s.timestamp||''; return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function loadShotList(){ var list=document.getElementById('slList'); list.innerHTML='<div class="ep-group-head">Loading…</div>';
+  api('GET','/api/v1/shots?limit=50').then(function(r){ shotList=(r&&(r.items||r.shots))||[]; renderShotList();
+    if(shotList.length) slSelect(shotList[0]); else document.getElementById('slDetail').innerHTML='<div class="ep-placeholder">No shots recorded yet</div>';
+  }).catch(function(){ list.innerHTML='<div class="ep-placeholder">Connect to load shots</div>'; }); }
+function renderShotList(){ var list=document.getElementById('slList'); list.innerHTML='';
+  if(!shotList.length){ list.innerHTML='<div class="ep-placeholder">No shots</div>'; return; }
+  var hd=document.createElement('div'); hd.className='ep-group-head'; hd.textContent='Recent · '+shotList.length; list.appendChild(hd);
+  shotList.forEach(function(s){ var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
+    var it=document.createElement('div'); it.className='ep-item'+(slSel&&slSel.id===s.id?' active':'');
+    var stars=an.enjoyment?('★'.repeat(Math.round(an.enjoyment))):'';
+    var ry=(an.actualDoseWeight&&an.actualYield)?(' · 1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'';
+    var badge=document.createElement('div'); badge.className='sl-badge'; badge.textContent=stars||'☕';
+    var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
+    body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(fmtShotDate(s))+ry+'</div>';
+    it.appendChild(badge); it.appendChild(body);
+    it.onclick=function(){ slSelect(s); }; list.appendChild(it); }); }
+function slSelect(summary){ slSel=summary; renderShotList();
+  var wrap=document.getElementById('slDetail'); wrap.innerHTML='<div class="ep-placeholder">Loading shot…</div>';
+  api('GET','/api/v1/shots/'+summary.id).then(function(s){ if(!s){ wrap.innerHTML='<div class="ep-placeholder">Not found</div>'; return; } renderShotDetail(s); })
+    .catch(function(){ renderShotDetail(summary); }); }
+function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
+  wrap.innerHTML=''
+    +'<div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(st.name)+'</div><div class="sl-dt-sub">'+(st.group?escapeHtml(st.group)+' · ':'')+escapeHtml(fmtShotDate(s))+(s.stopReason?' · '+escapeHtml(s.stopReason):'')+'</div></div></div>'
+    +'<div class="sl-canvas-wrap"><canvas id="slCurve"></canvas></div>'
+    +'<div class="sl-metrics">'
+      +'<div class="sl-metric"><div class="v">'+(an.actualDoseWeight!=null?an.actualDoseWeight:'—')+'</div><div class="l">Dose g</div></div>'
+      +'<div class="sl-metric"><div class="v">'+(an.actualYield!=null?an.actualYield:'—')+'</div><div class="l">Yield g</div></div>'
+      +'<div class="sl-metric"><div class="v">'+((an.actualDoseWeight&&an.actualYield)?('1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'—')+'</div><div class="l">Ratio</div></div>'
+      +'<div class="sl-metric"><div class="v">'+(an.drinkEy!=null?an.drinkEy:'—')+'</div><div class="l">EY %</div></div>'
+    +'</div>'
+    +'<div class="ep-section-title" style="margin-top:16px">Tasting log</div>'
+    +'<div class="field-row"><div class="field"><label>Actual Dose (g)</label><input id="slDose" type="number" step="0.1" value="'+(an.actualDoseWeight!=null?an.actualDoseWeight:'')+'"></div>'
+      +'<div class="field"><label>Actual Yield (g)</label><input id="slYield" type="number" step="0.1" value="'+(an.actualYield!=null?an.actualYield:'')+'"></div></div>'
+    +'<div class="field-row"><div class="field"><label>TDS %</label><input id="slTds" type="number" step="0.01" value="'+(an.drinkTds!=null?an.drinkTds:'')+'"></div>'
+      +'<div class="field"><label>Extraction Yield %</label><input id="slEy" type="number" step="0.1" value="'+(an.drinkEy!=null?an.drinkEy:'')+'"></div></div>'
+    +'<div class="field"><label>Enjoyment</label><div class="stars" id="slStars">'
+      +[1,2,3,4,5].map(function(n){ return '<span class="star'+(an.enjoyment>=n?' on':'')+'" onclick="setSlStar('+n+')">★</span>'; }).join('')+'</div></div>'
+    +'<div class="field"><label>Notes</label><textarea id="slNotes" rows="2">'+escapeHtml(an.espressoNotes||'')+'</textarea></div>'
+    +'<div class="ep-save-bar"><button class="m-btn primary" onclick="saveShotLog(\''+s.id+'\')">Save Log</button></div>';
+  slSel=s; slSel._stars=an.enjoyment||0;
+  var cv=document.getElementById('slCurve'); if(cv){ if(s.measurements&&s.measurements.length) drawShotMeasurements(cv,s); else drawSimCurve(cv,pr); } }
+function setSlStar(n){ if(slSel) slSel._stars=n; document.querySelectorAll('#slStars .star').forEach(function(el,i){ el.classList.toggle('on',i<n); }); }
+function saveShotLog(id){ var dose=parseFloat(document.getElementById('slDose').value)||null, yld=parseFloat(document.getElementById('slYield').value)||null;
+  var tds=parseFloat(document.getElementById('slTds').value)||null, ey=parseFloat(document.getElementById('slEy').value)||null;
+  if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1));
+  var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey, enjoyment:(slSel&&slSel._stars)||null, espressoNotes:document.getElementById('slNotes').value||null };
+  api('PUT','/api/v1/shots/'+id,{annotations:ann}).then(function(){ toast('Shot log saved','ok'); loadShotList(); }).catch(function(){ toast('Save failed','err'); }); }
+// Draw a recorded shot's pressure/flow measurements onto a canvas.
+// Measurements are nested: m[i].machine.{pressure,flow,timestamp}.
+function drawShotMeasurements(canvas,s){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||300,height:canvas.height||120}; }
+  canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  var m=s.measurements||[]; if(m.length<2){ drawSimCurve(canvas,(s.workflow&&s.workflow.profile)||{}); return; }
+  function tOf(pt){ var ts=pt.machine&&pt.machine.timestamp; var d=ts?Date.parse(ts):NaN; return isNaN(d)?null:d; }
+  var t0=tOf(m[0]), tN=tOf(m[m.length-1]); var useTime=(t0!=null&&tN!=null&&tN>t0); var span=useTime?(tN-t0):(m.length-1||1);
+  function line(field,color,mx){ ctx.beginPath(); m.forEach(function(pt,i){ var mac=pt.machine||{}; var v=mac[field]||0; var x=(useTime?((tOf(pt)-t0)/span):(i/span))*W; var y=H-Math.min(v/mx,1)*(H-6)-3; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke(); }
+  line('pressure','#6366f1',12); line('flow','#38bdf8',8); }
+
+// ── Workflow bootstrap ──────────────────────────────────────────────
+function loadWorkflow(){ api('GET','/api/v1/workflow').then(function(w){ if(!w) return;
+  if(w.context){ context=w.context;
+    if(w.context.targetDoseWeight) settings.doseIn=w.context.targetDoseWeight; if(w.context.targetYield) settings.doseOut=w.context.targetYield; }
+  if(w.steamSettings){ if(w.steamSettings.targetTemperature) settings.steamTemp=w.steamSettings.targetTemperature; if(w.steamSettings.duration) settings.steamDur=w.steamSettings.duration; if(w.steamSettings.flow) settings.steamFlow=w.steamSettings.flow; }
+  if(w.rinseData){ if(w.rinseData.targetTemperature) settings.flushTemp=w.rinseData.targetTemperature; if(w.rinseData.duration) settings.flushDur=w.rinseData.duration; if(w.rinseData.flow) settings.flushFlow=w.rinseData.flow; }
+  if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
+    var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; }); if(match) curProfileObj=match; if(carItems.length) buildCarousel(); }
+  syncRecipe(); updateBeanInfo(); }).catch(function(){}); }
+function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
+
+// Initial device state via REST (WS may not push a snapshot immediately on connect)
+function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
+  console.log('[Aurora] loadDevices response:', list);
+  if(!Array.isArray(list)){ toast('devices: unexpected response','err'); return; }
+  var machineConnected=false, scaleConnected=false, machineName=null;
+  list.forEach(function(d){ if(d.type==='machine'){ if(!machineName) machineName=d.name; if(d.state==='connected') machineConnected=true; } if(d.type==='scale'&&d.state==='connected') scaleConnected=true; });
+  state.connected=machineConnected; state.scaleConnected=scaleConnected;
+  if(machineName) document.getElementById('machineName').textContent=machineName;
+  updateConnUI(state.connected?'on':'off'); updateShotBtn();
+  if(state.connected){ loadMachineInfo(); loadWorkflow(); }
+}).catch(function(e){ console.error('[Aurora] loadDevices failed:', e); toast('Gateway not reachable: '+e.message,'err'); }); }
+
+// ── Toast ────────────────────────────────────────────────────────────
+var toastT=null; function toast(msg,type){ var el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); },2500); }
+setInterval(function(){ if(state.connected) api('POST','/api/v1/machine/heartbeat').catch(function(){}); },30000);
+
+// ── Init ─────────────────────────────────────────────────────────────
+window.addEventListener('load', function(){
+  fitStage(); loadFavs(); loadPrefs(); loadPresets(); initWebSockets();
+  applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
+  loadMachineSettings(); loadMachineInfo(); loadDevices();
+  // load profiles first, then workflow so we can match the current profile to a real list entry
+  loadProfiles();
+  setTimeout(loadWorkflow, 700);
+
+  // Carousel: keyboard arrows + touch swipe
+  window.addEventListener('keydown', function(e){
+    if(document.getElementById('editPage').classList.contains('show')) return;
+    if(e.key==='ArrowLeft') carouselMove(-1);
+    if(e.key==='ArrowRight') carouselMove(1);
+    if(e.key==='Enter') loadCentered();
+  });
+  var car=document.querySelector('.carousel'); var sx=0,tracking=false;
+  if(car){
+    car.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; tracking=true; },{passive:true});
+    car.addEventListener('touchend',function(e){ if(!tracking) return; tracking=false; var dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>40) carouselMove(dx<0?1:-1); },{passive:true});
+    car.addEventListener('wheel',function(e){ if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){ e.preventDefault(); carouselMove(e.deltaX>0?1:-1); } },{passive:false});
+  }
+});
+</script>
+</body>
+</html>
