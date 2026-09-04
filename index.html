@@ -24,17 +24,42 @@ body.night{--ink:#e8e6f5; --ink-soft:#b8b4d8; --ink-mute:#7d7aa0;
   --glass:rgba(40,36,66,.55); --glass-hi:rgba(255,255,255,.06); --glass-line:rgba(255,255,255,.1);
   --shadow:0 8px 32px rgba(0,0,0,.35); --shadow-lg:0 20px 60px rgba(0,0,0,.5); background:#0c0a18}
 body.night::before{background:radial-gradient(circle at 18% 22%,rgba(99,102,241,.28),transparent 46%),radial-gradient(circle at 84% 18%,rgba(56,189,248,.22),transparent 48%),radial-gradient(circle at 78% 84%,rgba(236,72,153,.2),transparent 48%),linear-gradient(135deg,#0d0b1c,#140f26)}
+/* base surfaces */
 body.night .glass{background:rgba(30,27,54,.72);border-color:rgba(255,255,255,.08)}
 body.night.overlay-active .app .glass{background:rgba(30,27,54,.9)}
 body.night .modal{background:#1a1730;border-color:rgba(255,255,255,.1)}
 body.night .modal-head{background:#1a1730}
+body.night .modal-title{color:var(--ink)}
 body.night .editpage{background:linear-gradient(135deg,#14111f,#1a1526)}
 body.night .ep-head{background:rgba(20,17,34,.6)}
-body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn{background:rgba(255,255,255,.06);color:var(--ink)}
-body.night .ep-group-head{background:linear-gradient(135deg,#14111f,#1a1526)}
-body.night .bg-tab{background:rgba(255,255,255,.06)}
+/* sticky headers/tab-bars that had light gradients */
+body.night .ep-group-head{background:linear-gradient(135deg,#14111f,#1a1526);color:var(--accent2)}
+body.night .ep-group-head.fav{background:linear-gradient(135deg,#241a12,#26141a);color:var(--amber)}
+body.night .bg-tabs{background:linear-gradient(135deg,#14111f,#1a1526)}
+/* pill / button surfaces */
+body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .car-nav,body.night .fav-btn{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
+body.night .kp-key{color:var(--ink)}
+body.night .car-nav:hover,body.night .ep-stepnav .nav:hover{background:rgba(255,255,255,.14)}
+/* editor panels */
+body.night .ep-visual,body.night .ep-step,body.night .ep-step-editor,body.night .browse-card{background:rgba(255,255,255,.05)}
+body.night .ep-visual canvas{background:transparent}
+body.night .sl-metric,body.night .last-shot .ls-stat{background:rgba(255,255,255,.06)}
+body.night .bean-chip{background:rgba(255,255,255,.06);color:var(--ink-soft)}
+/* form inputs */
+body.night .ep-name-input,body.night .ep-notes,body.night .field input,body.night .field textarea,body.night .field select{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
+body.night input,body.night textarea,body.night select{color:var(--ink)}
+body.night ::placeholder{color:var(--ink-mute);opacity:1}
+/* inline step name / free-text inputs use transparent bg + inherit ink */
+body.night .ep-step-editor input,body.night .ep-step input{color:var(--ink)}
+/* misc */
+body.night .ep-save-bar{background:linear-gradient(180deg,transparent,#1a1526 40%)}
+body.night .ep-slider-row input[type=range]{background:rgba(255,255,255,.14)}
 body.night .album .al-curve,body.night .ep-item .thmb{background:rgba(255,255,255,.05)}
-body.night .dose-num.tap:hover,body.night .rv.tap:hover,body.night .grind-val:hover{background:rgba(255,255,255,.08)}
+body.night .dose-num.tap:hover,body.night .rv.tap:hover,body.night .grind-val:hover{background:rgba(255,255,255,.1)}
+/* keep filled/gradient buttons readable (already white text) */
+body.night .m-btn.primary,body.night .browse-tab.active,body.night .bg-tab.active,body.night .ep-steptab.active,body.night .ep-pump-toggle button.on{color:#fff}
+body.night .bg-tab.active{background:rgba(99,102,241,.25);border-color:var(--accent)}
+body.night .ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.3)}
 
 .stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 .app{width:1280px;height:800px;display:grid;grid-template-columns:1fr 400px;grid-template-rows:78px 1fr;gap:14px;padding:14px;flex-shrink:0}
@@ -740,7 +765,8 @@ function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window
   // Snap near-1 scales to exactly 1 and drop the transform entirely so text stays pixel-crisp.
   if(s>=0.97&&s<=1.04){ a.style.transform='none'; }
   else { a.style.transform='scale('+s+')'; a.style.transformOrigin='center center'; } }
-window.addEventListener('resize', function(){ fitStage(); drawChart(); });
+var _resizeT=null;
+window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requestAnimationFrame(function(){ _resizeT=null; fitStage(); _chartBgKey=null; drawChart(); }); });
 
 var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='http://'+h+':8080'; return {http:b,ws:b.replace('http','ws')}; })();
 
@@ -922,11 +948,11 @@ function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.s
 function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000); document.getElementById('timerBig').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 var _chartRAF=null;
 function drawChart(){ if(_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
-var _chartDims={w:0,h:0}; var _chartLegendMode=null;
+var _chartDims={w:0,h:0}; var _chartLegendMode=null; var _chartBg=null, _chartBgKey=null;
 function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
   if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
-  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height;
   var isSteam=(chart.mode==='steam'), isWater=(chart.mode==='water'), isEsp=(!isSteam&&!isWater), hasTempAxis=true;
   // title + legend reflect the current mode (only rewritten when the mode changes)
   if(_chartLegendMode!==chart.mode){ _chartLegendMode=chart.mode;
@@ -940,19 +966,30 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   var padL=34, padR=hasTempAxis?34:8, padT=18, padB=22; // steam/water add a right gutter for the temp axis
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
   var PMAX=12;
+  var FMAX=isSteam?2.5:(isWater?10:8); // flow axis max (ml/s): steam is a small range, water/espresso larger
   var TMAX=isSteam?165:100; // temperature axis max (°C): steam ~165, espresso/water ~100
   var N=chart.pressure.length;
   var steps=(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[];
   function px(i){ return X0+(N<2?0:(i/(N-1))*PW); }
   function py(v,mx){ return Y0+PH-Math.min(v/mx,1)*(PH-6)-3; }
 
-  // Y grid + labels
-  ctx.strokeStyle='rgba(139,92,246,.08)'; ctx.lineWidth=1; ctx.font='600 11px Inter,sans-serif'; ctx.fillStyle='#6b6890'; ctx.textAlign='right'; ctx.textBaseline='middle';
-  for(var i=0;i<=4;i++){ var y=Y0+(i/4)*PH; ctx.beginPath(); ctx.moveTo(X0,y); ctx.lineTo(X0+PW,y); ctx.stroke(); ctx.fillText(String(Math.round(PMAX-(i/4)*PMAX)), X0-4, y); }
-
-  // right-side temperature axis labels (°C)
-  if(hasTempAxis){ ctx.fillStyle=isWater?'#0284c7':(isSteam?'#d1477f':'#c2620b'); ctx.font='600 10px Inter,sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
-    for(var ti=0;ti<=4;ti++){ var ty=Y0+(ti/4)*PH; ctx.fillText(String(Math.round(TMAX-(ti/4)*TMAX)),X0+PW+4,ty); } }
+  // ── Static background layer (grid + axis labels): cached offscreen and only
+  //    repainted when size/mode/theme change. This is the biggest per-frame saving. ──
+  var night=document.body.classList.contains('night');
+  var bgKey=W+'x'+H+'|'+chart.mode+'|'+(night?'n':'d');
+  if(_chartBgKey!==bgKey){ _chartBgKey=bgKey;
+    if(!_chartBg){ _chartBg=document.createElement('canvas'); }
+    _chartBg.width=cv.width; _chartBg.height=cv.height;
+    var bx=_chartBg.getContext('2d'); bx.setTransform(dpr,0,0,dpr,0,0); bx.clearRect(0,0,W,H);
+    var gridC=night?'rgba(255,255,255,.06)':'rgba(139,92,246,.08)', axisC=night?'#8b88a8':'#6b6890';
+    bx.strokeStyle=gridC; bx.lineWidth=1; bx.font='600 11px Inter,sans-serif'; bx.fillStyle=axisC; bx.textAlign='right'; bx.textBaseline='middle';
+    for(var gi=0;gi<=4;gi++){ var gy=Y0+(gi/4)*PH; bx.beginPath(); bx.moveTo(X0,gy); bx.lineTo(X0+PW,gy); bx.stroke(); bx.fillText(String(Math.round(PMAX-(gi/4)*PMAX)), X0-4, gy); }
+    bx.fillStyle=isWater?'#0284c7':(isSteam?'#d1477f':'#c2620b'); bx.font='600 10px Inter,sans-serif'; bx.textAlign='left';
+    for(var gti=0;gti<=4;gti++){ var gty=Y0+(gti/4)*PH; bx.fillText(String(Math.round(TMAX-(gti/4)*TMAX)),X0+PW+4,gty); }
+  }
+  // blit cached background (it already includes the clear)
+  ctx.clearRect(0,0,W,H);
+  if(_chartBg) ctx.drawImage(_chartBg,0,0,W,H);
 
   // step boundaries (espresso only; steam/water have no profile frames)
   if(isEsp && N>1 && chart.frame.length===N){
@@ -985,18 +1022,18 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx));else ctx.lineTo(px(i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   if(isSteam){
     line(chart.steamTemp,'#f472b6',TMAX,'rgba(244,114,182,.15)'); // steam temp (right axis scale)
-    line(chart.flow,'#38bdf8',PMAX,null);                          // steam flow
+    line(chart.flow,'#38bdf8',FMAX,null);                          // steam flow (small-range scale)
     line(chart.pressure,'#6366f1',PMAX,null);                      // steam pressure
   } else if(isWater){
     line(chart.waterTemp,'#0ea5e9',TMAX,'rgba(14,165,233,.15)');   // water temp (right axis scale)
-    line(chart.flow,'#38bdf8',PMAX,null);                          // water flow
+    line(chart.flow,'#38bdf8',FMAX,null);                          // water flow
     line(chart.pressure,'#6366f1',PMAX,null);                      // water pressure
   } else {
     // target temperature (dashed) on the right (°C) axis
     if(chart.targetTemp.length>1){ ctx.save(); ctx.setLineDash([4,4]); ctx.beginPath(); for(var ti2=0;ti2<chart.targetTemp.length;ti2++){ var xt=px(ti2),yt=py(chart.targetTemp[ti2],TMAX); if(ti2===0)ctx.moveTo(xt,yt);else ctx.lineTo(xt,yt); } ctx.strokeStyle='rgba(148,163,184,.85)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore(); }
     // group/mix temperature on the right (°C) axis, drawn under the pressure/flow lines
     line(chart.groupTemp,'#f97316',TMAX,null); line(chart.mixTemp,'#60a5fa',TMAX,null);
-    line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',PMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
+    line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',FMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
   }
 
   // live readouts at the leading edge
@@ -1004,9 +1041,9 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   if(N>=1 && running){
     var lx=px(N-1);
     function tag(v,mx,color){ var y=py(v,mx); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(lx,y,3.5,0,Math.PI*2); ctx.fill(); ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(v.toFixed(1), lx-6, y); }
-    if(isSteam){ tag(chart.steamTemp[N-1],TMAX,'#f472b6'); tag(chart.flow[N-1],PMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
-    else if(isWater){ tag(chart.waterTemp[N-1],TMAX,'#0ea5e9'); tag(chart.flow[N-1],PMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
-    else { tag(chart.pressure[N-1],PMAX,'#6366f1'); tag(chart.flow[N-1],PMAX,'#38bdf8'); }
+    if(isSteam){ tag(chart.steamTemp[N-1],TMAX,'#f472b6'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
+    else if(isWater){ tag(chart.waterTemp[N-1],TMAX,'#0ea5e9'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
+    else { tag(chart.pressure[N-1],PMAX,'#6366f1'); tag(chart.flow[N-1],FMAX,'#38bdf8'); }
   }
 }
 
