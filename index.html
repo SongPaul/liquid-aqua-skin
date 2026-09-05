@@ -880,7 +880,7 @@ var I18N={
     wcEmpty:'Empty tank height', wcFull:'Full tank height', wcAfterPour:'Height after pour', wcCapacity:'Tank capacity', wcPoured:'Poured amount',
     wcCapture:'Capture', wcCaptured:'Captured', wcNotSet:'not set',
     flowCal:'Flow Calibration', flowCalDesc:'Fine-tune the gateway flow/weight estimation multipliers.', fcWeight:'Weight flow multiplier', fcVolume:'Volume flow multiplier', fcHotWater:'Hot water flow multiplier',
-    refillKit:'Refill kit', refillKitDesc:'Override the plumbed refill-kit behavior on the machine.', rkAuto:'Auto', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
+    refillKit:'Refill kit', refillKitDesc:'Plumbed water supply. When on, the tank always shows full.', refillKitOverride:'Refill kit override', refillKitOverrideDesc:'Machine refill-kit register: auto, or force on/off.', rkAuto:'Auto', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
     installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Start the firmware update? Keep the machine powered.', updating:'Updating…',
     close:'Close', save:'Save', cancel:'Cancel', saveOptions:'Save Options', delete:'Delete', useForShot:'Use for shot', set:'Set',
@@ -915,7 +915,7 @@ var I18N={
     wcEmpty:'빈 탱크 높이', wcFull:'가득 찬 높이', wcAfterPour:'투입 후 높이', wcCapacity:'탱크 용량', wcPoured:'투입량',
     wcCapture:'캡처', wcCaptured:'캡처됨', wcNotSet:'미설정',
     flowCal:'유량 보정', flowCalDesc:'게이트웨이 유량/무게 추정 배수를 미세 조정합니다.', fcWeight:'무게 유량 배수', fcVolume:'볼륨 유량 배수', fcHotWater:'온수 유량 배수',
-    refillKit:'리필 킷', refillKitDesc:'머신의 배관형 리필 킷 동작을 강제로 설정합니다.', rkAuto:'자동', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
+    refillKit:'리필 킷', refillKitDesc:'배관 급수 연결. 켜면 탱크가 항상 만수로 표시됩니다.', refillKitOverride:'리필 킷 오버라이드', refillKitOverrideDesc:'머신 리필 킷 레지스터: 자동 또는 강제 켜기/끄기.', rkAuto:'자동', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
     installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 업데이트를 시작할까요? 머신 전원을 유지하세요.', updating:'업데이트 중…',
     close:'닫기', save:'저장', cancel:'취소', saveOptions:'옵션 저장', delete:'삭제', useForShot:'샷에 사용', set:'설정',
@@ -1109,6 +1109,10 @@ function updateWaterVisual(){ var pct=tankPercent(state.water.current);
   var wp2=document.querySelector('.temps-bar .wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
 }
 function updateWaterUI(){ var pct=tankPercent(state.water.current);
+  // Refill kit ON = plumbed supply, tank is effectively always full.
+  if(prefs.refillKitFull){
+    document.getElementById('waterPct').textContent=100; document.getElementById('waterFill').style.height='100%';
+    document.getElementById('waterWarn').style.display='none'; updateWaterVisual(); return; }
   document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=Math.min(pct,100)+'%';
   document.getElementById('waterWarn').style.display=(state.water.current<=state.water.refill||pct<15)?'inline':'none';
   updateWaterVisual(); }
@@ -1339,12 +1343,12 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', lang:'auto', tempUnit:'C', weightUnit:'g',
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false,
   // Water tank calibration. mode: 'off' | 'twopoint' | 'pour'.
   // twopoint: hEmpty/hFull (mm) + capacity(ml). pour: hEmpty(mm) + poured(ml) at hPour(mm).
   waterCal:{ mode:'off', hEmpty:null, hFull:null, capacity:1500, poured:null, hPour:null } };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
 // the chosen calibration. Falls back to treating the raw value as % (legacy).
 function tankPercent(mm){ var c=prefs.waterCal||{};
@@ -1436,9 +1440,10 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div class="ep-section-title" style="margin-top:20px">'+t('flowCal')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:6px">'+t('flowCalDesc')+'</div>';
     h+=flowMultRow('weightFlowMultiplier',t('fcWeight'),0.1,1)+flowMultRow('volumeFlowMultiplier',t('fcVolume'),0.05,2)+flowMultRow('hotWaterFlowMultiplier',t('fcHotWater'),0.05,2);
-    // ── Refill kit (gateway override) ──
+    // ── Refill kit ── skin toggle (ON = plumbed, always show full tank) above the gateway override.
+    h+=row('refillKit','refillKitDesc',sw('rkSwitch',!!prefs.refillKitFull,'setRefillKitFull(this.checked)'));
     var rk=(gwSettings.refillKitSetting!=null?String(gwSettings.refillKitSetting):'2');
-    h+=row('refillKit','refillKitDesc','<select class="set-select" onchange="setRefillKit(this.value)">'+opt('2',t('rkAuto'),rk)+opt('1',t('rkOn'),rk)+opt('0',t('rkOff'),rk)+'</select>');
+    h+=row('refillKitOverride','refillKitOverrideDesc','<select class="set-select" onchange="setRefillKit(this.value)">'+opt('2',t('rkAuto'),rk)+opt('1',t('rkOn'),rk)+opt('0',t('rkOff'),rk)+'</select>');
     h+='<div class="ep-section-title" style="margin-top:20px">'+t('machineInfo')+'</div>';
     var rkDet=(machineInfo.extra&&machineInfo.extra.refillKit!=null)?(machineInfo.extra.refillKit?t('rkYes'):t('rkNo')):'—';
     h+='<div class="sp-info-grid">'
@@ -1469,6 +1474,7 @@ function setKeepAwake(on){ gwSettings.keepAwake=on; api('POST','/api/v1/settings
 function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast('Save failed','err'); }); }
 function setRefillLevel(v){ state.water.refill=parseInt(v,10); api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)}).then(function(){ toast('Refill level saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setRefillKit(v){ var n=parseInt(v,10); gwSettings.refillKitSetting=n; api('POST','/api/v1/settings',{refillKitSetting:n}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
+function setRefillKitFull(on){ prefs.refillKitFull=!!on; savePrefs(); updateWaterUI(); }
 // ── Water tank calibration UI ──
 function setWaterCalMode(m){ prefs.waterCal.mode=m; savePrefs(); var b=document.getElementById('waterCalBox'); if(b) b.innerHTML=waterCalBoxHtml(); updateWaterUI(); }
 function waterCalBoxHtml(){ var c=prefs.waterCal||{}; if(c.mode==='off') return '';
