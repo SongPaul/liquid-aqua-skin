@@ -7,7 +7,7 @@ Single-file skin: everything lives in `index.html` (HTML + CSS + vanilla JS, no 
 ## Features
 
 - Live water-tank header whose fill color reflects the current action (extraction, steam, flush, hot water, low-water warning)
-- Album carousel for favorite profiles (max 5), with per-profile curve previews, `group/name` grouping, and a card colour you assign to the profile itself
+- Album carousel for favorite profiles (max 5), with per-profile curve previews, `group/name` grouping, and a card colour you assign to the profile itself - nine presets or any colour you pick
 - Full profile editor page: search, beverage-type filter, show/hide, roast level read from what the profile states, guessed by AI or set by hand, tags read automatically from each profile's own shape, a recently-used section built from the shot history, favorites, and a step-by-step visual editor with curve simulation
 - Extraction graph with step boundaries, live values, and point labels
 - Recipe card with Dose / Yield / Ratio — adjustable via +/- buttons or a numeric keypad
