@@ -73,10 +73,29 @@ body.overlay-active .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 .lockscreen.show{opacity:1;pointer-events:auto}
 /* During the sleep fade, drop the background glass blur so the transition is smooth. */
 body.asleep .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
-.lock-clock{font-size:150px;font-weight:200;letter-spacing:-.03em;color:rgba(255,255,255,.92);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 2px 16px rgba(99,102,241,.25)}
-.lock-date{font-size:22px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.02em}
-.lock-hint{position:absolute;bottom:48px;font-size:13px;font-weight:600;color:rgba(255,255,255,.35);animation:lockpulse 2.8s ease-in-out infinite}
+/* Burn-in guard: instead of moving the clock, we keep every pixel changing in place.
+   All three animations are opacity/filter/transform only (GPU composite, no paint),
+   so they cost almost nothing even while the rest of the UI is idle.
+     - breathe: the clock brightness gently rises and falls
+     - huedrift: the clock color slowly cycles through the aqua range (evens out
+       sub-pixel wear)
+     - ripple: a faint water-like sheen drifts behind the clock */
+.lock-shift{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px}
+.lock-clock{font-size:132px;font-weight:200;letter-spacing:-.03em;color:rgba(255,255,255,.82);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 2px 16px rgba(99,102,241,.22);will-change:opacity,filter}
+.lock-date{font-size:22px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.02em;will-change:opacity}
+.lock-hint{position:absolute;bottom:48px;font-size:13px;font-weight:600;color:rgba(255,255,255,.35)}
+/* Faint drifting sheen behind the clock so the background pixels also cycle. */
+.lock-ripple{position:absolute;inset:-40% -20%;z-index:-1;border-radius:50%;pointer-events:none;
+  background:radial-gradient(60% 55% at 50% 50%,rgba(56,189,248,.10),rgba(99,102,241,.05) 45%,transparent 70%);will-change:transform,opacity}
+/* Only animate while the lock is actually shown, so nothing runs on the hidden layer. */
+.lockscreen.show .lock-clock{animation:lockbreathe 9s ease-in-out infinite,lockhue 48s linear infinite}
+.lockscreen.show .lock-date{animation:lockbreathe 9s ease-in-out infinite}
+.lockscreen.show .lock-hint{animation:lockpulse 2.8s ease-in-out infinite}
+.lockscreen.show .lock-ripple{animation:lockripple 14s ease-in-out infinite}
 @keyframes lockpulse{0%,100%{opacity:.35}50%{opacity:.7}}
+@keyframes lockbreathe{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes lockhue{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+@keyframes lockripple{0%,100%{transform:scale(1) translateY(0);opacity:.7}50%{transform:scale(1.15) translateY(-3%);opacity:1}}
 /* While asleep, stop the water-tank wave animation to save the panel/CPU. */
 body.asleep .wave-path,body.asleep .wave-path2{animation-play-state:paused!important}
 body.asleep .water-fill svg animate{display:none}
@@ -84,10 +103,10 @@ body.asleep .water-fill svg animate{display:none}
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
 .water-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:var(--r-md)}
-.water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1)}
+.water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill svg{position:absolute;top:-16px;left:0;width:100%;height:18px;display:block}
-.wave-path{fill:rgba(56,189,248,.45)}
-.wave-path2{fill:rgba(99,102,241,.32)}
+.wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
+.wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
 .brand{display:flex;align-items:baseline;gap:7px}
 .brand h1{font-size:19px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -268,6 +287,9 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bean-spacer{flex:1;min-height:4px}
 .last-shot{border-top:1px solid var(--glass-line);padding-top:10px;margin-top:10px;flex-shrink:0}
 .ls-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
+.ls-profile:empty{display:none}
+.ls-profile .grp{font-weight:600;color:var(--ink-mute)}
 .ls-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .ls-stat{text-align:center;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:9px 4px}
 .ls-stat .v{font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
@@ -662,6 +684,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="bean-spacer"></div>
       <div class="last-shot" id="lastShot">
         <div class="ls-head"><span data-i18n="lastShot">Last Shot</span><button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button></div>
+        <div class="ls-profile" id="lsProfile"></div>
         <div class="ls-stats" id="lsStats"><div class="ls-empty" data-i18n="noShots">No shots recorded yet</div></div>
       </div>
     </div>
@@ -672,8 +695,11 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
 <!-- ── Sleep / screen-saver lock ───────────────────────────────── -->
 <div class="lockscreen" id="lockScreen" onclick="wakeFromSleep()">
-  <div class="lock-clock" id="lockClock">0:00</div>
-  <div class="lock-date" id="lockDate"></div>
+  <div class="lock-shift" id="lockShift">
+    <div class="lock-ripple"></div>
+    <div class="lock-clock" id="lockClock">0:00</div>
+    <div class="lock-date" id="lockDate"></div>
+  </div>
   <div class="lock-hint">Tap anywhere to wake</div>
 </div>
 
@@ -864,7 +890,7 @@ var I18N={
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose g', yieldG:'Yield g', ratio:'Ratio',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight', target:'Target',
-    lastShot:'Last Shot', viewGraph:'View Graph', lastYield:'Last Yield', lastRatio:'Last Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
+    lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
     currentlyLoaded:'● Currently loaded', tapCenter:'Tap center card to load', noBean:'No bean selected', tapEdit:'Tap edit to add beans & grinder', noGrinder:'No grinder', grind:'Grind',
     settings:'Settings', nightMode:'Night mode', nightModeDesc:'Dark theme for low-light environments.',
     autoNight:'Auto night mode', autoDyeName:'Auto-open shot log', autoDyeDesc:'Show the Log Your Espresso form as soon as a shot ends.',
@@ -874,6 +900,7 @@ var I18N={
     catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
     brightness:'Brightness', brightnessDesc:'Screen brightness (100 = auto).', wakeLock:'Keep screen awake', wakeLockDesc:'Prevent the tablet screen from turning off.',
     lowBatt:'Low-battery dimming', lowBattDesc:'Cap brightness when the battery is low.',
+    sleepDim:'Dim on sleep', sleepDimDesc:'Lower screen brightness while the sleep screen shows (saves the panel and battery).', sleepBright:'Sleep brightness', sleepBrightDesc:'Brightness level used while asleep.',
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
     waterCal:'Water tank calibration', waterCalDesc:'The machine reports water height in mm. Calibrate to show a percentage.', waterCalNow:'Current reading',
     waterCalMode:'Calibration method', wcOff:'Off (raw)', wcTwoPoint:'Empty & full', wcPour:'Measured pour',
@@ -899,7 +926,7 @@ var I18N={
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징 g', yieldG:'추출량 g', ratio:'비율',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'무게', target:'목표',
-    lastShot:'마지막 샷', viewGraph:'그래프 보기', lastYield:'마지막 추출량', lastRatio:'마지막 비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
+    lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
     currentlyLoaded:'● 현재 로드됨', tapCenter:'가운데 카드를 눌러 로드', noBean:'선택된 원두 없음', tapEdit:'편집을 눌러 원두·그라인더 추가', noGrinder:'그라인더 없음', grind:'분쇄도',
     settings:'설정', nightMode:'나이트 모드', nightModeDesc:'저조도 환경용 다크 테마.',
     autoNight:'자동 나이트 모드', autoDyeName:'샷 기록 자동 열기', autoDyeDesc:'샷이 끝나면 기록 폼을 자동으로 표시.',
@@ -909,6 +936,7 @@ var I18N={
     catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
     brightness:'밝기', brightnessDesc:'화면 밝기 (100 = 자동).', wakeLock:'화면 항상 켜기', wakeLockDesc:'태블릿 화면이 꺼지지 않게 유지.',
     lowBatt:'저전력 밝기 제한', lowBattDesc:'배터리가 낮을 때 밝기를 제한.',
+    sleepDim:'절전 시 화면 어둡게', sleepDimDesc:'절전 화면이 표시되는 동안 밝기를 낮춥니다 (액정 잔상·배터리 보호).', sleepBright:'절전 밝기', sleepBrightDesc:'절전 중 사용할 밝기 레벨.',
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCal:'물탱크 보정', waterCalDesc:'머신은 수위를 mm로 보고합니다. 퍼센트 표시를 위해 보정하세요.', waterCalNow:'현재 값',
     waterCalMode:'보정 방법', wcOff:'끔 (원시값)', wcTwoPoint:'빈 탱크 & 가득', wcPour:'측정 투입',
@@ -948,7 +976,7 @@ window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requ
 var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='http://'+h+':8080'; return {http:b,ws:b.replace('http','ws')}; })();
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
-  connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
+  connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
   water:{current:0,refill:0}, ghc:false, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[], groupTemp:[], mixTemp:[], targetTemp:[], mode:'espresso', max:600 };
@@ -1030,14 +1058,22 @@ function onMachineState(ms,prev){
   var lockShown=document.getElementById('lockScreen').classList.contains('show');
   if(ms.state==='sleeping'&&!lockShown){ enterSleepLocalOnly(); }
   else if(ms.state!=='sleeping'&&lockShown){ wakeLocalOnly(); }
-  var pouring=(ms.state==='espresso');
+  var inEspresso=(ms.state==='espresso');
+  // Only the preinfusion + pouring substates are real extraction. preparingForShot
+  // (heating/prep) and pouringDone (ending) are still the espresso state but must
+  // not feed the graph -- there the profile display drives things, not live data.
+  var sub=ms.substate||'';
+  var extracting=inEspresso && (sub==='preinfusion'||sub==='pouring');
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
   function resetChart(mode){ chart.mode=mode; chartReviewing=false; _chartLegendMode=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[]; }
-  // Espresso session lifecycle (records + DYE afterwards)
-  if(pouring&&!state.shotRunning){ startTimer(); resetChart('espresso'); }
-  if(!pouring&&state.shotRunning){ stopTimer(); setTimeout(afterShot,1500); }
-  state.shotRunning=pouring;
+  // Espresso session: the graph starts when actual extraction begins (first
+  // preinfusion/pouring sample), not during prep. DYE fires when the whole
+  // espresso state ends (after pouringDone returns to idle).
+  if(extracting&&!state.shotRunning){ startTimer(); resetChart('espresso'); }
+  if(!inEspresso&&state.shotActive){ stopTimer(); setTimeout(afterShot,1500); }
+  state.shotRunning=extracting;
+  state.shotActive=inEspresso;
   // Steam session lifecycle (records flow/pressure/steam temp; no DYE)
   if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
   if(!steaming&&state.steamRunning){ stopTimer(); drawChart(); }
@@ -1047,7 +1083,7 @@ function onMachineState(ms,prev){
   if(!watering&&state.waterRunning){ stopTimer(); drawChart(); }
   state.waterRunning=watering;
 
-  if(pouring){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetTemp.push(state.targetMixTemp||state.targetGroupTemp||0);
+  if(extracting){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetTemp.push(state.targetMixTemp||state.targetGroupTemp||0);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); if(chart.targetTemp.length>chart.max)chart.targetTemp.shift(); drawChart(); }
   else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
@@ -1117,9 +1153,17 @@ function tempColor(t){ t=t||0;
 }
 // Tank fill gradient + wave colors reflect the current water/boiler temperature
 // (low-water warning overrides to a red/orange alert).
+// Displayed tank color, eased toward the target so it glides instead of snapping
+// when the boiler temperature spikes during extraction.
+var _dispColor=null;
 function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   var low=(state.water.current<=state.water.refill||pct<15);
-  var t=state.groupTemp||state.mixTemp||0; var c=low?[239,68,68]:tempColor(t);
+  // Mix (brew water) temperature is the meaningful reference during a shot; the
+  // group thermometer swings hard and made the color flicker green<->red.
+  var t=state.mixTemp||state.groupTemp||0; var target=low?[239,68,68]:tempColor(t);
+  if(!_dispColor){ _dispColor=target.slice(); }
+  else { var k=0.18; for(var i=0;i<3;i++){ _dispColor[i]+= (target[i]-_dispColor[i])*k; } }
+  var c=[Math.round(_dispColor[0]),Math.round(_dispColor[1]),Math.round(_dispColor[2])];
   var fill=document.getElementById('waterFill'); if(!fill) return;
   fill.style.background='linear-gradient(180deg,rgba('+c[0]+','+c[1]+','+c[2]+',.30),rgba('+c[0]+','+c[1]+','+c[2]+',.48))';
   var wp=document.querySelector('.temps-bar .wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
@@ -1270,16 +1314,23 @@ function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/m
 function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared','ok');}).catch(function(e){toast(e.message,'err');}); }
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
-var _lockClockT=null; var _asleep=false;
+var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
 // Called on both enter paths (button + machine-reported). Flips the sleep flag,
 // shows the lock, and starts a 1s clock. Sets the clock to update only while the
 // tab is visible so a backgrounded tablet stops the timer entirely.
+// The burn-in guard is pure CSS (breathe/hue-drift/ripple), so no JS loop is needed.
 function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show');
-  updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(function(){ if(!document.hidden) updateLockClock(); },1000); }
+  updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(function(){ if(!document.hidden) updateLockClock(); },1000);
+  // Dim the panel while asleep (a dark, low-brightness screen resists burn-in and
+  // saves power). Remember the level so it can be restored on wake.
+  if(prefs.sleepDim){ if(displayState&&displayState.brightness!=null) _preSleepBrightness=displayState.brightness;
+    api('PUT','/api/v1/display/brightness',{brightness:prefs.sleepBrightness||20}).catch(function(){}); } }
 // Called on both wake paths. Clears the flag/clock, then repaints the live UI once
 // so everything reflects the current state after the sleep gap.
 function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show');
   if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; }
+  // Restore pre-sleep brightness.
+  if(_preSleepBrightness!=null){ var b=_preSleepBrightness; _preSleepBrightness=null; api('PUT','/api/v1/display/brightness',{brightness:b}).catch(function(){}); }
   updateMachineUI(); updateWaterUI(); updateScaleUI(); }
 function enterSleep(){ beginSleepUI();
   api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast('Sleep failed','err'); }); }
@@ -1371,12 +1422,12 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false,
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, sleepDim:true, sleepBrightness:20,
   // Water tank calibration. mode: 'off' | 'twopoint' | 'pour'.
   // twopoint: hEmpty/hFull (mm) + capacity(ml). pour: hEmpty(mm) + poured(ml) at hPour(mm).
   waterCal:{ mode:'off', hEmpty:null, hFull:null, capacity:1500, poured:null, hPour:null } };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim; if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
 // the chosen calibration. Falls back to treating the raw value as % (legacy).
 function tankPercent(mm){ var c=prefs.waterCal||{};
@@ -1454,6 +1505,9 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('brightness','brightnessDesc','<div class="opt-ctrl"><input type="range" class="slider" min="10" max="100" step="1" value="'+br+'"'+(brSupported?'':' disabled')+' oninput="setBrightness(this.value,true)" onchange="setBrightness(this.value,false)"><span class="opt-val" id="brVal">'+br+'</span></div>');
     h+=row('wakeLock','wakeLockDesc',sw('setWake',!!gwSettings.keepAwake,'setKeepAwake(this.checked)'));
     h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
+    h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
+    var sb=prefs.sleepBrightness||20;
+    h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
   } else if(spCat==='machine'){
     h+='<div class="sp-cat-title">'+t('catMachine')+'</div>';
     var rl=Math.round(state.water.refill||0);
@@ -1500,6 +1554,8 @@ function setBrightness(v,live){ document.getElementById('brVal').textContent=v; 
   api('PUT','/api/v1/display/brightness',{brightness:parseInt(v,10)}).catch(function(){ toast('Brightness failed','err'); }); }
 function setKeepAwake(on){ gwSettings.keepAwake=on; api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast('Save failed','err'); }); }
+function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
+function setSleepBright(v,live){ document.getElementById('sbVal').textContent=v; if(live) return; prefs.sleepBrightness=parseInt(v,10); savePrefs(); }
 function setRefillLevel(v){ state.water.refill=parseInt(v,10); api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)}).then(function(){ toast('Refill level saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setRefillKit(v){ var n=parseInt(v,10); gwSettings.refillKitSetting=n; api('POST','/api/v1/settings',{refillKitSetting:n}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setRefillKitFull(on){ prefs.refillKitFull=!!on; savePrefs(); updateWaterUI(); }
@@ -4331,13 +4387,26 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
 // Populate the "Last Shot" mini panel + today's count from the shot history.
 function loadLastShot(){ api('GET','/api/v1/shots?limit=20').then(function(r){ var items=(r&&(r.items||r.shots))||[];
   var box=document.getElementById('lsStats'); if(!box) return;
+  var profEl=document.getElementById('lsProfile');
   lastShotSummary=items.length?items[0]:null;
-  if(!items.length){ box.innerHTML='<div class="ls-empty">'+t('noShots')+'</div>'; return; }
+  if(!items.length){ box.innerHTML='<div class="ls-empty">'+t('noShots')+'</div>'; if(profEl) profEl.innerHTML=''; return; }
   var s=items[0], an=s.annotations||{};
+  // Show which profile produced this shot (group prefix dimmed if present).
+  if(profEl){ var pr=(s.workflow&&s.workflow.profile)||{}; var stt=splitTitle(pr.title||''); 
+    profEl.innerHTML=stt.name?((stt.group?'<span class="grp">'+escapeHtml(stt.group)+' / </span>':'')+escapeHtml(stt.name)):''; }
   var today=new Date(); var cnt=items.filter(function(x){ var d=new Date(x.createdAt||x.timestamp); return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate(); }).length;
-  var ratio=(an.actualDoseWeight&&an.actualYield)?('1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'—';
+  // Use values that exist without a saved log: the recipe context (targetDoseWeight/
+  // targetYield) is set before every shot. Fall back to DYE annotations when present
+  // (more accurate), then the loaded recipe.
+  var ctx=(s.workflow&&s.workflow.context)||{};
+  var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:(ctx.targetDoseWeight!=null?ctx.targetDoseWeight:settings.doseIn));
+  var yld=(an.actualYield!=null?an.actualYield:(ctx.targetYield!=null?ctx.targetYield:null));
+  var ratio=(dose&&yld)?('1:'+(yld/dose).toFixed(1)):'—';
   function stat(v,l){ return '<div class="ls-stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; }
-  box.innerHTML=stat(an.actualYield!=null?(convWeight(an.actualYield).toFixed(1)+weightUnitLabel()):'—',t('lastYield'))+stat(ratio,t('lastRatio'))+stat(an.enjoyment?('★'+an.enjoyment):'—',t('lastStar'))+stat(cnt,t('todaysShots'));
+  box.innerHTML=stat(dose!=null?convWeight(dose).toFixed(1):'—',t('lastDose'))
+    +stat(yld!=null?(convWeight(yld).toFixed(1)+weightUnitLabel()):'—',t('lastYield'))
+    +stat(ratio,t('lastRatio'))
+    +stat(cnt,t('todaysShots'));
 }).catch(function(){}); }
 // Load the last shot's recorded measurements into the main Extraction Graph.
 var chartReviewing=false;
