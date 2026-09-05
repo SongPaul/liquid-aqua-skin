@@ -915,6 +915,7 @@ var I18N={
     roaster:'Roaster', name:'Name', origin:'Origin', process:'Process', roastLevel:'Roast level', notes:'Notes',
     model:'Model', burrs:'Burrs', burrType:'Burr type', burrSize:'Burr size (mm)', grindSetting:'Grind Setting', current:'Current setting',
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; Gemini fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
+    qrNoLib:'QR library not loaded', qrNoLan:'Open this skin from the tablet using its Wi-Fi/LAN address (not localhost) so the phone can reach it.',
     profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'☕ Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
     steamOptions:'♨️ Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
     tapWake:'Tap anywhere to wake'
@@ -951,6 +952,7 @@ var I18N={
     roaster:'로스터', name:'이름', origin:'원산지', process:'가공', roastLevel:'로스팅', notes:'메모',
     model:'모델', burrs:'버', burrType:'버 종류', burrSize:'버 크기 (mm)', grindSetting:'분쇄도 설정', current:'현재 값',
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 Gemini가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
+    qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'폰이 접속할 수 있도록 태블릿에서 localhost가 아닌 Wi-Fi/LAN 주소로 이 스킨을 여세요.',
     profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'☕ 에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
     steamOptions:'♨️ 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
     tapWake:'화면을 눌러 깨우기'
@@ -2026,19 +2028,32 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
 // ── Phone hand-off via QR ───────────────────────────────────────────
 // The phone opens this same skin URL with ?beanscan=1. Its window.location.hostname
 // becomes the gateway host, so no address needs to travel in the QR.
-// Inline QR inside the bean editor's AI block (no modal).
+// The QR must point at a LAN-reachable address for THIS tablet, never localhost/
+// 127.0.0.1 (that would resolve to the phone itself). We ask the gateway for its
+// Wi-Fi/LAN IP (/api/v1/info -> localIp) and build the URL from that; only if the
+// page is already opened on a LAN host do we fall back to the current origin.
+function isLocalHost(h){ return !h||h==='localhost'||h==='127.0.0.1'||h==='0.0.0.0'||h==='::1'||/^127\./.test(h); }
 function togglePhoneQR(){
   var box=document.getElementById('aiQr'); if(!box) return;
   if(box.style.display!=='none'){ box.style.display='none'; return; }
-  try{
-    var base=(window.location.origin&&window.location.origin!=='null')?window.location.origin:('http://'+window.location.host);
-    var url=base+window.location.pathname+'?beanscan=1';
-    document.getElementById('aiQrUrl').textContent=url;
-    var wrap=document.getElementById('aiQrCanvas'); wrap.innerHTML='';
-    if(typeof qrcode==='undefined'){ wrap.innerHTML='<div style="font-size:12px;color:var(--red)">QR library not loaded</div>'; }
-    else { var cv=document.createElement('canvas'); wrap.appendChild(cv); drawQR(cv,url,220); }
-    box.style.display='block';
-  }catch(e){ document.getElementById('aiQrUrl').textContent='QR error: '+e.message; document.getElementById('aiQr').style.display='block'; }
+  var urlEl=document.getElementById('aiQrUrl'); var wrap=document.getElementById('aiQrCanvas');
+  wrap.innerHTML='<div style="font-size:12px;color:var(--ink-mute)">…</div>'; urlEl.textContent=''; box.style.display='block';
+  var port=window.location.port||''; var path=window.location.pathname;
+  function render(url){ wrap.innerHTML='';
+    if(typeof qrcode==='undefined'){ wrap.innerHTML='<div style="font-size:12px;color:var(--red)">'+t('qrNoLib')+'</div>'; urlEl.textContent=url; return; }
+    var cv=document.createElement('canvas'); wrap.appendChild(cv); drawQR(cv,url,220); urlEl.textContent=url; }
+  function fail(msg){ wrap.innerHTML='<div style="font-size:12px;color:var(--red);text-align:center;line-height:1.4">'+escapeHtml(msg)+'</div>'; urlEl.textContent=''; }
+  // Ask the gateway for its LAN IP first; that is the address the phone can reach.
+  api('GET','/api/v1/info').then(function(info){
+    var ip=(info&&info.localIp||'').trim();
+    if(ip && !isLocalHost(ip)){ render('http://'+ip+(port?(':'+port):'')+path+'?beanscan=1'); return; }
+    // No usable gateway IP. If the page itself is on a LAN host, that works too.
+    if(!isLocalHost(window.location.hostname)){ render('http://'+window.location.host+path+'?beanscan=1'); return; }
+    fail(t('qrNoLan'));
+  }).catch(function(){
+    if(!isLocalHost(window.location.hostname)){ render('http://'+window.location.host+path+'?beanscan=1'); }
+    else fail(t('qrNoLan'));
+  });
 }
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
