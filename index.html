@@ -384,19 +384,22 @@ body.night .ep-dot{border-color:#1a1526}
 .rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .rec-head{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
 .rec-wait{font-size:12px;color:var(--ink-mute);padding:10px 2px}
-.rec-cards{display:flex;gap:9px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
-.rec-cards::-webkit-scrollbar{height:5px}
-.rec-cards::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-.rec-card{flex:0 0 148px;display:flex;flex-direction:column;background:#fff;border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .16s,box-shadow .16s}
-.rec-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(30,25,70,.16)}
-.rec-art{position:relative;height:78px;display:flex;align-items:flex-end;border-bottom:1px solid var(--glass-line)}
-.rec-art canvas{position:absolute;inset:0;width:100%;height:100%}
-.rec-rank{position:absolute;top:6px;left:6px;width:19px;height:19px;border-radius:50%;background:rgba(0,0,0,.34);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
-.rec-rank.use{width:auto;min-width:19px;padding:0 6px;border-radius:100px}
-.rec-cardname{position:relative;width:100%;padding:4px 8px 5px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.42));color:#fff;font-size:11px;font-weight:800;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.reccar .car-nav{z-index:200}
+.reccar{position:relative;height:132px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible;margin-top:2px}
+.reccar-stage{position:relative;width:100%;height:100%}
+.rcard{position:absolute;top:50%;left:50%;width:132px;height:104px;margin:-52px 0 0 -66px;border-radius:14px;cursor:pointer;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
+.rcard.center{box-shadow:0 14px 32px rgba(80,70,160,.3);border-color:rgba(255,255,255,.6)}
+.rcard .rc-curve{flex:1;position:relative;min-height:0}
+.rcard .rc-curve canvas{position:absolute;inset:0;width:100%;height:100%}
+.rcard .rc-name{flex-shrink:0;padding:5px 7px 6px;text-align:center;background:rgba(0,0,0,.3);font-size:11px;font-weight:800;color:#fff;line-height:1.15;text-shadow:0 1px 2px rgba(0,0,0,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-badge{position:absolute;top:5px;left:5px;z-index:2;min-width:18px;height:18px;padding:0 5px;border-radius:100px;background:rgba(0,0,0,.34);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.reccar-cap{display:flex;align-items:center;gap:8px;margin-top:4px}
+.rc-cap-text{flex:1;min-width:0}
+.rc-cap-name{font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-cap-sub{font-size:10px;color:var(--ink-mute);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rc-use{flex:none;padding:7px 14px;font-size:12px}
 .rec-why{flex:1;font-size:10px;color:var(--ink-mute);line-height:1.45;padding:7px 8px}
-.rec-use{padding:6px 8px;border-top:1px solid var(--glass-line);text-align:center;font-size:11px;font-weight:800;color:var(--accent)}
-body.night .rec-card{background:rgba(255,255,255,.06)}
 .ep-roastlab{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-right:4px}
 .ep-roast{padding:4px 10px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
 .ep-roast.on{background:#f97316;border-color:#f97316;color:#fff}
@@ -975,8 +978,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <input type="file" id="mbFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files,true)">
     </div>
     <button class="m-btn primary mb-analyze" id="mbAnalyzeBtn" onclick="mbAnalyze()" disabled data-i18n="analyze">Analyze</button>
-    <div id="mbRec" class="rec-box"></div>
-    <div id="mbUse" class="rec-box"></div>
+    <div class="rec-cols"><div id="mbRec" class="rec-box"></div><div id="mbUse" class="rec-box"></div></div>
     <div class="mb-fields" id="mbFields" style="display:none">
       <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
       <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
@@ -2579,8 +2581,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
     recPfx='bg';
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
       +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')">'+t('recButton')+'</button></div>'
-      +'<div id="bgRec" class="rec-box"></div>'
-      +'<div id="bgUse" class="rec-box"></div>'
+      +'<div class="rec-cols"><div id="bgRec" class="rec-box"></div><div id="bgUse" class="rec-box"></div></div>'
       +'<div class="ai-scan" id="aiScan">'
         +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
         +'<div class="ai-thumbs" id="aiThumbs"></div>'
@@ -2710,23 +2711,6 @@ function loadBeanUsage(pfx){
         .sort(function(a,b){ return b.n-a.n || (b.last>a.last?1:-1); })
         .slice(0,5);
     }).then(function(){ usageBusy=false; renderUsageBox(); }); }
-function renderUsageBox(){
-  var box=document.getElementById(recPfx+'Use'); if(!box) return;
-  if(usageBusy){ box.innerHTML='<div class="rec-wait">'+escapeHtml(t('usageWorking'))+'</div>'; return; }
-  if(!usageResults||!usageResults.length){ box.innerHTML=''; return; }
-  box.innerHTML='<div class="rec-head">'+escapeHtml(t('usageHead'))+'</div>'
-    +'<div class="rec-cards">'+usageResults.map(function(r,i){ var st=splitTitle(profTitle(r.p));
-      var sub=t('usageCount').replace('{n}',r.n)+(r.last?' · '+fmtShortDate(r.last):'');
-      return '<div class="rec-card"'+(recPfx==='bg'?' onclick="useMostUsed('+i+')"':'')+'>'
-        +'<div class="rec-art" style="background:'+albumGrad(r.p,i)+'">'
-          +'<span class="rec-rank use">'+r.n+'</span><canvas></canvas>'
-          +'<span class="rec-cardname">'+escapeHtml(st.name)+'</span>'
-        +'</div>'
-        +'<div class="rec-why">'+escapeHtml(sub)+'</div>'
-        +(recPfx==='bg'?'<div class="rec-use">'+escapeHtml(t('use'))+'</div>':'')
-        +'</div>'; }).join('')+'</div>';
-  var cvs=box.querySelectorAll('.rec-art canvas');
-  usageResults.forEach(function(r,i){ var cv=cvs[i]; if(cv) setTimeout(function(){ drawSimCurve(cv,r.p.profile,true); },0); }); }
 function fmtShortDate(v){ var d=new Date(v); if(isNaN(d)) return '';
   try{ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(_){ return isoDay(v); } }
 function useMostUsed(i){ var r=usageResults&&usageResults[i]; if(!r) return;
@@ -2765,23 +2749,66 @@ function recFromExtras(bean){
   return rows.map(function(r){
     var match=allProfiles.find(function(p){ return profTitle(p)===r.title; });
     return match?{p:match,why:String(r.why||'')}:null; }).filter(Boolean); }
+// Both profile rows are carousels built the way the main screen builds its album
+// carousel: the centre card is scaled up, its neighbours step aside, and the
+// detail for whichever card is centred sits underneath.
+var carIdx={rec:0,use:0};
+function profileCarousel(boxId,key,items,capFn,useFn){
+  var box=document.getElementById(boxId); if(!box) return;
+  if(!items||!items.length){ box.innerHTML=''; box._items=null; return; }
+  if(carIdx[key]>=items.length) carIdx[key]=0;
+  var head=(key==='rec')?t('recHead'):t('usageHead');
+  box.innerHTML='<div class="rec-head">'+escapeHtml(head)+'</div>'
+    +'<div class="reccar">'
+      +(items.length>1?'<button class="car-nav prev" onclick="recCarMove(\''+key+'\',-1)">‹</button>':'')
+      +'<div class="reccar-stage">'+items.map(function(r,i){
+          return '<div class="rcard" style="background:'+albumGrad(r.p,i)+'">'
+            +'<div class="rc-badge">'+escapeHtml(String(r.badge))+'</div>'
+            +'<div class="rc-curve"><canvas></canvas></div>'
+            +'<div class="rc-name">'+escapeHtml(splitTitle(profTitle(r.p)).name)+'</div>'
+          +'</div>'; }).join('')+'</div>'
+      +(items.length>1?'<button class="car-nav next" onclick="recCarMove(\''+key+'\',1)">›</button>':'')
+    +'</div>'
+    +'<div class="reccar-cap"><div class="rc-cap-text" id="'+boxId+'Cap"></div>'
+      +(useFn?'<button class="m-btn rc-use" onclick="'+useFn+'(carIdx.'+key+')">'+escapeHtml(t('use'))+'</button>':'')
+      +'</div>';
+  box._items=items; box._key=key; box._capFn=capFn; box._useFn=useFn;
+  var cvs=box.querySelectorAll('.rcard canvas');
+  items.forEach(function(r,i){ var cv=cvs[i]; if(cv) setTimeout(function(){ drawSimCurve(cv,r.p.profile,true); },0); });
+  layoutRecCar(box); }
+function layoutRecCar(box){
+  var items=box._items||[], key=box._key, idx=carIdx[key]||0;
+  var cards=box.querySelectorAll('.rcard');
+  items.forEach(function(r,i){ var el=cards[i]; if(!el) return;
+    var off=i-idx, abs=Math.abs(off);
+    if(off===0) el.style.transform='translateX(0) scale(1.1)';
+    else el.style.transform='translateX('+(off*118)+'px) scale('+Math.max(0.7,0.86-abs*0.09)+')';
+    el.style.opacity=abs>2?0:(off===0?1:0.5);
+    el.style.zIndex=100-abs; el.style.pointerEvents=abs>2?'none':'auto';
+    el.classList.toggle('center',off===0);
+    el.onclick=function(){ if(i===idx){ if(box._useFn) window[box._useFn](i); }
+      else { carIdx[key]=i; layoutRecCar(box); } }; });
+  var cap=document.getElementById(box.id+'Cap');
+  if(cap&&items[idx]) cap.innerHTML=box._capFn(items[idx],idx);
+  var cv=cards[idx]&&cards[idx].querySelector('canvas');
+  if(items[idx]&&cv) setTimeout(function(){ drawSimCurve(cv,items[idx].p.profile,true); },380); }
+function recCarMove(key,dir){
+  var box=document.getElementById(recPfx+(key==='rec'?'Rec':'Use')); if(!box||!box._items) return;
+  var n=box._items.length; carIdx[key]=(carIdx[key]+dir+n)%n; layoutRecCar(box); }
 function renderRecBox(){
   var box=document.getElementById(recPfx+'Rec'); if(!box) return;
   if(recBusy){ box.innerHTML='<div class="rec-wait">'+escapeHtml(t('recWorking'))+'</div>'; return; }
-  if(!recResults||!recResults.length){ box.innerHTML=''; return; }
-  box.innerHTML='<div class="rec-head">'+escapeHtml(t('recHead'))+'</div>'
-    +'<div class="rec-cards">'+recResults.map(function(r,i){ var st=splitTitle(profTitle(r.p));
-      return '<div class="rec-card"'+(recPfx==='bg'?' onclick="useRecommended('+i+')"':'')+'>'
-        +'<div class="rec-art" style="background:'+albumGrad(r.p,i)+'">'
-          +'<span class="rec-rank">'+(i+1)+'</span><canvas></canvas>'
-          +'<span class="rec-cardname">'+escapeHtml(st.name)+'</span>'
-        +'</div>'
-        +'<div class="rec-why">'+escapeHtml(r.why)+'</div>'
-        +(recPfx==='bg'?'<div class="rec-use">'+escapeHtml(t('use'))+'</div>':'')
-        +'</div>'; }).join('')+'</div>';
-  // the curve is drawn after layout so the canvas has a size to measure
-  var cvs=box.querySelectorAll('.rec-art canvas');
-  recResults.forEach(function(r,i){ var cv=cvs[i]; if(cv) setTimeout(function(){ drawSimCurve(cv,r.p.profile,true); },0); }); }
+  profileCarousel(recPfx+'Rec','rec',(recResults||[]).map(function(r,i){ return {p:r.p,badge:i+1,why:r.why}; }),
+    function(r){ return '<div class="rc-cap-name">'+escapeHtml(splitTitle(profTitle(r.p)).name)+'</div>'
+      +'<div class="rc-cap-sub">'+escapeHtml(r.why)+'</div>'; },
+    recPfx==='bg'?'useRecommended':null); }
+function renderUsageBox(){
+  var box=document.getElementById(recPfx+'Use'); if(!box) return;
+  if(usageBusy){ box.innerHTML='<div class="rec-wait">'+escapeHtml(t('usageWorking'))+'</div>'; return; }
+  profileCarousel(recPfx+'Use','use',(usageResults||[]).map(function(r){ return {p:r.p,badge:r.n,n:r.n,last:r.last}; }),
+    function(r){ return '<div class="rc-cap-name">'+escapeHtml(splitTitle(profTitle(r.p)).name)+'</div>'
+      +'<div class="rc-cap-sub">'+escapeHtml(t('usageCount').replace('{n}',r.n)+(r.last?' · '+fmtShortDate(r.last):''))+'</div>'; },
+    recPfx==='bg'?'useMostUsed':null); }
 function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
   selectProfile(r.p);
   var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
