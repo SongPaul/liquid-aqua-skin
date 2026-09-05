@@ -2001,17 +2001,46 @@ function renderAiThumbs(mobile){ var wrap=document.getElementById(mobile?'mbThum
     var x=document.createElement('button'); x.className='ai-thumb-x'; x.textContent='×'; x.onclick=function(){ aiImages.splice(i,1); renderAiThumbs(mobile); }; d.appendChild(x); wrap.appendChild(d); });
   var btn=document.getElementById(mobile?'mbAnalyzeBtn':'aiAnalyzeBtn'); if(btn) btn.disabled=aiImages.length===0;
 }
+// Resolve the newest usable Flash model at runtime instead of hard-coding a version
+// (Google renames/deprecates these often). We list the models the key can see, keep
+// the vision-capable Flash ones, and pick the highest version number. Cached per session.
+var GEMINI_API='https://generativelanguage.googleapis.com/v1beta';
+var GEMINI_FALLBACK='gemini-flash-latest';
+var _geminiModel=null;
+function pickFlashModel(models){
+  var cand=(models||[]).filter(function(m){
+    var n=(m.name||'').replace(/^models\//,'');
+    var methods=m.supportedGenerationMethods||m.supportedActions||[];
+    var canGen=!methods.length||methods.indexOf('generateContent')>=0;
+    return /flash/i.test(n) && !/-lite/i.test(n) && !/thinking|image|tts|audio|embedding|vision-legacy/i.test(n) && canGen;
+  }).map(function(m){ return (m.name||'').replace(/^models\//,''); });
+  if(!cand.length) return null;
+  // Prefer a plain "-latest" alias if present, else the highest numeric version.
+  var latest=cand.filter(function(n){ return /latest$/.test(n); });
+  if(latest.length) return latest.sort()[latest.length-1];
+  function ver(n){ var m=n.match(/(\d+(?:\.\d+)?)/); return m?parseFloat(m[1]):0; }
+  cand.sort(function(a,b){ return ver(a)-ver(b); });
+  return cand[cand.length-1];
+}
+function resolveGeminiModel(key){
+  if(_geminiModel) return Promise.resolve(_geminiModel);
+  return fetch(GEMINI_API+'/models?key='+encodeURIComponent(key))
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(j){ var picked=j&&pickFlashModel(j.models); _geminiModel=picked||GEMINI_FALLBACK; return _geminiModel; })
+    .catch(function(){ _geminiModel=GEMINI_FALLBACK; return _geminiModel; });
+}
 // Shared: send images to Gemini, resolve with the parsed bean object.
 function geminiAnalyze(key,images){
   var parts=[{text:'You are reading one or more photos of a coffee bag label. Extract the bean details and respond ONLY with JSON using these keys (empty string if unknown): {"roaster":"","name":"","country":"","processing":"","roastLevel":"","notes":""}. name is the coffee/blend name (not the roaster). roastLevel is one of light, medium-light, medium, medium-dark, dark if determinable. notes = brief tasting notes if printed.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:0.1}};
-  var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(key);
-  return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
-    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error((j.error&&j.error.message)||('HTTP '+r.status)); return j; }); })
-    .then(function(j){ var txt=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
-      if(!txt) throw new Error('Empty response'); var data; try{ data=JSON.parse(txt); }catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
-      if(!data) throw new Error('Could not parse result'); return data; }); }
+  return resolveGeminiModel(key).then(function(model){
+    var url=GEMINI_API+'/models/'+model+':generateContent?key='+encodeURIComponent(key);
+    return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(function(r){ return r.json().then(function(j){ if(!r.ok){ if(r.status===404) _geminiModel=null; throw new Error((j.error&&j.error.message)||('HTTP '+r.status)); } return j; }); })
+      .then(function(j){ var txt=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
+        if(!txt) throw new Error('Empty response'); var data; try{ data=JSON.parse(txt); }catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
+        if(!data) throw new Error('Could not parse result'); return data; }); }); }
 function analyzeBeanImages(){ if(!aiImages.length) return;
   var key=(prefs.geminiKey||'').trim(); if(!key){ toast('Set a Gemini API key in Settings','err'); openSettingsPage(); spSelect('ai'); return; }
   var statusEl=document.getElementById('aiStatus'); statusEl.textContent='Analyzing… ✨'; var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
