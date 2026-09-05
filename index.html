@@ -332,8 +332,8 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ep-toolbar{position:sticky;top:0;z-index:2;display:flex;flex-direction:column;gap:8px;padding:2px 2px 8px;background:linear-gradient(135deg,#eef1ff,#f5edff)}
 .ep-search{width:100%;padding:9px 12px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;color:var(--ink);-webkit-appearance:none}
 .ep-search:focus{outline:none;border-color:var(--accent)}
-.ep-kinds{display:flex;gap:4px}
-.ep-kind{flex:1;min-width:0;padding:6px 2px;border-radius:9px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:10px;font-weight:700;color:var(--ink-mute);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ep-kinds{display:flex;gap:4px;flex-wrap:wrap}
+.ep-kind{flex:0 1 auto;min-width:0;padding:6px 9px;border-radius:9px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:10px;font-weight:700;color:var(--ink-mute);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ep-kind.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ep-tags{display:flex;flex-wrap:wrap;gap:4px}
 .ep-tag{padding:4px 8px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:10px;font-weight:700;color:var(--ink-mute);cursor:pointer}
@@ -342,6 +342,12 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ep-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
 .ep-chip{font-size:9px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.10);border-radius:100px;padding:2px 6px}
 .ep-chip.roast{color:#c2620b;background:rgba(249,115,22,.12)}
+.ep-chip.ai{border:1px dashed currentColor;background:transparent}
+.ep-airow{display:flex;gap:5px}
+.ep-aibtn{flex:1;padding:6px 8px;border-radius:9px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
+.ep-aibtn[disabled]{opacity:.55;cursor:default}
+.ep-aibtn.ghost{flex:0 0 auto;background:#fff;color:var(--ink-mute);border-color:var(--glass-line)}
+body.night .ep-aibtn.ghost{background:rgba(255,255,255,.07);color:var(--ink)}
 .eye-btn{background:none;border:none;font-size:14px;line-height:1;cursor:pointer;opacity:.35;padding:2px}
 .eye-btn:hover,.eye-btn.on{opacity:1}
 .ep-roastrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 10px}
@@ -991,6 +997,11 @@ var I18N={
     kindHidden:'Hidden', hideProfile:'Hide this profile', showProfile:'Show this profile',
     hidden:'Hidden', shown:'Shown again', toggleFav:'Toggle favorite',
     roastLevel:'Roast', fromProfile:'from the profile', clear:'Clear',
+    tagForMilk:'for milk', tagForLong:'long drink',
+    aiClassify:'✨ Classify with AI', aiClassifyingShort:'Classifying…', aiClear:'Clear AI',
+    aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
+    aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
+    aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     roastDate:'Roast date', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
     species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
@@ -1048,6 +1059,11 @@ var I18N={
     kindHidden:'숨김', hideProfile:'이 프로파일 숨기기', showProfile:'다시 보이기',
     hidden:'숨김 처리됨', shown:'다시 표시됨', toggleFav:'즐겨찾기',
     roastLevel:'배전도', fromProfile:'프로파일에 명시됨', clear:'해제',
+    tagForMilk:'우유음료', tagForLong:'롱드링크',
+    aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
+    aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
+    aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
+    aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     roastDate:'로스팅 날짜', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
     species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
@@ -1928,7 +1944,7 @@ function ensureCurveObserver(){ if(epCurveObserver||!('IntersectionObserver' in 
 // beverage type splits espresso from tea and cleaning, and the shot history
 // says which ones are actually in use.
 var epQuery='', epKind='espresso', epTag='', epRecent=[];
-var TAG_KEYS=['tagLight','tagMedium','tagDark','tagPressure','tagFlow','tagMixed','tagLowPressure','tagBloom','tagDecline','tagCool','tagHot'];
+var TAG_KEYS=['tagLight','tagMedium','tagDark','tagForMilk','tagForLong','tagPressure','tagFlow','tagMixed','tagLowPressure','tagBloom','tagDecline','tagCool','tagHot'];
 function pourSteps(steps){ var out=[];
   steps.forEach(function(st){ var nm=String(st.name||'').toLowerCase();
     if(!out.length&&(nm.indexOf('fill')>=0||nm.indexOf('preinfus')>=0)) return; out.push(st); });
@@ -1982,7 +1998,12 @@ function manualRoast(p){ var tags=((p&&p.metadata)||{}).tags||[];
   return ROAST_KEYS.filter(function(k){ return tags.indexOf(k)>=0; }); }
 function profileRoast(p){ var manual=manualRoast(p); if(manual.length) return manual;
   var pr=(p&&p.profile)||{}; var byTitle=roastFromTitle(pr.title||'');
-  return byTitle.length?byTitle:roastFromNotes(pr.notes); }
+  if(byTitle.length) return byTitle;
+  var byNotes=roastFromNotes(pr.notes); if(byNotes.length) return byNotes;
+  return aiTagsOf(p).filter(function(k){ return ROAST_KEYS.indexOf(k)>=0; }); }
+function profileAiExtras(p){ return aiTagsOf(p).filter(function(k){ return ROAST_KEYS.indexOf(k)<0; }); }
+function isAiRoast(p){ return !manualRoast(p).length && !roastFromTitle(((p&&p.profile)||{}).title||'').length
+  && !roastFromNotes(((p&&p.profile)||{}).notes).length && aiTagsOf(p).length>0; }
 // Metadata is writable on bundled profiles, but only on its own - sending the
 // profile alongside is rejected as an attempt to edit default content.
 function setProfileRoast(id,key){
@@ -2010,7 +2031,74 @@ function loadRecentProfiles(){ return api('GET','/api/v1/shots?limit=50').then(f
     items.forEach(function(sh){ var t=((sh.workflow&&sh.workflow.profile)||{}).title;
       if(t&&!seen[t]){ seen[t]=true; epRecent.push(t); } });
   }).catch(function(){ epRecent=[]; }); }
-function allTagsOf(p){ return profileRoast(p).concat(profileTags((p&&p.profile)||{})); }
+// ── AI profile classification ───────────────────────────────────────
+// A profile's shape cannot reveal the roast it suits, but its notes usually can,
+// in prose no rule reads reliably. Gemini reads them and its answers are kept
+// apart from hand-set tags, so re-running never overwrites a deliberate choice.
+var AI_KEYS=['tagLight','tagMedium','tagDark','tagForMilk','tagForLong'];
+var aiBusyFlag=false;
+function aiTagsOf(p){ var tags=((p&&p.metadata)||{}).aiTags||[];
+  return AI_KEYS.filter(function(k){ return tags.indexOf(k)>=0; }); }
+function profileDigest(p,i){
+  var pr=p.profile||{}, steps=pr.steps||[];
+  var temps=steps.map(function(st){ return parseFloat(st.temperature)||0; }).filter(function(v){ return v>0; });
+  var pres=steps.filter(function(st){ return st.pump==='pressure'; }).map(function(st){ return parseFloat(st.pressure)||0; });
+  return { i:i, title:pr.title||'', author:pr.author||'',
+    notes:String(pr.notes||'').replace(/\s+/g,' ').slice(0,900),
+    steps:steps.length,
+    tempC:temps.length?[Math.min.apply(null,temps),Math.max.apply(null,temps)]:null,
+    peakBar:pres.length?Math.round(Math.max.apply(null,pres)*10)/10:null,
+    targetWeightG:pr.target_weight||null }; }
+function aiClassifyPrompt(list){
+  return 'You are cataloguing espresso profiles for a Decent espresso machine so they can be filtered. '
+    +'For each profile decide which roast levels it suits and how it is meant to be drunk. '
+    +'Respond ONLY with a JSON array, one object per profile, exactly: [{"i":0,"tags":["tagLight"]}]. '
+    +'Allowed tags, use no others: tagLight (suits light roasts), tagMedium (medium roasts), tagDark (dark roasts), '
+    +'tagForMilk (intended for milk drinks - cappuccino, latte, flat white), tagForLong (a long or filter-style drink - allonge, lungo, americano-like). '
+    +'Base the roast on what the notes and title actually say or clearly imply about the beans this profile is for. '
+    +'More than one roast tag is fine and often right - a profile described for "medium to dark" gets both, '
+    +'and a general-purpose profile can carry all three. Prefer being inclusive over leaving it empty. '
+    +'Do NOT infer roast from temperature or pressure alone: across these profiles those numbers do not separate roast levels. '
+    +'If the notes give no usable signal at all, return an empty tags array for that profile rather than guessing from the curve. '
+    +'Return one object for every profile, keeping the "i" you were given.\n\nPROFILES:\n'
+    +JSON.stringify(list); }
+function aiClassifyProfiles(){
+  if(aiBusyFlag) return;
+  var key=(prefs.geminiKey||'').trim();
+  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
+  var targets=allProfiles.filter(epMatches).filter(function(p){ return !manualRoast(p).length; });
+  if(!targets.length){ toast(t('aiNothingToDo'),'ok'); return; }
+  aiBusyFlag=true; renderEpList();
+  var BATCH=8, done=0, tagged=0;
+  function step(idx){
+    if(idx>=targets.length){ aiBusyFlag=false; loadProfiles().then(function(){ renderEpList(); renderEpEditor();
+      toast(t('aiClassified').replace('{n}',tagged).replace('{m}',targets.length),'ok'); }); return; }
+    var slice=targets.slice(idx,idx+BATCH);
+    var parts=[{text:aiClassifyPrompt(slice.map(profileDigest))}];
+    toast(t('aiClassifying').replace('{a}',Math.min(idx+BATCH,targets.length)).replace('{b}',targets.length),'ok');
+    geminiJson(key,parts,0).then(function(res){
+      var rows=Array.isArray(res)?res:(res&&res.profiles)||[];
+      var writes=rows.map(function(row){
+        var p=slice[row&&row.i]; if(!p) return null;
+        var tags=(row.tags||[]).filter(function(k){ return AI_KEYS.indexOf(k)>=0; });
+        var meta=JSON.parse(JSON.stringify(p.metadata||{})); meta.aiTags=tags;
+        if(tags.length) tagged++;
+        return api('PUT','/api/v1/profiles/'+encodeURIComponent(p.id),{metadata:meta})
+          .then(function(saved){ p.metadata=(saved&&saved.metadata)||meta; }).catch(function(){});
+      }).filter(Boolean);
+      return Promise.all(writes);
+    }).catch(function(e){ toast(t('aiClassifyFailed')+' '+((e&&e.message)||'error'),'err'); })
+      .then(function(){ done+=slice.length; renderEpList(); step(idx+BATCH); });
+  }
+  step(0); }
+function clearAiTags(){
+  var targets=allProfiles.filter(function(p){ return aiTagsOf(p).length; });
+  if(!targets.length){ toast(t('aiNothingToDo'),'ok'); return; }
+  Promise.all(targets.map(function(p){ var meta=JSON.parse(JSON.stringify(p.metadata||{})); meta.aiTags=[];
+    return api('PUT','/api/v1/profiles/'+encodeURIComponent(p.id),{metadata:meta})
+      .then(function(saved){ p.metadata=(saved&&saved.metadata)||meta; }).catch(function(){}); }))
+    .then(function(){ renderEpList(); renderEpEditor(); toast(t('aiCleared'),'ok'); }); }
+function allTagsOf(p){ return profileRoast(p).concat(profileAiExtras(p)).concat(profileTags((p&&p.profile)||{})); }
 function epSetKind(k){ epKind=k; epTag=''; renderEpList(); }
 function epSetTag(t){ epTag=(epTag===t)?'':t; renderEpList(); }
 function epSetQuery(v){ epQuery=String(v||'').trim().toLowerCase(); renderEpList(); }
@@ -2034,6 +2122,12 @@ function renderEpList(){ var list=document.getElementById('epList'); list.innerH
   bar.innerHTML='<input class="ep-search" id="epSearch" placeholder="'+escapeAttr(t('searchProfiles'))+'" value="'+escapeAttr(epQuery)+'" oninput="epSetQuery(this.value)">'
     +'<div class="ep-kinds">'+kinds.map(function(k){
         return '<button class="ep-kind'+(epKind===k[0]?' on':'')+'" onclick="epSetKind(\''+k[0]+'\')">'+escapeHtml(t(k[1]))+'</button>'; }).join('')+'</div>';
+  var ai=document.createElement('div'); ai.className='ep-airow';
+  ai.innerHTML='<button class="ep-aibtn" onclick="aiClassifyProfiles()"'+(aiBusyFlag?' disabled':'')+'>'
+    +escapeHtml(aiBusyFlag?t('aiClassifyingShort'):t('aiClassify'))+'</button>'
+    +(allProfiles.some(function(p){ return aiTagsOf(p).length; })
+      ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '');
+  bar.appendChild(ai);
   var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
   var counts={}; pool.forEach(function(p){ allTagsOf(p).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
   var avail=TAG_KEYS.filter(function(k){ return counts[k]; });
@@ -2055,7 +2149,10 @@ function renderEpList(){ var list=document.getElementById('epList'); list.innerH
     var it=document.createElement('div'); it.className='ep-item'+(editing&&editing.id===p.id?' active':'');
     var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
     var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
-    var tagHtml=allTagsOf(p).map(function(k){ return '<span class="ep-chip'+(ROAST_KEYS.indexOf(k)>=0?' roast':'')+'">'+escapeHtml(t(k))+'</span>'; }).join('');
+    var aiSet=aiTagsOf(p), guess=isAiRoast(p);
+    var tagHtml=allTagsOf(p).map(function(k){ var cls='ep-chip'+(ROAST_KEYS.indexOf(k)>=0?' roast':'');
+      if(aiSet.indexOf(k)>=0&&(guess||ROAST_KEYS.indexOf(k)<0)) cls+=' ai';
+      return '<span class="'+cls+'">'+escapeHtml(t(k))+'</span>'; }).join('');
     body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(author)+' · '+((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' steps</div>'
       +(tagHtml?'<div class="ep-chips">'+tagHtml+'</div>':'');
     var fav=document.createElement('button'); fav.className='fav-btn'+(favIds[p.id]?' on':''); fav.textContent=favIds[p.id]?'★':'☆'; fav.title=t('toggleFav');
@@ -2089,7 +2186,7 @@ function roastPicker(p){
     return '<button class="ep-roast'+(cur.indexOf(k)>=0?' on':'')+'" onclick="setProfileRoast(\''+live.id+'\',\''+k+'\')">'+escapeHtml(t(k))+'</button>'; }).join('');
   var clear=isManual?'<button class="ep-roast clear" onclick="setProfileRoast(\''+live.id+'\',\'\')">'+escapeHtml(t('clear'))+'</button>':'';
   return '<div class="ep-roastrow"><span class="ep-roastlab">'+escapeHtml(t('roastLevel'))
-    +(cur.length&&!isManual?' · '+escapeHtml(t('fromProfile')):'')+'</span>'+btns+clear+'</div>'; }
+    +(cur.length&&!isManual?' · '+escapeHtml(isAiRoast(live)?t('fromAi'):t('fromProfile')):'')+'</span>'+btns+clear+'</div>'; }
 function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!editing){ wrap.innerHTML='<div class="ep-placeholder">← Select a profile</div>'; return; }
   var pr=editing.profile||{};
   wrap.innerHTML=''
@@ -2425,7 +2522,10 @@ function isOverload(e){ return e&&(e.status===503||e.status===429||/overload|hig
 function geminiAnalyze(key,images){
   var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"species\":\"\",\"decaf\":false,\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decaf is a boolean. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag lists the coffees that make up the blend, put only their COUNTRY names in country, separated by commas and in the order printed, and put the composition lines themselves - farm or lot name, process and percentage, exactly as printed - in notes under a Blend heading. Leave region, producer, processing, variety and altitude empty when they differ between components. Never invent an origin for a blend, and never copy the origin, farm or process of one component into region, producer or processing as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
-  var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:0.1}};
+  return geminiJson(key,parts,0.1); }
+// Ask Gemini for JSON, retrying transient overload and falling back to the lite model.
+function geminiJson(key,parts,temperature){
+  var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:(temperature==null?0:temperature)}};
   return resolveGeminiModel(key).then(function(model){
     function attempt(m,tries){
       return geminiGenerate(key,m,body).catch(function(e){
