@@ -18,6 +18,7 @@ Single-file skin: everything lives in `index.html` (HTML + CSS + vanilla JS, no 
 - Tablet battery level in the header and on the sleep screen, from the gateway charging state with a browser-battery fallback
 - Bean library backed by the full Bean/BeanBatch model: roast date and roast level on a batch, plus region, producer, variety, altitude, species and decaf on the bean; days off roast in the list, and the shot links to the batch
 - AI suggestion of which installed profile suits the bean in front of you, five ranked cards with the profile curve and a reason for each, run automatically after a label scan and saved with the bean
+- The profiles this bean has actually been pulled with, counted from the shot history, shown as cards beside the suggestions
 - Phone hand-off by QR for AI bean scanning, with a remembered LAN address for gateways that do not report one
 
 ## Layout

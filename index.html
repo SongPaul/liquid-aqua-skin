@@ -376,6 +376,7 @@ body.night .ep-dot{border-color:#1a1526}
 .rec-art{position:relative;height:78px;display:flex;align-items:flex-end;border-bottom:1px solid var(--glass-line)}
 .rec-art canvas{position:absolute;inset:0;width:100%;height:100%}
 .rec-rank{position:absolute;top:6px;left:6px;width:19px;height:19px;border-radius:50%;background:rgba(0,0,0,.34);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.rec-rank.use{width:auto;min-width:19px;padding:0 6px;border-radius:100px}
 .rec-cardname{position:relative;width:100%;padding:4px 8px 5px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.42));color:#fff;font-size:11px;font-weight:800;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rec-why{flex:1;font-size:10px;color:var(--ink-mute);line-height:1.45;padding:7px 8px}
 .rec-use{padding:6px 8px;border-top:1px solid var(--glass-line);text-align:center;font-size:11px;font-weight:800;color:var(--accent)}
@@ -942,6 +943,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <input type="file" id="mbFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files,true)">
     </div>
     <button class="m-btn primary mb-analyze" id="mbAnalyzeBtn" onclick="mbAnalyze()" disabled data-i18n="analyze">Analyze</button>
+    <div id="mbUse" class="rec-box"></div>
     <div id="mbRec" class="rec-box"></div>
     <div class="mb-fields" id="mbFields" style="display:none">
       <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
@@ -1033,6 +1035,7 @@ var I18N={
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
+    usageHead:'Most used with this bean', usageCount:'{n} shots', usageWorking:'Reading the shot history…',
     recFailed:'Suggestion failed:', recNoMatch:'No profile matched', recNoProfiles:'No espresso profiles installed', use:'Use',
     cardColor:'Card colour', auto:'Auto', customColor:'Pick any colour',
     roastDate:'Roast date', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
@@ -1098,6 +1101,7 @@ var I18N={
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
+    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', usageWorking:'샷 기록을 읽는 중…',
     recFailed:'추천 실패:', recNoMatch:'일치하는 프로파일이 없습니다', recNoProfiles:'설치된 에스프레소 프로파일이 없습니다', use:'사용',
     cardColor:'카드 색', auto:'자동', customColor:'직접 지정',
     roastDate:'로스팅 날짜', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
@@ -2495,9 +2499,11 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
     var batch=(o.id&&beanBatches[o.id])||{};
-    if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); }
+    if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); usageResults=null; _usageFor=null; }
     recPfx='bg';
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
+      +'<div id="bgUse" class="rec-box"></div>'
+      +'<div id="bgRec" class="rec-box"></div>'
       +'<div class="ai-scan" id="aiScan">'
         +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
         +'<div class="ai-thumbs" id="aiThumbs"></div>'
@@ -2521,9 +2527,8 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')">'+t('recButton')+'</button></div>'
-      +'<div id="bgRec" class="rec-box"></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
-    renderRecBox();
+    renderRecBox(); renderUsageBox(); loadBeanUsage('bg');
   } else {
     var isPreset=(o.settingType==='preset');
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Grinder':'Edit Grinder')+'</div>'
@@ -2594,6 +2599,63 @@ function recommendPrompt(bean,cat,lang){
     +'the days off roast or the flavour it should bring out - not a generic description of the profile. '
     +'Write every "why" in '+(lang==='ko'?'Korean':'English')+'.\n\nBEAN:\n'+JSON.stringify(bean)
     +'\n\nCATALOGUE:\n'+JSON.stringify(cat); }
+var usageResults=null, usageBusy=false, _usageFor=null;
+// Shots record the bean by name and roaster; beanId only matches through batches,
+// so a bean with no batch would look unused. Both are asked and the answers merged.
+function loadBeanUsage(pfx){
+  pfx=pfx||'bg';
+  var v=function(f){ var el=document.getElementById(pfx+f); return el?el.value.trim():''; };
+  var roaster=v('Roaster'), name=v('Name');
+  var id=(pfx==='bg'&&bgSel&&bgSel.obj&&bgSel.obj.id)||'';
+  var key=id||(roaster+'|'+name);
+  if(!name&&!roaster){ usageResults=null; _usageFor=null; renderUsageBox(); return Promise.resolve(); }
+  if(_usageFor===key) return Promise.resolve();
+  _usageFor=key; usageBusy=true; usageResults=null; renderUsageBox();
+  var qs=[];
+  if(name||roaster) qs.push('/api/v1/shots?limit=100'
+    +(name?'&coffeeName='+encodeURIComponent(name):'')
+    +(roaster?'&coffeeRoaster='+encodeURIComponent(roaster):''));
+  if(id) qs.push('/api/v1/shots?limit=100&beanId='+encodeURIComponent(id));
+  return Promise.all(qs.map(function(u){ return api('GET',u).catch(function(){ return null; }); }))
+    .then(function(res){
+      var seen={}, rows=[];
+      res.forEach(function(r){ ((r&&(r.items||r.shots))||[]).forEach(function(sh){
+        if(sh&&sh.id&&!seen[sh.id]){ seen[sh.id]=true; rows.push(sh); } }); });
+      var tally={};
+      rows.forEach(function(sh){ var title=((sh.workflow&&sh.workflow.profile)||{}).title; if(!title) return;
+        var when=sh.timestamp||sh.createdAt||'';
+        if(!tally[title]) tally[title]={n:0,last:''};
+        tally[title].n++; if(when>tally[title].last) tally[title].last=when; });
+      usageResults=Object.keys(tally).map(function(title){
+        var match=allProfiles.find(function(p){ return profTitle(p)===title; });
+        return match?{p:match,n:tally[title].n,last:tally[title].last}:null; })
+        .filter(Boolean)
+        .sort(function(a,b){ return b.n-a.n || (b.last>a.last?1:-1); })
+        .slice(0,5);
+    }).then(function(){ usageBusy=false; renderUsageBox(); }); }
+function renderUsageBox(){
+  var box=document.getElementById(recPfx+'Use'); if(!box) return;
+  if(usageBusy){ box.innerHTML='<div class="rec-wait">'+escapeHtml(t('usageWorking'))+'</div>'; return; }
+  if(!usageResults||!usageResults.length){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="rec-head">'+escapeHtml(t('usageHead'))+'</div>'
+    +'<div class="rec-cards">'+usageResults.map(function(r,i){ var st=splitTitle(profTitle(r.p));
+      var sub=t('usageCount').replace('{n}',r.n)+(r.last?' · '+fmtShortDate(r.last):'');
+      return '<div class="rec-card"'+(recPfx==='bg'?' onclick="useMostUsed('+i+')"':'')+'>'
+        +'<div class="rec-art" style="background:'+albumGrad(r.p,i)+'">'
+          +'<span class="rec-rank use">'+r.n+'</span><canvas></canvas>'
+          +'<span class="rec-cardname">'+escapeHtml(st.name)+'</span>'
+        +'</div>'
+        +'<div class="rec-why">'+escapeHtml(sub)+'</div>'
+        +(recPfx==='bg'?'<div class="rec-use">'+escapeHtml(t('use'))+'</div>':'')
+        +'</div>'; }).join('')+'</div>';
+  var cvs=box.querySelectorAll('.rec-art canvas');
+  usageResults.forEach(function(r,i){ var cv=cvs[i]; if(cv) setTimeout(function(){ drawSimCurve(cv,r.p.profile,true); },0); }); }
+function fmtShortDate(v){ var d=new Date(v); if(isNaN(d)) return '';
+  try{ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(_){ return isoDay(v); } }
+function useMostUsed(i){ var r=usageResults&&usageResults[i]; if(!r) return;
+  selectProfile(r.p);
+  var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
+  if(o&&o.name) api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).catch(function(){}); }
 var recPfx='bg';
 function recommendProfiles(pfx,quiet){
   if(recBusy) return Promise.resolve();
@@ -2806,7 +2868,7 @@ function togglePhoneQR(){
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
   var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing'); document.getElementById('mbAnalyzeBtn').disabled=true;
-  recResults=null; recPfx='mb'; renderRecBox();
+  recResults=null; usageResults=null; _usageFor=null; recPfx='mb'; renderRecBox(); renderUsageBox();
   geminiAnalyze(key,aiImages).then(function(data){
     data=cleanBeanText(data);
     document.getElementById('mbFields').style.display='block';
@@ -2818,6 +2880,7 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
     var dc=document.getElementById('mbDecaf'); if(dc) dc.checked=!!data.decaf;
     st.textContent=t('mbReview');
+    _usageFor=null; loadBeanUsage('mb');
     recommendProfiles('mb',true);
   }).catch(function(e){ st.textContent=t('mbAnalyzeFailed')+' '+((e&&e.message)||'error'); }).then(function(){ document.getElementById('mbAnalyzeBtn').disabled=aiImages.length===0; }); }
 function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getElementById('mbSaveBtn'), body;
@@ -2835,7 +2898,8 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
   api('POST','/api/v1/beans',body,15000)
     .then(function(saved){ return (saved&&saved.id)?saveBeanBatch(saved.id,v('mbRoastDate'),v('mbRoast')):null; })
     .then(function(){ st.textContent=t('mbSaved');
-      aiImages=[]; renderAiThumbs(true); recResults=null; renderRecBox();
+      aiImages=[]; renderAiThumbs(true); recResults=null; usageResults=null; _usageFor=null;
+      renderRecBox(); renderUsageBox();
       document.getElementById('mbFields').style.display='none'; })
     .catch(function(e){ st.textContent=t('mbSaveFailed')+' '+apiErrorText(e); })
     .then(function(){ if(btn) btn.disabled=false; }); }
