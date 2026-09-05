@@ -329,6 +329,20 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ep-close:hover{transform:translateY(-2px)}
 .ep-body{flex:1;display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
 .ep-list{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:9px}
+.ep-toolbar{position:sticky;top:0;z-index:2;display:flex;flex-direction:column;gap:8px;padding:2px 2px 8px;background:linear-gradient(135deg,#eef1ff,#f5edff)}
+.ep-search{width:100%;padding:9px 12px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;color:var(--ink);-webkit-appearance:none}
+.ep-search:focus{outline:none;border-color:var(--accent)}
+.ep-kinds{display:flex;gap:4px}
+.ep-kind{flex:1;min-width:0;padding:6px 2px;border-radius:9px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:10px;font-weight:700;color:var(--ink-mute);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ep-kind.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ep-tags{display:flex;flex-wrap:wrap;gap:4px}
+.ep-tag{padding:4px 8px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:10px;font-weight:700;color:var(--ink-mute);cursor:pointer}
+.ep-tag span{opacity:.55;margin-left:2px}
+.ep-tag.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ep-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.ep-chip{font-size:9px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.10);border-radius:100px;padding:2px 6px}
+body.night .ep-toolbar{background:linear-gradient(135deg,#14111f,#1a1526)}
+body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
 .ep-list::-webkit-scrollbar{width:6px}.ep-list::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .ep-group-head{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:6px 4px 2px;position:sticky;top:0;background:linear-gradient(135deg,#eef1ff,#f5edff);z-index:1}
 .ep-group-head:first-child{padding-top:0}
@@ -960,6 +974,10 @@ var I18N={
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
+    searchProfiles:'Search profiles…', kindEspresso:'Espresso', kindBrew:'Brew · tea', kindOther:'Clean · manual', kindAll:'All',
+    favorites:'Favorites', recentlyUsed:'Recently used', noMatches:'Nothing matches',
+    tagPressure:'pressure', tagFlow:'flow', tagMixed:'mixed', tagLowPressure:'low pressure',
+    tagBloom:'bloom', tagDecline:'declining', tagCool:'cool', tagHot:'hot',
     roastDate:'Roast date', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
     species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
@@ -1009,6 +1027,10 @@ var I18N={
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
+    searchProfiles:'프로파일 검색…', kindEspresso:'에스프레소', kindBrew:'브루·티', kindOther:'청소·수동', kindAll:'전체',
+    favorites:'즐겨찾기', recentlyUsed:'최근 사용', noMatches:'일치하는 프로파일 없음',
+    tagPressure:'압력제어', tagFlow:'유량제어', tagMixed:'혼합', tagLowPressure:'저압',
+    tagBloom:'블루밍', tagDecline:'디클라인', tagCool:'저온', tagHot:'고온',
     roastDate:'로스팅 날짜', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
     species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
@@ -1875,7 +1897,7 @@ function updateCurProfile(){ renderCarousel(); }
 
 // ── Profile Editor full page ────────────────────────────────────────
 var epSelected=null;
-function openEditPage(){ renderEpList(); document.getElementById('editPage').classList.add('show');
+function openEditPage(){ renderEpList(); loadRecentProfiles().then(renderEpList); document.getElementById('editPage').classList.add('show');
   // open the currently centered profile by default
   var c=carItems[carIndex]||allProfiles[0]; if(c) epSelect(c); }
 function closeEditPage(){ document.getElementById('editPage').classList.remove('show'); }
@@ -1883,26 +1905,104 @@ var epItemEls={};       // id -> row element (to toggle .active without full reb
 var epCurveObserver=null; // lazily draw curves only when a row scrolls into view
 function ensureCurveObserver(){ if(epCurveObserver||!('IntersectionObserver' in window)) return;
   epCurveObserver=new IntersectionObserver(function(entries){ entries.forEach(function(en){ if(en.isIntersecting){ var cv=en.target; if(!cv._drawn){ cv._drawn=true; drawSimCurve(cv,cv._profile); } epCurveObserver.unobserve(cv); } }); }, {root:document.getElementById('epList'),rootMargin:'120px'}); }
+// ── Profile browsing ────────────────────────────────────────────────
+// 73 bundled profiles arrive as one flat list. Rather than ask for them to be
+// filed by hand, the shape of each profile is read back into a few tags, the
+// beverage type splits espresso from tea and cleaning, and the shot history
+// says which ones are actually in use.
+var epQuery='', epKind='espresso', epTag='', epRecent=[];
+var TAG_KEYS=['tagPressure','tagFlow','tagMixed','tagLowPressure','tagBloom','tagDecline','tagCool','tagHot'];
+function pourSteps(steps){ var out=[];
+  steps.forEach(function(st){ var nm=String(st.name||'').toLowerCase();
+    if(!out.length&&(nm.indexOf('fill')>=0||nm.indexOf('preinfus')>=0)) return; out.push(st); });
+  return out.length?out:steps; }
+function profileTags(pr){
+  var steps=(pr&&pr.steps)||[]; if(!steps.length) return [];
+  var tags=[], body=pourSteps(steps);
+  var secOf=function(st){ return parseFloat(st.seconds)||0; };
+  var tP=0,tF=0; body.forEach(function(st){ if(st.pump==='pressure') tP+=secOf(st); else if(st.pump==='flow') tF+=secOf(st); });
+  if(tP&&tF&&Math.min(tP,tF)/Math.max(tP,tF)>0.4) tags.push('tagMixed');
+  else tags.push(tP>=tF?'tagPressure':'tagFlow');
+
+  var pres=steps.filter(function(st){ return st.pump==='pressure'; }).map(function(st){ return parseFloat(st.pressure)||0; });
+  var peak=pres.length?Math.max.apply(null,pres):0;
+  if(peak&&peak<=6.5) tags.push('tagLowPressure');
+
+  for(var i=0;i<body.length-1;i++){ var st=body[i];
+    var v=(st.pump==='pressure')?parseFloat(st.pressure):(st.pump==='flow'?parseFloat(st.flow):NaN);
+    if(!isNaN(v)&&v<=0.6&&secOf(st)>=4){ tags.push('tagBloom'); break; } }
+
+  var bp=body.filter(function(st){ return st.pump==='pressure'; }).map(function(st){ return parseFloat(st.pressure)||0; });
+  if(bp.length>=3){ var mx=Math.max.apply(null,bp); if(mx>=4&&bp[bp.length-1]<mx*0.6) tags.push('tagDecline'); }
+
+  var temps=steps.map(function(st){ return parseFloat(st.temperature)||0; }).filter(function(v){ return v>0; });
+  if(temps.length){ var tmax=Math.max.apply(null,temps);
+    if(tmax<=88) tags.push('tagCool'); else if(tmax>=94) tags.push('tagHot'); }
+  return tags; }
+function profileKind(pr){ var b=(pr&&pr.beverage_type)||'espresso';
+  if(b==='espresso') return 'espresso';
+  if(b==='cleaning'||b==='manual') return 'other';
+  return 'brew'; }
+// Which profiles have actually been pulled, newest first. Titles are the only
+// link a shot keeps back to its profile.
+function loadRecentProfiles(){ return api('GET','/api/v1/shots?limit=50').then(function(r){
+    var items=(r&&(r.items||r.shots))||[], seen={}; epRecent=[];
+    items.forEach(function(sh){ var t=((sh.workflow&&sh.workflow.profile)||{}).title;
+      if(t&&!seen[t]){ seen[t]=true; epRecent.push(t); } });
+  }).catch(function(){ epRecent=[]; }); }
+function epSetKind(k){ epKind=k; epTag=''; renderEpList(); }
+function epSetTag(t){ epTag=(epTag===t)?'':t; renderEpList(); }
+function epSetQuery(v){ epQuery=String(v||'').trim().toLowerCase(); renderEpList(); }
+function epMatches(p){
+  var pr=p.profile||{};
+  if(epKind!=='all'&&profileKind(pr)!==epKind) return false;
+  if(epTag&&profileTags(pr).indexOf(epTag)<0) return false;
+  if(epQuery){ var hay=[pr.title,pr.author,pr.notes].join(' ').toLowerCase()
+      +' '+profileTags(pr).map(function(k){ return t(k); }).join(' ').toLowerCase();
+    if(hay.indexOf(epQuery)<0) return false; }
+  return true; }
 function renderEpList(){ var list=document.getElementById('epList'); list.innerHTML=''; epItemEls={}; ensureCurveObserver();
-  // Favorites first, then groups by "{group}/" prefix; ungrouped under "Other".
-  var favList=allProfiles.filter(function(p){ return favIds[p.id]; });
+  var shown=allProfiles.filter(epMatches);
+  // toolbar: search, beverage type, and the tags present in what is left
+  var bar=document.createElement('div'); bar.className='ep-toolbar';
+  var kinds=[['espresso','kindEspresso'],['brew','kindBrew'],['other','kindOther'],['all','kindAll']];
+  bar.innerHTML='<input class="ep-search" id="epSearch" placeholder="'+escapeAttr(t('searchProfiles'))+'" value="'+escapeAttr(epQuery)+'" oninput="epSetQuery(this.value)">'
+    +'<div class="ep-kinds">'+kinds.map(function(k){
+        return '<button class="ep-kind'+(epKind===k[0]?' on':'')+'" onclick="epSetKind(\''+k[0]+'\')">'+escapeHtml(t(k[1]))+'</button>'; }).join('')+'</div>';
+  var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
+  var counts={}; pool.forEach(function(p){ profileTags(p.profile||{}).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
+  var avail=TAG_KEYS.filter(function(k){ return counts[k]; });
+  if(avail.length){ var tw=document.createElement('div'); tw.className='ep-tags';
+    tw.innerHTML=avail.map(function(k){
+      return '<button class="ep-tag'+(epTag===k?' on':'')+'" onclick="epSetTag(\''+k+'\')">'+escapeHtml(t(k))+' <span>'+counts[k]+'</span></button>'; }).join('');
+    bar.appendChild(tw); }
+  list.appendChild(bar);
+  if(!shown.length){ var none=document.createElement('div'); none.className='ep-placeholder'; none.style.marginTop='24px'; none.textContent=t('noMatches'); list.appendChild(none); return; }
+
+  var favList=shown.filter(function(p){ return favIds[p.id]; });
+  var recent=epRecent.map(function(title){ return shown.find(function(p){ return profTitle(p)===title; }); })
+                     .filter(function(p){ return p&&!favIds[p.id]; }).slice(0,6);
   var groups={}, order=[];
-  allProfiles.forEach(function(p){ var st=splitTitle(profTitle(p)); var key=st.group||'Other';
+  shown.forEach(function(p){ var st=splitTitle(profTitle(p)); var key=st.group||'Other';
     if(!groups[key]){ groups[key]=[]; order.push(key); } groups[key].push({p:p,st:st}); });
   order.sort(function(a,b){ if(a==='Other') return 1; if(b==='Other') return -1; return a.localeCompare(b); });
   function addItem(p,st){ var author=(p.profile&&p.profile.author)||'';
     var it=document.createElement('div'); it.className='ep-item'+(editing&&editing.id===p.id?' active':'');
     var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
     var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
-    body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(author)+' · '+((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' steps</div>';
+    var tagHtml=profileTags(p.profile||{}).map(function(k){ return '<span class="ep-chip">'+escapeHtml(t(k))+'</span>'; }).join('');
+    body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(author)+' · '+((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' steps</div>'
+      +(tagHtml?'<div class="ep-chips">'+tagHtml+'</div>':'');
     var fav=document.createElement('button'); fav.className='fav-btn'+(favIds[p.id]?' on':''); fav.textContent=favIds[p.id]?'★':'☆'; fav.title='Toggle favorite';
     fav.onclick=function(e){ e.stopPropagation(); toggleFav(p.id); };
     it.appendChild(th); it.appendChild(body); it.appendChild(fav);
     it.onclick=function(){ epSelect(p); };
     list.appendChild(it); (epItemEls[p.id]=epItemEls[p.id]||[]).push(it);
     if(epCurveObserver) epCurveObserver.observe(cv); else drawSimCurve(cv,p.profile); }
-  if(favList.length){ var fh=document.createElement('div'); fh.className='ep-group-head fav'; fh.textContent='★ Favorites · '+favList.length; list.appendChild(fh);
+  if(favList.length){ var fh=document.createElement('div'); fh.className='ep-group-head fav'; fh.textContent='★ '+t('favorites')+' · '+favList.length; list.appendChild(fh);
     favList.forEach(function(p){ addItem(p,splitTitle(profTitle(p))); }); }
+  if(recent.length){ var rh=document.createElement('div'); rh.className='ep-group-head'; rh.textContent='↻ '+t('recentlyUsed')+' · '+recent.length; list.appendChild(rh);
+    recent.forEach(function(p){ addItem(p,splitTitle(profTitle(p))); }); }
   order.forEach(function(key){
     var hd=document.createElement('div'); hd.className='ep-group-head'; hd.textContent=key+' · '+groups[key].length; list.appendChild(hd);
     groups[key].forEach(function(rec){ addItem(rec.p,rec.st); }); }); }
