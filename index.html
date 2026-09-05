@@ -72,6 +72,7 @@ body.overlay-active .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 .lockscreen{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 120% at 50% 40%,#1a1730,#0a0814);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .35s ease;cursor:pointer;-webkit-user-select:none;user-select:none;will-change:opacity;transform:translateZ(0)}
 .lockscreen.show{opacity:1;pointer-events:auto}
 /* During the sleep fade, drop the background glass blur so the transition is smooth. */
+body.asleep .app{visibility:hidden}
 body.asleep .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
 /* Burn-in guard: instead of moving the clock, we keep every pixel changing in place.
    All three animations are opacity/filter/transform only (GPU composite, no paint),
@@ -1211,7 +1212,7 @@ function updateBatteryUI(){
   document.getElementById('lockBattIco').style.setProperty('--batt-fill',b.percent+'%');
   document.getElementById('lockBattPct').textContent=label; }
 function loadBattery(){ api('GET','/api/v1/settings')
-  .then(function(s){ if(!applyChargingState(s&&s.chargingState)) initBrowserBattery(); })
+  .then(function(s){ if(s) gwSettings=s; syncWakeLock(); if(!applyChargingState(s&&s.chargingState)) initBrowserBattery(); })
   .catch(function(){ initBrowserBattery(); }); }
 var _navBattInit=false;
 function initBrowserBattery(){
@@ -1223,9 +1224,18 @@ function initBrowserBattery(){
 
 // ── WebSockets ──────────────────────────────────────────────────────
 var sockets={};
+// The screen is only pinned awake while the user asked for it and the machine is
+// not asleep; letting the override go while asleep is what lets the tablet's own
+// display timeout turn the panel off.
+var _wakeHeld=null;
+function syncWakeLock(){
+  var ws=sockets.display; if(!ws||ws.readyState!==1) return;
+  var want=((gwSettings||{}).keepAwake!==false)&&!_asleep;
+  if(want===_wakeHeld) return; _wakeHeld=want;
+  try{ ws.send(JSON.stringify({command:want?'requestWakeLock':'releaseWakeLock'})); }catch(_){ _wakeHeld=null; } }
 function openWs(name,path,onMsg){ var url=GATEWAY.ws+path;
   function connect(){ if(sockets[name]&&sockets[name].readyState<=1) return; var ws=new WebSocket(url); sockets[name]=ws;
-    ws.onopen=function(){ if(name==='display'){ ws.send(JSON.stringify({command:'requestWakeLock'})); ws.send(JSON.stringify({command:'setBrightness',brightness:92})); } };
+    ws.onopen=function(){ if(name==='display'){ _wakeHeld=null; syncWakeLock(); } };
     ws.onmessage=function(e){ try{ onMsg(JSON.parse(e.data)); }catch(_){} };
     ws.onclose=function(){ setTimeout(connect,2000); }; ws.onerror=function(){ ws.close(); }; }
   connect(); }
@@ -1254,7 +1264,8 @@ function initWebSockets(){
     if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); }
     applyChargingState(m.charging);
     updateShotBtn(); });
-  openWs('display','/ws/v1/display',function(){});
+  openWs('display','/ws/v1/display',function(d){ if(d&&d.brightness!==undefined) displayState=d; });
+  api('GET','/api/v1/display').then(function(d){ if(d) displayState=d; }).catch(function(){});
 }
 
 // ── GHC detection: decide Steam/Flush button behavior ───────────────
@@ -1443,7 +1454,7 @@ function startTimer(){ state.shotStart=Date.now(); if(state.shotTick) clearInter
 function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
 function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000); document.getElementById('timerBig').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 var _chartRAF=null;
-function drawChart(){ if(_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
+function drawChart(){ if(_asleep||_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
 var _chartDims={w:0,h:0}; var _chartLegendMode=null; var _chartBg=null, _chartBgKey=null;
 function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
@@ -1564,7 +1575,7 @@ var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
 // shows the lock, and starts a 1s clock. Sets the clock to update only while the
 // tab is visible so a backgrounded tablet stops the timer entirely.
 // The burn-in guard is pure CSS (breathe/hue-drift/ripple), so no JS loop is needed.
-function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show');
+function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock();
   updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(function(){ if(!document.hidden) updateLockClock(); },1000);
   // Dim the panel while asleep (a dark, low-brightness screen resists burn-in and
   // saves power). Remember the level so it can be restored on wake.
@@ -1572,11 +1583,11 @@ function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); do
     api('PUT','/api/v1/display/brightness',{brightness:prefs.sleepBrightness||20}).catch(function(){}); } }
 // Called on both wake paths. Clears the flag/clock, then repaints the live UI once
 // so everything reflects the current state after the sleep gap.
-function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show');
+function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show'); syncWakeLock();
   if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; }
   // Restore pre-sleep brightness.
   if(_preSleepBrightness!=null){ var b=_preSleepBrightness; _preSleepBrightness=null; api('PUT','/api/v1/display/brightness',{brightness:b}).catch(function(){}); }
-  updateMachineUI(); updateWaterUI(); updateScaleUI(); }
+  updateMachineUI(); updateWaterUI(); updateScaleUI(); _chartBgKey=null; drawChart(); }
 function enterSleep(){ beginSleepUI();
   api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast('Sleep failed','err'); }); }
 function wakeFromSleep(){ endSleepUI();
@@ -1797,7 +1808,7 @@ function infoCell(k,v){ return '<div class="sp-info-cell"><div class="k">'+escap
 // Display settings
 function setBrightness(v,live){ document.getElementById('brVal').textContent=v; if(live) return; // only push on change (release)
   api('PUT','/api/v1/display/brightness',{brightness:parseInt(v,10)}).catch(function(){ toast('Brightness failed','err'); }); }
-function setKeepAwake(on){ gwSettings.keepAwake=on; api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
+function setKeepAwake(on){ gwSettings.keepAwake=on; syncWakeLock(); api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast('Save failed','err'); }); }
 function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
 function setSleepBright(v,live){ document.getElementById('sbVal').textContent=v; if(live) return; prefs.sleepBrightness=parseInt(v,10); savePrefs(); }
