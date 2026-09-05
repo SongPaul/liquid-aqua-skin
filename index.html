@@ -953,6 +953,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="6"></textarea></div>
       <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()" data-i18n="addToGateway">Add to gateway</button>
     </div>
+    <div id="mbRec" class="rec-box"></div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
     <div class="mb-key" id="mbKeyBox" style="display:none">
       <div class="field"><label data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
@@ -1885,8 +1886,10 @@ function profTitle(p){ return (p&&p.profile&&p.profile.title)||(p&&p.id)||''; }
 function loadFavs(){ try{ favIds=JSON.parse(localStorage.getItem('aurora_favs')||'{}'); }catch(_){ favIds={}; } }
 function saveFavs(){ try{ localStorage.setItem('aurora_favs',JSON.stringify(favIds)); }catch(_){} }
 function loadProfiles(){ return api('GET','/api/v1/profiles?includeHidden=true').then(function(data){ allProfiles=data||[];
+  var stage=document.getElementById('carouselStage'); if(!stage) return;
   if(Object.keys(favIds).length===0){ allProfiles.filter(function(p){return p.isDefault;}).slice(0,5).forEach(function(p){ favIds[p.id]=true; }); saveFavs(); }
-  buildCarousel(); }).catch(function(){ document.getElementById('carouselStage').innerHTML='<div class="car-empty">Connect to load</div>'; }); }
+  buildCarousel(); }).catch(function(){ var stage=document.getElementById('carouselStage');
+    if(stage) stage.innerHTML='<div class="car-empty">Connect to load</div>'; }); }
 
 // ── Album carousel (favorites; center = focused profile) ────────────
 // The first six are the original rotation, so a profile with no colour of its
@@ -2486,7 +2489,8 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
     var batch=(o.id&&beanBatches[o.id])||{};
-    if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=null; }
+    if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); }
+    recPfx='bg';
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
       +'<div class="ai-scan" id="aiScan">'
         +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
@@ -2510,7 +2514,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
-      +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles()">'+t('recButton')+'</button></div>'
+      +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')">'+t('recButton')+'</button></div>'
       +'<div id="bgRec" class="rec-box"></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
     renderRecBox();
@@ -2549,17 +2553,18 @@ function bgReadGrinderForm(){ var o=bgSel.obj; var g=function(id){ var el=docume
 // Read the bean off the form rather than the record, so an unsaved bean and a
 // half-edited one both work, and pair it against the profiles actually installed.
 var recBusy=false, recResults=null;
-function beanFormDigest(){
-  var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
-  var roastDate=toIsoDate(v('bgRoastDate')), days=null;
+function beanFormDigest(pfx){
+  pfx=pfx||'bg';
+  var v=function(f){ var el=document.getElementById(pfx+f); return el?el.value.trim():''; };
+  var roastDate=toIsoDate(v('RoastDate')), days=null;
   if(roastDate){ var d=new Date(roastDate+'T00:00:00');
     if(!isNaN(d)) days=Math.max(0,Math.floor((Date.now()-d.getTime())/86400000)); }
-  return { roaster:v('bgRoaster'), name:v('bgName'), country:v('bgCountry'), region:v('bgRegion'),
-    producer:v('bgProducer'), processing:v('bgProcess'), species:v('bgSpecies'),
-    variety:parseList(v('bgVariety')), altitude:parseAltitude(v('bgAltitude')),
-    decaf:!!(document.getElementById('bgDecaf')||{}).checked,
-    roastLevel:v('bgRoast'), daysOffRoast:days,
-    notes:String((document.getElementById('bgNotes')||{}).value||'').replace(/\s+/g,' ').slice(0,600) }; }
+  return { roaster:v('Roaster'), name:v('Name'), country:v('Country'), region:v('Region'),
+    producer:v('Producer'), processing:v('Process'), species:v('Species'),
+    variety:parseList(v('Variety')), altitude:parseAltitude(v('Altitude')),
+    decaf:!!(document.getElementById(pfx+'Decaf')||{}).checked,
+    roastLevel:v('Roast'), daysOffRoast:days,
+    notes:String((document.getElementById(pfx+'Notes')||{}).value||'').replace(/\s+/g,' ').slice(0,600) }; }
 function profileCatalogForAi(){
   return allProfiles.filter(function(p){ return p.visibility!=='hidden'&&p.visibility!=='deleted'
       &&profileKind(p.profile||{})==='espresso'; })
@@ -2583,25 +2588,40 @@ function recommendPrompt(bean,cat,lang){
     +'the days off roast or the flavour it should bring out - not a generic description of the profile. '
     +'Write every "why" in '+(lang==='ko'?'Korean':'English')+'.\n\nBEAN:\n'+JSON.stringify(bean)
     +'\n\nCATALOGUE:\n'+JSON.stringify(cat); }
-function recommendProfiles(){
-  if(recBusy) return;
+var recPfx='bg';
+function recommendProfiles(pfx,quiet){
+  if(recBusy) return Promise.resolve();
+  recPfx=pfx||'bg';
   var key=(prefs.geminiKey||'').trim();
-  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
-  var bean=beanFormDigest();
-  if(!bean.name&&!bean.roaster){ toast(t('mbNeedRoasterName'),'err'); return; }
+  if(!key){ if(!quiet){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); } return Promise.resolve(); }
+  var bean=beanFormDigest(recPfx);
+  if(!bean.name&&!bean.roaster){ if(!quiet) toast(t('mbNeedRoasterName'),'err'); return Promise.resolve(); }
   var cat=profileCatalogForAi();
-  if(!cat.length){ toast(t('recNoProfiles'),'err'); return; }
+  if(!cat.length){ if(!quiet) toast(t('recNoProfiles'),'err'); return Promise.resolve(); }
   recBusy=true; recResults=null; renderRecBox();
-  geminiJson(key,[{text:recommendPrompt(bean,cat,_lang)}],0.2).then(function(res){
+  return geminiJson(key,[{text:recommendPrompt(bean,cat,_lang)}],0.2).then(function(res){
     var rows=Array.isArray(res)?res:(res&&res.picks)||[];
     recResults=rows.map(function(r){
       var match=allProfiles.find(function(p){ return profTitle(p)===r.title; });
       return match?{p:match,why:String(r.why||'')}:null; }).filter(Boolean).slice(0,3);
-    if(!recResults.length) toast(t('recNoMatch'),'err');
-  }).catch(function(e){ toast(t('recFailed')+' '+((e&&e.message)||'error'),'err'); })
+    if(!recResults.length&&!quiet) toast(t('recNoMatch'),'err');
+  }).catch(function(e){ if(!quiet) toast(t('recFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ recBusy=false; renderRecBox(); }); }
+// The picks ride along on the bean, so opening it later costs no AI call.
+function recExtras(existing){
+  var extras=JSON.parse(JSON.stringify(existing||{}));
+  if(recResults&&recResults.length){
+    extras.recommendedProfiles=recResults.map(function(r){ return {title:profTitle(r.p),why:r.why}; });
+    extras.recommendedAt=isoDay(new Date().toISOString());
+  }
+  return Object.keys(extras).length?extras:null; }
+function recFromExtras(bean){
+  var rows=((bean&&bean.extras)||{}).recommendedProfiles||[];
+  return rows.map(function(r){
+    var match=allProfiles.find(function(p){ return profTitle(p)===r.title; });
+    return match?{p:match,why:String(r.why||'')}:null; }).filter(Boolean); }
 function renderRecBox(){
-  var box=document.getElementById('bgRec'); if(!box) return;
+  var box=document.getElementById(recPfx+'Rec'); if(!box) return;
   if(recBusy){ box.innerHTML='<div class="rec-wait">'+escapeHtml(t('recWorking'))+'</div>'; return; }
   if(!recResults||!recResults.length){ box.innerHTML=''; return; }
   box.innerHTML='<div class="rec-head">'+escapeHtml(t('recHead'))+'</div>'
@@ -2609,7 +2629,8 @@ function renderRecBox(){
       return '<div class="rec-item"><div class="rec-rank">'+(i+1)+'</div>'
         +'<div class="rec-body"><div class="rec-name">'+escapeHtml(st.name)+'</div>'
         +'<div class="rec-why">'+escapeHtml(r.why)+'</div></div>'
-        +'<button class="m-btn" onclick="useRecommended('+i+')">'+escapeHtml(t('use'))+'</button></div>'; }).join(''); }
+        +(recPfx==='bg'?'<button class="m-btn" onclick="useRecommended('+i+')">'+escapeHtml(t('use'))+'</button>':'')
+        +'</div>'; }).join(''); }
 function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
   selectProfile(r.p);
   var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
@@ -2621,6 +2642,7 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
     variety:parseList(v('bgVariety')),altitude:parseAltitude(v('bgAltitude')),
     notes:document.getElementById('bgNotes').value||null};
   if(!body.variety.length) body.variety=null;
+  var ex=recExtras(o.extras); if(ex) body.extras=ex;
   if(!body.roaster||!body.name){ toast(t('mbNeedRoasterName'),'err'); return; }
   var roastDate=v('bgRoastDate'), roastLevel=v('bgRoast');
   var req=o.id?api('PUT','/api/v1/beans/'+o.id,body):api('POST','/api/v1/beans',body);
@@ -2724,6 +2746,7 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
       var dc=document.getElementById('bgDecaf'); if(dc&&data.decaf) dc.checked=true;
       var notesEl=document.getElementById('bgNotes'); if(notesEl&&data.notes){ notesEl.value=data.notes; }
       statusEl.textContent=t('aiFilled'); toast(t('aiDetected'),'ok');
+      recommendProfiles('bg',true);
     })
     .catch(function(e){ statusEl.textContent='Failed: '+e.message; toast('AI analyze failed','err'); })
     .then(function(){ var b=document.getElementById('aiAnalyzeBtn'); if(b) b.disabled=aiImages.length===0; }); }
@@ -2771,6 +2794,7 @@ function togglePhoneQR(){
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
   var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing'); document.getElementById('mbAnalyzeBtn').disabled=true;
+  recResults=null; recPfx='mb'; renderRecBox();
   geminiAnalyze(key,aiImages).then(function(data){
     data=cleanBeanText(data);
     document.getElementById('mbFields').style.display='block';
@@ -2782,6 +2806,7 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
     var dc=document.getElementById('mbDecaf'); if(dc) dc.checked=!!data.decaf;
     st.textContent=t('mbReview');
+    recommendProfiles('mb',true);
   }).catch(function(e){ st.textContent=t('mbAnalyzeFailed')+' '+((e&&e.message)||'error'); }).then(function(){ document.getElementById('mbAnalyzeBtn').disabled=aiImages.length===0; }); }
 function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getElementById('mbSaveBtn'), body;
   var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
@@ -2791,13 +2816,15 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
     variety:parseList(v('mbVariety')), altitude:parseAltitude(v('mbAltitude')),
     notes:document.getElementById('mbNotes').value||null };
     if(!body.variety.length) body.variety=null;
+    var ex=recExtras(null); if(ex) body.extras=ex;
   }catch(e){ st.textContent=t('mbSaveFailed')+' '+e.message; return; }
   if(!body.roaster||!body.name){ st.textContent=t('mbNeedRoasterName'); return; }
   st.textContent=t('mbSaving'); if(btn) btn.disabled=true;
   api('POST','/api/v1/beans',body,15000)
     .then(function(saved){ return (saved&&saved.id)?saveBeanBatch(saved.id,v('mbRoastDate'),v('mbRoast')):null; })
     .then(function(){ st.textContent=t('mbSaved');
-      aiImages=[]; renderAiThumbs(true); document.getElementById('mbFields').style.display='none'; })
+      aiImages=[]; renderAiThumbs(true); recResults=null; renderRecBox();
+      document.getElementById('mbFields').style.display='none'; })
     .catch(function(e){ st.textContent=t('mbSaveFailed')+' '+apiErrorText(e); })
     .then(function(){ if(btn) btn.disabled=false; }); }
 function mbGetKey(){ try{ return (localStorage.getItem('aurora_gemini')||'').trim(); }catch(_){ return ''; } }
@@ -5381,6 +5408,7 @@ function bootMobileBeanScan(){
   document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
   if(prefs.night) document.body.classList.add('night');
   if(!mbGetKey()) mbShowKeyBox();
+  loadProfiles(); // the profile suggestion needs a catalogue to choose from
 }
 window.addEventListener('load', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
