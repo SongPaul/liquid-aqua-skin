@@ -108,7 +108,8 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
-.brand{display:flex;align-items:baseline;gap:7px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{align-self:baseline}
 .brand h1{font-size:19px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand span{font-size:10px;color:var(--ink-mute);font-weight:600}
 /* Tablet battery pill in the header brand row. */
@@ -290,19 +291,24 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ms-btn:active{transform:scale(.9)}
 .ms-val{min-width:36px;text-align:center;font-size:13px;font-weight:700}
 
-.bean-info{padding:14px 18px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-.bean-row{display:flex;align-items:center;gap:10px}
+.bean-info{padding:14px 18px;flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.bean-info::-webkit-scrollbar{width:5px}
+.bean-info::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
+.bean-row{display:flex;align-items:center;gap:10px;flex:none}
 .bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .grind-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
-.grind-label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-soft);min-width:0}
+.grind-label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-soft);min-width:0;background:none;border:none;padding:4px 6px;margin:-4px -6px;border-radius:9px;cursor:pointer;font-family:var(--font);transition:background .15s}
+.grind-label:hover{background:var(--glass-hi)}
+.grind-label span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .grind-label .gr-ico{font-size:15px}
 .grind-label #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .grind-val{min-width:52px;text-align:center;font-size:18px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 6px;transition:background .15s}
 .grind-val:hover{background:var(--glass-hi)}
-.bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;max-height:52px;overflow:hidden}
+.bean-chips{display:flex;flex-wrap:nowrap;gap:5px;margin-top:9px;flex:none;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.bean-chips::-webkit-scrollbar{display:none}
 .bean-chips:empty{display:none}
-.bean-chip{font-size:10px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
+.bean-chip{flex:none;white-space:nowrap;font-size:10px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .bean-spacer{flex:1;min-height:4px}
 .last-shot{border-top:1px solid var(--glass-line);padding-top:10px;margin-top:10px;flex-shrink:0}
@@ -317,7 +323,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ls-empty{grid-column:1/-1;text-align:center;font-size:12px;color:var(--ink-mute);padding:8px 0}
 .bean-txt{flex:1;min-width:0}
 .bean-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bean-sub{font-size:11px;color:var(--ink-mute);font-weight:500}
+.bean-sub{font-size:11px;color:var(--ink-mute);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bean-edit{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;background:none;border:none;-webkit-appearance:none}
 
 /* ── Profile Editor full page ────────────────────────────────────── */
@@ -638,7 +644,14 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
   <!-- ── Header ────────────────────────────────────────────────── -->
   <header class="glass">
-    <div class="brand"><h1>Liquid Aqua</h1><span id="machineName">Espresso Studio</span><span class="batt" id="battPill" style="display:none"><span class="batt-ico" id="battIco"></span><i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span></span></div>
+    <div class="brand"><h1>Liquid Aqua</h1>
+      <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()">
+        <div class="conn-rows">
+          <span class="conn-line" id="connMachineRow"><span class="status-dot" id="dotMachine"></span><span class="conn-txt" id="lblMachine">Machine</span></span>
+          <span class="conn-line" id="connScaleRow"><span class="status-dot" id="dotScale"></span><span class="conn-txt" id="lblScale">Scale</span></span>
+        </div>
+      </button>
+      <span class="batt" id="battPill" style="display:none"><span class="batt-ico" id="battIco"></span><i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span></span></div>
 
     <div class="hdr-group">
       <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
@@ -658,12 +671,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       </button>
       <button class="act-btn sleep" id="btnSleep" onclick="doSleep()" disabled>
         <span class="ico">🌙</span><span data-i18n="sleep">Sleep</span>
-      </button>
-      <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()">
-        <div class="conn-rows">
-          <span class="conn-line" id="connMachineRow"><span class="status-dot" id="dotMachine"></span><span class="conn-txt" id="lblMachine">Machine</span></span>
-          <span class="conn-line" id="connScaleRow"><span class="status-dot" id="dotScale"></span><span class="conn-txt" id="lblScale">Scale</span></span>
-        </div>
       </button>
       <button class="icon-btn" id="btnSettings" onclick="openSettingsPage()" title="Settings">⚙</button>
     </div>
@@ -756,6 +763,10 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
           <div class="dose-lbl" data-i18n="yieldG">Yield g</div>
         </div>
       </div>
+      <div class="grind-row" id="grindRow" style="display:none">
+        <button class="grind-label" id="grindModelBtn" onclick="openGrinderPage()"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></button>
+        <div class="grind-stepper"><button class="ms-btn" onclick="adjustGrind(-1)">−</button><span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span><button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
+      </div>
     </div>
 
     <div class="bean-info glass">
@@ -765,10 +776,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <button class="bean-edit" onclick="openBeanModal()">Edit</button>
       </div>
       <div class="bean-chips" id="beanChips"></div>
-      <div class="grind-row" id="grindRow" style="display:none">
-        <div class="grind-label"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></div>
-        <div class="grind-stepper"><button class="ms-btn" onclick="adjustGrind(-1)">−</button><span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span><button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
-      </div>
       <div class="bean-spacer"></div>
       <div class="last-shot" id="lastShot">
         <div class="ls-head"><span data-i18n="lastShot">Last Shot</span><button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button></div>
@@ -1206,7 +1213,6 @@ function initWebSockets(){
     state.connected=machineConnected||(phase==='ready');
     state.scaleConnected=scaleConnected;
     updateConnUI(state.connected?'on':(scanning?'ing':'off'));
-    if(machineName) document.getElementById('machineName').textContent=machineName;
     var err=m.connectionStatus&&m.connectionStatus.error; if(err&&err.suggestion) toast(err.suggestion,'err');
     if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); }
     applyChargingState(m.charging);
@@ -2375,6 +2381,14 @@ function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&qu
 // ── Beans & Grinder ─────────────────────────────────────────────────
 function openBeanModal(){ loadBeansGrinders(); document.getElementById('beanOverlay').classList.add('show'); }
 var bgSel=null; // {type:'bean'|'grinder', obj}
+// Tapping the grinder in the recipe opens Beans & Grinders on that grinder.
+function openGrinderPage(){
+  document.getElementById('beanPage').classList.add('show');
+  bgTab='grinder';
+  loadBeansGrinders().then(function(){
+    var g=currentGrinder()||grinders[0];
+    if(g){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; }
+    renderBgList(); renderBgEditor(); }); }
 function openBeanModal(){ document.getElementById('beanPage').classList.add('show'); loadBeansGrinders(); }
 function closeBeanPage(){ document.getElementById('beanPage').classList.remove('show'); }
 // ── Bean / BeanBatch ─────────────────────────────────────────────────
@@ -2454,7 +2468,7 @@ function loadBeanBatches(){ return api('GET','/api/v1/bean-batches').then(functi
     if(!cur||batchTime(b)>batchTime(cur)) beanBatches[b.beanId]=b; }); }).catch(function(){ beanBatches={}; }); }
 
 function loadBeansGrinders(){
-  Promise.all([ api('GET','/api/v1/beans').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}), loadBeanBatches() ])
+  return Promise.all([ api('GET','/api/v1/beans').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}), loadBeanBatches() ])
     .then(function(res){ beans=res[0]||[]; grinders=res[1]||[]; renderBgList(); if(bgSel&&bgSel.type==='bean'&&bgSel.obj.id) renderBgEditor(); });
 }
 var bgTab='bean'; // which section is shown: 'bean' | 'grinder'
@@ -5222,13 +5236,36 @@ function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
 function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
 function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
   api('PUT','/api/v1/workflow',{context:ctx}).then(function(){ toast('Grinder set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
-function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRoaster, g=context.grinderModel, gs=context.grinderSetting;
-  if(name){ document.getElementById('beanName').textContent=(roaster?roaster+' · ':'')+name; document.getElementById('beanSub').textContent=g?(g+(gs?' @ '+gs:'')):t('noGrinder'); }
-  else { document.getElementById('beanName').textContent=t('noBean'); document.getElementById('beanSub').textContent=t('tapEdit'); }
-  // detail chips from the current bean context
+// The workflow context only carries the coffee's name and roaster, so the detail
+// comes from the bean record it points at, and its batch for the roast.
+function currentBean(){ var n=context.coffeeName, r=context.coffeeRoaster; if(!n) return null;
+  return beans.find(function(b){ return b.name===n && (!r || b.roaster===r); })
+      || beans.find(function(b){ return b.name===n; }) || null; }
+function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRoaster;
+  var bean=currentBean(), batch=(bean&&beanBatches[bean.id])||null;
+  var nameEl=document.getElementById('beanName'), subEl=document.getElementById('beanSub');
+  if(name){ nameEl.textContent=(roaster?roaster+' · ':'')+name;
+    var line=[];
+    if(bean){ if(bean.country) line.push(bean.country);
+      if(bean.region) line.push(bean.region);
+      if(bean.producer) line.push(bean.producer); }
+    var age=daysSinceRoast(batch);
+    if(age!=null) line.push(t('daysOffRoast').replace('{n}',age));
+    subEl.textContent=line.length?line.join(' · '):t('tapEdit'); }
+  else { nameEl.textContent=t('noBean'); subEl.textContent=t('tapEdit'); }
   var chips=document.getElementById('beanChips'); if(chips){ chips.innerHTML='';
-    function chip(k,v){ if(!v) return; var c=document.createElement('span'); c.className='bean-chip'; c.innerHTML='<span class="k">'+k+'</span>'+escapeHtml(String(v)); chips.appendChild(c); }
-    chip('Origin',context.coffeeCountry); chip('Process',context.coffeeProcessing); chip('Roast',context.coffeeRoastLevel); }
+    function chip(k,v){ if(v==null||v==='') return; var c=document.createElement('span'); c.className='bean-chip';
+      c.innerHTML='<span class="k">'+escapeHtml(k)+'</span>'+escapeHtml(String(v)); chips.appendChild(c); }
+    if(bean){
+      chip(t('origin'),bean.country);
+      chip(t('region'),bean.region);
+      chip(t('process'),bean.processing);
+      if(batch&&batch.roastLevel) chip(t('roastLevel'),batch.roastLevel);
+      if(batch&&batch.roastDate) chip(t('roastDate'),isoDay(batch.roastDate));
+      chip(t('variety'),(bean.variety||[]).join(', '));
+      chip(t('altitude'),fmtAltitude(bean.altitude));
+      chip(t('species'),bean.species);
+      if(bean.decaf) chip(t('decaf'),bean.decafProcess||'✓'); } }
   updateGrindRow(); }
 // Populate the "Last Shot" mini panel + today's count from the shot history.
 function loadLastShot(){ api('GET','/api/v1/shots?limit=20').then(function(r){ var items=(r&&(r.items||r.shots))||[];
@@ -5459,7 +5496,6 @@ function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
   list.forEach(function(d){ if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; } if(d.type==='scale'){ if(!scaleName||d.state==='connected') scaleName=d.name; if(d.state==='connected') scaleConnected=true; } });
   state.machineName=machineName; state.scaleName=scaleName;
   state.connected=machineConnected; state.scaleConnected=scaleConnected;
-  if(machineName) document.getElementById('machineName').textContent=machineName;
   updateConnUI(state.connected?'on':'off'); updateShotBtn();
   if(state.connected){ loadMachineInfo(); loadWorkflow(); }
 }).catch(function(e){ console.error('[Aurora] loadDevices failed:', e); toast('Gateway not reachable: '+e.message,'err'); }); }
@@ -5494,6 +5530,8 @@ window.addEventListener('load', function(){
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
+  Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
+    .then(function(r){ beans=r[0]||[]; updateBeanInfo(); });
   loadLastShot();
   // load profiles first, then workflow so we can match the current profile to a real list entry
   loadProfiles();
