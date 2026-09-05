@@ -1062,6 +1062,10 @@ function setGauge(nameEl,valEl,barEl,label,value,unit,frac){
   document.getElementById(valEl).innerHTML=value+'<span class="u"> '+unit+'</span>';
   document.getElementById(barEl).style.width=Math.max(0,Math.min(frac,1))*100+'%'; }
 function updateMachineUI(){
+  // Asleep: the whole app is hidden under the opaque lock screen. Skip the per-tick
+  // DOM writes (temps, gauges, water gradient) so the tablet isn't repainting for
+  // nothing while the machine keeps streaming its snapshot. State is still tracked.
+  if(_asleep) return;
   document.getElementById('groupTemp').textContent=convTemp(state.groupTemp).toFixed(prefs.tempUnit==='F'?0:1);
   document.getElementById('mixTemp').textContent=convTemp(state.mixTemp).toFixed(prefs.tempUnit==='F'?0:1);
   document.getElementById('steamTempDisp').textContent=convTemp(state.steamTemp).toFixed(0);
@@ -1083,24 +1087,37 @@ function updateMachineUI(){
   updateWaterVisual();
   updateShotBtn();
 }
-function updateScaleUI(){ var el=document.getElementById('weightNum'); var uEl=document.querySelector('.weight-unit'); if(uEl) uEl.textContent=weightUnitLabel();
+function updateScaleUI(){ if(_asleep) return; var el=document.getElementById('weightNum'); var uEl=document.querySelector('.weight-unit'); if(uEl) uEl.textContent=weightUnitLabel();
   if(!state.scaleConnected||state.scaleWeight===null){ el.textContent=convWeight(0).toFixed(1); el.className='weight-num zero'; return; }
   el.textContent=convWeight(state.scaleWeight).toFixed(1); el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':''); }
 // Temperature -> RGB for the tank fill/waves. Cool blue when cold, teal/green mid,
 // amber/orange as it approaches brew temp, red when very hot (steam range).
-// Espresso brew-zone color bands (distinct steps, not a smooth ramp):
-//   ≤80 blue · 80–85 teal · 85–90 green · 90–95 amber · 95–105 orange · >105 red
+// The color is interpolated between anchor stops so it shifts a visible amount for
+// every degree, especially around the 90C brew zone rather than jumping in bands.
+var TEMP_STOPS=[
+  [70,  56,189,248],  // cool blue
+  [80,  45,212,191],  // teal
+  [85,  16,185,129],  // green
+  [90, 132,204,22],   // lime (approaching brew)
+  [91, 190,190,16],   // yellow-green
+  [92, 234,179,8],    // yellow
+  [93, 245,158,11],   // amber (typical brew)
+  [94, 249,115,22],   // orange
+  [95, 234,88,12],    // deep orange
+  [105,239,68,68]     // red (very hot / steam)
+];
 function tempColor(t){ t=t||0;
-  if(t<80)  return [56,189,248];   // cool blue
-  if(t<85)  return [45,212,191];   // teal
-  if(t<90)  return [16,185,129];   // green
-  if(t<95)  return [245,158,11];   // amber (typical brew)
-  if(t<105) return [249,115,22];   // orange (high)
-  return [239,68,68];              // red (very hot / steam)
+  var s=TEMP_STOPS;
+  if(t<=s[0][0]) return [s[0][1],s[0][2],s[0][3]];
+  var last=s[s.length-1]; if(t>=last[0]) return [last[1],last[2],last[3]];
+  for(var i=1;i<s.length;i++){ if(t<s[i][0]){ var a=s[i-1],b=s[i];
+    var f=(t-a[0])/(b[0]-a[0]);
+    return [Math.round(a[1]+(b[1]-a[1])*f),Math.round(a[2]+(b[2]-a[2])*f),Math.round(a[3]+(b[3]-a[3])*f)]; } }
+  return [last[1],last[2],last[3]];
 }
 // Tank fill gradient + wave colors reflect the current water/boiler temperature
 // (low-water warning overrides to a red/orange alert).
-function updateWaterVisual(){ var pct=tankPercent(state.water.current);
+function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   var low=(state.water.current<=state.water.refill||pct<15);
   var t=state.groupTemp||state.mixTemp||0; var c=low?[239,68,68]:tempColor(t);
   var fill=document.getElementById('waterFill'); if(!fill) return;
@@ -1108,14 +1125,17 @@ function updateWaterVisual(){ var pct=tankPercent(state.water.current);
   var wp=document.querySelector('.temps-bar .wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
   var wp2=document.querySelector('.temps-bar .wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
 }
-function updateWaterUI(){ var pct=tankPercent(state.water.current);
+function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   // Refill kit ON = plumbed supply, tank is effectively always full.
   if(prefs.refillKitFull){
-    document.getElementById('waterPct').textContent=100; document.getElementById('waterFill').style.height='100%';
+    document.getElementById('waterPct').textContent=100; document.getElementById('waterFill').style.height=fillHeight(100);
     document.getElementById('waterWarn').style.display='none'; updateWaterVisual(); return; }
-  document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=Math.min(pct,100)+'%';
+  document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=fillHeight(pct);
   document.getElementById('waterWarn').style.display=(state.water.current<=state.water.refill||pct<15)?'inline':'none';
   updateWaterVisual(); }
+// Map a 0-100% tank level to a visual fill height. Full (100%) fills to 90% so the
+// water surface never touches the top of the panel and leaves headroom for the wave.
+function fillHeight(pct){ return (Math.max(0,Math.min(pct,100))*0.9)+'%'; }
 function updateShotBtn(){ var st=state.machine.state;
   var btn=document.getElementById('btnShot'),ico=document.getElementById('shotIco'),lbl=document.getElementById('shotLbl');
   btn.disabled=!state.connected;
@@ -1250,19 +1270,27 @@ function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/m
 function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared','ok');}).catch(function(e){toast(e.message,'err');}); }
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
-var _lockClockT=null;
-function enterSleep(){ document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show');
-  updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(updateLockClock,1000);
-  api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast('Sleep failed','err'); }); }
-function wakeFromSleep(){ document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show');
+var _lockClockT=null; var _asleep=false;
+// Called on both enter paths (button + machine-reported). Flips the sleep flag,
+// shows the lock, and starts a 1s clock. Sets the clock to update only while the
+// tab is visible so a backgrounded tablet stops the timer entirely.
+function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show');
+  updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(function(){ if(!document.hidden) updateLockClock(); },1000); }
+// Called on both wake paths. Clears the flag/clock, then repaints the live UI once
+// so everything reflects the current state after the sleep gap.
+function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show');
   if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; }
+  updateMachineUI(); updateWaterUI(); updateScaleUI(); }
+function enterSleep(){ beginSleepUI();
+  api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast('Sleep failed','err'); }); }
+function wakeFromSleep(){ endSleepUI();
   if(state.machine.state==='sleeping') api('PUT','/api/v1/machine/state/idle').catch(function(){ toast('Wake failed','err'); }); }
 function updateLockClock(){ var d=new Date();
   document.getElementById('lockClock').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
   document.getElementById('lockDate').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
 // Show/hide the lock without issuing a state change (used when the machine itself reports sleep).
-function enterSleepLocalOnly(){ document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(updateLockClock,1000); }
-function wakeLocalOnly(){ document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show'); if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; } }
+function enterSleepLocalOnly(){ beginSleepUI(); }
+function wakeLocalOnly(){ endSleepUI(); }
 function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast('Scan failed','err');}); }
 
 // ── Steam/Flush modals ──────────────────────────────────────────────
