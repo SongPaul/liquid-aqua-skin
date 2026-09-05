@@ -351,6 +351,15 @@ body.night .ep-aibtn.ghost{background:rgba(255,255,255,.07);color:var(--ink)}
 .eye-btn{background:none;border:none;font-size:14px;line-height:1;cursor:pointer;opacity:.35;padding:2px}
 .eye-btn:hover,.eye-btn.on{opacity:1}
 .ep-roastrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 10px}
+.ep-colorrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 8px}
+.ep-sw{width:24px;height:24px;flex:none;border-radius:8px;border:2px solid transparent;cursor:pointer;padding:0}
+.ep-sw.on{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.ep-sw.auto{width:auto;padding:0 10px;height:24px;background:#fff;border:1px solid var(--glass-line);font-family:var(--font);font-size:10px;font-weight:700;color:var(--ink-mute)}
+.ep-sw.auto.on{border-color:var(--accent);color:var(--accent)}
+.thmb{position:relative}
+.ep-dot{position:absolute;right:-3px;bottom:-3px;width:11px;height:11px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+body.night .ep-sw.auto{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
+body.night .ep-dot{border-color:#1a1526}
 .rec-bar{margin-top:6px}
 .rec-btn{width:100%;border-color:var(--accent);color:var(--accent);font-weight:800}
 .rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:8px}
@@ -1015,6 +1024,7 @@ var I18N={
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
     recFailed:'Suggestion failed:', recNoMatch:'No profile matched', recNoProfiles:'No espresso profiles installed', use:'Use',
+    cardColor:'Card colour', auto:'Auto',
     roastDate:'Roast date', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
     species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
@@ -1079,6 +1089,7 @@ var I18N={
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
     recFailed:'추천 실패:', recNoMatch:'일치하는 프로파일이 없습니다', recNoProfiles:'설치된 에스프레소 프로파일이 없습니다', use:'사용',
+    cardColor:'카드 색', auto:'자동',
     roastDate:'로스팅 날짜', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
     species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
@@ -1875,7 +1886,37 @@ function loadProfiles(){ return api('GET','/api/v1/profiles?includeHidden=true')
   buildCarousel(); }).catch(function(){ document.getElementById('carouselStage').innerHTML='<div class="car-empty">Connect to load</div>'; }); }
 
 // ── Album carousel (favorites; center = focused profile) ────────────
-var ALBUM_GRADS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#ec4899,#f97316)','linear-gradient(135deg,#38bdf8,#6366f1)','linear-gradient(135deg,#f59e0b,#ec4899)','linear-gradient(135deg,#10b981,#38bdf8)','linear-gradient(135deg,#8b5cf6,#ec4899)'];
+// The first six are the original rotation, so a profile with no colour of its
+// own still looks exactly as it did.
+var PROFILE_COLORS=[
+  {k:'indigo',from:'#6366f1',to:'#8b5cf6'},
+  {k:'sunset',from:'#ec4899',to:'#f97316'},
+  {k:'sky',   from:'#38bdf8',to:'#6366f1'},
+  {k:'amber', from:'#f59e0b',to:'#ec4899'},
+  {k:'mint',  from:'#10b981',to:'#38bdf8'},
+  {k:'violet',from:'#8b5cf6',to:'#ec4899'},
+  {k:'ocean', from:'#0ea5e9',to:'#10b981'},
+  {k:'ember', from:'#ef4444',to:'#f59e0b'},
+  {k:'plum',  from:'#a855f7',to:'#6366f1'}];
+function gradOf(c){ return 'linear-gradient(135deg,'+c.from+','+c.to+')'; }
+var ALBUM_GRADS=PROFILE_COLORS.slice(0,6).map(gradOf);
+function colorKeyOf(p){ var k=((p&&p.metadata)||{}).color;
+  return PROFILE_COLORS.some(function(c){ return c.k===k; })?k:''; }
+function colorOf(p){ var k=colorKeyOf(p);
+  return k?PROFILE_COLORS.filter(function(c){ return c.k===k; })[0]:null; }
+// A colour set on the profile follows it around; otherwise the card keeps its
+// place in the rotation.
+function albumGrad(p,i){ var c=colorOf(p); return c?gradOf(c):ALBUM_GRADS[i%ALBUM_GRADS.length]; }
+function setProfileColor(id,key){
+  var p=allProfiles.find(function(x){ return x.id===id; }); if(!p) return;
+  var meta=JSON.parse(JSON.stringify(p.metadata||{}));
+  if(key) meta.color=key; else delete meta.color;
+  api('PUT','/api/v1/profiles/'+encodeURIComponent(id),{metadata:meta}).then(function(saved){
+    p.metadata=(saved&&saved.metadata)||meta;
+    if(curProfileObj&&curProfileObj.id===id) curProfileObj.metadata=p.metadata;
+    if(editing&&editing.id===id) editing.metadata=p.metadata;
+    buildCarousel(); renderEpList(); renderEpEditor();
+  }).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
 var carItems=[], carIndex=0;
 
 function carListProfiles(){ // favorites first; if none, first 6 profiles
@@ -1889,7 +1930,7 @@ function buildCarousel(){
   if(!carItems.length){ stage.innerHTML='<div class="car-empty">No profiles</div>'; return; }
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id;
     var el=document.createElement('div'); el.className='album';
-    el.style.background=ALBUM_GRADS[i%ALBUM_GRADS.length];
+    el.style.background=albumGrad(p,i);
     var curve=document.createElement('div'); curve.className='al-curve'; var cv=document.createElement('canvas'); curve.appendChild(cv);
     var st=splitTitle(title);
     var nm=document.createElement('div'); nm.className='al-name';
@@ -1903,7 +1944,7 @@ function buildCarousel(){
   var nav=document.getElementById('navCards'); nav.innerHTML='';
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id; var stn=splitTitle(title);
     var c=document.createElement('div'); c.className='nav-card';
-    c.style.background='linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35)),'+ALBUM_GRADS[i%ALBUM_GRADS.length];
+    c.style.background='linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35)),'+albumGrad(p,i);
     c.innerHTML='<span>'+escapeHtml(stn.name)+'</span>';
     c.title=title;
     c.onclick=function(){ carIndex=i; renderCarousel(); selectProfile(p); };
@@ -2163,6 +2204,7 @@ function renderEpList(){ var list=document.getElementById('epList'); list.innerH
   function addItem(p,st){ var author=(p.profile&&p.profile.author)||'';
     var it=document.createElement('div'); it.className='ep-item'+(editing&&editing.id===p.id?' active':'');
     var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
+    var pc=colorOf(p); if(pc){ var dot=document.createElement('span'); dot.className='ep-dot'; dot.style.background=gradOf(pc); th.appendChild(dot); }
     var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
     var aiSet=aiTagsOf(p), guess=isAiRoast(p);
     var tagHtml=allTagsOf(p).map(function(k){ var cls='ep-chip'+(ROAST_KEYS.indexOf(k)>=0?' roast':'');
@@ -2194,6 +2236,14 @@ function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
   // just move the active highlight — no full list rebuild (keeps it fast)
   Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.toggle('active', k===p.id); }); });
   renderEpEditor(); }
+function colorPicker(p){
+  var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
+  var cur=colorKeyOf(live);
+  var sw=PROFILE_COLORS.map(function(c){
+    return '<button class="ep-sw'+(cur===c.k?' on':'')+'" style="background:'+gradOf(c)+'" title="'+escapeAttr(c.k)
+      +'" onclick="setProfileColor(\''+live.id+'\',\''+c.k+'\')"></button>'; }).join('');
+  var auto='<button class="ep-sw auto'+(cur?'':' on')+'" onclick="setProfileColor(\''+live.id+'\',\'\')">'+escapeHtml(t('auto'))+'</button>';
+  return '<div class="ep-colorrow"><span class="ep-roastlab">'+escapeHtml(t('cardColor'))+'</span>'+sw+auto+'</div>'; }
 function roastPicker(p){
   var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
   var cur=profileRoast(live), isManual=manualRoast(live).length>0;
@@ -2207,6 +2257,7 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!edi
   wrap.innerHTML=''
     +'<div class="ep-visual"><div class="ep-visual-title"><span>Pressure &amp; Flow Curve</span><span><span style="color:var(--accent)">■</span> pressure &nbsp;<span style="color:var(--steam)">■</span> flow &nbsp;<span style="color:#f97316">▬</span> temp</span></div><canvas id="epCurve"></canvas></div>'
     +'<input class="ep-name-input" id="epName" value="'+escapeAttr(pr.title||'')+'">'
+    +colorPicker(editing)
     +roastPicker(editing)
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
     +'<div class="ep-steps-title"><span>Steps</span><button class="ep-step-add" onclick="addStep()">+ Add step</button></div>'
