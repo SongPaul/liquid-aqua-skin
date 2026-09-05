@@ -438,6 +438,32 @@ body.mobile-scan{overflow:auto}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--glass-line)}
 .set-select{padding:9px 14px;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;-webkit-appearance:none}
 body.night .set-select{background:rgba(255,255,255,.07);color:var(--ink)}
+.plugin-list{display:flex;flex-direction:column;gap:8px}
+.plugin-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:12px;padding:10px 14px}
+.plugin-info{min-width:0}
+.plugin-name{font-size:13px;font-weight:800;color:var(--ink)}
+.plugin-ver{font-size:10px;font-weight:600;color:var(--ink-mute)}
+.plugin-author{font-size:11px;color:var(--ink-mute);margin-top:1px}
+.plugin-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.plugin-actions .m-btn{padding:7px 14px;font-size:12px}
+body.night .plugin-item{background:rgba(255,255,255,.06)}
+#pluginCfgFields .pcf-cb{width:22px;height:22px;cursor:pointer}
+
+/* Settings full page */
+.sp-nav{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.sp-nav-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid transparent;background:transparent;font-family:var(--font);font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;text-align:left;transition:all .15s}
+.sp-nav-item:hover{background:var(--glass-hi)}
+.sp-nav-item.active{background:var(--glass-hi);border-color:var(--accent);color:var(--accent)}
+.sp-nav-item .ic{font-size:17px;width:22px;text-align:center}
+.sp-content{overflow-y:auto}
+.sp-content::-webkit-scrollbar{width:6px}.sp-content::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
+.sp-content-inner{padding:22px 26px;max-width:640px}
+.sp-cat-title{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px;color:var(--ink)}
+.sp-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.sp-info-cell{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:12px;padding:12px 14px}
+.sp-info-cell .k{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
+.sp-info-cell .v{font-size:15px;font-weight:800;color:var(--ink);margin-top:2px}
+body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .set-row:last-child{border-bottom:none}
 .set-info{min-width:0}
 .set-name{font-size:14px;font-weight:800;color:var(--ink)}
@@ -529,7 +555,7 @@ body.night .set-select{background:rgba(255,255,255,.07);color:var(--ink)}
           <span class="conn-line" id="connScaleRow"><span class="status-dot" id="dotScale"></span><span class="conn-txt" id="lblScale">Scale</span></span>
         </div>
       </button>
-      <button class="icon-btn" id="btnSettings" onclick="openSettings()" title="Settings">⚙</button>
+      <button class="icon-btn" id="btnSettings" onclick="openSettingsPage()" title="Settings">⚙</button>
     </div>
   </header>
 
@@ -768,38 +794,25 @@ body.night .set-select{background:rgba(255,255,255,.07);color:var(--ink)}
   </div></div>
 </div>
 
-<!-- ── Settings ────────────────────────────────────────────────── -->
-<div class="overlay" id="settingsOverlay" onclick="closeModal(event,'settingsOverlay')">
-  <div class="modal"><div class="modal-head"><div class="modal-title"><span>⚙ </span><span data-i18n="settings">Settings</span></div><button class="modal-close" onclick="closeModal(null,'settingsOverlay')">×</button></div>
+<!-- ── Settings full page (left categories + right content) ────── -->
+<div class="editpage" id="settingsPage">
+  <div class="ep-head">
+    <div class="ep-title"><span>⚙ </span><span data-i18n="settings">Settings</span></div>
+    <button class="ep-close" onclick="closeSettingsPage()">✕ <span data-i18n="close">Close</span></button>
+  </div>
+  <div class="ep-body">
+    <div class="sp-nav glass" id="spNav"></div>
+    <div class="sp-content glass"><div class="sp-content-inner" id="spContent"></div></div>
+  </div>
+</div>
+
+<!-- ── Plugin settings modal (schema-driven form) ──────────────── -->
+<div class="overlay" id="pluginCfgOverlay" onclick="closeModal(event,'pluginCfgOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title" id="pluginCfgTitle">Plugin</div><button class="modal-close" onclick="closeModal(null,'pluginCfgOverlay')">×</button></div>
   <div class="modal-body">
-    <div class="set-row">
-      <div class="set-info"><div class="set-name" data-i18n="language">Language</div></div>
-      <select id="setLang" onchange="setLang(this.value)" class="set-select"><option value="auto">Auto</option><option value="en">English</option><option value="ko">한국어</option></select>
-    </div>
-    <div class="set-row">
-      <div class="set-info"><div class="set-name" data-i18n="tempUnit">Temperature</div></div>
-      <select id="setTempUnit" onchange="setUnit('temp',this.value)" class="set-select"><option value="C">°C</option><option value="F">°F</option></select>
-    </div>
-    <div class="set-row">
-      <div class="set-info"><div class="set-name" data-i18n="weightUnit">Weight</div></div>
-      <select id="setWeightUnit" onchange="setUnit('weight',this.value)" class="set-select"><option value="g">g</option><option value="oz">oz</option></select>
-    </div>
-    <div class="set-row">
-      <div class="set-info"><div class="set-name" data-i18n="nightMode">Night mode</div><div class="set-desc" data-i18n="nightModeDesc">Dark theme for low-light environments.</div></div>
-      <label class="switch"><input type="checkbox" id="setNight" onchange="toggleNight(this.checked)"><span class="track"></span></label>
-    </div>
-    <div class="set-row">
-      <div class="set-info"><div class="set-name" data-i18n="autoNight">Auto night mode</div><div class="set-desc">19:00–07:00</div></div>
-      <label class="switch"><input type="checkbox" id="setNightAuto" onchange="toggleNightAuto(this.checked)"><span class="track"></span></label>
-    </div>
-    <div class="set-row">
-      <div class="set-info"><div class="set-name" data-i18n="autoDyeName">Auto-open shot log</div><div class="set-desc" data-i18n="autoDyeDesc">Show the Log Your Espresso form as soon as a shot ends.</div></div>
-      <label class="switch"><input type="checkbox" id="setAutoDye" onchange="toggleAutoDye(this.checked)"><span class="track"></span></label>
-    </div>
-    <div class="set-row" style="display:block">
-      <div class="set-info" style="margin-bottom:8px"><div class="set-name" data-i18n="geminiName">Gemini API key</div><div class="set-desc">Used to auto-fill bean details from a photo of the bag. Stored on this device only. <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">Get a key ↗</a></div></div>
-      <div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="AIza…" oninput="saveGeminiKey(this.value)"></div>
-    </div>
+    <div id="pluginCfgFields"></div>
+    <div class="ai-status" id="pluginCfgStatus"></div>
+    <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'pluginCfgOverlay')" data-i18n="close">Close</button><button class="m-btn primary" id="pluginCfgSave" onclick="savePluginCfg()" data-i18n="save">Save</button></div>
   </div></div>
 </div>
 
@@ -857,6 +870,19 @@ var I18N={
     autoNight:'Auto night mode', autoDyeName:'Auto-open shot log', autoDyeDesc:'Show the Log Your Espresso form as soon as a shot ends.',
     gatewayName:'Gateway', gatewayDesc:'Open the Decaid gateway web interface in a new tab.', open:'Open ↗',
     geminiName:'Gemini API key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
+    plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
+    catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
+    brightness:'Brightness', brightnessDesc:'Screen brightness (100 = auto).', wakeLock:'Keep screen awake', wakeLockDesc:'Prevent the tablet screen from turning off.',
+    lowBatt:'Low-battery dimming', lowBattDesc:'Cap brightness when the battery is low.',
+    refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
+    waterCal:'Water tank calibration', waterCalDesc:'The machine reports water height in mm. Calibrate to show a percentage.', waterCalNow:'Current reading',
+    waterCalMode:'Calibration method', wcOff:'Off (raw)', wcTwoPoint:'Empty & full', wcPour:'Measured pour',
+    wcEmpty:'Empty tank height', wcFull:'Full tank height', wcAfterPour:'Height after pour', wcCapacity:'Tank capacity', wcPoured:'Poured amount',
+    wcCapture:'Capture', wcCaptured:'Captured', wcNotSet:'not set',
+    flowCal:'Flow Calibration', flowCalDesc:'Fine-tune the gateway flow/weight estimation multipliers.', fcWeight:'Weight flow multiplier', fcVolume:'Volume flow multiplier', fcHotWater:'Hot water flow multiplier',
+    refillKit:'Refill kit', refillKitDesc:'Override the plumbed refill-kit behavior on the machine.', rkAuto:'Auto', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
+    machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
+    installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Start the firmware update? Keep the machine powered.', updating:'Updating…',
     close:'Close', save:'Save', cancel:'Cancel', saveOptions:'Save Options', delete:'Delete', useForShot:'Use for shot', set:'Set',
     beans:'Beans', grinders:'Grinders', addBean:'+ Add Bean', addGrinder:'+ Add Grinder', newBean:'New Bean', editBean:'Edit Bean', newGrinder:'New Grinder', editGrinder:'Edit Grinder',
     roaster:'Roaster', name:'Name', origin:'Origin', process:'Process', roastLevel:'Roast level', notes:'Notes',
@@ -879,6 +905,19 @@ var I18N={
     autoNight:'자동 나이트 모드', autoDyeName:'샷 기록 자동 열기', autoDyeDesc:'샷이 끝나면 기록 폼을 자동으로 표시.',
     gatewayName:'게이트웨이', gatewayDesc:'Decaid 게이트웨이 웹 화면을 새 탭에서 열기.', open:'열기 ↗',
     geminiName:'Gemini API 키', language:'언어', tempUnit:'온도', weightUnit:'무게',
+    plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
+    catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
+    brightness:'밝기', brightnessDesc:'화면 밝기 (100 = 자동).', wakeLock:'화면 항상 켜기', wakeLockDesc:'태블릿 화면이 꺼지지 않게 유지.',
+    lowBatt:'저전력 밝기 제한', lowBattDesc:'배터리가 낮을 때 밝기를 제한.',
+    refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
+    waterCal:'물탱크 보정', waterCalDesc:'머신은 수위를 mm로 보고합니다. 퍼센트 표시를 위해 보정하세요.', waterCalNow:'현재 값',
+    waterCalMode:'보정 방법', wcOff:'끔 (원시값)', wcTwoPoint:'빈 탱크 & 가득', wcPour:'측정 투입',
+    wcEmpty:'빈 탱크 높이', wcFull:'가득 찬 높이', wcAfterPour:'투입 후 높이', wcCapacity:'탱크 용량', wcPoured:'투입량',
+    wcCapture:'캡처', wcCaptured:'캡처됨', wcNotSet:'미설정',
+    flowCal:'유량 보정', flowCalDesc:'게이트웨이 유량/무게 추정 배수를 미세 조정합니다.', fcWeight:'무게 유량 배수', fcVolume:'볼륨 유량 배수', fcHotWater:'온수 유량 배수',
+    refillKit:'리필 킷', refillKitDesc:'머신의 배관형 리필 킷 동작을 강제로 설정합니다.', rkAuto:'자동', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
+    machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
+    installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 업데이트를 시작할까요? 머신 전원을 유지하세요.', updating:'업데이트 중…',
     close:'닫기', save:'저장', cancel:'취소', saveOptions:'옵션 저장', delete:'삭제', useForShot:'샷에 사용', set:'설정',
     beans:'원두', grinders:'그라인더', addBean:'+ 원두 추가', addGrinder:'+ 그라인더 추가', newBean:'새 원두', editBean:'원두 편집', newGrinder:'새 그라인더', editGrinder:'그라인더 편집',
     roaster:'로스터', name:'이름', origin:'원산지', process:'가공', roastLevel:'로스팅', notes:'메모',
@@ -1061,17 +1100,17 @@ function tempColor(t){ t=t||0;
 }
 // Tank fill gradient + wave colors reflect the current water/boiler temperature
 // (low-water warning overrides to a red/orange alert).
-function updateWaterVisual(){ var pct=state.water.current;
-  var low=(pct<=state.water.refill||pct<15);
+function updateWaterVisual(){ var pct=tankPercent(state.water.current);
+  var low=(state.water.current<=state.water.refill||pct<15);
   var t=state.groupTemp||state.mixTemp||0; var c=low?[239,68,68]:tempColor(t);
   var fill=document.getElementById('waterFill'); if(!fill) return;
   fill.style.background='linear-gradient(180deg,rgba('+c[0]+','+c[1]+','+c[2]+',.30),rgba('+c[0]+','+c[1]+','+c[2]+',.48))';
   var wp=document.querySelector('.temps-bar .wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
   var wp2=document.querySelector('.temps-bar .wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
 }
-function updateWaterUI(){ var pct=state.water.current;
+function updateWaterUI(){ var pct=tankPercent(state.water.current);
   document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=Math.min(pct,100)+'%';
-  document.getElementById('waterWarn').style.display=(pct<=state.water.refill||pct<15)?'inline':'none';
+  document.getElementById('waterWarn').style.display=(state.water.current<=state.water.refill||pct<15)?'inline':'none';
   updateWaterVisual(); }
 function updateShotBtn(){ var st=state.machine.state;
   var btn=document.getElementById('btnShot'),ico=document.getElementById('shotIco'),lbl=document.getElementById('shotLbl');
@@ -1300,9 +1339,29 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', lang:'auto', tempUnit:'C', weightUnit:'g' };
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', lang:'auto', tempUnit:'C', weightUnit:'g',
+  // Water tank calibration. mode: 'off' | 'twopoint' | 'pour'.
+  // twopoint: hEmpty/hFull (mm) + capacity(ml). pour: hEmpty(mm) + poured(ml) at hPour(mm).
+  waterCal:{ mode:'off', hEmpty:null, hFull:null, capacity:1500, poured:null, hPour:null } };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; }catch(_){ } applyNight(); applyI18n(); }
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
+// Convert the raw tank height (mm, from the DE1) to a display percentage using
+// the chosen calibration. Falls back to treating the raw value as % (legacy).
+function tankPercent(mm){ var c=prefs.waterCal||{};
+  if(c.mode==='twopoint' && c.hEmpty!=null && c.hFull!=null && c.hFull>c.hEmpty){
+    return Math.max(0,Math.min(100, 100*(mm-c.hEmpty)/(c.hFull-c.hEmpty))); }
+  if(c.mode==='pour' && c.hEmpty!=null && c.hPour!=null && c.poured>0 && c.hPour>c.hEmpty){
+    var mlPerMm=c.poured/(c.hPour-c.hEmpty); var ml=Math.max(0,(mm-c.hEmpty)*mlPerMm);
+    var cap=c.capacity||1500; return Math.max(0,Math.min(100, 100*ml/cap)); }
+  return Math.max(0,Math.min(100, mm)); // legacy: raw value already 0-100
+}
+// Estimated remaining volume (ml) if calibration provides enough info; else null.
+function tankMl(mm){ var c=prefs.waterCal||{};
+  if(c.mode==='pour' && c.hEmpty!=null && c.hPour!=null && c.poured>0 && c.hPour>c.hEmpty){
+    return Math.max(0,(mm-c.hEmpty)*(c.poured/(c.hPour-c.hEmpty))); }
+  if(c.mode==='twopoint' && c.hEmpty!=null && c.hFull!=null && c.hFull>c.hEmpty && c.capacity){
+    return Math.max(0,Math.min(c.capacity, c.capacity*(mm-c.hEmpty)/(c.hFull-c.hEmpty))); }
+  return null; }
 // Unit conversion helpers. Machine/scale data is always metric (°C, g);
 // these convert only for display.
 function convTemp(c){ return prefs.tempUnit==='F'?(c*9/5+32):c; }
@@ -1316,18 +1375,208 @@ function setLang(v){ prefs.lang=v; savePrefs(); applyI18n(); relocalizeDynamic()
 function relocalizeDynamic(){ try{ renderCarousel(); updateShotBtn(); updateConnUI(state.connected?'on':'off'); applyActionMode(); updateBeanInfo(); loadLastShot(); _chartLegendMode=null; drawChart();
   if(document.getElementById('editPage').classList.contains('show')){ renderEpList(); if(editing) renderEpEditor(); }
   if(document.getElementById('beanPage').classList.contains('show')){ renderBgList(); if(bgSel) renderBgEditor(); }
+  if(document.getElementById('settingsPage')&&document.getElementById('settingsPage').classList.contains('show')){ renderSpNav(); renderSpContent(); }
 }catch(_){ } }
 function savePrefs(){ try{ localStorage.setItem('aurora_prefs',JSON.stringify(prefs)); }catch(_){ } }
 function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
-function openSettings(){ document.getElementById('setLang').value=prefs.lang||'auto'; document.getElementById('setTempUnit').value=prefs.tempUnit; document.getElementById('setWeightUnit').value=prefs.weightUnit; document.getElementById('setAutoDye').checked=prefs.autoDye; document.getElementById('setNight').checked=(prefs.nightAuto?isNightTime():prefs.night); document.getElementById('setNight').disabled=prefs.nightAuto; document.getElementById('setNightAuto').checked=prefs.nightAuto; document.getElementById('setGeminiKey').value=prefs.geminiKey||''; document.getElementById('settingsOverlay').classList.add('show'); }
 function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
+
+// ── Settings full page ──────────────────────────────────────────────
+var SP_CATS=[
+  {id:'general', ic:'⚙', key:'catGeneral'},
+  {id:'display', ic:'🔆', key:'catDisplay'},
+  {id:'machine', ic:'☕', key:'catMachine'},
+  {id:'firmware',ic:'⬆', key:'catFirmware'},
+  {id:'ai',      ic:'✨', key:'catAI'},
+  {id:'plugins', ic:'🧩', key:'plugins'}
+];
+var spCat='general', gwSettings={}, displayState={}, machineInfo={};
+function openSettingsPage(){ document.getElementById('settingsPage').classList.add('show'); renderSpNav();
+  // preload gateway settings + display + machine info
+  api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='display'||spCat==='machine') renderSpContent(); }).catch(function(){});
+  api('GET','/api/v1/display').then(function(d){ displayState=d||{}; if(spCat==='display') renderSpContent(); }).catch(function(){});
+  api('GET','/api/v1/machine/info').then(function(i){ machineInfo=i||{}; if(spCat==='machine') renderSpContent(); }).catch(function(){});
+  spSelect(spCat); }
+function closeSettingsPage(){ document.getElementById('settingsPage').classList.remove('show'); }
+function renderSpNav(){ var nav=document.getElementById('spNav'); nav.innerHTML='';
+  SP_CATS.forEach(function(c){ var b=document.createElement('button'); b.className='sp-nav-item'+(c.id===spCat?' active':'');
+    b.innerHTML='<span class="ic">'+c.ic+'</span><span>'+t(c.key)+'</span>'; b.onclick=function(){ spSelect(c.id); }; nav.appendChild(b); }); }
+function spSelect(id){ spCat=id; renderSpNav(); renderSpContent(); }
+function row(nameKey,descKey,control){ return '<div class="set-row"><div class="set-info"><div class="set-name">'+t(nameKey)+'</div>'+(descKey?'<div class="set-desc">'+t(descKey)+'</div>':'')+'</div>'+control+'</div>'; }
+function sw(id,checked,onchg,disabled){ return '<label class="switch"><input type="checkbox" id="'+id+'"'+(checked?' checked':'')+(disabled?' disabled':'')+' onchange="'+onchg+'"><span class="track"></span></label>'; }
+function renderSpContent(){ var box=document.getElementById('spContent'); if(!box) return; var h='';
+  if(spCat==='general'){
+    h+='<div class="sp-cat-title">'+t('catGeneral')+'</div>';
+    h+=row('language','','<select class="set-select" onchange="setLang(this.value)">'+opt('auto','Auto',prefs.lang)+opt('en','English',prefs.lang)+opt('ko','한국어',prefs.lang)+'</select>');
+    h+=row('tempUnit','','<select class="set-select" onchange="setUnit(\'temp\',this.value)">'+opt('C','°C',prefs.tempUnit)+opt('F','°F',prefs.tempUnit)+'</select>');
+    h+=row('weightUnit','','<select class="set-select" onchange="setUnit(\'weight\',this.value)">'+opt('g','g',prefs.weightUnit)+opt('oz','oz',prefs.weightUnit)+'</select>');
+    h+=row('nightMode','nightModeDesc',sw('setNight',(prefs.nightAuto?isNightTime():prefs.night),'toggleNight(this.checked)',prefs.nightAuto));
+    h+=row('autoNight',null,sw('setNightAuto',prefs.nightAuto,'toggleNightAuto(this.checked)'));
+    h+=row('autoDyeName','autoDyeDesc',sw('setAutoDye',prefs.autoDye,'toggleAutoDye(this.checked)'));
+  } else if(spCat==='display'){
+    h+='<div class="sp-cat-title">'+t('catDisplay')+'</div>';
+    var br=(displayState.brightness!=null?displayState.brightness:100);
+    var brSupported=!displayState.platformSupported||displayState.platformSupported.brightness!==false;
+    h+=row('brightness','brightnessDesc','<div class="opt-ctrl"><input type="range" class="slider" min="10" max="100" step="1" value="'+br+'"'+(brSupported?'':' disabled')+' oninput="setBrightness(this.value,true)" onchange="setBrightness(this.value,false)"><span class="opt-val" id="brVal">'+br+'</span></div>');
+    h+=row('wakeLock','wakeLockDesc',sw('setWake',!!gwSettings.keepAwake,'setKeepAwake(this.checked)'));
+    h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
+  } else if(spCat==='machine'){
+    h+='<div class="sp-cat-title">'+t('catMachine')+'</div>';
+    var rl=Math.round(state.water.refill||0);
+    h+=row('refillLevel','refillLevelDesc','<div class="opt-ctrl"><input type="range" class="slider" min="0" max="30" step="1" value="'+rl+'" oninput="document.getElementById(\'rlVal\').textContent=this.value" onchange="setRefillLevel(this.value)"><span class="opt-val" id="rlVal">'+rl+'</span></div>');
+    // ── Water tank calibration ──
+    h+='<div class="ep-section-title" style="margin-top:20px">'+t('waterCal')+'</div>';
+    h+='<div class="set-desc" style="margin-bottom:10px">'+t('waterCalDesc')+' '+t('waterCalNow')+': <b>'+ (state.water.current!=null?state.water.current.toFixed(1):'—') +' mm</b></div>';
+    var cm=(prefs.waterCal&&prefs.waterCal.mode)||'off';
+    h+=row('waterCalMode','','<select class="set-select" onchange="setWaterCalMode(this.value)">'+opt('off',t('wcOff'),cm)+opt('twopoint',t('wcTwoPoint'),cm)+opt('pour',t('wcPour'),cm)+'</select>');
+    h+='<div id="waterCalBox">'+waterCalBoxHtml()+'</div>';
+    // ── Flow calibration (gateway multipliers) ──
+    h+='<div class="ep-section-title" style="margin-top:20px">'+t('flowCal')+'</div>';
+    h+='<div class="set-desc" style="margin-bottom:6px">'+t('flowCalDesc')+'</div>';
+    h+=flowMultRow('weightFlowMultiplier',t('fcWeight'),0.1,1)+flowMultRow('volumeFlowMultiplier',t('fcVolume'),0.05,2)+flowMultRow('hotWaterFlowMultiplier',t('fcHotWater'),0.05,2);
+    // ── Refill kit (gateway override) ──
+    var rk=(gwSettings.refillKitSetting!=null?String(gwSettings.refillKitSetting):'2');
+    h+=row('refillKit','refillKitDesc','<select class="set-select" onchange="setRefillKit(this.value)">'+opt('2',t('rkAuto'),rk)+opt('1',t('rkOn'),rk)+opt('0',t('rkOff'),rk)+'</select>');
+    h+='<div class="ep-section-title" style="margin-top:20px">'+t('machineInfo')+'</div>';
+    var rkDet=(machineInfo.extra&&machineInfo.extra.refillKit!=null)?(machineInfo.extra.refillKit?t('rkYes'):t('rkNo')):'—';
+    h+='<div class="sp-info-grid">'
+      +infoCell(t('model'),machineInfo.model||'—')+infoCell(t('serial'),machineInfo.serialNumber||'—')
+      +infoCell(t('firmware'),machineInfo.version||'—')+infoCell('GHC',machineInfo.GHC?'Yes':'No')
+      +infoCell(t('rkDetected'),rkDet)+'</div>';
+  } else if(spCat==='firmware'){
+    h+='<div class="sp-cat-title">'+t('catFirmware')+'</div>';
+    h+='<div id="fwBox"><div class="ls-empty">'+t('loading')+'</div></div>';
+  } else if(spCat==='ai'){
+    h+='<div class="sp-cat-title">'+t('catAI')+'</div>';
+    h+='<div class="set-row" style="display:block"><div class="set-info" style="margin-bottom:8px"><div class="set-name">'+t('geminiName')+'</div><div class="set-desc">'+t('geminiDesc')+' <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">Get a key ↗</a></div></div><div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="AIza…" value="'+escapeAttr(prefs.geminiKey||'')+'" oninput="saveGeminiKey(this.value)"></div></div>';
+  } else if(spCat==='plugins'){
+    h+='<div class="sp-cat-title">'+t('plugins')+'</div>';
+    h+='<div class="set-desc" style="margin-bottom:12px">'+t('pluginsDesc')+'</div>';
+    h+='<div id="pluginList" class="plugin-list"><div class="ls-empty">'+t('loading')+'</div></div>';
+  }
+  box.innerHTML=h;
+  if(spCat==='plugins') loadPlugins();
+  if(spCat==='firmware') loadFirmware();
+}
+function opt(val,label,cur){ return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+label+'</option>'; }
+function infoCell(k,v){ return '<div class="sp-info-cell"><div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(String(v))+'</div></div>'; }
+// Display settings
+function setBrightness(v,live){ document.getElementById('brVal').textContent=v; if(live) return; // only push on change (release)
+  api('PUT','/api/v1/display/brightness',{brightness:parseInt(v,10)}).catch(function(){ toast('Brightness failed','err'); }); }
+function setKeepAwake(on){ gwSettings.keepAwake=on; api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
+function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast('Save failed','err'); }); }
+function setRefillLevel(v){ state.water.refill=parseInt(v,10); api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)}).then(function(){ toast('Refill level saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
+function setRefillKit(v){ var n=parseInt(v,10); gwSettings.refillKitSetting=n; api('POST','/api/v1/settings',{refillKitSetting:n}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
+// ── Water tank calibration UI ──
+function setWaterCalMode(m){ prefs.waterCal.mode=m; savePrefs(); var b=document.getElementById('waterCalBox'); if(b) b.innerHTML=waterCalBoxHtml(); updateWaterUI(); }
+function waterCalBoxHtml(){ var c=prefs.waterCal||{}; if(c.mode==='off') return '';
+  function cap(id,label,val,unit){ return '<div class="set-row"><div class="set-info"><div class="set-name">'+label+'</div>'
+    +'<div class="set-desc">'+(val!=null?(val+' '+unit):t('wcNotSet'))+'</div></div>'
+    +'<button class="m-btn" onclick="captureWaterCal(\''+id+'\')">'+t('wcCapture')+'</button></div>'; }
+  var h='';
+  if(c.mode==='twopoint'){
+    h+=cap('hEmpty',t('wcEmpty'),c.hEmpty,'mm');
+    h+=cap('hFull',t('wcFull'),c.hFull,'mm');
+    h+=row('wcCapacity','','<div class="opt-ctrl"><input type="number" class="set-select" style="width:90px" value="'+(c.capacity||1500)+'" oninput="prefs.waterCal.capacity=parseInt(this.value,10)||1500;savePrefs();"> ml</div>');
+  } else if(c.mode==='pour'){
+    h+=cap('hEmpty',t('wcEmpty'),c.hEmpty,'mm');
+    h+=row('wcPoured','','<div class="opt-ctrl"><input type="number" class="set-select" style="width:90px" value="'+(c.poured||'')+'" placeholder="ml" oninput="prefs.waterCal.poured=parseFloat(this.value)||null;savePrefs();"> ml</div>');
+    h+=cap('hPour',t('wcAfterPour'),c.hPour,'mm');
+  }
+  return h; }
+function captureWaterCal(field){ var mm=state.water.current; if(mm==null){ toast('No water reading','err'); return; }
+  prefs.waterCal[field]=parseFloat(mm.toFixed(2)); savePrefs();
+  var b=document.getElementById('waterCalBox'); if(b) b.innerHTML=waterCalBoxHtml(); updateWaterUI();
+  toast(t('wcCaptured')+': '+mm.toFixed(1)+' mm','ok'); }
+// ── Flow calibration multipliers (gateway settings) ──
+function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0);
+  return '<div class="set-row"><div class="set-info"><div class="set-name">'+label+'</div></div>'
+    +'<div class="grind-stepper"><button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+(-step)+','+digits+')">−</button>'
+    +'<span class="grind-val" id="fm-'+key+'">'+v.toFixed(digits)+'</span>'
+    +'<button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+step+','+digits+')">+</button></div></div>'; }
+function adjustFlowMult(key,delta,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0)+delta; v=Math.max(0,parseFloat(v.toFixed(digits))); gwSettings[key]=v;
+  var el=document.getElementById('fm-'+key); if(el) el.textContent=v.toFixed(digits);
+  var body={}; body[key]=v; clearTimeout(adjustFlowMult._t); adjustFlowMult._t=setTimeout(function(){ api('POST','/api/v1/settings',body).catch(function(){ toast('Save failed','err'); }); },500); }
+// Firmware
+function loadFirmware(){ var box=document.getElementById('fwBox'); if(!box) return;
+  api('GET','/api/v1/machine/firmware').then(function(fw){ if(!box) return;
+    var cur=(fw&&fw.machine&&(fw.machine.version||fw.machine.installedVersion))||machineInfo.version||'—';
+    var arts=(fw&&fw.artifacts)||[]; var recId=fw&&fw.recommendedArtifactId;
+    var rec=recId?arts.find(function(a){return a.id===recId;}):(arts.length?arts[0]:null);
+    var avail=rec&&(rec.version||rec.name)||'—';
+    var updateAvailable=!!(fw&&fw.updateAvailable);
+    var h='<div class="sp-info-grid"><div class="sp-info-cell"><div class="k">'+t('installed')+'</div><div class="v">'+escapeHtml(String(cur))+'</div></div>';
+    h+='<div class="sp-info-cell"><div class="k">'+t('available')+'</div><div class="v">'+escapeHtml(String(avail))+'</div></div></div>';
+    h+='<div style="margin-top:16px"><button class="m-btn primary" id="fwApply"'+(updateAvailable&&recId?'':' disabled')+' onclick="applyFirmware(\''+(recId||'')+'\')">'+t('updateFirmware')+'</button></div>';
+    if(!updateAvailable) h+='<div class="set-desc" style="margin-top:8px">'+t('fwUpToDate')+'</div>';
+    box.innerHTML=h;
+  }).catch(function(){ if(box) box.innerHTML='<div class="ls-empty">'+t('fwUnavailable')+'</div>'; }); }
+function applyFirmware(id){ if(!id){ toast('No firmware artifact','err'); return; } if(!confirm(t('fwConfirm'))) return;
+  toast(t('updating'),'ok'); api('POST','/api/v1/machine/firmware/apply',{artifactId:id}).then(function(){ toast('Firmware update started','ok'); }).catch(function(e){ toast('Firmware failed: '+e.message,'err'); }); }
+
+// ── Gateway plugins (list + enable/disable + open UI) ───────────────
+var pluginsCache=[];
+function loadPlugins(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
+  api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:[]; renderPluginList(); })
+    .catch(function(){ box.innerHTML='<div class="ls-empty">'+t('noPlugins')+'</div>'; }); }
+function pluginHasUI(p){ var a=p.api; if(!a) return false; a=Array.isArray(a)?a:[a]; return a.some(function(e){ return e&&e.id==='ui'&&e.type==='http'; }); }
+function renderPluginList(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='';
+  if(!pluginsCache.length){ box.innerHTML='<div class="ls-empty">'+t('noPlugins')+'</div>'; return; }
+  pluginsCache.forEach(function(p){ var row=document.createElement('div'); row.className='plugin-item';
+    var info=document.createElement('div'); info.className='plugin-info';
+    info.innerHTML='<div class="plugin-name">'+escapeHtml(p.name||p.id)+' <span class="plugin-ver">v'+escapeHtml(p.version||'')+'</span></div>'+(p.author?'<div class="plugin-author">'+escapeHtml(p.author)+'</div>':'');
+    var actions=document.createElement('div'); actions.className='plugin-actions';
+    var hasCfg=p.settings&&Object.keys(p.settings).length>0;
+    if(hasCfg){ var cfg=document.createElement('button'); cfg.className='m-btn'; cfg.textContent='⚙'; cfg.title=t('settings'); cfg.onclick=function(){ openPluginCfg(p.id); }; actions.appendChild(cfg); }
+    if(pluginHasUI(p)){ var open=document.createElement('button'); open.className='m-btn'; open.textContent=t('open'); open.onclick=function(){ window.open(GATEWAY.http+'/api/v1/plugins/'+encodeURIComponent(p.id)+'/ui','_blank'); }; actions.appendChild(open); }
+    var lbl=document.createElement('label'); lbl.className='switch'; var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!p.loaded;
+    cb.onchange=function(){ togglePlugin(p.id,cb.checked,cb); }; var tr=document.createElement('span'); tr.className='track'; lbl.appendChild(cb); lbl.appendChild(tr); actions.appendChild(lbl);
+    row.appendChild(info); row.appendChild(actions); box.appendChild(row); }); }
+function togglePlugin(id,on,cb){ api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/'+(on?'enable':'disable'))
+    .then(function(){ toast((on?t('enabled'):t('disabled'))+': '+id,'ok'); var p=pluginsCache.find(function(x){return x.id===id;}); if(p) p.loaded=on; })
+    .catch(function(e){ toast('Plugin toggle failed','err'); if(cb) cb.checked=!on; }); }
+// Schema-driven plugin settings form (covers Visualizer credentials, etc.)
+var pluginCfgId=null, pluginCfgSchema=null;
+function openPluginCfg(id){ var p=pluginsCache.find(function(x){return x.id===id;}); if(!p) return;
+  pluginCfgId=id; pluginCfgSchema=p.settings||{};
+  document.getElementById('pluginCfgTitle').textContent=p.name||id;
+  document.getElementById('pluginCfgStatus').textContent='';
+  var box=document.getElementById('pluginCfgFields'); box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
+  document.getElementById('pluginCfgOverlay').classList.add('show');
+  // fetch current values (secure -> {isSet})
+  api('GET','/api/v1/plugins/'+encodeURIComponent(id)+'/settings').then(function(cur){ renderPluginCfg(cur||{}); }).catch(function(){ renderPluginCfg({}); });
+}
+function renderPluginCfg(cur){ var box=document.getElementById('pluginCfgFields'); box.innerHTML='';
+  Object.keys(pluginCfgSchema).forEach(function(key){ var s=pluginCfgSchema[key]; var v=cur[key];
+    var wrap=document.createElement('div'); wrap.className='field'; var lab=document.createElement('label'); lab.textContent=s.label||key;
+    if(s.description) lab.title=s.description; wrap.appendChild(lab);
+    var input;
+    if(s.type==='boolean'){ input=document.createElement('input'); input.type='checkbox'; input.checked=(v!=null?!!v:!!s['default']); input.className='pcf-cb'; }
+    else if(s.type==='number'){ input=document.createElement('input'); input.type='number'; input.value=(v!=null&&typeof v!=='object')?v:(s['default']!=null?s['default']:''); }
+    else if(s.secure){ input=document.createElement('input'); input.type='password'; input.placeholder=(v&&v.isSet)?'•••••• (saved)':''; }
+    else { input=document.createElement('input'); input.type='text'; input.value=(v!=null&&typeof v!=='object')?v:''; }
+    input.setAttribute('data-key',key); input.setAttribute('data-type',s.type||'string'); input.setAttribute('data-secure',s.secure?'1':'0');
+    wrap.appendChild(input); box.appendChild(wrap); });
+  if(!Object.keys(pluginCfgSchema).length) box.innerHTML='<div class="ls-empty">No settings</div>';
+}
+function savePluginCfg(){ if(!pluginCfgId) return; var patch={};
+  document.querySelectorAll('#pluginCfgFields [data-key]').forEach(function(el){ var k=el.getAttribute('data-key'), ty=el.getAttribute('data-type'), sec=el.getAttribute('data-secure')==='1';
+    if(ty==='boolean'){ patch[k]=el.checked; }
+    else if(ty==='number'){ if(el.value!=='') patch[k]=parseFloat(el.value); }
+    else if(sec){ if(el.value!=='') patch[k]=el.value; /* blank = keep existing (omit) */ }
+    else { patch[k]=el.value; } });
+  var st=document.getElementById('pluginCfgStatus'); st.textContent='Saving…'; document.getElementById('pluginCfgSave').disabled=true;
+  api('POST','/api/v1/plugins/'+encodeURIComponent(pluginCfgId)+'/settings',patch)
+    .then(function(){ toast('Plugin settings saved','ok'); closeModal(null,'pluginCfgOverlay'); loadPlugins(); })
+    .catch(function(e){ st.textContent='Failed: '+e.message; })
+    .then(function(){ document.getElementById('pluginCfgSave').disabled=false; }); }
 function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
 function toggleNight(v){ prefs.night=!!v; savePrefs(); applyNight(); }
 function toggleNightAuto(v){ prefs.nightAuto=!!v; savePrefs(); applyNight();
   // reflect the resulting mode + lock the manual toggle while Auto is on
-  document.getElementById('setNight').checked=(prefs.nightAuto?isNightTime():prefs.night); document.getElementById('setNight').disabled=prefs.nightAuto; }
+  var sn=document.getElementById('setNight'); if(sn){ sn.checked=(prefs.nightAuto?isNightTime():prefs.night); sn.disabled=prefs.nightAuto; } }
 // Re-evaluate the time-based theme once a minute.
 setInterval(function(){ if(prefs.nightAuto) applyNight(); },60000);
 // (Gateway-nav button removed: no other skin exposes a browsable gateway link.)
@@ -1672,7 +1921,7 @@ function geminiAnalyze(key,images){
       if(!txt) throw new Error('Empty response'); var data; try{ data=JSON.parse(txt); }catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
       if(!data) throw new Error('Could not parse result'); return data; }); }
 function analyzeBeanImages(){ if(!aiImages.length) return;
-  var key=(prefs.geminiKey||'').trim(); if(!key){ toast('Set a Gemini API key in Settings','err'); openSettings(); return; }
+  var key=(prefs.geminiKey||'').trim(); if(!key){ toast('Set a Gemini API key in Settings','err'); openSettingsPage(); spSelect('ai'); return; }
   var statusEl=document.getElementById('aiStatus'); statusEl.textContent='Analyzing… ✨'; var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
   geminiAnalyze(key,aiImages)
     .then(function(data){ function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
