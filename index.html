@@ -2000,6 +2000,33 @@ function isoDay(v){ return v?String(v).slice(0,10):''; }
 // The gateway always sends ISO, but a label can print 2026.08.20, 26/08/20 or
 // 2026년 8월 20일 - an <input type="date"> silently rejects anything but
 // YYYY-MM-DD, so normalise before filling the field.
+// A bilingual bag can come back as "Haewol Dark Roast Blend해월 다크 로스트 블렌드".
+// Split where a Latin run butts straight against a Hangul one and keep the side
+// that matches the interface language; a real mixed name has a separator.
+function pickOneScriptPart(str){
+  str=str.trim(); if(!str) return '';
+  var at=str.search(/(?:[A-Za-z.)\]][가-힣])|(?:[가-힣][A-Za-z(\[])/);
+  if(at<0) return str;
+  var a=str.slice(0,at+1).trim(), b=str.slice(at+1).trim();
+  if(!a||!b) return str;
+  return ((_lang==='ko')===/[가-힣]/.test(a))?a:b;
+}
+function pickOneScript(v){
+  var str=String(v==null?'':v).trim(); if(!str) return '';
+  if(str.indexOf(',')<0) return pickOneScriptPart(str);
+  return str.split(',').map(pickOneScriptPart).filter(Boolean).join(', ');
+}
+function cleanBeanText(data){
+  ['roaster','name','country','region','producer','processing','species','decafProcess','roastLevel']
+    .forEach(function(k){ if(typeof data[k]==='string') data[k]=pickOneScript(data[k]); });
+  if(Array.isArray(data.variety)) data.variety=data.variety.map(pickOneScript).filter(Boolean);
+  // the roaster is its own field; a name that repeats it just wastes the line
+  if(data.name&&data.roaster){
+    var r=data.roaster.trim();
+    if(r&&data.name.toLowerCase().indexOf(r.toLowerCase())===0) data.name=data.name.slice(r.length).trim()||data.name;
+  }
+  return data;
+}
 var MONTH_NAMES={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 function toIsoDate(v){
   var raw=String(v==null?'':v).trim(); if(!raw) return '';
@@ -2216,7 +2243,7 @@ function isOverload(e){ return e&&(e.status===503||e.status===429||/overload|hig
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"species\":\"\",\"decaf\":false,\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. If a value is printed in two languages, keep the one printed most prominently. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. altitude is [min,max] in metres as numbers, or [value] for a single figure. decaf is a boolean. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"species\":\"\",\"decaf\":false,\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. altitude is [min,max] in metres as numbers, or [value] for a single figure. decaf is a boolean. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag lists the coffees or origins that make up the blend, put those origins in country exactly as printed, separated by commas, and put the full composition - component names and any percentages - in notes. Leave region, producer, variety and altitude empty unless the bag gives one for the blend as a whole. Never invent an origin for a blend, and never copy a component origin into region or producer. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:0.1}};
   return resolveGeminiModel(key).then(function(model){
@@ -2237,7 +2264,7 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
   var key=(prefs.geminiKey||'').trim(); if(!key){ toast('Set a Gemini API key in Settings','err'); openSettingsPage(); spSelect('ai'); return; }
   var statusEl=document.getElementById('aiStatus'); statusEl.textContent='Analyzing… ✨'; var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
   geminiAnalyze(key,aiImages)
-    .then(function(data){ function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
+    .then(function(data){ data=cleanBeanText(data); function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
       put('bgRoaster',data.roaster); put('bgName',data.name); put('bgCountry',data.country); put('bgRegion',data.region);
       put('bgProducer',data.producer); put('bgProcess',data.processing); put('bgSpecies',data.species);
       put('bgDecafProcess',data.decafProcess); put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
@@ -2293,6 +2320,7 @@ function togglePhoneQR(){
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
   var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing'); document.getElementById('mbAnalyzeBtn').disabled=true;
   geminiAnalyze(key,aiImages).then(function(data){
+    data=cleanBeanText(data);
     document.getElementById('mbFields').style.display='block';
     function set(id,v){ var el=document.getElementById(id); if(el) el.value=v||''; }
     set('mbRoaster',data.roaster); set('mbName',data.name); set('mbRoastDate',toIsoDate(data.roastDate));
