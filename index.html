@@ -390,11 +390,17 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ai-qr{margin-top:12px;text-align:center;background:#fff;border:1px solid var(--glass-line);border-radius:12px;padding:14px}
 .ai-qr canvas{border-radius:8px}
 .ai-qr-url{font-size:10px;color:var(--ink-mute);word-break:break-all;margin-top:8px}
+.qr-ask{font-size:12px;color:var(--ink-mute);text-align:center;line-height:1.5;padding:8px 4px}
+.qr-host{display:flex;gap:6px;margin-top:10px;align-items:center}
+.qr-host input{flex:1;min-width:0;padding:7px 10px;border-radius:9px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;color:var(--ink);-webkit-appearance:none}
+.qr-host .m-btn{padding:7px 12px;font-size:12px;flex:none}
+.qr-host-note{flex-basis:100%;font-size:11px;color:var(--ink-mute)}
+body.night .qr-host input{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
 body.night .ai-qr{background:rgba(255,255,255,.06)}
 body.night .ai-scan{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(56,189,248,.1))}
 
 /* Mobile bean-scan page (phone via QR) */
-body.mobile-scan{overflow:auto}
+html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 #mobilePage{min-height:100vh;background:linear-gradient(135deg,#eef1ff,#f5edff);padding:22px 18px 40px}
 .mb-wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .mb-head{text-align:center;margin-bottom:4px}
@@ -521,6 +527,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .field label{display:block;font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .field input,.field textarea,.field select{width:100%;padding:10px 13px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:14px;color:var(--ink);-webkit-appearance:none;resize:vertical}
 .field input:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+.field label.bean-check{display:flex;align-items:center;gap:9px;margin-bottom:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);cursor:pointer}
+.field label.bean-check input[type=checkbox]{width:18px;height:18px;flex:none;padding:0;margin:0;border-radius:5px;-webkit-appearance:auto;appearance:auto;accent-color:var(--accent)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .edit-sim{background:#fff;border:1px solid var(--glass-line);border-radius:14px;padding:12px;margin:13px 0}
 .edit-sim-title{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-bottom:8px}
@@ -878,16 +886,24 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <div class="mb-fields" id="mbFields" style="display:none">
       <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
       <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
-      <div class="field"><label data-i18n="origin">Origin</label><input id="mbCountry"></div>
-      <div class="field"><label data-i18n="process">Process</label><input id="mbProcess"></div>
+      <div class="field"><label data-i18n="roastDate">Roast date</label><input id="mbRoastDate" type="date"></div>
       <div class="field"><label data-i18n="roastLevel">Roast level</label><input id="mbRoast"></div>
+      <div class="field"><label data-i18n="origin">Origin</label><input id="mbCountry"></div>
+      <div class="field"><label data-i18n="region">Region</label><input id="mbRegion"></div>
+      <div class="field"><label data-i18n="process">Process</label><input id="mbProcess"></div>
+      <div class="field"><label data-i18n="producer">Producer</label><input id="mbProducer"></div>
+      <div class="field"><label data-i18n="variety">Variety</label><input id="mbVariety" placeholder="Heirloom, SL28"></div>
+      <div class="field"><label data-i18n="altitude">Altitude (m)</label><input id="mbAltitude" placeholder="1800-2200"></div>
+      <div class="field"><label data-i18n="species">Species</label><input id="mbSpecies" placeholder="arabica"></div>
+      <div class="field"><label class="bean-check"><input type="checkbox" id="mbDecaf"> <span data-i18n="decaf">Decaf</span></label></div>
+      <div class="field"><label data-i18n="decafProcess">Decaf process</label><input id="mbDecafProcess" placeholder="Swiss Water"></div>
       <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="2"></textarea></div>
-      <button class="m-btn primary mb-analyze" onclick="mbSave()" data-i18n="useForShot">Add to gateway</button>
+      <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()" data-i18n="addToGateway">Add to gateway</button>
     </div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
     <div class="mb-key" id="mbKeyBox" style="display:none">
-      <div class="field"><label>Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
-      <button class="m-btn primary" onclick="mbSaveKey()">Save key</button>
+      <div class="field"><label data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
+      <button class="m-btn primary" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
     </div>
   </div>
 </div>
@@ -936,8 +952,18 @@ var I18N={
     roaster:'Roaster', name:'Name', origin:'Origin', process:'Process', roastLevel:'Roast level', notes:'Notes',
     model:'Model', burrs:'Burrs', burrType:'Burr type', burrSize:'Burr size (mm)', grindSetting:'Grind Setting', current:'Current setting',
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; Gemini fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
-    qrNoLib:'QR library not loaded', qrNoLan:'Open this skin from the tablet using its Wi-Fi/LAN address (not localhost) so the phone can reach it.',
+    qrNoLib:'QR library not loaded', qrNoLan:'The gateway did not report a LAN address. Enter the Wi-Fi/LAN address of the tablet so the phone can reach it.',
     aiBusy:'The AI model is busy right now. Please try again in a moment.',
+    addToGateway:'Add to gateway', mbSaving:'Saving…', mbSaved:'Added ✓ — you can scan another',
+    mbKeyLabel:'Gemini API key (stored on this phone)', mbSaveKey:'Save key',
+    confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
+    apply:'Apply',
+    roastDate:'Roast date', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
+    species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
+    beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
+    mbSaveFailed:'Save failed:', mbNeedRoasterName:'Roaster and name required', mbTimeout:'No response from the gateway',
+    mbAnalyzing:'Analyzing… ✨', mbAnalyzeFailed:'Analyze failed:', mbReview:'Review, then add to gateway',
+    mbNeedKey:'Enter your Gemini API key to analyze', mbKeySaved:'Key saved — tap Analyze',
     profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'☕ Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
     steamOptions:'♨️ Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
     tapWake:'Tap anywhere to wake'
@@ -974,8 +1000,18 @@ var I18N={
     roaster:'로스터', name:'이름', origin:'원산지', process:'가공', roastLevel:'로스팅', notes:'메모',
     model:'모델', burrs:'버', burrType:'버 종류', burrSize:'버 크기 (mm)', grindSetting:'분쇄도 설정', current:'현재 값',
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 Gemini가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
-    qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'폰이 접속할 수 있도록 태블릿에서 localhost가 아닌 Wi-Fi/LAN 주소로 이 스킨을 여세요.',
+    qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'게이트웨이가 LAN 주소를 알려주지 않았습니다. 폰이 접속할 태블릿의 Wi-Fi/LAN 주소를 입력하세요.',
     aiBusy:'AI 모델이 지금 혼잡합니다. 잠시 후 다시 시도해 주세요.',
+    addToGateway:'게이트웨이에 추가', mbSaving:'저장 중…', mbSaved:'추가됨 ✓ — 계속 스캔할 수 있어요',
+    mbKeyLabel:'Gemini API 키 (이 폰에만 저장)', mbSaveKey:'키 저장',
+    confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
+    apply:'적용',
+    roastDate:'로스팅 날짜', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
+    species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
+    beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
+    mbSaveFailed:'저장 실패:', mbNeedRoasterName:'로스터와 이름은 필수입니다', mbTimeout:'게이트웨이 응답 없음',
+    mbAnalyzing:'분석 중… ✨', mbAnalyzeFailed:'분석 실패:', mbReview:'확인 후 게이트웨이에 추가하세요',
+    mbNeedKey:'분석하려면 Gemini API 키를 입력하세요', mbKeySaved:'키 저장됨 — 분석을 누르세요',
     profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'☕ 에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
     steamOptions:'♨️ 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
     tapWake:'화면을 눌러 깨우기'
@@ -1368,7 +1404,14 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
 }
 
 // ── REST ────────────────────────────────────────────────────────────
-function api(method,path,body){ var o={method:method,headers:{}}; if(body){o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body);} return fetch(GATEWAY.http+path,o).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); if(r.status===204) return null; return r.json(); }); }
+function api(method,path,body,timeoutMs){ var o={method:method,headers:{}}; if(body){o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body);}
+  var ac=null,timer=null;
+  if(timeoutMs&&typeof AbortController!=='undefined'){ ac=new AbortController(); o.signal=ac.signal; timer=setTimeout(function(){ ac.abort(); },timeoutMs); }
+  return fetch(GATEWAY.http+path,o).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); if(r.status===204) return null; return r.json(); })
+    .then(function(v){ if(timer) clearTimeout(timer); return v; },function(e){ if(timer) clearTimeout(timer); throw e; }); }
+// A save that dies before reaching the gateway must say so, and say where it tried.
+function apiErrorText(e){ if(e&&e.name==='AbortError') return t('mbTimeout')+' ('+GATEWAY.http+')';
+  var m=(e&&e.message)||'error'; return /^HTTP /.test(m)?m:m+' ('+GATEWAY.http+')'; }
 
 // ── Actions ─────────────────────────────────────────────────────────
 function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
@@ -1483,12 +1526,12 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, sleepDim:true, sleepBrightness:20,
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, sleepDim:true, sleepBrightness:20,
   // Water tank calibration. mode: 'off' | 'twopoint' | 'pour'.
   // twopoint: hEmpty/hFull (mm) + capacity(ml). pour: hEmpty(mm) + poured(ml) at hPour(mm).
   waterCal:{ mode:'off', hEmpty:null, hFull:null, capacity:1500, poured:null, hPour:null } };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim; if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim; if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
 // the chosen calibration. Falls back to treating the raw value as % (legacy).
 function tankPercent(mm){ var c=prefs.waterCal||{};
@@ -1946,9 +1989,38 @@ function openBeanModal(){ loadBeansGrinders(); document.getElementById('beanOver
 var bgSel=null; // {type:'bean'|'grinder', obj}
 function openBeanModal(){ document.getElementById('beanPage').classList.add('show'); loadBeansGrinders(); }
 function closeBeanPage(){ document.getElementById('beanPage').classList.remove('show'); }
+// ── Bean / BeanBatch ─────────────────────────────────────────────────
+// Roast date and roast level live on a BeanBatch, not on the Bean. The editor
+// works with one batch per bean - the most recent roast - and creates it lazily.
+var beanBatches={}; // beanId -> newest batch
+function latestBatch(list){ if(!list||!list.length) return null;
+  return list.slice().sort(function(a,b){ return batchTime(b)-batchTime(a); })[0]; }
+function batchTime(b){ return new Date(b.roastDate||b.createdAt||0).getTime()||0; }
+function isoDay(v){ return v?String(v).slice(0,10):''; }
+function daysSinceRoast(b){ if(!b||!b.roastDate) return null;
+  var d=new Date(b.roastDate); if(isNaN(d)) return null;
+  return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000)); }
+function parseList(v){ return String(v||'').split(',').map(function(x){ return x.trim(); }).filter(Boolean); }
+function parseAltitude(v){ var n=String(v||'').split(/[-~,]/).map(function(x){ return parseInt(x.trim(),10); }).filter(function(x){ return !isNaN(x); });
+  return n.length?n.slice(0,2):null; }
+function fmtAltitude(a){ return (a&&a.length)?a.join('-'):''; }
+// Write the roast fields back to the bean's batch, creating one on first use.
+function saveBeanBatch(beanId,roastDate,roastLevel){
+  var body={ roastDate:roastDate||null, roastLevel:roastLevel||null };
+  if(!body.roastDate&&!body.roastLevel) return Promise.resolve(beanBatches[beanId]||null);
+  var cur=beanBatches[beanId];
+  var req=cur?api('PUT','/api/v1/bean-batches/'+encodeURIComponent(cur.id),body)
+             :api('POST','/api/v1/beans/'+encodeURIComponent(beanId)+'/batches',body);
+  return req.then(function(b){ if(b&&b.id) beanBatches[beanId]=b; return b; }); }
+function beanSubtitle(b){ var age=daysSinceRoast(beanBatches[b.id]);
+  return escapeHtml(b.roaster||'')+(age!=null?' \u00b7 '+t('daysOffRoast').replace('{n}',age):''); }
+function loadBeanBatches(){ return api('GET','/api/v1/bean-batches').then(function(list){
+  beanBatches={}; (list||[]).forEach(function(b){ var cur=beanBatches[b.beanId];
+    if(!cur||batchTime(b)>batchTime(cur)) beanBatches[b.beanId]=b; }); }).catch(function(){ beanBatches={}; }); }
+
 function loadBeansGrinders(){
-  Promise.all([ api('GET','/api/v1/beans').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}) ])
-    .then(function(res){ beans=res[0]||[]; grinders=res[1]||[]; renderBgList(); });
+  Promise.all([ api('GET','/api/v1/beans').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}), loadBeanBatches() ])
+    .then(function(res){ beans=res[0]||[]; grinders=res[1]||[]; renderBgList(); if(bgSel&&bgSel.type==='bean'&&bgSel.obj.id) renderBgEditor(); });
 }
 var bgTab='bean'; // which section is shown: 'bean' | 'grinder'
 function bgSetTab(t){ bgTab=t; renderBgList(); }
@@ -1962,7 +2034,7 @@ function renderBgList(){ var list=document.getElementById('bgList'); list.innerH
     var addB=document.createElement('button'); addB.className='ep-step-add'; addB.style.cssText='margin:4px 0 8px'; addB.textContent='+ Add Bean'; addB.onclick=function(){ bgSelectNew('bean'); }; list.appendChild(addB);
     if(!beans.length){ var e=document.createElement('div'); e.className='ep-placeholder'; e.style.marginTop='40px'; e.textContent='No beans yet'; list.appendChild(e); }
     beans.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
-      it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(249,115,22,.12)">🫘</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(b.name||'')+'</div><div class="mt">'+escapeHtml(b.roaster||'')+'</div></div>';
+      it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(249,115,22,.12)">🫘</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(b.name||'')+'</div><div class="mt">'+beanSubtitle(b)+'</div></div>';
       it.onclick=function(){ bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
   } else {
     var addG=document.createElement('button'); addG.className='ep-step-add'; addG.style.cssText='margin:4px 0 8px'; addG.textContent='+ Add Grinder'; addG.onclick=function(){ bgSelectNew('grinder'); }; list.appendChild(addG);
@@ -1986,30 +2058,35 @@ function renderBgListOLD(){ var list=document.getElementById('bgList'); list.inn
     it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(g.burrs||g.burrType||'grinder')+'</div></div>';
     it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
 }
-function bgSelectNew(type){ bgTab=type; aiImages=[]; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',roastLevel:'',processing:''}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:''}}; renderBgList(); renderBgEditor(); }
+function bgSelectNew(type){ bgTab=type; aiImages=[]; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',region:'',producer:'',processing:'',species:'',decaf:false,decafProcess:'',variety:[],altitude:null}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:''}}; renderBgList(); renderBgEditor(); }
 function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML='<div class="ep-placeholder">← Select or add an item</div>'; return; }
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
-    wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Bean':'Edit Bean')+'</div>'
+    var batch=(o.id&&beanBatches[o.id])||{};
+    wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
       +'<div class="ai-scan" id="aiScan">'
-        +'<div class="ai-scan-head"><span>✨ Scan label with AI</span><span class="ai-scan-sub">Photograph or attach the bag; Gemini fills the fields.</span></div>'
+        +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
         +'<div class="ai-thumbs" id="aiThumbs"></div>'
         +'<div class="ai-scan-actions">'
-          +'<button class="m-btn" onclick="document.getElementById(\'aiCam\').click()">📷 Camera</button>'
-          +'<button class="m-btn" onclick="document.getElementById(\'aiFile\').click()">🖼 Attach</button>'
-          +'<button class="m-btn" onclick="togglePhoneQR()">📱 Use phone</button>'
-          +'<button class="m-btn primary" id="aiAnalyzeBtn" onclick="analyzeBeanImages()" disabled>Analyze</button>'
+          +'<button class="m-btn" onclick="document.getElementById(\'aiCam\').click()">'+t('camera')+'</button>'
+          +'<button class="m-btn" onclick="document.getElementById(\'aiFile\').click()">'+t('attach')+'</button>'
+          +'<button class="m-btn" onclick="togglePhoneQR()">'+t('usePhone')+'</button>'
+          +'<button class="m-btn primary" id="aiAnalyzeBtn" onclick="analyzeBeanImages()" disabled>'+t('analyze')+'</button>'
           +'<input type="file" id="aiCam" accept="image/*" capture="environment" multiple style="display:none" onchange="onAiImages(this.files)">'
           +'<input type="file" id="aiFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files)">'
         +'</div>'
         +'<div class="ai-qr" id="aiQr" style="display:none"><div id="aiQrCanvas"></div><div class="ai-qr-url" id="aiQrUrl"></div></div>'
         +'<div class="ai-status" id="aiStatus"></div>'
       +'</div>'
-      +'<div class="field-row"><div class="field"><label>Roaster</label><input id="bgRoaster" value="'+escapeAttr(o.roaster||'')+'"></div><div class="field"><label>Name</label><input id="bgName" value="'+escapeAttr(o.name||'')+'"></div></div>'
-      +'<div class="field-row"><div class="field"><label>Origin</label><input id="bgCountry" value="'+escapeAttr(o.country||'')+'"></div><div class="field"><label>Process</label><input id="bgProcess" value="'+escapeAttr(o.processing||'')+'"></div></div>'
-      +'<div class="field"><label>Roast level</label><input id="bgRoast" value="'+escapeAttr(o.roastLevel||'')+'"></div>'
-      +'<div class="field"><label>Notes</label><textarea id="bgNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
-      +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">Delete</button>')+'<button class="m-btn" onclick="useBean()">Use for shot</button><button class="m-btn primary" onclick="saveBean()">Save</button></div>';
+      +'<div class="field-row"><div class="field"><label>'+t('roaster')+'</label><input id="bgRoaster" value="'+escapeAttr(o.roaster||'')+'"></div><div class="field"><label>'+t('name')+'</label><input id="bgName" value="'+escapeAttr(o.name||'')+'"></div></div>'
+      +'<div class="field-row"><div class="field"><label>'+t('roastDate')+'</label><input id="bgRoastDate" type="date" value="'+escapeAttr(isoDay(batch.roastDate))+'"></div><div class="field"><label>'+t('roastLevel')+'</label><input id="bgRoast" value="'+escapeAttr(batch.roastLevel||'')+'" placeholder="light / medium / dark"></div></div>'
+      +'<div class="field-row"><div class="field"><label>'+t('origin')+'</label><input id="bgCountry" value="'+escapeAttr(o.country||'')+'"></div><div class="field"><label>'+t('region')+'</label><input id="bgRegion" value="'+escapeAttr(o.region||'')+'"></div></div>'
+      +'<div class="field-row"><div class="field"><label>'+t('process')+'</label><input id="bgProcess" value="'+escapeAttr(o.processing||'')+'"></div><div class="field"><label>'+t('producer')+'</label><input id="bgProducer" value="'+escapeAttr(o.producer||'')+'"></div></div>'
+      +'<div class="field-row"><div class="field"><label>'+t('variety')+'</label><input id="bgVariety" value="'+escapeAttr((o.variety||[]).join(', '))+'" placeholder="Heirloom, SL28"></div><div class="field"><label>'+t('altitude')+'</label><input id="bgAltitude" value="'+escapeAttr(fmtAltitude(o.altitude))+'" placeholder="1800-2200"></div></div>'
+      +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
+      +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
+      +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
+      +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
   } else {
     var isPreset=(o.settingType==='preset');
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Grinder':'Edit Grinder')+'</div>'
@@ -2041,12 +2118,27 @@ function bgReadGrinderForm(){ var o=bgSel.obj; var g=function(id){ var el=docume
   var sv=g('bgSettingValues'); if(sv!==undefined) o.settingValues=sv.split(',').map(function(s){return s.trim();}).filter(Boolean);
   var gs=g('bgGrindSetting'); if(gs!==undefined) o.grinderSetting=gs.trim();
   var nt=g('bgGNotes'); if(nt!==undefined) o.notes=nt; }
-function saveBean(){ var o=bgSel.obj; var body={roaster:document.getElementById('bgRoaster').value.trim(),name:document.getElementById('bgName').value.trim(),country:document.getElementById('bgCountry').value.trim()||null,processing:document.getElementById('bgProcess').value.trim()||null,roastLevel:document.getElementById('bgRoast').value.trim()||null,notes:document.getElementById('bgNotes').value||null};
-  if(!body.roaster||!body.name){ toast('Roaster and name required','err'); return; }
+function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
+  var body={roaster:v('bgRoaster'),name:v('bgName'),country:v('bgCountry')||null,region:v('bgRegion')||null,
+    producer:v('bgProducer')||null,processing:v('bgProcess')||null,species:v('bgSpecies')||null,
+    decafProcess:v('bgDecafProcess')||null,decaf:!!(document.getElementById('bgDecaf')||{}).checked,
+    variety:parseList(v('bgVariety')),altitude:parseAltitude(v('bgAltitude')),
+    notes:document.getElementById('bgNotes').value||null};
+  if(!body.variety.length) body.variety=null;
+  if(!body.roaster||!body.name){ toast(t('mbNeedRoasterName'),'err'); return; }
+  var roastDate=v('bgRoastDate'), roastLevel=v('bgRoast');
   var req=o.id?api('PUT','/api/v1/beans/'+o.id,body):api('POST','/api/v1/beans',body);
-  req.then(function(){ toast('Bean saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
-function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this bean?')) return; api('DELETE','/api/v1/beans/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
-function useBean(){ var o=bgSel.obj; api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:null}}).then(function(){ toast('Bean set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
+  req.then(function(saved){ return saveBeanBatch((saved&&saved.id)||o.id,roastDate,roastLevel); })
+    .then(function(){ toast(t('beanSaved'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">'+t('saved')+'</div>'; })
+    .catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm(t('confirmDeleteBean'))) return;
+  api('GET','/api/v1/beans/'+o.id+'/batches').catch(function(){ return []; })
+    .then(function(list){ return Promise.all((list||[]).map(function(b){ return api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(b.id)).catch(function(){}); })); })
+    .then(function(){ return api('DELETE','/api/v1/beans/'+o.id); })
+    .then(function(){ delete beanBatches[o.id]; toast(t('deleted'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← '+t('selectItem')+'</div>'; })
+    .catch(function(e){ toast(t('deleteFailed')+' '+apiErrorText(e),'err'); }); }
+function useBean(){ var o=bgSel.obj; var b=o.id&&beanBatches[o.id];
+  api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).then(function(){ toast('Bean set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
 
 // ── AI bean-label scanning (Gemini) ─────────────────────────────────
 var aiImages=[]; // {mime, data(base64), url}
@@ -2104,7 +2196,7 @@ function isOverload(e){ return e&&(e.status===503||e.status===429||/overload|hig
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Extract the bean details and respond ONLY with JSON using these keys (empty string if unknown): {"roaster":"","name":"","country":"","processing":"","roastLevel":"","notes":""}. name is the coffee/blend name (not the roaster). roastLevel is one of light, medium-light, medium, medium-dark, dark if determinable. notes = brief tasting notes if printed.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Extract the bean details and respond ONLY with JSON using these keys (empty string, or [] for lists, if unknown): {"roaster":"","name":"","country":"","region":"","producer":"","processing":"","variety":[],"altitude":[],"species":"","decaf":false,"decafProcess":"","roastDate":"","roastLevel":"","notes":""}. name is the coffee/blend name (not the roaster). region is the growing region, producer the farm/washing station. variety is a list of cultivar names. altitude is [min,max] in metres, or [value] if a single number is printed. species is arabica or robusta if stated. decaf is true only if the bag says decaffeinated; decafProcess is the method (e.g. Swiss Water) when named. roastDate is the roast/roasted-on date as YYYY-MM-DD - never a best-before or packaging date, and never a guess. roastLevel is one of light, medium-light, medium, medium-dark, dark if determinable. notes = brief tasting notes if printed.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:0.1}};
   return resolveGeminiModel(key).then(function(model){
@@ -2126,10 +2218,13 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
   var statusEl=document.getElementById('aiStatus'); statusEl.textContent='Analyzing… ✨'; var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
   geminiAnalyze(key,aiImages)
     .then(function(data){ function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
-      put('bgRoaster',data.roaster); put('bgName',data.name); put('bgCountry',data.country); put('bgProcess',data.processing); put('bgRoast',data.roastLevel);
+      put('bgRoaster',data.roaster); put('bgName',data.name); put('bgCountry',data.country); put('bgRegion',data.region);
+      put('bgProducer',data.producer); put('bgProcess',data.processing); put('bgSpecies',data.species);
+      put('bgDecafProcess',data.decafProcess); put('bgRoast',data.roastLevel); put('bgRoastDate',isoDay(data.roastDate));
+      put('bgVariety',(data.variety||[]).join(', ')); put('bgAltitude',fmtAltitude(data.altitude));
+      var dc=document.getElementById('bgDecaf'); if(dc&&data.decaf) dc.checked=true;
       var notesEl=document.getElementById('bgNotes'); if(notesEl&&data.notes){ notesEl.value=data.notes; }
-      var o=bgSel.obj; o.roaster=data.roaster||o.roaster; o.name=data.name||o.name; o.country=data.country||o.country; o.processing=data.processing||o.processing; o.roastLevel=data.roastLevel||o.roastLevel; o.notes=data.notes||o.notes;
-      statusEl.textContent='Filled from label ✓ — review & Save'; toast('Bean details detected','ok');
+      statusEl.textContent=t('aiFilled'); toast(t('aiDetected'),'ok');
     })
     .catch(function(e){ statusEl.textContent='Failed: '+e.message; toast('AI analyze failed','err'); })
     .then(function(){ var b=document.getElementById('aiAnalyzeBtn'); if(b) b.disabled=aiImages.length===0; }); }
@@ -2142,49 +2237,73 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
 // Wi-Fi/LAN IP (/api/v1/info -> localIp) and build the URL from that; only if the
 // page is already opened on a LAN host do we fall back to the current origin.
 function isLocalHost(h){ return !h||h==='localhost'||h==='127.0.0.1'||h==='0.0.0.0'||h==='::1'||/^127\./.test(h); }
+// /api/v1/info only reports a Wi-Fi address, so an Ethernet or tethered host
+// returns nothing and the skin cannot discover the LAN address on its own. When
+// that happens the user types it once and it is remembered.
+function beanScanUrl(host){ var port=window.location.port||'';
+  var hasPort=host.indexOf(':')>=0;
+  return 'http://'+host+((hasPort||!port)?'':(':'+port))+window.location.pathname+'?beanscan=1'; }
+function setQrHost(v){ prefs.qrHost=(v||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''); savePrefs();
+  var box=document.getElementById('aiQr'); if(box) box.style.display='none';
+  togglePhoneQR(); }
 function togglePhoneQR(){
   var box=document.getElementById('aiQr'); if(!box) return;
   if(box.style.display!=='none'){ box.style.display='none'; return; }
   var urlEl=document.getElementById('aiQrUrl'); var wrap=document.getElementById('aiQrCanvas');
   wrap.innerHTML='<div style="font-size:12px;color:var(--ink-mute)">…</div>'; urlEl.textContent=''; box.style.display='block';
-  var port=window.location.port||''; var path=window.location.pathname;
+  function hostBox(current,note){
+    return '<div class="qr-host">'+(note?'<div class="qr-host-note">'+escapeHtml(note)+'</div>':'')
+      +'<input id="aiQrHost" value="'+escapeAttr(current||'')+'" placeholder="192.168.0.10" inputmode="url">'
+      +'<button class="m-btn" onclick="setQrHost(document.getElementById(\'aiQrHost\').value)">'+t('apply')+'</button></div>'; }
   function render(url){ wrap.innerHTML='';
     if(typeof qrcode==='undefined'){ wrap.innerHTML='<div style="font-size:12px;color:var(--red)">'+t('qrNoLib')+'</div>'; urlEl.textContent=url; return; }
-    var cv=document.createElement('canvas'); wrap.appendChild(cv); drawQR(cv,url,220); urlEl.textContent=url; }
-  function fail(msg){ wrap.innerHTML='<div style="font-size:12px;color:var(--red);text-align:center;line-height:1.4">'+escapeHtml(msg)+'</div>'; urlEl.textContent=''; }
-  // Ask the gateway for its LAN IP first; that is the address the phone can reach.
-  api('GET','/api/v1/info').then(function(info){
-    var ip=(info&&info.localIp||'').trim();
-    if(ip && !isLocalHost(ip)){ render('http://'+ip+(port?(':'+port):'')+path+'?beanscan=1'); return; }
-    // No usable gateway IP. If the page itself is on a LAN host, that works too.
-    if(!isLocalHost(window.location.hostname)){ render('http://'+window.location.host+path+'?beanscan=1'); return; }
-    fail(t('qrNoLan'));
-  }).catch(function(){
-    if(!isLocalHost(window.location.hostname)){ render('http://'+window.location.host+path+'?beanscan=1'); }
-    else fail(t('qrNoLan'));
-  });
+    var cv=document.createElement('canvas'); wrap.appendChild(cv); drawQR(cv,url,220);
+    urlEl.innerHTML=escapeHtml(url)+hostBox(prefs.qrHost,''); }
+  function ask(note){ wrap.innerHTML='<div class="qr-ask">'+escapeHtml(note)+'</div>'; urlEl.innerHTML=hostBox(prefs.qrHost,''); }
+  function resolve(info){
+    if(prefs.qrHost && !isLocalHost(prefs.qrHost)){ render(beanScanUrl(prefs.qrHost)); return; }
+    var ip=((info&&info.localIp)||'').trim();
+    if(ip && !isLocalHost(ip)){ render(beanScanUrl(ip)); return; }
+    if(!isLocalHost(window.location.hostname)){ render(beanScanUrl(window.location.host)); return; }
+    ask(t('qrNoLan'));
+  }
+  api('GET','/api/v1/info').then(resolve).catch(function(){ resolve(null); });
 }
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
-  var st=document.getElementById('mbStatus'); st.textContent='Analyzing… ✨'; document.getElementById('mbAnalyzeBtn').disabled=true;
+  var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing'); document.getElementById('mbAnalyzeBtn').disabled=true;
   geminiAnalyze(key,aiImages).then(function(data){
     document.getElementById('mbFields').style.display='block';
-    document.getElementById('mbRoaster').value=data.roaster||''; document.getElementById('mbName').value=data.name||'';
-    document.getElementById('mbCountry').value=data.country||''; document.getElementById('mbProcess').value=data.processing||'';
-    document.getElementById('mbRoast').value=data.roastLevel||''; document.getElementById('mbNotes').value=data.notes||'';
-    st.textContent='Review, then add to gateway';
-  }).catch(function(e){ st.textContent='Failed: '+e.message; }).then(function(){ document.getElementById('mbAnalyzeBtn').disabled=aiImages.length===0; }); }
-function mbSave(){ var body={ roaster:document.getElementById('mbRoaster').value.trim(), name:document.getElementById('mbName').value.trim(),
-    country:document.getElementById('mbCountry').value.trim()||null, processing:document.getElementById('mbProcess').value.trim()||null,
-    roastLevel:document.getElementById('mbRoast').value.trim()||null, notes:document.getElementById('mbNotes').value||null };
-  if(!body.roaster||!body.name){ document.getElementById('mbStatus').textContent='Roaster and name required'; return; }
-  api('POST','/api/v1/beans',body).then(function(){ document.getElementById('mbStatus').textContent='Added ✓ — you can scan another';
-    aiImages=[]; renderAiThumbs(true); document.getElementById('mbFields').style.display='none'; })
-    .catch(function(e){ document.getElementById('mbStatus').textContent='Save failed: '+e.message; }); }
+    function set(id,v){ var el=document.getElementById(id); if(el) el.value=v||''; }
+    set('mbRoaster',data.roaster); set('mbName',data.name); set('mbRoastDate',isoDay(data.roastDate));
+    set('mbRoast',data.roastLevel); set('mbCountry',data.country); set('mbRegion',data.region);
+    set('mbProcess',data.processing); set('mbProducer',data.producer); set('mbSpecies',data.species);
+    set('mbDecafProcess',data.decafProcess); set('mbVariety',(data.variety||[]).join(', '));
+    set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
+    var dc=document.getElementById('mbDecaf'); if(dc) dc.checked=!!data.decaf;
+    st.textContent=t('mbReview');
+  }).catch(function(e){ st.textContent=t('mbAnalyzeFailed')+' '+((e&&e.message)||'error'); }).then(function(){ document.getElementById('mbAnalyzeBtn').disabled=aiImages.length===0; }); }
+function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getElementById('mbSaveBtn'), body;
+  var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
+  try{ body={ roaster:v('mbRoaster'), name:v('mbName'), country:v('mbCountry')||null, region:v('mbRegion')||null,
+    producer:v('mbProducer')||null, processing:v('mbProcess')||null, species:v('mbSpecies')||null,
+    decafProcess:v('mbDecafProcess')||null, decaf:!!(document.getElementById('mbDecaf')||{}).checked,
+    variety:parseList(v('mbVariety')), altitude:parseAltitude(v('mbAltitude')),
+    notes:document.getElementById('mbNotes').value||null };
+    if(!body.variety.length) body.variety=null;
+  }catch(e){ st.textContent=t('mbSaveFailed')+' '+e.message; return; }
+  if(!body.roaster||!body.name){ st.textContent=t('mbNeedRoasterName'); return; }
+  st.textContent=t('mbSaving'); if(btn) btn.disabled=true;
+  api('POST','/api/v1/beans',body,15000)
+    .then(function(saved){ return (saved&&saved.id)?saveBeanBatch(saved.id,v('mbRoastDate'),v('mbRoast')):null; })
+    .then(function(){ st.textContent=t('mbSaved');
+      aiImages=[]; renderAiThumbs(true); document.getElementById('mbFields').style.display='none'; })
+    .catch(function(e){ st.textContent=t('mbSaveFailed')+' '+apiErrorText(e); })
+    .then(function(){ if(btn) btn.disabled=false; }); }
 function mbGetKey(){ try{ return (localStorage.getItem('aurora_gemini')||'').trim(); }catch(_){ return ''; } }
-function mbShowKeyBox(){ document.getElementById('mbKeyBox').style.display='block'; document.getElementById('mbStatus').textContent='Enter your Gemini API key to analyze'; }
+function mbShowKeyBox(){ document.getElementById('mbKeyBox').style.display='block'; document.getElementById('mbStatus').textContent=t('mbNeedKey'); }
 function mbSaveKey(){ var v=document.getElementById('mbKey').value.trim(); if(!v) return; try{ localStorage.setItem('aurora_gemini',v); }catch(_){}
-  document.getElementById('mbKeyBox').style.display='none'; document.getElementById('mbStatus').textContent='Key saved — tap Analyze'; }
+  document.getElementById('mbKeyBox').style.display='none'; document.getElementById('mbStatus').textContent=t('mbKeySaved'); }
 
 // ── QR code (qrcode-generator by Kazuhiko Arase, MIT) ──────────────
 //---------------------------------------------------------------------
@@ -4690,7 +4809,7 @@ function bootMobileBeanScan(){
   loadPrefs(); // picks up language + applies i18n
   document.querySelector('.stage-wrap').style.display='none';
   document.getElementById('mobilePage').style.display='block';
-  document.body.classList.add('mobile-scan');
+  document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
   if(prefs.night) document.body.classList.add('night');
   if(!mbGetKey()) mbShowKeyBox();
 }
