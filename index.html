@@ -897,7 +897,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="field"><label data-i18n="species">Species</label><input id="mbSpecies" placeholder="arabica"></div>
       <div class="field"><label class="bean-check"><input type="checkbox" id="mbDecaf"> <span data-i18n="decaf">Decaf</span></label></div>
       <div class="field"><label data-i18n="decafProcess">Decaf process</label><input id="mbDecafProcess" placeholder="Swiss Water"></div>
-      <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="2"></textarea></div>
+      <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="6"></textarea></div>
       <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()" data-i18n="addToGateway">Add to gateway</button>
     </div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
@@ -1997,6 +1997,26 @@ function latestBatch(list){ if(!list||!list.length) return null;
   return list.slice().sort(function(a,b){ return batchTime(b)-batchTime(a); })[0]; }
 function batchTime(b){ return new Date(b.roastDate||b.createdAt||0).getTime()||0; }
 function isoDay(v){ return v?String(v).slice(0,10):''; }
+// The gateway always sends ISO, but a label can print 2026.08.20, 26/08/20 or
+// 2026년 8월 20일 - an <input type="date"> silently rejects anything but
+// YYYY-MM-DD, so normalise before filling the field.
+var MONTH_NAMES={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function toIsoDate(v){
+  var raw=String(v==null?'':v).trim(); if(!raw) return '';
+  function pack(y,m,d){
+    if(y<100) y+=y<70?2000:1900;
+    if(!(y>=1990&&y<=2100)||!(m>=1&&m<=12)||!(d>=1&&d<=31)) return '';
+    return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+  var m;
+  if((m=raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return pack(+m[1],+m[2],+m[3]);
+  if((m=raw.match(/(\d{4})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]\s*(\d{1,2})/))) return pack(+m[1],+m[2],+m[3]);
+  if((m=raw.match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/))) return pack(+m[1],+m[2],+m[3]);
+  if((m=raw.match(/(\d{2})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]\s*(\d{1,2})/))) return pack(+m[1],+m[2],+m[3]);
+  var lower=raw.toLowerCase();
+  if((m=lower.match(/(\d{1,2})\s*([a-z]{3})[a-z]*\.?,?\s*(\d{4})/))&&MONTH_NAMES[m[2]]) return pack(+m[3],MONTH_NAMES[m[2]],+m[1]);
+  if((m=lower.match(/([a-z]{3})[a-z]*\.?\s*(\d{1,2}),?\s*(\d{4})/))&&MONTH_NAMES[m[1]]) return pack(+m[3],MONTH_NAMES[m[1]],+m[2]);
+  return '';
+}
 function daysSinceRoast(b){ if(!b||!b.roastDate) return null;
   var d=new Date(b.roastDate); if(isNaN(d)) return null;
   return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000)); }
@@ -2006,7 +2026,7 @@ function parseAltitude(v){ var n=String(v||'').split(/[-~,]/).map(function(x){ r
 function fmtAltitude(a){ return (a&&a.length)?a.join('-'):''; }
 // Write the roast fields back to the bean's batch, creating one on first use.
 function saveBeanBatch(beanId,roastDate,roastLevel){
-  var body={ roastDate:roastDate||null, roastLevel:roastLevel||null };
+  var body={ roastDate:toIsoDate(roastDate)||null, roastLevel:roastLevel||null };
   if(!body.roastDate&&!body.roastLevel) return Promise.resolve(beanBatches[beanId]||null);
   var cur=beanBatches[beanId];
   var req=cur?api('PUT','/api/v1/bean-batches/'+encodeURIComponent(cur.id),body)
@@ -2085,7 +2105,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('variety')+'</label><input id="bgVariety" value="'+escapeAttr((o.variety||[]).join(', '))+'" placeholder="Heirloom, SL28"></div><div class="field"><label>'+t('altitude')+'</label><input id="bgAltitude" value="'+escapeAttr(fmtAltitude(o.altitude))+'" placeholder="1800-2200"></div></div>'
       +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
-      +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
+      +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
   } else {
     var isPreset=(o.settingType==='preset');
@@ -2196,7 +2216,7 @@ function isOverload(e){ return e&&(e.status===503||e.status===429||/overload|hig
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Extract the bean details and respond ONLY with JSON using these keys (empty string, or [] for lists, if unknown): {"roaster":"","name":"","country":"","region":"","producer":"","processing":"","variety":[],"altitude":[],"species":"","decaf":false,"decafProcess":"","roastDate":"","roastLevel":"","notes":""}. name is the coffee/blend name (not the roaster). region is the growing region, producer the farm/washing station. variety is a list of cultivar names. altitude is [min,max] in metres, or [value] if a single number is printed. species is arabica or robusta if stated. decaf is true only if the bag says decaffeinated; decafProcess is the method (e.g. Swiss Water) when named. roastDate is the roast/roasted-on date as YYYY-MM-DD - never a best-before or packaging date, and never a guess. roastLevel is one of light, medium-light, medium, medium-dark, dark if determinable. notes = brief tasting notes if printed.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"species\":\"\",\"decaf\":false,\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. If a value is printed in two languages, keep the one printed most prominently. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. altitude is [min,max] in metres as numbers, or [value] for a single figure. decaf is a boolean. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:0.1}};
   return resolveGeminiModel(key).then(function(model){
@@ -2220,7 +2240,7 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
     .then(function(data){ function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
       put('bgRoaster',data.roaster); put('bgName',data.name); put('bgCountry',data.country); put('bgRegion',data.region);
       put('bgProducer',data.producer); put('bgProcess',data.processing); put('bgSpecies',data.species);
-      put('bgDecafProcess',data.decafProcess); put('bgRoast',data.roastLevel); put('bgRoastDate',isoDay(data.roastDate));
+      put('bgDecafProcess',data.decafProcess); put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
       put('bgVariety',(data.variety||[]).join(', ')); put('bgAltitude',fmtAltitude(data.altitude));
       var dc=document.getElementById('bgDecaf'); if(dc&&data.decaf) dc.checked=true;
       var notesEl=document.getElementById('bgNotes'); if(notesEl&&data.notes){ notesEl.value=data.notes; }
@@ -2275,7 +2295,7 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
   geminiAnalyze(key,aiImages).then(function(data){
     document.getElementById('mbFields').style.display='block';
     function set(id,v){ var el=document.getElementById(id); if(el) el.value=v||''; }
-    set('mbRoaster',data.roaster); set('mbName',data.name); set('mbRoastDate',isoDay(data.roastDate));
+    set('mbRoaster',data.roaster); set('mbName',data.name); set('mbRoastDate',toIsoDate(data.roastDate));
     set('mbRoast',data.roastLevel); set('mbCountry',data.country); set('mbRegion',data.region);
     set('mbProcess',data.processing); set('mbProducer',data.producer); set('mbSpecies',data.species);
     set('mbDecafProcess',data.decafProcess); set('mbVariety',(data.variety||[]).join(', '));
