@@ -943,8 +943,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <input type="file" id="mbFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files,true)">
     </div>
     <button class="m-btn primary mb-analyze" id="mbAnalyzeBtn" onclick="mbAnalyze()" disabled data-i18n="analyze">Analyze</button>
-    <div id="mbUse" class="rec-box"></div>
     <div id="mbRec" class="rec-box"></div>
+    <div id="mbUse" class="rec-box"></div>
     <div class="mb-fields" id="mbFields" style="display:none">
       <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
       <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
@@ -2502,8 +2502,8 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
     if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); usageResults=null; _usageFor=null; }
     recPfx='bg';
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
-      +'<div id="bgUse" class="rec-box"></div>'
       +'<div id="bgRec" class="rec-box"></div>'
+      +'<div id="bgUse" class="rec-box"></div>'
       +'<div class="ai-scan" id="aiScan">'
         +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
         +'<div class="ai-thumbs" id="aiThumbs"></div>'
