@@ -365,15 +365,21 @@ body.night .ep-sw.auto{background:rgba(255,255,255,.07);color:var(--ink);border-
 body.night .ep-dot{border-color:#1a1526}
 .rec-bar{margin-top:6px}
 .rec-btn{width:100%;border-color:var(--accent);color:var(--accent);font-weight:800}
-.rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .rec-head{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
 .rec-wait{font-size:12px;color:var(--ink-mute);padding:10px 2px}
-.rec-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--glass-line);border-radius:12px;padding:10px}
-.rec-rank{width:22px;height:22px;flex:none;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
-.rec-body{flex:1;min-width:0}
-.rec-name{font-size:13px;font-weight:800;color:var(--ink)}
-.rec-why{font-size:11px;color:var(--ink-mute);line-height:1.45;margin-top:2px}
-body.night .rec-item{background:rgba(255,255,255,.06)}
+.rec-cards{display:flex;gap:9px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.rec-cards::-webkit-scrollbar{height:5px}
+.rec-cards::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
+.rec-card{flex:0 0 148px;display:flex;flex-direction:column;background:#fff;border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .16s,box-shadow .16s}
+.rec-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(30,25,70,.16)}
+.rec-art{position:relative;height:78px;display:flex;align-items:flex-end;border-bottom:1px solid var(--glass-line)}
+.rec-art canvas{position:absolute;inset:0;width:100%;height:100%}
+.rec-rank{position:absolute;top:6px;left:6px;width:19px;height:19px;border-radius:50%;background:rgba(0,0,0,.34);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.rec-cardname{position:relative;width:100%;padding:4px 8px 5px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.42));color:#fff;font-size:11px;font-weight:800;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-why{flex:1;font-size:10px;color:var(--ink-mute);line-height:1.45;padding:7px 8px}
+.rec-use{padding:6px 8px;border-top:1px solid var(--glass-line);text-align:center;font-size:11px;font-weight:800;color:var(--accent)}
+body.night .rec-card{background:rgba(255,255,255,.06)}
 .ep-roastlab{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-right:4px}
 .ep-roast{padding:4px 10px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
 .ep-roast.on{background:#f97316;border-color:#f97316;color:#fff}
@@ -936,6 +942,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <input type="file" id="mbFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files,true)">
     </div>
     <button class="m-btn primary mb-analyze" id="mbAnalyzeBtn" onclick="mbAnalyze()" disabled data-i18n="analyze">Analyze</button>
+    <div id="mbRec" class="rec-box"></div>
     <div class="mb-fields" id="mbFields" style="display:none">
       <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
       <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
@@ -953,7 +960,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="6"></textarea></div>
       <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()" data-i18n="addToGateway">Add to gateway</button>
     </div>
-    <div id="mbRec" class="rec-box"></div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
     <div class="mb-key" id="mbKeyBox" style="display:none">
       <div class="field"><label data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
@@ -2578,7 +2584,7 @@ function profileCatalogForAi(){
         notes:String(pr.notes||'').replace(/\s+/g,' ').slice(0,260) }; }); }
 function recommendPrompt(bean,cat,lang){
   return 'You are a barista choosing an espresso profile on a Decent machine for one specific coffee. '
-    +'Pick the THREE best profiles from the catalogue for this bean and rank them best first. '
+    +'Pick the FIVE best profiles from the catalogue for this bean and rank them best first. '
     +'Respond ONLY with JSON: [{"title":"exact title from the catalogue","why":"one sentence"}]. '
     +'Copy each title character for character from the catalogue - it is how the profile is looked up - and never invent one. '
     +'Weigh the roast level first, then the process and the origin character, then how long ago it was roasted '
@@ -2603,7 +2609,7 @@ function recommendProfiles(pfx,quiet){
     var rows=Array.isArray(res)?res:(res&&res.picks)||[];
     recResults=rows.map(function(r){
       var match=allProfiles.find(function(p){ return profTitle(p)===r.title; });
-      return match?{p:match,why:String(r.why||'')}:null; }).filter(Boolean).slice(0,3);
+      return match?{p:match,why:String(r.why||'')}:null; }).filter(Boolean).slice(0,5);
     if(!recResults.length&&!quiet) toast(t('recNoMatch'),'err');
   }).catch(function(e){ if(!quiet) toast(t('recFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ recBusy=false; renderRecBox(); }); }
@@ -2625,12 +2631,18 @@ function renderRecBox(){
   if(recBusy){ box.innerHTML='<div class="rec-wait">'+escapeHtml(t('recWorking'))+'</div>'; return; }
   if(!recResults||!recResults.length){ box.innerHTML=''; return; }
   box.innerHTML='<div class="rec-head">'+escapeHtml(t('recHead'))+'</div>'
-    +recResults.map(function(r,i){ var st=splitTitle(profTitle(r.p));
-      return '<div class="rec-item"><div class="rec-rank">'+(i+1)+'</div>'
-        +'<div class="rec-body"><div class="rec-name">'+escapeHtml(st.name)+'</div>'
-        +'<div class="rec-why">'+escapeHtml(r.why)+'</div></div>'
-        +(recPfx==='bg'?'<button class="m-btn" onclick="useRecommended('+i+')">'+escapeHtml(t('use'))+'</button>':'')
-        +'</div>'; }).join(''); }
+    +'<div class="rec-cards">'+recResults.map(function(r,i){ var st=splitTitle(profTitle(r.p));
+      return '<div class="rec-card"'+(recPfx==='bg'?' onclick="useRecommended('+i+')"':'')+'>'
+        +'<div class="rec-art" style="background:'+albumGrad(r.p,i)+'">'
+          +'<span class="rec-rank">'+(i+1)+'</span><canvas></canvas>'
+          +'<span class="rec-cardname">'+escapeHtml(st.name)+'</span>'
+        +'</div>'
+        +'<div class="rec-why">'+escapeHtml(r.why)+'</div>'
+        +(recPfx==='bg'?'<div class="rec-use">'+escapeHtml(t('use'))+'</div>':'')
+        +'</div>'; }).join('')+'</div>';
+  // the curve is drawn after layout so the canvas has a size to measure
+  var cvs=box.querySelectorAll('.rec-art canvas');
+  recResults.forEach(function(r,i){ var cv=cvs[i]; if(cv) setTimeout(function(){ drawSimCurve(cv,r.p.profile,true); },0); }); }
 function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
   selectProfile(r.p);
   var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
