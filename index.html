@@ -421,6 +421,7 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .sl-canvas-wrap{position:relative;height:150px;background:#f8f8ff;border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;margin-bottom:14px}
 .sl-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
 .sl-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sl-legend{display:flex;flex-wrap:wrap;gap:10px;margin:-6px 0 12px;padding:0 2px}
 .sl-metric{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:12px;padding:12px 8px;text-align:center}
 .sl-metric .v{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
 .sl-metric .l{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
@@ -958,6 +959,7 @@ var I18N={
     mbKeyLabel:'Gemini API key (stored on this phone)', mbSaveKey:'Save key',
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
+    dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
     roastDate:'Roast date', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
     species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
@@ -1006,6 +1008,7 @@ var I18N={
     mbKeyLabel:'Gemini API 키 (이 폰에만 저장)', mbSaveKey:'키 저장',
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
+    dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
     roastDate:'로스팅 날짜', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
     species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
@@ -4769,6 +4772,7 @@ function renderShotList(){ var list=document.getElementById('slList'); list.inne
     var it=document.createElement('div'); it.className='ep-item'+(slSel&&slSel.id===s.id?' active':'');
     var stars=an.enjoyment?('★'.repeat(Math.round(an.enjoyment))):'';
     var ry=(an.actualDoseWeight&&an.actualYield)?(' · 1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'';
+    var secs=shotSeconds(s); if(secs) ry+=' · '+secs.toFixed(0)+'s';
     var badge=document.createElement('div'); badge.className='sl-badge'; badge.textContent=stars||'☕';
     var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
     body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(fmtShotDate(s))+ry+'</div>';
@@ -4778,15 +4782,31 @@ function slSelect(summary){ slSel=summary; renderShotList();
   var wrap=document.getElementById('slDetail'); wrap.innerHTML='<div class="ep-placeholder">Loading shot…</div>';
   api('GET','/api/v1/shots/'+summary.id).then(function(s){ if(!s){ wrap.innerHTML='<div class="ep-placeholder">Not found</div>'; return; } renderShotDetail(s); })
     .catch(function(){ renderShotDetail(summary); }); }
+function metric(v,label){ return '<div class="sl-metric"><div class="v">'+(v!=null&&v!==''?escapeHtml(String(v)):'—')+'</div><div class="l">'+escapeHtml(label)+'</div></div>'; }
+// The recording carries the bean and grinder that were in play; show them rather
+// than let them sit unread in the workflow.
+function shotContextLine(s){ var c=(s.workflow&&s.workflow.context)||{}; var bits=[];
+  var bean=[c.coffeeRoaster,c.coffeeName].filter(Boolean).join(' · '); if(bean) bits.push(bean);
+  var grind=[c.grinderModel,c.grinderSetting!=null&&c.grinderSetting!==''?('@ '+c.grinderSetting):''].filter(Boolean).join(' ');
+  if(grind) bits.push(grind);
+  return bits.length?'<div class="sl-dt-sub">'+escapeHtml(bits.join('  ·  '))+'</div>':''; }
 function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
+  var ctx=(s.workflow&&s.workflow.context)||{}; var stats=shotStats(s);
+  var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:(ctx.targetDoseWeight!=null?ctx.targetDoseWeight:null));
+  var yld=(an.actualYield!=null?an.actualYield:(stats.weight!=null?Math.round(stats.weight*10)/10:(ctx.targetYield!=null?ctx.targetYield:null)));
   wrap.innerHTML=''
-    +'<div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(st.name)+'</div><div class="sl-dt-sub">'+(st.group?escapeHtml(st.group)+' · ':'')+escapeHtml(fmtShotDate(s))+(s.stopReason?' · '+escapeHtml(s.stopReason):'')+'</div></div></div>'
+    +'<div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(st.name)+'</div><div class="sl-dt-sub">'+(st.group?escapeHtml(st.group)+' · ':'')+escapeHtml(fmtShotDate(s))+(s.stopReason?' · '+escapeHtml(s.stopReason):'')+'</div>'+shotContextLine(s)+'</div></div>'
     +'<div class="sl-canvas-wrap"><canvas id="slCurve"></canvas></div>'
+    +shotLegend(s)
     +'<div class="sl-metrics">'
-      +'<div class="sl-metric"><div class="v">'+(an.actualDoseWeight!=null?an.actualDoseWeight:'—')+'</div><div class="l">Dose g</div></div>'
-      +'<div class="sl-metric"><div class="v">'+(an.actualYield!=null?an.actualYield:'—')+'</div><div class="l">Yield g</div></div>'
-      +'<div class="sl-metric"><div class="v">'+((an.actualDoseWeight&&an.actualYield)?('1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'—')+'</div><div class="l">Ratio</div></div>'
-      +'<div class="sl-metric"><div class="v">'+(an.drinkEy!=null?an.drinkEy:'—')+'</div><div class="l">EY %</div></div>'
+      +metric(dose,t('dose')+' g')
+      +metric(yld,t('yield')+' g')
+      +metric((dose&&yld)?('1:'+(yld/dose).toFixed(1)):null,t('ratio'))
+      +metric(an.drinkEy!=null?an.drinkEy:null,'EY %')
+      +metric(stats.seconds?stats.seconds.toFixed(1):null,t('time')+' s')
+      +metric(stats.peakPressure?stats.peakPressure.toFixed(1):null,t('peak')+' bar')
+      +metric(stats.groupTemp?stats.groupTemp.toFixed(1):null,t('group')+' °C')
+      +metric(stats.volume!=null?stats.volume.toFixed(1):null,t('volume')+' ml')
     +'</div>'
     +'<div class="ep-section-title" style="margin-top:16px">Tasting log</div>'
     +'<div class="field-row"><div class="field"><label>Actual Dose (g)</label><input id="slDose" type="number" step="0.1" value="'+(an.actualDoseWeight!=null?an.actualDoseWeight:'')+'"></div>'
@@ -4805,15 +4825,67 @@ function saveShotLog(id){ var dose=parseFloat(document.getElementById('slDose').
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1));
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey, enjoyment:(slSel&&slSel._stars)||null, espressoNotes:document.getElementById('slNotes').value||null };
   api('PUT','/api/v1/shots/'+id,{annotations:ann}).then(function(){ toast('Shot log saved','ok'); loadShotList(); }).catch(function(){ toast('Save failed','err'); }); }
-// Draw a recorded shot's pressure/flow measurements onto a canvas.
-// Measurements are nested: m[i].machine.{pressure,flow,timestamp}.
-function drawShotMeasurements(canvas,s){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||300,height:canvas.height||120}; }
+// Draw a recorded shot onto a canvas: pressure, flow, weight and the group /
+// mix / target temperatures, with the profile frame boundaries behind them.
+// Measurements are nested: m[i].machine.{...}, m[i].scale.{...}, m[i].volume.
+function shotSeconds(s){ var m=s.measurements||[]; if(m.length<2) return 0;
+  var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
+  return (isNaN(a)||isNaN(b))?0:Math.max(0,(b-a)/1000); }
+function shotStats(s){
+  var m=s.measurements||[], peak=0, tSum=0, tN=0, vol=null, wt=null;
+  m.forEach(function(pt){ var mac=pt.machine||{};
+    if(mac.pressure>peak) peak=mac.pressure;
+    var sub=(mac.state||{}).substate;
+    if((sub==='pouring'||sub==='preinfusion')&&mac.groupTemperature){ tSum+=mac.groupTemperature; tN++; }
+    if(pt.volume!=null) vol=pt.volume;
+    if(pt.scale&&pt.scale.weight!=null) wt=pt.scale.weight; });
+  return { seconds:shotSeconds(s), peakPressure:peak, groupTemp:tN?(tSum/tN):null, volume:vol, weight:wt }; }
+function drawShotMeasurements(canvas,s){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||300,height:canvas.height||150}; }
   canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
   var m=s.measurements||[]; if(m.length<2){ drawSimCurve(canvas,(s.workflow&&s.workflow.profile)||{}); return; }
-  function tOf(pt){ var ts=pt.machine&&pt.machine.timestamp; var d=ts?Date.parse(ts):NaN; return isNaN(d)?null:d; }
-  var t0=tOf(m[0]), tN=tOf(m[m.length-1]); var useTime=(t0!=null&&tN!=null&&tN>t0); var span=useTime?(tN-t0):(m.length-1||1);
-  function line(field,color,mx){ ctx.beginPath(); m.forEach(function(pt,i){ var mac=pt.machine||{}; var v=mac[field]||0; var x=(useTime?((tOf(pt)-t0)/span):(i/span))*W; var y=H-Math.min(v/mx,1)*(H-6)-3; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke(); }
-  line('pressure','#6366f1',12); line('flow','#38bdf8',8); }
+  var night=document.body.classList.contains('night');
+  var padL=24, padR=26, padT=8, padB=8;
+  var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
+  var PMAX=12, FMAX=8, TMAX=100;
+  var wMax=0; m.forEach(function(pt){ var w=pt.scale&&pt.scale.weight; if(w>wMax) wMax=w; });
+  var WMAX=wMax>0?Math.max(10,Math.ceil(wMax/10)*10):0;
+  function tOf(pt){ return Date.parse((pt.machine||{}).timestamp)||0; }
+  var t0=tOf(m[0]), t1=tOf(m[m.length-1]), span=(t1-t0)||1, useTime=(t1>t0);
+  function px(pt,i){ return X0+(useTime?((tOf(pt)-t0)/span):(i/(m.length-1)))*PW; }
+  function py(v,mx){ return Y0+PH-Math.min(Math.max(v,0)/mx,1)*(PH-4)-2; }
+
+  ctx.strokeStyle=night?'rgba(255,255,255,.06)':'rgba(139,92,246,.10)'; ctx.lineWidth=1;
+  for(var gi=0;gi<=2;gi++){ var gy=Y0+(gi/2)*PH; ctx.beginPath(); ctx.moveTo(X0,gy); ctx.lineTo(X0+PW,gy); ctx.stroke(); }
+  // profile frame boundaries, so the steps of the recorded shot stay visible
+  ctx.strokeStyle=night?'rgba(255,255,255,.13)':'rgba(99,102,241,.18)';
+  var lastFrame=null;
+  m.forEach(function(pt,i){ var f=(pt.machine||{}).profileFrame;
+    if(f!=null&&lastFrame!=null&&f!==lastFrame){ var x=px(pt,i); ctx.beginPath(); ctx.moveTo(x,Y0); ctx.lineTo(x,Y0+PH); ctx.stroke(); }
+    if(f!=null) lastFrame=f; });
+
+  ctx.font='600 9px Inter,sans-serif'; ctx.textBaseline='middle';
+  ctx.fillStyle=night?'#8b88a8':'#6b6890'; ctx.textAlign='right';
+  for(var li=0;li<=2;li++) ctx.fillText(String(Math.round(PMAX-(li/2)*PMAX)), X0-3, Y0+(li/2)*PH);
+  ctx.fillStyle='#c2620b'; ctx.textAlign='left';
+  for(var ri=0;ri<=2;ri++) ctx.fillText(String(Math.round(TMAX-(ri/2)*TMAX)), X0+PW+3, Y0+(ri/2)*PH);
+
+  function line(get,mx,color,dash){ var any=false; ctx.beginPath();
+    m.forEach(function(pt,i){ var v=get(pt); if(v==null) return;
+      var x=px(pt,i), y=py(v,mx); if(!any){ ctx.moveTo(x,y); any=true; } else ctx.lineTo(x,y); });
+    if(!any) return;
+    ctx.setLineDash(dash||[]); ctx.strokeStyle=color; ctx.lineWidth=dash?1.2:2; ctx.lineJoin='round'; ctx.stroke(); ctx.setLineDash([]); }
+  var mac=function(f){ return function(pt){ var o=pt.machine||{}; return o[f]!=null?o[f]:null; }; };
+  line(mac('targetGroupTemperature'),TMAX,'#94a3b8',[3,3]);
+  line(mac('groupTemperature'),TMAX,'#f97316');
+  line(mac('mixTemperature'),TMAX,'#60a5fa');
+  if(WMAX) line(function(pt){ return pt.scale?pt.scale.weight:null; },WMAX,'#10b981');
+  line(mac('flow'),FMAX,'#38bdf8');
+  line(mac('pressure'),PMAX,'#6366f1'); }
+function shotLegend(s){
+  var hasWeight=(s.measurements||[]).some(function(pt){ return pt.scale&&pt.scale.weight!=null; });
+  function li(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+escapeHtml(label)+'</span>'; }
+  return '<div class="chart-legend sl-legend">'+li('#6366f1',t('pressure'))+li('#38bdf8',t('flow'))
+    +(hasWeight?li('#10b981',t('weight')):'')+li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target'))+'</div>'; }
 
 // ── Workflow bootstrap ──────────────────────────────────────────────
 function loadWorkflow(){ api('GET','/api/v1/workflow').then(function(w){ if(!w) return;
