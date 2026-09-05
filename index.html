@@ -351,6 +351,17 @@ body.night .ep-aibtn.ghost{background:rgba(255,255,255,.07);color:var(--ink)}
 .eye-btn{background:none;border:none;font-size:14px;line-height:1;cursor:pointer;opacity:.35;padding:2px}
 .eye-btn:hover,.eye-btn.on{opacity:1}
 .ep-roastrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 10px}
+.rec-bar{margin-top:6px}
+.rec-btn{width:100%;border-color:var(--accent);color:var(--accent);font-weight:800}
+.rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.rec-head{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
+.rec-wait{font-size:12px;color:var(--ink-mute);padding:10px 2px}
+.rec-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--glass-line);border-radius:12px;padding:10px}
+.rec-rank{width:22px;height:22px;flex:none;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.rec-body{flex:1;min-width:0}
+.rec-name{font-size:13px;font-weight:800;color:var(--ink)}
+.rec-why{font-size:11px;color:var(--ink-mute);line-height:1.45;margin-top:2px}
+body.night .rec-item{background:rgba(255,255,255,.06)}
 .ep-roastlab{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-right:4px}
 .ep-roast{padding:4px 10px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
 .ep-roast.on{background:#f97316;border-color:#f97316;color:#fff}
@@ -1002,6 +1013,8 @@ var I18N={
     aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
+    recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
+    recFailed:'Suggestion failed:', recNoMatch:'No profile matched', recNoProfiles:'No espresso profiles installed', use:'Use',
     roastDate:'Roast date', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
     species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
@@ -1064,6 +1077,8 @@ var I18N={
     aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
+    recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
+    recFailed:'추천 실패:', recNoMatch:'일치하는 프로파일이 없습니다', recNoProfiles:'설치된 에스프레소 프로파일이 없습니다', use:'사용',
     roastDate:'로스팅 날짜', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
     species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
@@ -2383,10 +2398,12 @@ function renderBgListOLD(){ var list=document.getElementById('bgList'); list.inn
     it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
 }
 function bgSelectNew(type){ bgTab=type; aiImages=[]; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',region:'',producer:'',processing:'',species:'',decaf:false,decafProcess:'',variety:[],altitude:null}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:''}}; renderBgList(); renderBgEditor(); }
+var _recFor=null;
 function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML='<div class="ep-placeholder">← Select or add an item</div>'; return; }
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
     var batch=(o.id&&beanBatches[o.id])||{};
+    if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=null; }
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
       +'<div class="ai-scan" id="aiScan">'
         +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
@@ -2410,7 +2427,10 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
+      +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles()">'+t('recButton')+'</button></div>'
+      +'<div id="bgRec" class="rec-box"></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
+    renderRecBox();
   } else {
     var isPreset=(o.settingType==='preset');
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Grinder':'Edit Grinder')+'</div>'
@@ -2442,6 +2462,75 @@ function bgReadGrinderForm(){ var o=bgSel.obj; var g=function(id){ var el=docume
   var sv=g('bgSettingValues'); if(sv!==undefined) o.settingValues=sv.split(',').map(function(s){return s.trim();}).filter(Boolean);
   var gs=g('bgGrindSetting'); if(gs!==undefined) o.grinderSetting=gs.trim();
   var nt=g('bgGNotes'); if(nt!==undefined) o.notes=nt; }
+// ── AI profile recommendation ───────────────────────────────────────
+// Read the bean off the form rather than the record, so an unsaved bean and a
+// half-edited one both work, and pair it against the profiles actually installed.
+var recBusy=false, recResults=null;
+function beanFormDigest(){
+  var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
+  var roastDate=toIsoDate(v('bgRoastDate')), days=null;
+  if(roastDate){ var d=new Date(roastDate+'T00:00:00');
+    if(!isNaN(d)) days=Math.max(0,Math.floor((Date.now()-d.getTime())/86400000)); }
+  return { roaster:v('bgRoaster'), name:v('bgName'), country:v('bgCountry'), region:v('bgRegion'),
+    producer:v('bgProducer'), processing:v('bgProcess'), species:v('bgSpecies'),
+    variety:parseList(v('bgVariety')), altitude:parseAltitude(v('bgAltitude')),
+    decaf:!!(document.getElementById('bgDecaf')||{}).checked,
+    roastLevel:v('bgRoast'), daysOffRoast:days,
+    notes:String((document.getElementById('bgNotes')||{}).value||'').replace(/\s+/g,' ').slice(0,600) }; }
+function profileCatalogForAi(){
+  return allProfiles.filter(function(p){ return p.visibility!=='hidden'&&p.visibility!=='deleted'
+      &&profileKind(p.profile||{})==='espresso'; })
+    .map(function(p){ var pr=p.profile||{}, steps=pr.steps||[];
+      var temps=steps.map(function(st){ return parseFloat(st.temperature)||0; }).filter(function(x){ return x>0; });
+      var pres=steps.filter(function(st){ return st.pump==='pressure'; }).map(function(st){ return parseFloat(st.pressure)||0; });
+      return { title:pr.title||'', author:pr.author||'',
+        tags:allTagsOf(p).map(function(k){ return t(k); }),
+        tempC:temps.length?[Math.min.apply(null,temps),Math.max.apply(null,temps)]:null,
+        peakBar:pres.length?Math.round(Math.max.apply(null,pres)*10)/10:null,
+        notes:String(pr.notes||'').replace(/\s+/g,' ').slice(0,260) }; }); }
+function recommendPrompt(bean,cat,lang){
+  return 'You are a barista choosing an espresso profile on a Decent machine for one specific coffee. '
+    +'Pick the THREE best profiles from the catalogue for this bean and rank them best first. '
+    +'Respond ONLY with JSON: [{"title":"exact title from the catalogue","why":"one sentence"}]. '
+    +'Copy each title character for character from the catalogue - it is how the profile is looked up - and never invent one. '
+    +'Weigh the roast level first, then the process and the origin character, then how long ago it was roasted '
+    +'(a very fresh coffee still degasses, a rested one can take more pressure). '
+    +'A profile whose tags match the roast is a strong signal; temperature and pressure matter but do not decide roast on their own. '
+    +'Each "why" must be one short sentence naming the concrete reason for THIS bean - the roast, the process, '
+    +'the days off roast or the flavour it should bring out - not a generic description of the profile. '
+    +'Write every "why" in '+(lang==='ko'?'Korean':'English')+'.\n\nBEAN:\n'+JSON.stringify(bean)
+    +'\n\nCATALOGUE:\n'+JSON.stringify(cat); }
+function recommendProfiles(){
+  if(recBusy) return;
+  var key=(prefs.geminiKey||'').trim();
+  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
+  var bean=beanFormDigest();
+  if(!bean.name&&!bean.roaster){ toast(t('mbNeedRoasterName'),'err'); return; }
+  var cat=profileCatalogForAi();
+  if(!cat.length){ toast(t('recNoProfiles'),'err'); return; }
+  recBusy=true; recResults=null; renderRecBox();
+  geminiJson(key,[{text:recommendPrompt(bean,cat,_lang)}],0.2).then(function(res){
+    var rows=Array.isArray(res)?res:(res&&res.picks)||[];
+    recResults=rows.map(function(r){
+      var match=allProfiles.find(function(p){ return profTitle(p)===r.title; });
+      return match?{p:match,why:String(r.why||'')}:null; }).filter(Boolean).slice(0,3);
+    if(!recResults.length) toast(t('recNoMatch'),'err');
+  }).catch(function(e){ toast(t('recFailed')+' '+((e&&e.message)||'error'),'err'); })
+    .then(function(){ recBusy=false; renderRecBox(); }); }
+function renderRecBox(){
+  var box=document.getElementById('bgRec'); if(!box) return;
+  if(recBusy){ box.innerHTML='<div class="rec-wait">'+escapeHtml(t('recWorking'))+'</div>'; return; }
+  if(!recResults||!recResults.length){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="rec-head">'+escapeHtml(t('recHead'))+'</div>'
+    +recResults.map(function(r,i){ var st=splitTitle(profTitle(r.p));
+      return '<div class="rec-item"><div class="rec-rank">'+(i+1)+'</div>'
+        +'<div class="rec-body"><div class="rec-name">'+escapeHtml(st.name)+'</div>'
+        +'<div class="rec-why">'+escapeHtml(r.why)+'</div></div>'
+        +'<button class="m-btn" onclick="useRecommended('+i+')">'+escapeHtml(t('use'))+'</button></div>'; }).join(''); }
+function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
+  selectProfile(r.p);
+  var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
+  if(o&&o.name) api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).catch(function(){}); }
 function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
   var body={roaster:v('bgRoaster'),name:v('bgName'),country:v('bgCountry')||null,region:v('bgRegion')||null,
     producer:v('bgProducer')||null,processing:v('bgProcess')||null,species:v('bgSpecies')||null,
