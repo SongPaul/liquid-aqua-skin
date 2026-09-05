@@ -379,7 +379,7 @@ body.night .ep-batch{background:rgba(255,255,255,.07);color:var(--ink);border-co
 .ep-dot{position:absolute;right:-3px;bottom:-3px;width:11px;height:11px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 body.night .ep-sw.auto{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
 body.night .ep-dot{border-color:#1a1526}
-.rec-bar{margin-top:6px}
+.rec-bar{margin:2px 0 10px}
 .rec-btn{width:100%;border-color:var(--accent);color:var(--accent);font-weight:800}
 .rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .rec-head{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
@@ -2578,6 +2578,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       bgBatchId=null; bgNewBatch=false; }
     recPfx='bg';
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
+      +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')">'+t('recButton')+'</button></div>'
       +'<div id="bgRec" class="rec-box"></div>'
       +'<div id="bgUse" class="rec-box"></div>'
       +'<div class="ai-scan" id="aiScan">'
@@ -2603,7 +2604,6 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
-      +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')">'+t('recButton')+'</button></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
     renderRecBox(); renderUsageBox(); loadBeanUsage('bg');
   } else {
