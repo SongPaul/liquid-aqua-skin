@@ -111,6 +111,26 @@ header>*{position:relative;z-index:1}
 .brand{display:flex;align-items:baseline;gap:7px}
 .brand h1{font-size:19px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand span{font-size:10px;color:var(--ink-mute);font-weight:600}
+/* Tablet battery pill in the header brand row. */
+.batt{display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 5px;border-radius:100px;background:var(--glass-hi);border:1px solid var(--glass-line)}
+.batt .batt-pct{font-size:10px;font-weight:800;color:var(--ink);letter-spacing:0}
+.batt.low .batt-pct{color:var(--red)}
+.batt-ico{width:20px;height:11px;border:1.5px solid var(--ink-mute);border-radius:3px;position:relative;display:inline-block;box-sizing:border-box}
+.batt-ico::after{content:'';position:absolute;right:-3.5px;top:2.5px;width:2px;height:4px;background:var(--ink-mute);border-radius:0 1px 1px 0}
+.batt-ico::before{content:'';position:absolute;left:1px;top:1px;bottom:1px;width:var(--batt-fill,60%);max-width:calc(100% - 2px);background:var(--green);border-radius:1px;transition:width .5s ease,background .5s ease}
+.batt.low .batt-ico::before{background:var(--red)}
+.batt.charging .batt-ico::before{background:var(--accent)}
+.batt-bolt{display:none;width:5px;height:9px;background:currentColor;clip-path:polygon(60% 0,20% 55%,45% 55%,38% 100%,80% 42%,52% 42%)}
+.batt .batt-bolt{color:var(--accent)}
+.batt.charging .batt-bolt,.lock-batt.charging .batt-bolt{display:inline-block}
+/* Sleep-screen battery, dim to fit the dark lock. */
+.lock-batt{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600;color:rgba(255,255,255,.55);margin-top:4px}
+.lock-batt .batt-ico{width:26px;height:14px;border-color:rgba(255,255,255,.5)}
+.lock-batt .batt-ico::after{background:rgba(255,255,255,.5)}
+.lock-batt .batt-bolt{width:7px;height:12px;margin-right:-2px}
+.lock-batt.low{color:var(--red)}
+.lock-batt.low .batt-ico::before{background:var(--red)}
+.lock-batt.charging .batt-ico::before{background:var(--accent)}
 
 .water-readout{display:flex;align-items:center;gap:9px}
 .water-icon{font-size:18px}
@@ -550,7 +570,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
   <!-- ── Header ────────────────────────────────────────────────── -->
   <header class="glass">
-    <div class="brand"><h1>Liquid Aqua</h1><span id="machineName">Espresso Studio</span></div>
+    <div class="brand"><h1>Liquid Aqua</h1><span id="machineName">Espresso Studio</span><span class="batt" id="battPill" style="display:none"><span class="batt-ico" id="battIco"></span><i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span></span></div>
 
     <div class="hdr-group">
       <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
@@ -699,6 +719,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <div class="lock-ripple"></div>
     <div class="lock-clock" id="lockClock">0:00</div>
     <div class="lock-date" id="lockDate"></div>
+    <div class="lock-batt" id="lockBatt" style="display:none"><span class="batt-ico" id="lockBattIco"></span><i class="batt-bolt"></i><span id="lockBattPct"></span></div>
   </div>
   <div class="lock-hint">Tap anywhere to wake</div>
 </div>
@@ -916,6 +937,7 @@ var I18N={
     model:'Model', burrs:'Burrs', burrType:'Burr type', burrSize:'Burr size (mm)', grindSetting:'Grind Setting', current:'Current setting',
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; Gemini fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
     qrNoLib:'QR library not loaded', qrNoLan:'Open this skin from the tablet using its Wi-Fi/LAN address (not localhost) so the phone can reach it.',
+    aiBusy:'The AI model is busy right now. Please try again in a moment.',
     profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'☕ Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
     steamOptions:'♨️ Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
     tapWake:'Tap anywhere to wake'
@@ -953,6 +975,7 @@ var I18N={
     model:'모델', burrs:'버', burrType:'버 종류', burrSize:'버 크기 (mm)', grindSetting:'분쇄도 설정', current:'현재 값',
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 Gemini가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
     qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'폰이 접속할 수 있도록 태블릿에서 localhost가 아닌 Wi-Fi/LAN 주소로 이 스킨을 여세요.',
+    aiBusy:'AI 모델이 지금 혼잡합니다. 잠시 후 다시 시도해 주세요.',
     profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'☕ 에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
     steamOptions:'♨️ 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
     tapWake:'화면을 눌러 깨우기'
@@ -979,11 +1002,46 @@ var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='htt
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
   connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
-  water:{current:0,refill:0}, ghc:false, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0 };
+  water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[], groupTemp:[], mixTemp:[], targetTemp:[], mode:'espresso', max:600 };
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
 var beans=[], grinders=[], context={};
+
+// ── Battery ──────────────────────────────────────
+// Gateway charging state (Android/iOS host) wins; navigator.getBattery is the
+// fallback when the skin runs in a plain browser on the display device.
+function setBattery(percent,charging,src){
+  if(percent==null||isNaN(percent)) return;
+  if(src==='nav'&&state.battery&&state.battery.src==='gw') return;
+  var p=Math.max(0,Math.min(100,Math.round(percent)));
+  state.battery={percent:p,charging:!!charging,src:src||'gw'};
+  updateBatteryUI(); }
+function applyChargingState(cs){ if(!cs||cs.batteryPercent==null) return false;
+  setBattery(cs.batteryPercent,cs.usbChargerOn===true||cs.currentPhase==='chargingToMax','gw'); return true; }
+function updateBatteryUI(){
+  var pill=document.getElementById('battPill'), lock=document.getElementById('lockBatt');
+  if(!pill||!lock) return;
+  var b=state.battery;
+  if(!b||b.percent==null){ pill.style.display='none'; lock.style.display='none'; return; }
+  var low=b.percent<=20&&!b.charging, mods=(low?' low':'')+(b.charging?' charging':'');
+  var label=b.percent+'%';
+  pill.style.display=''; pill.className='batt'+mods;
+  document.getElementById('battIco').style.setProperty('--batt-fill',b.percent+'%');
+  document.getElementById('battPct').textContent=label;
+  lock.style.display='flex'; lock.className='lock-batt'+mods;
+  document.getElementById('lockBattIco').style.setProperty('--batt-fill',b.percent+'%');
+  document.getElementById('lockBattPct').textContent=label; }
+function loadBattery(){ api('GET','/api/v1/settings')
+  .then(function(s){ if(!applyChargingState(s&&s.chargingState)) initBrowserBattery(); })
+  .catch(function(){ initBrowserBattery(); }); }
+var _navBattInit=false;
+function initBrowserBattery(){
+  if(_navBattInit||!navigator.getBattery) return; _navBattInit=true;
+  try{ navigator.getBattery().then(function(bat){
+    var push=function(){ setBattery(bat.level*100,bat.charging,'nav'); };
+    push(); bat.addEventListener('levelchange',push); bat.addEventListener('chargingchange',push);
+  }).catch(function(){}); }catch(_){} }
 
 // ── WebSockets ──────────────────────────────────────────────────────
 var sockets={};
@@ -1017,6 +1075,7 @@ function initWebSockets(){
     if(machineName) document.getElementById('machineName').textContent=machineName;
     var err=m.connectionStatus&&m.connectionStatus.error; if(err&&err.suggestion) toast(err.suggestion,'err');
     if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); }
+    applyChargingState(m.charging);
     updateShotBtn(); });
   openWs('display','/ws/v1/display',function(){});
 }
@@ -2029,18 +2088,39 @@ function resolveGeminiModel(key){
     .then(function(j){ var picked=j&&pickFlashModel(j.models); _geminiModel=picked||GEMINI_FALLBACK; return _geminiModel; })
     .catch(function(){ _geminiModel=GEMINI_FALLBACK; return _geminiModel; });
 }
+// Overload/rate-limit fallback: if the newest Flash model is saturated, try the
+// lite variant which usually has spare capacity.
+var GEMINI_LITE='gemini-flash-lite-latest';
+function _sleep(ms){ return new Promise(function(res){ setTimeout(res,ms); }); }
+// One request against a specific model. Throws an Error tagged with .status.
+function geminiGenerate(key,model,body){
+  var url=GEMINI_API+'/models/'+model+':generateContent?key='+encodeURIComponent(key);
+  return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok){ var e=new Error((j.error&&j.error.message)||('HTTP '+r.status)); e.status=r.status; throw e; } return j; }); })
+    .then(function(j){ var txt=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
+      if(!txt) throw new Error('Empty response'); var data; try{ data=JSON.parse(txt); }catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
+      if(!data) throw new Error('Could not parse result'); return data; }); }
+function isOverload(e){ return e&&(e.status===503||e.status===429||/overload|high demand|unavailable|rate.?limit|quota/i.test(e.message||'')); }
 // Shared: send images to Gemini, resolve with the parsed bean object.
+// Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
   var parts=[{text:'You are reading one or more photos of a coffee bag label. Extract the bean details and respond ONLY with JSON using these keys (empty string if unknown): {"roaster":"","name":"","country":"","processing":"","roastLevel":"","notes":""}. name is the coffee/blend name (not the roaster). roastLevel is one of light, medium-light, medium, medium-dark, dark if determinable. notes = brief tasting notes if printed.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:0.1}};
   return resolveGeminiModel(key).then(function(model){
-    var url=GEMINI_API+'/models/'+model+':generateContent?key='+encodeURIComponent(key);
-    return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
-      .then(function(r){ return r.json().then(function(j){ if(!r.ok){ if(r.status===404) _geminiModel=null; throw new Error((j.error&&j.error.message)||('HTTP '+r.status)); } return j; }); })
-      .then(function(j){ var txt=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
-        if(!txt) throw new Error('Empty response'); var data; try{ data=JSON.parse(txt); }catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
-        if(!data) throw new Error('Could not parse result'); return data; }); }); }
+    function attempt(m,tries){
+      return geminiGenerate(key,m,body).catch(function(e){
+        if(e.status===404){ _geminiModel=null; throw e; }
+        if(isOverload(e)){
+          if(tries>0){ return _sleep(1200*(4-tries)).then(function(){ return attempt(m,tries-1); }); }
+          if(m!==GEMINI_LITE){ return attempt(GEMINI_LITE,1); } // last resort: lite model
+          var oe=new Error(t('aiBusy')); oe.status=e.status; throw oe;
+        }
+        throw e;
+      });
+    }
+    return attempt(model,2);
+  }); }
 function analyzeBeanImages(){ if(!aiImages.length) return;
   var key=(prefs.geminiKey||'').trim(); if(!key){ toast('Set a Gemini API key in Settings','err'); openSettingsPage(); spSelect('ai'); return; }
   var statusEl=document.getElementById('aiStatus'); statusEl.textContent='Analyzing… ✨'; var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
@@ -4620,6 +4700,7 @@ window.addEventListener('load', function(){
   fitStage(); loadFavs(); loadPrefs(); loadPresets(); initWebSockets(); watchOverlays();
   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
+  loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
   loadLastShot();
   // load profiles first, then workflow so we can match the current profile to a real list entry

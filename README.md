@@ -15,6 +15,7 @@ Single-file skin: everything lives in `index.html` (HTML + CSS + vanilla JS, no 
 - DYE (dial-in your espresso) post-shot logging, with an auto-open toggle in Settings
 - Shot Log history page: browse recorded shots, view the recorded extraction curve, edit tasting annotations
 - Settings page with a link to open the gateway web interface
+- Tablet battery level in the header and on the sleep screen, from the gateway charging state with a browser-battery fallback
 
 ## Layout
 
