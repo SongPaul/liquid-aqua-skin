@@ -99,7 +99,6 @@ body.asleep .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
 @keyframes lockripple{0%,100%{transform:scale(1) translateY(0);opacity:.7}50%{transform:scale(1.15) translateY(-3%);opacity:1}}
 /* While asleep, stop the water-tank wave animation to save the panel/CPU. */
 body.asleep .wave-path,body.asleep .wave-path2{animation-play-state:paused!important}
-body.asleep .water-fill svg animate{display:none}
 
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
@@ -1571,11 +1570,15 @@ function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared'
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
 var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
+function pauseSvgAnimations(on){
+  var list=document.querySelectorAll('.app svg');
+  for(var i=0;i<list.length;i++){ var sv=list[i];
+    try{ if(on){ if(sv.pauseAnimations) sv.pauseAnimations(); } else if(sv.unpauseAnimations) sv.unpauseAnimations(); }catch(_){} } }
 // Called on both enter paths (button + machine-reported). Flips the sleep flag,
 // shows the lock, and starts a 1s clock. Sets the clock to update only while the
 // tab is visible so a backgrounded tablet stops the timer entirely.
 // The burn-in guard is pure CSS (breathe/hue-drift/ripple), so no JS loop is needed.
-function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock();
+function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock(); pauseSvgAnimations(true);
   updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(function(){ if(!document.hidden) updateLockClock(); },1000);
   // Dim the panel while asleep (a dark, low-brightness screen resists burn-in and
   // saves power). Remember the level so it can be restored on wake.
@@ -1583,7 +1586,7 @@ function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); do
     api('PUT','/api/v1/display/brightness',{brightness:prefs.sleepBrightness||20}).catch(function(){}); } }
 // Called on both wake paths. Clears the flag/clock, then repaints the live UI once
 // so everything reflects the current state after the sleep gap.
-function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show'); syncWakeLock();
+function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show'); syncWakeLock(); pauseSvgAnimations(false);
   if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; }
   // Restore pre-sleep brightness.
   if(_preSleepBrightness!=null){ var b=_preSleepBrightness; _preSleepBrightness=null; api('PUT','/api/v1/display/brightness',{brightness:b}).catch(function(){}); }
