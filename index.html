@@ -208,6 +208,7 @@ header>*{position:relative;z-index:1}
 .timer-big.run{color:var(--hot)}
 
 .gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0;margin-top:auto}
+.live-main .aux-row{margin-top:10px;padding-top:10px}
 .gauge{background:var(--glass-hi);border-radius:var(--r-sm);padding:11px 13px;min-width:0;border:1px solid var(--glass-line)}
 .gauge-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
 .gauge-name{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
@@ -302,10 +303,10 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bean-row{display:flex;align-items:center;gap:10px;flex:none}
 .bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .aux-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--glass-line)}
-.aux-chip{display:flex;align-items:center;gap:7px;min-height:42px;padding:4px 9px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);cursor:pointer;-webkit-appearance:none;text-align:left;min-width:0;transition:all .15s}
+.aux-chip{display:flex;align-items:center;gap:6px;min-height:42px;padding:4px 7px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);cursor:pointer;-webkit-appearance:none;text-align:left;min-width:0;transition:all .15s}
 .aux-chip:hover{border-color:var(--accent)}
 .aux-chip.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.16)}
-.ax-ico{flex:none;font-size:16px;line-height:1}
+.ax-ico{flex:none;font-size:15px;line-height:1}
 .ax-txt{min-width:0;display:flex;flex-direction:column;gap:1px;flex:1}
 .ax-name{font-size:11px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ax-val{font-size:11px;font-weight:700;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -330,12 +331,11 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .grind-val{min-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:20px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
 .recipe .grind-val{flex:1;min-width:0;font-size:28px}
 .grind-val:hover{background:var(--glass-hi)}
-.bean-chips{display:flex;flex-wrap:nowrap;gap:5px;margin-top:9px;flex:none;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;flex:none}
 .bean-chips::-webkit-scrollbar{display:none}
 .bean-chips:empty{display:none}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
-.bean-spacer{flex:1;min-height:4px}
 .last-shot{border-top:1px solid var(--glass-line);padding-top:10px;margin-top:10px;flex-shrink:0}
 .ls-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 .ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
@@ -752,6 +752,14 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge1Name">Pressure</span><span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span></div><div class="gauge-track"><div class="gauge-fill pressure" id="pressureBar" style="width:0%"></div></div></div>
         <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge2Name">Flow</span><span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span></div><div class="gauge-track"><div class="gauge-fill flow" id="flowBar" style="width:0%"></div></div></div>
       </div>
+        <div class="aux-row" id="auxRow">
+          <button class="aux-chip" id="auxChipSteam" onclick="openSteamModal()"><span class="ax-ico">♨️</span>
+            <span class="ax-txt"><span class="ax-name" id="auxNameSteam">Steam</span><span class="ax-val" id="auxValSteam">—</span></span></button>
+          <button class="aux-chip" id="auxChipFlush" onclick="openFlushModal()"><span class="ax-ico">🚿</span>
+            <span class="ax-txt"><span class="ax-name" id="auxNameFlush">Flush</span><span class="ax-val" id="auxValFlush">—</span></span></button>
+          <button class="aux-chip" id="auxChipWater" onclick="openWaterModal()"><span class="ax-ico">💧</span>
+            <span class="ax-txt"><span class="ax-name" id="auxNameWater">Water</span><span class="ax-val" id="auxValWater">—</span></span></button>
+        </div>
       </div>
       <div class="recipe">
         <div class="recipe-title"><span data-i18n="recipe">Recipe</span><span class="rc-live" id="recipeLiveTag"></span></div>
@@ -783,14 +791,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
               <button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
             <button class="grind-label" id="grindModelBtn" onclick="openGrinderPage()"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></button>
           </div>
-        </div>
-        <div class="aux-row" id="auxRow">
-          <button class="aux-chip" id="auxChipSteam" onclick="openSteamModal()"><span class="ax-ico">♨️</span>
-            <span class="ax-txt"><span class="ax-name" id="auxNameSteam">Steam</span><span class="ax-val" id="auxValSteam">—</span></span></button>
-          <button class="aux-chip" id="auxChipFlush" onclick="openFlushModal()"><span class="ax-ico">🚿</span>
-            <span class="ax-txt"><span class="ax-name" id="auxNameFlush">Flush</span><span class="ax-val" id="auxValFlush">—</span></span></button>
-          <button class="aux-chip" id="auxChipWater" onclick="openWaterModal()"><span class="ax-ico">💧</span>
-            <span class="ax-txt"><span class="ax-name" id="auxNameWater">Water</span><span class="ax-val" id="auxValWater">—</span></span></button>
         </div>
         </div>
         <div id="recipeLive" style="display:none"></div>
@@ -834,7 +834,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <button class="bean-edit" onclick="openBeanModal()">Edit</button>
       </div>
       <div class="bean-chips" id="beanChips"></div>
-      <div class="bean-spacer"></div>
       <div class="last-shot" id="lastShot">
         <div class="ls-head"><span data-i18n="lastShot">Last Shot</span><button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button></div>
         <div class="ls-profile" id="lsProfile"></div>
@@ -1708,8 +1707,8 @@ var AUX_KINDS={
 };
 function auxNum(f){ var v=settings[f.k]; return f.dec?(+v).toFixed(f.dec):String(Math.round(v)); }
 function auxSummary(kind){
-  if(kind==='steam') return auxNum(AUX_KINDS.steam.fields[0])+'° · '+settings.steamDur+'s · '+(+settings.steamFlow).toFixed(1);
-  if(kind==='flush') return settings.flushTemp+'° · '+settings.flushDur+'s · '+(+settings.flushFlow).toFixed(1);
+  if(kind==='steam') return auxNum(AUX_KINDS.steam.fields[0])+'° · '+settings.steamDur+'s';
+  if(kind==='flush') return settings.flushTemp+'° · '+settings.flushDur+'s';
   return settings.waterTemp+'° · '+(settings.waterVol>0?settings.waterVol+'ml':settings.waterDur+'s'); }
 function auxClose(a,b,tol){ return Math.abs((+a)-(+b))<=(tol||0.01); }
 function auxLabel(kind){
