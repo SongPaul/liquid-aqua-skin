@@ -37,7 +37,7 @@ body.night .ep-group-head{background:linear-gradient(135deg,#14111f,#1a1526);col
 body.night .ep-group-head.fav{background:linear-gradient(135deg,#241a12,#26141a);color:var(--amber)}
 body.night .bg-tabs{background:linear-gradient(135deg,#14111f,#1a1526)}
 /* pill / button surfaces */
-body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .car-nav,body.night .fav-btn{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
+body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .car-nav,body.night .fav-btn,body.night .aux-chip{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
 body.night .kp-key{color:var(--ink)}
 body.night .car-nav:hover,body.night .ep-stepnav .nav:hover{background:rgba(255,255,255,.14)}
 /* editor panels */
@@ -232,15 +232,15 @@ header>*{position:relative;z-index:1}
 canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 
 /* ── Right column ────────────────────────────────────────────────── */
-.right{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:14px;min-height:0}
+.right{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:10px;min-height:0}
 
 /* Current profile hero */
 /* Profile album carousel (current + favorites merged) */
-.carousel-card{padding:12px 16px 12px;flex-shrink:0;display:flex;flex-direction:column}
+.carousel-card{padding:8px 16px;flex-shrink:0;display:flex;flex-direction:column}
 .cc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .cur-tag{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase}
 .cur-browse{min-height:44px;padding:0 8px;font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;-webkit-appearance:none}
-.carousel{position:relative;height:150px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
+.carousel{position:relative;height:140px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
 .carousel-stage{position:relative;width:100%;height:100%}
 .car-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--ink-mute);font-size:12px}
 .album{position:absolute;top:50%;left:50%;width:146px;height:118px;margin:-59px 0 0 -73px;border-radius:16px;cursor:pointer;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
@@ -296,6 +296,22 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bean-info::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .bean-row{display:flex;align-items:center;gap:10px;flex:none}
 .bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.aux-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--glass-line)}
+.aux-chip{display:flex;align-items:center;gap:7px;min-height:42px;padding:4px 9px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);cursor:pointer;-webkit-appearance:none;text-align:left;min-width:0;transition:all .15s}
+.aux-chip:hover{border-color:var(--accent)}
+.aux-chip.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.16)}
+.ax-ico{flex:none;font-size:16px;line-height:1}
+.ax-txt{min-width:0;display:flex;flex-direction:column;gap:1px;flex:1}
+.ax-name{font-size:11px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ax-val{font-size:11px;font-weight:700;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-live{font-size:11px;font-weight:800;color:var(--accent);text-transform:none;letter-spacing:0}
+.live-grid{display:grid;gap:6px}
+.live-cell{text-align:center;min-width:0}
+.live-adj{display:flex;align-items:center;justify-content:space-between;gap:1px;min-width:0}
+.live-num{flex:1;min-width:40px;font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--accent)}
+.live-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);margin-top:2px}
+.live-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
+.live-kind{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:var(--ink)}
 .grind-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
 .grind-label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-soft);min-width:0;background:none;border:none;padding:10px 8px;margin:-10px -8px;border-radius:9px;cursor:pointer;font-family:var(--font);transition:background .15s}
 .grind-label:hover{background:var(--glass-hi)}
@@ -759,7 +775,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     </div>
 
     <div class="recipe glass">
-      <div class="recipe-title" data-i18n="recipe">Recipe</div>
+      <div class="recipe-title"><span data-i18n="recipe">Recipe</span><span class="rc-live" id="recipeLiveTag"></span></div>
+      <div id="recipeNormal">
       <div class="dose-row">
         <div class="dose-block">
           <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
@@ -784,6 +801,16 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <button class="grind-label" id="grindModelBtn" onclick="openGrinderPage()"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></button>
         <div class="grind-stepper"><button class="ms-btn" onclick="adjustGrind(-1)">−</button><span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span><button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
       </div>
+      <div class="aux-row" id="auxRow">
+        <button class="aux-chip" id="auxChipSteam" onclick="openSteamModal()"><span class="ax-ico">♨️</span>
+          <span class="ax-txt"><span class="ax-name" id="auxNameSteam">Steam</span><span class="ax-val" id="auxValSteam">—</span></span></button>
+        <button class="aux-chip" id="auxChipFlush" onclick="openFlushModal()"><span class="ax-ico">🚿</span>
+          <span class="ax-txt"><span class="ax-name" id="auxNameFlush">Flush</span><span class="ax-val" id="auxValFlush">—</span></span></button>
+        <button class="aux-chip" id="auxChipWater" onclick="openWaterModal()"><span class="ax-ico">💧</span>
+          <span class="ax-txt"><span class="ax-name" id="auxNameWater">Water</span><span class="ax-val" id="auxValWater">—</span></span></button>
+      </div>
+      </div>
+      <div id="recipeLive" style="display:none"></div>
     </div>
 
     <div class="bean-info glass">
@@ -1022,6 +1049,7 @@ window.addEventListener('error', function(e){ try{ var el=document.getElementByI
 var I18N={
   en:{
     start:'Start', stop:'Stop', steam:'Steam', flush:'Flush', water:'Water', sleep:'Sleep', connect:'Connect',
+    custom:'Custom', liveAdjust:'Live', tempShort:'°C', secShort:'sec', mlShort:'ml', flowShort:'ml/s',
     machine:'Machine', scale:'Scale', group:'Group', mix:'Mix', tank:'Tank',
     liveWeight:'Live Weight', tare:'Tare', timer:'Timer', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose g', yieldG:'Yield g', ratio:'Ratio',
@@ -1091,6 +1119,7 @@ var I18N={
   },
   ko:{
     start:'추출', stop:'정지', steam:'스팀', flush:'플러시', water:'물', sleep:'절전', connect:'연결',
+    custom:'커스텀', liveAdjust:'실시간 조정', tempShort:'°C', secShort:'초', mlShort:'ml', flowShort:'ml/s',
     machine:'머신', scale:'저울', group:'그룹', mix:'믹스', tank:'물탱크',
     liveWeight:'실시간 무게', tare:'영점', timer:'타이머', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징 g', yieldG:'추출량 g', ratio:'비율',
@@ -1330,6 +1359,7 @@ function onMachineState(ms,prev){
   if(watering&&!state.waterRunning){ startTimer(); resetChart('water'); }
   if(!watering&&state.waterRunning){ stopTimer(); drawChart(); }
   state.waterRunning=watering;
+  syncAuxPanel();
 
   if(extracting){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetTemp.push(state.targetMixTemp||state.targetGroupTemp||0);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); if(chart.targetTemp.length>chart.max)chart.targetTemp.shift(); drawChart(); }
@@ -1626,7 +1656,7 @@ function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); 
 }
 function applyPreset(kind,ps){ if(kind==='steam'){ set('steamTemp',ps.temp,'steamTempV'); set('steamDur',ps.dur,'steamDurV'); set('steamFlow',ps.flow,'steamFlowV',1); }
   else if(kind==='water'){ set('waterTemp',ps.temp,'waterTempV'); set('waterVol',ps.vol,'waterVolV'); set('waterDur',ps.dur,'waterDurV'); set('waterFlow',ps.flow,'waterFlowV',1); }
-  else { set('flushTemp',ps.temp,'flushTempV'); set('flushDur',ps.dur,'flushDurV'); set('flushFlow',ps.flow,'flushFlowV',1); } toast('Preset "'+ps.n+'" applied','ok'); }
+  else { set('flushTemp',ps.temp,'flushTempV'); set('flushDur',ps.dur,'flushDurV'); set('flushFlow',ps.flow,'flushFlowV',1); } syncAux(); toast('Preset "'+ps.n+'" applied','ok'); }
 function addPreset(kind){ var name=prompt('Preset name?',(kind==='steam'?'Steam ':kind==='water'?'Water ':'Flush ')+(presets[kind].length+1)); if(!name) return;
   if(kind==='steam') presets.steam.push({n:name,temp:+document.getElementById('steamTemp').value,dur:+document.getElementById('steamDur').value,flow:+document.getElementById('steamFlow').value});
   else if(kind==='water') presets.water.push({n:name,temp:+document.getElementById('waterTemp').value,vol:+document.getElementById('waterVol').value,dur:+document.getElementById('waterDur').value,flow:+document.getElementById('waterFlow').value});
@@ -1638,11 +1668,95 @@ function syncFlushModal(){ set('flushTemp',settings.flushTemp,'flushTempV'); set
 function set(id,v,vid,dec){ document.getElementById(id).value=v; document.getElementById(vid).textContent=dec?(+v).toFixed(1):v; }
 function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v; }
 function saveSteam(){ settings.steamTemp=+document.getElementById('steamTemp').value; settings.steamDur=+document.getElementById('steamDur').value; settings.steamFlow=+document.getElementById('steamFlow').value;
-  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){toast('Steam options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'steamOverlay'); }
+  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast('Steam options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'steamOverlay'); }
 function saveFlush(){ settings.flushTemp=+document.getElementById('flushTemp').value; settings.flushDur=+document.getElementById('flushDur').value; settings.flushFlow=+document.getElementById('flushFlow').value;
-  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){toast('Flush options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'flushOverlay'); }
+  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){ syncAux(); toast('Flush options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'flushOverlay'); }
 function saveWater(){ settings.waterTemp=+document.getElementById('waterTemp').value; settings.waterVol=+document.getElementById('waterVol').value; settings.waterDur=+document.getElementById('waterDur').value; settings.waterFlow=+document.getElementById('waterFlow').value;
-  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){toast('Water options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'waterOverlay'); }
+  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){ syncAux(); toast('Water options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'waterOverlay'); }
+
+// Steam, flush and hot water each have their own stored numbers. The recipe card
+// shows what they are set to, and while one of them is running it swaps to
+// steppers that push the change straight to the machine.
+var AUX_KINDS={
+  steam:{ico:'♨️',state:'steam',act:'doSteamAction',open:'openSteamModal',sync:'syncSteamModal',cols:3,
+    fields:[{k:'steamTemp',step:1,min:0,max:165,dec:0,unit:'tempShort'},
+            {k:'steamDur',step:5,min:0,max:120,dec:0,unit:'secShort'},
+            {k:'steamFlow',step:0.1,min:0,max:2.5,dec:1,unit:'flowShort'}]},
+  flush:{ico:'🚿',state:'flush',act:'doFlushAction',open:'openFlushModal',sync:'syncFlushModal',cols:3,
+    fields:[{k:'flushTemp',step:1,min:60,max:95,dec:0,unit:'tempShort'},
+            {k:'flushDur',step:1,min:1,max:20,dec:0,unit:'secShort'},
+            {k:'flushFlow',step:0.5,min:1,max:10,dec:1,unit:'flowShort'}]},
+  water:{ico:'💧',state:'hotWater',act:'doWaterAction',open:'openWaterModal',sync:'syncWaterModal',cols:2,
+    fields:[{k:'waterTemp',step:1,min:20,max:100,dec:0,unit:'tempShort'},
+            {k:'waterVol',step:10,min:0,max:500,dec:0,unit:'mlShort'},
+            {k:'waterDur',step:5,min:0,max:120,dec:0,unit:'secShort'},
+            {k:'waterFlow',step:0.5,min:1,max:10,dec:1,unit:'flowShort'}]}
+};
+function auxNum(f){ var v=settings[f.k]; return f.dec?(+v).toFixed(f.dec):String(Math.round(v)); }
+function auxSummary(kind){
+  if(kind==='steam') return auxNum(AUX_KINDS.steam.fields[0])+'° · '+settings.steamDur+'s · '+(+settings.steamFlow).toFixed(1);
+  if(kind==='flush') return settings.flushTemp+'° · '+settings.flushDur+'s · '+(+settings.flushFlow).toFixed(1);
+  return settings.waterTemp+'° · '+(settings.waterVol>0?settings.waterVol+'ml':settings.waterDur+'s'); }
+function auxClose(a,b,tol){ return Math.abs((+a)-(+b))<=(tol||0.01); }
+function auxLabel(kind){
+  var list=presets[kind]||[];
+  for(var i=0;i<list.length;i++){ var ps=list[i], hit=false;
+    if(kind==='steam') hit=auxClose(ps.temp,settings.steamTemp)&&auxClose(ps.dur,settings.steamDur)&&auxClose(ps.flow,settings.steamFlow,0.051);
+    else if(kind==='flush') hit=auxClose(ps.temp,settings.flushTemp)&&auxClose(ps.dur,settings.flushDur)&&auxClose(ps.flow,settings.flushFlow,0.051);
+    else hit=auxClose(ps.temp,settings.waterTemp)&&auxClose(ps.vol,settings.waterVol)&&auxClose(ps.dur,settings.waterDur)&&auxClose(ps.flow,settings.waterFlow,0.051);
+    if(hit) return ps.n; }
+  return t('custom'); }
+function syncAux(){
+  ['steam','flush','water'].forEach(function(kind){
+    var cap=kind.charAt(0).toUpperCase()+kind.slice(1);
+    var nm=document.getElementById('auxName'+cap), vl=document.getElementById('auxVal'+cap);
+    if(nm) nm.textContent=auxLabel(kind);
+    if(vl) vl.textContent=auxSummary(kind);
+    var chip=document.getElementById('auxChip'+cap);
+    if(chip) chip.classList.toggle('on',state.machine.state===AUX_KINDS[kind].state); });
+  if(_auxLiveKind){ var def=AUX_KINDS[_auxLiveKind];
+    def.fields.forEach(function(f){ var el=document.getElementById('live_'+f.k); if(el) el.textContent=auxNum(f); }); } }
+// The workflow endpoint does not debounce, so the trailing edge is ours to keep.
+var _auxPushT=null, _auxPushKind=null;
+function auxBody(kind){
+  if(kind==='steam') return {steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}};
+  if(kind==='flush') return {rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}};
+  return {hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}; }
+function pushAux(kind){ _auxPushKind=kind;
+  if(_auxPushT) clearTimeout(_auxPushT);
+  _auxPushT=setTimeout(function(){ _auxPushT=null;
+    api('PUT','/api/v1/workflow',auxBody(_auxPushKind)).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); },450); }
+function adjustAux(kind,key,delta){
+  var def=AUX_KINDS[kind], f=null;
+  for(var i=0;i<def.fields.length;i++) if(def.fields[i].k===key) f=def.fields[i];
+  if(!f) return;
+  var v=Math.max(f.min,Math.min(f.max,parseFloat((settings[key]+delta).toFixed(2))));
+  settings[key]=f.dec?parseFloat(v.toFixed(f.dec)):Math.round(v);
+  syncAux(); window[def.sync](); pushAux(kind); }
+var _auxLiveKind=null;
+function auxRunning(){ var st=state.machine.state;
+  return st==='steam'?'steam':st==='flush'?'flush':st==='hotWater'?'water':null; }
+function renderAuxLive(kind){
+  var def=AUX_KINDS[kind], box=document.getElementById('recipeLive');
+  box.innerHTML='<div class="live-grid" style="grid-template-columns:repeat('+def.cols+',1fr)">'
+    +def.fields.map(function(f){
+      return '<div class="live-cell"><div class="live-adj">'
+        +'<button class="ms-btn" onclick="adjustAux(\''+kind+'\',\''+f.k+'\','+(-f.step)+')">−</button>'
+        +'<div class="live-num" id="live_'+f.k+'">'+auxNum(f)+'</div>'
+        +'<button class="ms-btn" onclick="adjustAux(\''+kind+'\',\''+f.k+'\','+f.step+')">+</button>'
+        +'</div><div class="live-lbl">'+escapeHtml(t(f.unit))+'</div></div>'; }).join('')
+    +'</div>'
+    +'<div class="live-bar"><div class="live-kind"><span>'+def.ico+'</span><span>'+escapeHtml(t(kind))+'</span></div>'
+    +'<button class="m-btn" onclick="'+def.act+'()">'+escapeHtml(t('stop'))+'</button></div>'; }
+function syncAuxPanel(){
+  var kind=auxRunning();
+  if(kind!==_auxLiveKind){
+    _auxLiveKind=kind;
+    document.getElementById('recipeNormal').style.display=kind?'none':'';
+    document.getElementById('recipeLive').style.display=kind?'':'none';
+    document.getElementById('recipeLiveTag').textContent=kind?t('liveAdjust'):'';
+    if(kind) renderAuxLive(kind); }
+  syncAux(); }
 
 // ── Recipe / ratio ──────────────────────────────────────────────────
 function adjust(key,delta){ settings[key]=parseFloat((settings[key]+delta).toFixed(1)); var c={doseIn:[5,30],doseOut:[10,80]}[key]; if(c) settings[key]=Math.max(c[0],Math.min(c[1],settings[key])); syncRecipe(); pushRecipe(); }
@@ -5634,7 +5748,7 @@ function loadWorkflow(){ api('GET','/api/v1/workflow').then(function(w){ if(!w) 
   if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.duration) settings.waterDur=w.hotWaterData.duration; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; }
   if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
     var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; }); if(match) curProfileObj=match; if(carItems.length) buildCarousel(); }
-  syncRecipe(); updateBeanInfo(); }).catch(function(){}); }
+  syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}); }
 function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
 
 // Initial device state via REST (WS may not push a snapshot immediately on connect)
