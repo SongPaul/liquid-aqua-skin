@@ -267,6 +267,9 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cc-meta{font-size:11px;color:var(--ink-mute);font-weight:500;text-align:center;margin-top:2px}
 .cc-hint{margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
 .cc-hint.current{color:var(--green)}
+.album.loaded{box-shadow:0 0 0 2px var(--green),0 6px 18px rgba(30,25,70,.14)}
+.album.loaded.center{box-shadow:0 0 0 3px var(--green),0 14px 32px rgba(80,70,160,.3)}
+.nav-card.loaded{box-shadow:0 0 0 2px var(--green)}
 /* card navigation strip: tap to load instantly */
 .nav-cards{display:flex;justify-content:center;gap:7px;margin-top:8px;overflow-x:auto;padding:2px 0 2px}
 .nav-cards::-webkit-scrollbar{height:0}
@@ -1075,7 +1078,7 @@ var I18N={
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight', target:'Target',
     lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
-    currentlyLoaded:'● Currently loaded', tapCenter:'Tap center card to load', noBean:'No bean selected', tapEdit:'Tap edit to add beans & grinder', noGrinder:'No grinder', grind:'Grind',
+    currentlyLoaded:'● Currently loaded', loadedIs:'● Loaded: {n} · tap center to change', tapCenter:'Tap center card to load', noBean:'No bean selected', tapEdit:'Tap edit to add beans & grinder', noGrinder:'No grinder', grind:'Grind',
     settings:'Settings', nightMode:'Night mode', nightModeDesc:'Dark theme for low-light environments.',
     autoNight:'Auto night mode', autoDyeName:'Auto-open shot log', autoDyeDesc:'Show the Log Your Espresso form as soon as a shot ends.',
     gatewayName:'Gateway', gatewayDesc:'Open the Decaid gateway web interface in a new tab.', open:'Open ↗',
@@ -1145,7 +1148,7 @@ var I18N={
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'무게', target:'목표',
     lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
-    currentlyLoaded:'● 현재 로드됨', tapCenter:'가운데 카드를 눌러 로드', noBean:'선택된 원두 없음', tapEdit:'편집을 눌러 원두·그라인더 추가', noGrinder:'그라인더 없음', grind:'분쇄도',
+    currentlyLoaded:'● 현재 로드됨', loadedIs:'● 현재: {n} · 가운데 카드를 눌러 변경', tapCenter:'가운데 카드를 눌러 로드', noBean:'선택된 원두 없음', tapEdit:'편집을 눌러 원두·그라인더 추가', noGrinder:'그라인더 없음', grind:'분쇄도',
     settings:'설정', nightMode:'나이트 모드', nightModeDesc:'저조도 환경용 다크 테마.',
     autoNight:'자동 나이트 모드', autoDyeName:'샷 기록 자동 열기', autoDyeDesc:'샷이 끝나면 기록 폼을 자동으로 표시.',
     gatewayName:'게이트웨이', gatewayDesc:'Decaid 게이트웨이 웹 화면을 새 탭에서 열기.', open:'열기 ↗',
@@ -2148,9 +2151,10 @@ function setProfileColor(id,key){
   }).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
 var carItems=[], carIndex=0;
 
-function carListProfiles(){ // favorites first; if none, first 6 profiles
+function carListProfiles(){ // favorites, with whatever is actually loaded pinned in front
   var favs=allProfiles.filter(function(p){ return favIds[p.id]; });
   if(!favs.length) favs=allProfiles.slice(0,6);
+  if(curProfileObj&&!favs.some(function(p){ return p.id===curProfileObj.id; })) favs=[curProfileObj].concat(favs);
   return favs;
 }
 function buildCarousel(){
@@ -2158,7 +2162,7 @@ function buildCarousel(){
   var stage=document.getElementById('carouselStage'); stage.innerHTML='';
   if(!carItems.length){ stage.innerHTML='<div class="car-empty">No profiles</div>'; return; }
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id;
-    var el=document.createElement('div'); el.className='album';
+    var el=document.createElement('div'); el.className='album'+(curProfileObj&&curProfileObj.id===p.id?' loaded':'');
     el.style.background=albumGrad(p,i);
     var curve=document.createElement('div'); curve.className='al-curve'; var cv=document.createElement('canvas'); curve.appendChild(cv);
     var st=splitTitle(title);
@@ -2172,7 +2176,7 @@ function buildCarousel(){
   // card navigation strip — tap a card to load that profile instantly
   var nav=document.getElementById('navCards'); nav.innerHTML='';
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id; var stn=splitTitle(title);
-    var c=document.createElement('div'); c.className='nav-card';
+    var c=document.createElement('div'); c.className='nav-card'+(curProfileObj&&curProfileObj.id===p.id?' loaded':'');
     c.style.background='linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35)),'+albumGrad(p,i);
     c.innerHTML='<span>'+escapeHtml(stn.name)+'</span>';
     c.title=title;
@@ -2202,7 +2206,11 @@ function renderCarousel(){
     document.getElementById('curName').textContent=stc.name;
     document.getElementById('curMeta').textContent=(stc.group?stc.group+' · ':'')+(pr.author||'')+' · '+((pr.steps&&pr.steps.length)||0)+' steps';
     var isCur=curProfileObj&&curProfileObj.id===cur.id;
-    var hint=document.getElementById('ccHint'); hint.textContent=isCur?t('currentlyLoaded'):t('tapCenter'); hint.className='cc-hint'+(isCur?' current':'');
+    var hint=document.getElementById('ccHint');
+    if(isCur){ hint.textContent=t('currentlyLoaded'); }
+    else if(curProfileObj){ hint.textContent=t('loadedIs').replace('{n}',splitTitle(profTitle(curProfileObj)).name); }
+    else { hint.textContent=t('tapCenter'); }
+    hint.className='cc-hint'+(isCur?' current':'');
   }
 }
 function carouselMove(dir){ if(!carItems.length) return; carIndex=(carIndex+dir+carItems.length)%carItems.length; renderCarousel(); }
