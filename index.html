@@ -1423,21 +1423,21 @@ function updateMachineUI(){
 function updateScaleUI(){ if(_asleep) return; var el=document.getElementById('weightNum'); var uEl=document.querySelector('.weight-unit'); if(uEl) uEl.textContent=weightUnitLabel();
   if(!state.scaleConnected||state.scaleWeight===null){ el.textContent=convWeight(0).toFixed(1); el.className='weight-num zero'; return; }
   el.textContent=convWeight(state.scaleWeight).toFixed(1); el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':''); }
-// Temperature -> RGB for the tank fill/waves. Cool blue when cold, teal/green mid,
-// amber/orange as it approaches brew temp, red when very hot (steam range).
-// The color is interpolated between anchor stops so it shifts a visible amount for
-// every degree, especially around the 90C brew zone rather than jumping in bands.
+// Temperature -> RGB for the tank fill/waves. Blue holds to 80C, then the ramp
+// runs through the warm hues one degree at a time and reaches red at 95C.
+// Values are interpolated between the anchors, so every degree in that window is
+// a visibly different colour.
 var TEMP_STOPS=[
-  [70,  56,189,248],  // cool blue
-  [80,  45,212,191],  // teal
-  [85,  16,185,129],  // green
-  [90, 132,204,22],   // lime (approaching brew)
-  [91, 190,190,16],   // yellow-green
-  [92, 234,179,8],    // yellow
-  [93, 245,158,11],   // amber (typical brew)
-  [94, 249,115,22],   // orange
-  [95, 234,88,12],    // deep orange
-  [105,239,68,68]     // red (very hot / steam)
+  [80,  56,189,248],  // blue up to 80
+  [82,  45,212,191],  // teal
+  [84,  16,185,129],  // green
+  [86, 132,204,22],   // lime
+  [88, 190,190,16],   // yellow-green
+  [90, 234,179,8],    // yellow
+  [91, 245,158,11],   // amber
+  [92, 249,115,22],   // orange
+  [93, 234,88,12],    // deep orange
+  [95, 239,68,68]     // red at 95 and above
 ];
 function tempColor(t){ t=t||0;
   var s=TEMP_STOPS;
@@ -1454,7 +1454,7 @@ function tempColor(t){ t=t||0;
 // when the boiler temperature spikes during extraction.
 var _dispColor=null;
 function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.water.current);
-  var low=(state.water.current<=state.water.refill||pct<15);
+  var low=!prefs.refillKitFull&&(state.water.current<=state.water.refill||pct<15);
   // Mix (brew water) temperature is the meaningful reference during a shot; the
   // group thermometer swings hard and made the color flicker green<->red.
   var t=state.mixTemp||state.groupTemp||0; var target=low?[239,68,68]:tempColor(t);
