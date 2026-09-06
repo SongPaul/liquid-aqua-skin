@@ -2170,7 +2170,7 @@ function buildCarousel(){
   var stage=document.getElementById('carouselStage'); stage.innerHTML='';
   if(!carItems.length){ stage.innerHTML='<div class="car-empty">No profiles</div>'; return; }
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id;
-    var el=document.createElement('div'); el.className='album'+(curProfileObj&&curProfileObj.id===p.id?' loaded':'');
+    var el=document.createElement('div'); el.className='album';
     el.style.background=albumGrad(p,i);
     var curve=document.createElement('div'); curve.className='al-curve'; var cv=document.createElement('canvas'); curve.appendChild(cv);
     var st=splitTitle(title);
@@ -2185,7 +2185,7 @@ function buildCarousel(){
   // card navigation strip — tap a card to load that profile instantly
   var nav=document.getElementById('navCards'); nav.innerHTML='';
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id; var stn=splitTitle(title);
-    var c=document.createElement('div'); c.className='nav-card'+(curProfileObj&&curProfileObj.id===p.id?' loaded':'');
+    var c=document.createElement('div'); c.className='nav-card';
     c.style.background='linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35)),'+albumGrad(p,i);
     c.innerHTML='<span>'+escapeHtml(stn.name)+'</span>'+(favIds[p.id]?'<i class="nc-fav">★</i>':'');
     c.title=title;
@@ -2207,7 +2207,9 @@ function renderCarousel(){
     var op=abs>2?0:(off===0?1:0.55);
     p._el.style.opacity=op; p._el.style.zIndex=100-abs; p._el.style.pointerEvents=abs>2?'none':'auto';
     p._el.classList.toggle('center', off===0); p._el.classList.toggle('side', off!==0);
-    if(p._navEl) p._navEl.classList.toggle('active', i===carIndex); });
+    var isLoaded=!!(curProfileObj&&curProfileObj.id===p.id);
+    p._el.classList.toggle('loaded', isLoaded);
+    if(p._navEl){ p._navEl.classList.toggle('active', i===carIndex); p._navEl.classList.toggle('loaded', isLoaded); } });
   // redraw center curve crisp at its scaled size after transform applies
   var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); }
   var cur=carItems[carIndex]; if(cur){ var pr=cur.profile||{};
@@ -2237,7 +2239,14 @@ function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
   saveFavs(); buildCarousel(); }
 
 function selectProfile(p){ var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
-  api('PUT','/api/v1/workflow',{profile:p.profile}).then(function(){ toast('▶ '+title,'ok'); renderCarousel(); }).catch(function(){ toast('Profile error','err'); }); }
+  api('PUT','/api/v1/workflow',{profile:p.profile}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast('Profile error','err'); }); }
+// A profile that is not in the strip has to be pinned into it first; one that is
+// only needs the marker moved, which keeps the carousel from jumping.
+function refreshCarouselMark(){
+  if(curProfileObj&&!carItems.some(function(x){ return x.id===curProfileObj.id; })){ buildCarousel(); return; }
+  var i=curProfileObj?carItems.findIndex(function(x){ return x.id===curProfileObj.id; }):-1;
+  if(i>=0) carIndex=i;
+  renderCarousel(); }
 function updateCurProfile(){ renderCarousel(); }
 
 // ── Profile Editor full page ────────────────────────────────────────
@@ -2588,8 +2597,7 @@ function drawEditCurve(){ var canvas=document.getElementById('epCurve'); if(!can
 // so they are what gets loaded; the profile itself is untouched until Save.
 function useEditedProfile(){ if(!editing) return;
   var known=allProfiles.find(function(x){ return x.id===editing.id; });
-  selectProfile(known&&!epDirty()?known:{ id:editing.id, profile:editing.profile, metadata:editing.metadata, isDefault:editing.isDefault });
-  buildCarousel(); }
+  selectProfile(known&&!epDirty()?known:{ id:editing.id, profile:editing.profile, metadata:editing.metadata, isDefault:editing.isDefault }); }
 function epDirty(){ var known=allProfiles.find(function(x){ return x.id===editing.id; });
   return !known||JSON.stringify(known.profile)!==JSON.stringify(editing.profile); }
 function saveProfilePage(){ if(!editing) return;
