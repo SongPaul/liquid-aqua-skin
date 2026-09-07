@@ -305,6 +305,8 @@ It is built to cost as close to nothing as a screen can:
 - the wake-lock override is **released**, so the tablet's own display timeout applies
 - the interface behind the lock stops painting, and the graph stops redrawing
 - the tank's wave animation is paused, not merely hidden
+
+The full-screen pages — beans, the profile editor, the shot log, settings — do the same while they are open: the interface behind them stops painting and its wave stops ticking, which takes a page from 38 to 5 ms of CPU per second.
 - brightness drops to your sleep level and is restored on wake
 
 Measured with the machine driven through idle and sleeping: **2 ms of CPU per second of wall clock** while asleep, against 26 ms awake.

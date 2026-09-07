@@ -77,7 +77,7 @@ body.overlay-active .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 .lockscreen{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 120% at 50% 40%,#1a1730,#0a0814);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .35s ease;cursor:pointer;-webkit-user-select:none;user-select:none;will-change:opacity;transform:translateZ(0)}
 .lockscreen.show{opacity:1;pointer-events:auto}
 /* During the sleep fade, drop the background glass blur so the transition is smooth. */
-body.asleep .app{visibility:hidden}
+body.asleep .app,body.page-open .app{visibility:hidden}
 body.asleep .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
 /* Burn-in guard: instead of moving the clock, we keep every pixel changing in place.
    All three animations are opacity/filter/transform only (GPU composite, no paint),
@@ -1539,7 +1539,7 @@ function startTimer(){ state.shotStart=Date.now(); if(state.shotTick) clearInter
 function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
 function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000); document.getElementById('timerBig').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 var _chartRAF=null;
-function drawChart(){ if(_asleep||_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
+function drawChart(){ if(_asleep||_pageOpen||_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
 var _chartDims={w:0,h:0}; var _chartLegendMode=null; var _chartBg=null, _chartBgKey=null;
 function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
@@ -1910,8 +1910,8 @@ function openSettingsPage(){ document.getElementById('settingsPage').classList.a
   api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='display'||spCat==='machine') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/display').then(function(d){ displayState=d||{}; if(spCat==='display') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/machine/info').then(function(i){ machineInfo=i||{}; if(spCat==='machine') renderSpContent(); }).catch(function(){});
-  spSelect(spCat); }
-function closeSettingsPage(){ document.getElementById('settingsPage').classList.remove('show'); }
+  spSelect(spCat); afterPageChange(); }
+function closeSettingsPage(){ document.getElementById('settingsPage').classList.remove('show'); afterPageChange(); }
 function renderSpNav(){ var nav=document.getElementById('spNav'); nav.innerHTML='';
   SP_CATS.forEach(function(c){ var b=document.createElement('button'); b.className='sp-nav-item'+(c.id===spCat?' active':'');
     b.innerHTML='<span class="ic">'+c.ic+'</span><span>'+t(c.key)+'</span>'; b.onclick=function(){ spSelect(c.id); }; nav.appendChild(b); }); }
@@ -2277,10 +2277,11 @@ function updateCurProfile(){ renderCarousel(); }
 
 // ── Profile Editor full page ────────────────────────────────────────
 var epSelected=null;
-function openEditPage(){ renderEpList(); loadRecentProfiles().then(renderEpList); document.getElementById('editPage').classList.add('show');
+function openEditPage(){ renderEpList(); loadRecentProfiles().then(renderEpList); document.getElementById('editPage').classList.add('show'); afterPageChange();
   // open the currently centered profile by default
   var c=carItems[carIndex]||allProfiles[0]; if(c) epSelect(c); }
-function closeEditPage(){ document.getElementById('editPage').classList.remove('show'); }
+function closeEditPage(){ document.getElementById('editPage').classList.remove('show'); afterPageChange();
+  if(_backToBean){ _backToBean=false; openBeanModal(); } }
 var epItemEls={};       // id -> row element (to toggle .active without full rebuild)
 var epCurveObserver=null; // lazily draw curves only when a row scrolls into view
 function ensureCurveObserver(){ if(epCurveObserver||!('IntersectionObserver' in window)) return;
@@ -2666,8 +2667,19 @@ function openGrinderPage(){
     var g=currentGrinder()||grinders[0];
     if(g){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; }
     renderBgList(); renderBgEditor(); }); }
-function openBeanModal(){ document.getElementById('beanPage').classList.add('show'); loadBeansGrinders(); }
-function closeBeanPage(){ document.getElementById('beanPage').classList.remove('show'); }
+function openBeanModal(){ document.getElementById('beanPage').classList.add('show'); afterPageChange(); loadBeansGrinders(); }
+function closeBeanPage(){ document.getElementById('beanPage').classList.remove('show'); afterPageChange(); }
+// The four full-screen pages sit on top of the whole interface, which kept
+// laying out and painting behind them -- the same waste the sleep screen used
+// to have. Modals are not covered by this: they dim the app rather than hide it.
+var _pageOpen=false;
+function afterPageChange(){
+  var open=!!document.querySelector('.editpage.show');
+  if(open===_pageOpen) return;
+  _pageOpen=open;
+  document.body.classList.toggle('page-open', open);
+  pauseSvgAnimations(open);
+  if(!open){ _chartBgKey=null; drawChart(); updateMachineUI(); updateWaterUI(); updateScaleUI(); } }
 // ── Bean / BeanBatch ─────────────────────────────────────────────────
 // Roast date and roast level live on a BeanBatch, not on the Bean. The editor
 // works with one batch per bean - the most recent roast - and creates it lazily.
@@ -3058,10 +3070,10 @@ function renderBeanStats(){
 // The list rows carry no measurements -- the gateway only sends those for a
 // single shot -- so opening one hands it to the shot log, which fetches the
 // recording and draws what actually happened.
-var histRows=[];
+var histRows=[], _backToBean=false;
 function openShotFromHistory(i){
   var sh=histRows&&histRows[i]; if(!sh) return;
-  closeBeanPage();
+  _backToBean=true; closeBeanPage();
   document.getElementById('shotLogPage').classList.add('show');
   loadShotList(sh); }
 function fmtShotWhen(sh){ var v=sh.timestamp||sh.createdAt||''; var d=new Date(v); if(isNaN(d)) return '';
@@ -3155,7 +3167,7 @@ function useProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return; use
 // Editing leaves the bean page rather than stacking a second full-screen page on it.
 function editProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return;
   var known=allProfiles.find(function(x){ return x.id===r.p.id; })||r.p;
-  closeBeanPage(); openEditPage(); epSelect(known); }
+  _backToBean=true; closeBeanPage(); openEditPage(); epSelect(known); }
 // The history pane already lists every shot; this narrows it to one profile.
 function histProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return;
   histProfile=profTitle(r.p); setBgTab('history'); renderBeanStats(); }
@@ -5832,8 +5844,9 @@ function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return
 
 // ── Shot Log history page ───────────────────────────────────────────
 var shotList=[], slSel=null, lastShotSummary=null;
-function openShotLog(){ document.getElementById('shotLogPage').classList.add('show'); loadShotList(); }
-function closeShotLog(){ document.getElementById('shotLogPage').classList.remove('show'); }
+function openShotLog(){ document.getElementById('shotLogPage').classList.add('show'); afterPageChange(); loadShotList(); }
+function closeShotLog(){ document.getElementById('shotLogPage').classList.remove('show'); afterPageChange();
+  if(_backToBean){ _backToBean=false; openBeanModal(); } }
 function fmtShotDate(s){ var d=new Date(s.createdAt||s.timestamp); if(isNaN(d)) return s.timestamp||''; return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
 function loadShotList(pick){ var list=document.getElementById('slList'); list.innerHTML='<div class="ep-group-head">Loading…</div>';
   api('GET','/api/v1/shots?limit=50').then(function(r){ shotList=(r&&(r.items||r.shots))||[]; renderShotList();
