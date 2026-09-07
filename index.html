@@ -368,6 +368,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* ── Profile Editor full page ────────────────────────────────────── */
 .editpage{position:fixed;inset:0;z-index:250;background:linear-gradient(135deg,#eef1ff,#f5edff);display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:scale(1.02);transition:opacity .25s,transform .25s}
 .editpage.show{opacity:1;pointer-events:auto;transform:scale(1)}
+body.page-swap .editpage{transition:none}
 .ep-head{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--glass-line);background:rgba(255,255,255,.6)}
 .ep-title{font-size:20px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .ep-close{min-height:44px;padding:10px 18px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
@@ -2280,8 +2281,12 @@ var epSelected=null;
 function openEditPage(){ renderEpList(); loadRecentProfiles().then(renderEpList); document.getElementById('editPage').classList.add('show'); afterPageChange();
   // open the currently centered profile by default
   var c=carItems[carIndex]||allProfiles[0]; if(c) epSelect(c); }
-function closeEditPage(){ document.getElementById('editPage').classList.remove('show'); afterPageChange();
-  if(_backToBean){ _backToBean=false; openBeanModal(); } }
+function closeEditPage(){
+  if(_backToBean){ _backToBean=false;
+    swapPage(function(){ document.getElementById('editPage').classList.remove('show');
+      document.getElementById('beanPage').classList.add('show'); });
+    loadBeansGrinders(); return; }
+  document.getElementById('editPage').classList.remove('show'); afterPageChange(); }
 var epItemEls={};       // id -> row element (to toggle .active without full rebuild)
 var epCurveObserver=null; // lazily draw curves only when a row scrolls into view
 function ensureCurveObserver(){ if(epCurveObserver||!('IntersectionObserver' in window)) return;
@@ -2672,14 +2677,28 @@ function closeBeanPage(){ document.getElementById('beanPage').classList.remove('
 // The four full-screen pages sit on top of the whole interface, which kept
 // laying out and painting behind them -- the same waste the sleep screen used
 // to have. Modals are not covered by this: they dim the app rather than hide it.
-var _pageOpen=false;
+var _pageOpen=false, _pageQ=false;
+// Handing one page to another closes the first and opens the second in the same
+// tick. Evaluated eagerly that unhides the whole interface and hides it again,
+// which is two full-screen invalidations for no visible reason -- so settle once,
+// on the next frame, against whatever the final state is.
 function afterPageChange(){
-  var open=!!document.querySelector('.editpage.show');
-  if(open===_pageOpen) return;
-  _pageOpen=open;
-  document.body.classList.toggle('page-open', open);
-  pauseSvgAnimations(open);
-  if(!open){ _chartBgKey=null; drawChart(); updateMachineUI(); updateWaterUI(); updateScaleUI(); } }
+  if(_pageQ) return; _pageQ=true;
+  requestAnimationFrame(function(){ _pageQ=false;
+    var open=!!document.querySelector('.editpage.show');
+    if(open===_pageOpen) return;
+    _pageOpen=open;
+    document.body.classList.toggle('page-open', open);
+    pauseSvgAnimations(open);
+    if(!open){ _chartBgKey=null; drawChart(); updateMachineUI(); updateWaterUI(); updateScaleUI(); } }); }
+// Two full-screen pages cross-fading and scaling at once is the jank you can see;
+// a swap is instant, an ordinary open or close still animates.
+function swapPage(fn){
+  document.body.classList.add('page-swap');
+  fn();
+  afterPageChange();
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ document.body.classList.remove('page-swap'); }); }); }
 // ── Bean / BeanBatch ─────────────────────────────────────────────────
 // Roast date and roast level live on a BeanBatch, not on the Bean. The editor
 // works with one batch per bean - the most recent roast - and creates it lazily.
@@ -3073,9 +3092,14 @@ function renderBeanStats(){
 var histRows=[], _backToBean=false;
 function openShotFromHistory(i){
   var sh=histRows&&histRows[i]; if(!sh) return;
-  _backToBean=true; closeBeanPage();
-  document.getElementById('shotLogPage').classList.add('show');
-  loadShotList(sh); }
+  _backToBean=true;
+  swapPage(function(){
+    document.getElementById('beanPage').classList.remove('show');
+    document.getElementById('shotLogPage').classList.add('show'); });
+  // the recording is a single small fetch; the fifty-shot list is the slow one,
+  // so show the shot first and let the list arrive behind it
+  loadShotList(null,true);
+  slSelect(sh); }
 function fmtShotWhen(sh){ var v=sh.timestamp||sh.createdAt||''; var d=new Date(v); if(isNaN(d)) return '';
   try{ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}); }
   catch(_){ return isoDay(v); } }
@@ -3167,7 +3191,12 @@ function useProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return; use
 // Editing leaves the bean page rather than stacking a second full-screen page on it.
 function editProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return;
   var known=allProfiles.find(function(x){ return x.id===r.p.id; })||r.p;
-  _backToBean=true; closeBeanPage(); openEditPage(); epSelect(known); }
+  _backToBean=true;
+  swapPage(function(){
+    document.getElementById('beanPage').classList.remove('show');
+    renderEpList(); document.getElementById('editPage').classList.add('show'); });
+  loadRecentProfiles().then(renderEpList);
+  epSelect(known); }
 // The history pane already lists every shot; this narrows it to one profile.
 function histProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return;
   histProfile=profTitle(r.p); setBgTab('history'); renderBeanStats(); }
@@ -5845,19 +5874,26 @@ function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return
 // ── Shot Log history page ───────────────────────────────────────────
 var shotList=[], slSel=null, lastShotSummary=null;
 function openShotLog(){ document.getElementById('shotLogPage').classList.add('show'); afterPageChange(); loadShotList(); }
-function closeShotLog(){ document.getElementById('shotLogPage').classList.remove('show'); afterPageChange();
-  if(_backToBean){ _backToBean=false; openBeanModal(); } }
+function closeShotLog(){
+  if(_backToBean){ _backToBean=false;
+    swapPage(function(){ document.getElementById('shotLogPage').classList.remove('show');
+      document.getElementById('beanPage').classList.add('show'); });
+    loadBeansGrinders(); return; }
+  document.getElementById('shotLogPage').classList.remove('show'); afterPageChange(); }
 function fmtShotDate(s){ var d=new Date(s.createdAt||s.timestamp); if(isNaN(d)) return s.timestamp||''; return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
-function loadShotList(pick){ var list=document.getElementById('slList'); list.innerHTML='<div class="ep-group-head">Loading…</div>';
-  api('GET','/api/v1/shots?limit=50').then(function(r){ shotList=(r&&(r.items||r.shots))||[]; renderShotList();
+var slLoading=false;
+function loadShotList(pick,keep){ slLoading=true; renderShotList();
+  var list=document.getElementById('slList');
+  return api('GET','/api/v1/shots?limit=50').then(function(r){ shotList=(r&&(r.items||r.shots))||[]; slLoading=false; renderShotList();
+    if(keep) return;
     // a shot older than the newest fifty is still openable -- slSelect only needs its id
     var want=pick&&(shotList.find(function(x){ return x.id===pick.id; })||pick);
     if(want) slSelect(want);
     else if(shotList.length) slSelect(shotList[0]);
     else document.getElementById('slDetail').innerHTML='<div class="ep-placeholder">No shots recorded yet</div>';
-  }).catch(function(){ list.innerHTML='<div class="ep-placeholder">Connect to load shots</div>'; }); }
-function renderShotList(){ var list=document.getElementById('slList'); list.innerHTML='';
-  if(!shotList.length){ list.innerHTML='<div class="ep-placeholder">No shots</div>'; return; }
+  }).catch(function(){ slLoading=false; list.innerHTML='<div class="ep-placeholder">Connect to load shots</div>'; }); }
+function renderShotList(){ var list=document.getElementById('slList'); if(!list) return; list.innerHTML='';
+  if(!shotList.length){ list.innerHTML=slLoading?'<div class="ep-group-head">Loading…</div>':'<div class="ep-placeholder">No shots</div>'; return; }
   var hd=document.createElement('div'); hd.className='ep-group-head'; hd.textContent='Recent · '+shotList.length; list.appendChild(hd);
   shotList.forEach(function(s){ var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
     var it=document.createElement('div'); it.className='ep-item'+(slSel&&slSel.id===s.id?' active':'');
