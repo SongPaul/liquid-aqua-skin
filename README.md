@@ -186,7 +186,7 @@ One action, full screen: the graph worth watching and the numbers worth reading 
 
 The two graphs share a width, a padding and a sample count, so a moment on one is directly above the same moment on the other. Splitting them lets the extraction graph keep its whole height for pressure and flow instead of sharing it with a temperature axis.
 
-A monitor that opened itself closes itself when the action ends. One you opened by hand stays until you close it.
+**The monitor outlives the action.** However it was opened, it stays until you close it — the graph and the numbers are worth reading after the pour, not just during it. Stop withdraws when there is nothing left to stop, and the heading keeps describing what is on screen: a finished steam still reads *Steam*, with its own settings, until you close the page or the next action starts.
 
 ---
 

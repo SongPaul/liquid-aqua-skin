@@ -6683,7 +6683,7 @@ function refreshAiPanel(){ var el=document.getElementById('slAi'); if(el) el.out
 // One action, full screen: the graph it is worth watching, the numbers worth
 // reading across a room, and nothing else. Opens itself when an action starts if
 // the setting says so, and can always be opened by tapping the graph.
-var _monOpen=false, _monAuto=false;
+var _monOpen=false;
 var MON_STATES={espresso:1,steam:1,flush:1,hotWater:1};
 function monBeanLine(){
   var c=context||{}, bits=[];
@@ -6694,13 +6694,15 @@ function monBeanLine(){
   return bits.join('  ·  '); }
 // Which of the aux settings an action is running on, if any.
 var MON_AUX={steam:'steam',flush:'flush',hotWater:'water'};
+// What the graph is showing, which is what the heading describes.
+var MON_MODE_AUX={steam:'steam',flush:'flush',water:'water'};
 function syncMonitorHead(){
   if(!_monOpen) return;
-  var st=state.machine.state, kind=MON_AUX[st];
+  var st=state.machine.state, kind=MON_MODE_AUX[chart.mode];
   // Steam, flush and water are not pulled on a profile and have nothing to do
   // with the bean, so the action names itself and the chip would only repeat it.
   if(kind){
-    document.getElementById('monTitle').textContent=t(st==='hotWater'?'water':st);
+    document.getElementById('monTitle').textContent=t(kind);
     document.getElementById('monBean').textContent='';
     document.getElementById('monState').textContent='';
   } else {
@@ -6724,7 +6726,7 @@ function syncMonitorLive(){
   w.firstChild.nodeValue=convWeight(v).toFixed(1); }
 function openMonitor(auto){
   if(_monOpen) return;
-  _monOpen=true; _monAuto=!!auto;
+  _monOpen=true;
   document.getElementById('monPage').classList.add('show');
   afterPageChange();
   // the two canvases are different sizes, so the cached backing-store dimensions
@@ -6735,7 +6737,7 @@ function openMonitor(auto){
   tick(); drawChart(); }
 function closeMonitor(){
   if(!_monOpen) return;
-  _monOpen=false; _monAuto=false;
+  _monOpen=false;
   document.getElementById('monPage').classList.remove('show');
   afterPageChange();
   _chartDims.w=0; _chartDims.h=0; _chartLegendMode=null; _chartBgKey=null; _tempBgKey=null;
@@ -6749,12 +6751,12 @@ function monStop(){
   api('PUT','/api/v1/machine/state/idle')
     .then(function(){ toast(t('stopped'),'ok'); })
     .catch(function(){ toast(t('stopFailed'),'err'); }); }
-// An action starting opens the monitor when asked; one ending closes it again
-// only if it was the action that opened it.
+// An action starting opens the monitor when asked. An action ending does not
+// take it away again: the graph and the numbers are worth reading after the fact,
+// and the page goes when it is closed.
 function monitorOnState(st,prev){
   var now=!!MON_STATES[st], was=!!MON_STATES[prev];
   if(now&&!was&&prefs.monAuto&&!_monOpen&&!_asleep) openMonitor(true);
-  else if(!now&&was&&_monOpen&&_monAuto) closeMonitor();
   if(_monOpen) syncMonitorHead(); }
 // GHC presence arrives after the machine connects, so a monitor already open has
 // to be told.
