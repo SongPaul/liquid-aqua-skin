@@ -212,7 +212,13 @@ It opens on **Bean**. A new bean has no History tab yet, and the Profiles tab ca
 
 ![Profiles for this bean](docs/bean-profiles.png)
 
-One list, whatever the source. Each row is the profile's curve, its name and the badges that apply — `Pick 1` with the reason the AI gave, `14 shots` with the date it was last used, or both on the same row when a suggestion is also something you already brew. **Use** loads it.
+One list, whatever the source. Each row is the profile's curve, its name and the badges that apply — `Pick 1` with the reason the AI gave, `14 shots` with the date it was last used, or both on the same row when a suggestion is also something you already brew.
+
+| | |
+|---|---|
+| **Use** | loads it onto the machine |
+| **Edit** | opens it in the profile editor |
+| **History** | jumps to the History tab showing only the shots pulled with it — the averages recompute for that profile alone, and the chip clears the filter |
 
 - **Suggest a profile for this bean** asks AI which of *your installed* profiles suits this coffee, and ranks five. Saved with the bean, so reopening it costs no API call.
 - The counts come from your own shot history — no AI needed.

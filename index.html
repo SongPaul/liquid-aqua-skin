@@ -41,6 +41,7 @@ body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle
 body.night .ep-aibtn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ms-btn:hover{background:rgba(139,92,246,.28)}
 body.night .bg-tab2.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
+body.night .bh-filter{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .car-nav,body.night .fav-btn,body.night .aux-chip,body.night .bh-cell,body.night .bg-tab2,body.night .prow{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
 body.night .kp-key{color:var(--ink)}
 body.night .car-nav:hover,body.night .ep-stepnav .nav:hover{background:rgba(255,255,255,.14)}
@@ -490,7 +491,11 @@ body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255
 .prow-badge{display:inline-flex;align-items:center;min-height:18px;padding:0 7px;border-radius:100px;font-size:11px;font-weight:800;margin-right:6px}
 .prow-badge.rec{background:rgba(99,102,241,.12);color:var(--accent)}
 .prow-badge.use{background:rgba(16,185,129,.14);color:var(--green)}
+.prow-acts{flex:none;display:flex;align-items:center;gap:6px}
 .prow-use{flex:none;min-height:40px;padding:8px 16px;font-size:12px}
+.prow-side{flex:none;min-height:40px;padding:8px 12px;font-size:11px;color:var(--ink-mute)}
+.bh-filter{display:inline-flex;align-items:center;min-height:34px;margin-bottom:10px;padding:0 12px;border-radius:100px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.1);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:800;cursor:pointer;-webkit-appearance:none}
+.bh-filter:hover{background:rgba(99,102,241,.18)}
 .bg-title{font-size:18px;font-weight:800;margin-bottom:12px}
 .bg-tabs2{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--glass-line);padding-bottom:10px}
 .bg-tab2{min-height:40px;padding:0 14px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;font-weight:800;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;transition:all .15s}
@@ -1149,7 +1154,7 @@ var I18N={
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
-    usageHead:'Most used with this bean', usageCount:'{n} shots', profHead:'Profiles for this bean', recRank:'Pick {n}', avgGrind:'Avg grind', shotList:'Every shot', showingN:'latest {n}', tabBeanInfo:'Bean', tabBeanProfiles:'Profiles', tabBeanHistory:'History', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
+    usageHead:'Most used with this bean', usageCount:'{n} shots', profHead:'Profiles for this bean', recRank:'Pick {n}', avgGrind:'Avg grind', shotList:'Every shot', noShotsForProfile:'No shots with this profile', showingN:'latest {n}', tabBeanInfo:'Bean', tabBeanProfiles:'Profiles', tabBeanHistory:'History', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
     recFailed:'Suggestion failed:', recNoMatch:'No profile matched', recNoProfiles:'No espresso profiles installed', use:'Use',
     cardColor:'Card colour', auto:'Auto', customColor:'Pick any colour',
     batch:'Batch', newBatch:'New batch', batchNoDate:'No date', confirmDeleteBatch:'Delete this batch?',
@@ -1219,7 +1224,7 @@ var I18N={
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
-    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', profHead:'이 원두의 프로파일', recRank:'추천 {n}', avgGrind:'평균 분쇄도', shotList:'추출 기록', showingN:'최근 {n}건', tabBeanInfo:'원두 정보', tabBeanProfiles:'추출 프로파일', tabBeanHistory:'기록', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
+    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', profHead:'이 원두의 프로파일', recRank:'추천 {n}', avgGrind:'평균 분쇄도', shotList:'추출 기록', noShotsForProfile:'이 프로파일로 내린 샷 없음', showingN:'최근 {n}건', tabBeanInfo:'원두 정보', tabBeanProfiles:'추출 프로파일', tabBeanHistory:'기록', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
     recFailed:'추천 실패:', recNoMatch:'일치하는 프로파일이 없습니다', recNoProfiles:'설치된 에스프레소 프로파일이 없습니다', use:'사용',
     cardColor:'카드 색', auto:'자동', customColor:'직접 지정',
     batch:'배치', newBatch:'새 배치', batchNoDate:'날짜 없음', confirmDeleteBatch:'이 배치를 삭제할까요?',
@@ -2813,7 +2818,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
     if(!bgNewBatch&&!bgBatchId&&_bl.length) bgBatchId=_bl[0].id;
     var batch=bgNewBatch?{}:(_bl.filter(function(b){ return b.id===bgBatchId; })[0]||_bl[0]||{});
     if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); usageResults=null; _usageFor=null;
-      bgBatchId=null; bgNewBatch=false; }
+      bgBatchId=null; bgNewBatch=false; histProfile=null; }
     recPfx='bg';
     if(isNew) bgPane='info';
     wrap.innerHTML='<div class="bg-title">'+t(isNew?'newBean':'editBean')+'</div>'
@@ -2933,7 +2938,7 @@ function loadBeanUsage(pfx){
   var key=id||(roaster+'|'+name);
   if(!name&&!roaster){ usageResults=null; usageStats=null; _usageFor=null; renderUsageBox(); renderBeanStats(); return Promise.resolve(); }
   if(_usageFor===key) return Promise.resolve();
-  _usageFor=key; usageBusy=true; usageResults=null; usageStats=null; renderUsageBox(); renderBeanStats();
+  _usageFor=key; usageBusy=true; usageResults=null; usageStats=null; histProfile=null; renderUsageBox(); renderBeanStats();
   var qs=[];
   if(name||roaster) qs.push('/api/v1/shots?limit=100'
     +(name?'&coffeeName='+encodeURIComponent(name):'')
@@ -2998,12 +3003,19 @@ function avgGrind(rows){
     return (Math.round(a*100)/100).toString(); }
   return best; }
 function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
+var histProfile=null;
 function renderBeanStats(){
   renderBgTabs();
   var box=document.getElementById(recPfx+'Stats'); if(!box) return;
-  var st=usageStats;
+  var all=usageShots||[];
+  var picked=histProfile?all.filter(function(sh){ return (((sh.workflow||{}).profile)||{}).title===histProfile; }):all;
+  var st=histProfile?beanStatsFrom(picked):usageStats;
   if(usageBusy){ box.style.display=''; box.innerHTML='<div class="rec-wait">'+escapeHtml(t('usageWorking'))+'</div>'; return; }
-  if(!st||!st.n){ box.style.display='none'; box.innerHTML=''; return; }
+  if(!st||!st.n){
+    if(histProfile){ box.style.display='';
+      box.innerHTML='<button class="bh-filter" onclick="clearHistProfile()">'+escapeHtml(splitTitle(histProfile).name)+' \u00d7</button>'
+        +'<div class="rec-wait">'+escapeHtml(t('noShotsForProfile'))+'</div>'; return; }
+    box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='';
   var span=st.first&&st.last&&fmtShortDate(st.first)!==fmtShortDate(st.last)
     ? fmtShortDate(st.first)+' \u2013 '+fmtShortDate(st.last) : fmtShortDate(st.last);
@@ -3013,7 +3025,7 @@ function renderBeanStats(){
          +cell(st.ratio?('1:'+st.ratio.toFixed(1)):'\u2014', t('avgRatio'))
          +cell(st.grind!=null?st.grind:'\u2014', t('avgGrind'))
          +(st.starN?cell(st.stars.toFixed(1)+'\u2605', t('avgRating')):'');
-  var shots=(usageShots||[]).slice(0,20);
+  var shots=picked.slice(0,20);
   var list=shots.map(function(sh,i){
     var c=((sh.workflow||{}).context)||{}, a=sh.annotations||{};
     var pr=((sh.workflow||{}).profile)||{};
@@ -3030,6 +3042,8 @@ function renderBeanStats(){
       +'</div></div>'; }).join('');
   box.innerHTML='<div class="bh-head"><span>'+escapeHtml(t('histHead'))+'</span>'
       +'<span class="bh-sub">'+escapeHtml(t('usageCount').replace('{n}',st.n)+(span?' \u00b7 '+span:''))+'</span></div>'
+    +(histProfile?'<button class="bh-filter" onclick="clearHistProfile()">'
+        +escapeHtml(splitTitle(histProfile).name)+' \u00d7</button>':'')
     +'<div class="bh-nums">'+nums+'</div>'
     +(list?'<div class="bh-glist"><div class="bh-gh">'+escapeHtml(t('shotList'))
         +(st.n>shots.length?' \u00b7 '+escapeHtml(t('showingN').replace('{n}',shots.length)):'')+'</div>'
@@ -3114,13 +3128,25 @@ function renderProfileList(){
         +'<div class="prow-curve" style="background:'+albumGrad(r.p,i)+'"><canvas></canvas></div>'
         +'<div class="prow-body"><div class="prow-name">'+escapeHtml(splitTitle(profTitle(r.p)).name)+'</div>'
         +meta.map(function(m){ return '<div class="prow-meta">'+m+'</div>'; }).join('')+'</div>'
-        +(canUse?'<button class="m-btn prow-use" onclick="useProfileRow('+i+')">'+escapeHtml(t('use'))+'</button>':'')
+        +(canUse?'<div class="prow-acts">'
+            +'<button class="m-btn prow-use" onclick="useProfileRow('+i+')">'+escapeHtml(t('use'))+'</button>'
+            +'<button class="m-btn prow-side" onclick="editProfileRow('+i+')">'+escapeHtml(t('edit'))+'</button>'
+            +(r.use?'<button class="m-btn prow-side" onclick="histProfileRow('+i+')">'+escapeHtml(t('tabBeanHistory'))+'</button>':'')
+          +'</div>':'')
       +'</div>'; }).join('')+'</div>';
   var cvs=box.querySelectorAll('.prow-curve canvas');
   rows.forEach(function(r,i){ var cv=cvs[i]; if(cv) setTimeout(function(){ drawSimCurve(cv,r.p.profile,true); },0); }); }
 function renderRecBox(){ renderProfileList(); renderBgTabs(); }
 function renderUsageBox(){ renderProfileList(); renderBgTabs(); }
 function useProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return; useProfileObj(r.p); }
+// Editing leaves the bean page rather than stacking a second full-screen page on it.
+function editProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return;
+  var known=allProfiles.find(function(x){ return x.id===r.p.id; })||r.p;
+  closeBeanPage(); openEditPage(); epSelect(known); }
+// The history pane already lists every shot; this narrows it to one profile.
+function histProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return;
+  histProfile=profTitle(r.p); setBgTab('history'); renderBeanStats(); }
+function clearHistProfile(){ histProfile=null; renderBeanStats(); }
 function useProfileObj(p){
   selectProfile(p);
   var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
