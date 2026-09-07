@@ -196,27 +196,39 @@ With a Gemini key set, **✨ Scan label with AI** fills the form from a photo of
 
 The scan keeps what the bag says, in the language the bag says it, and puts anything that has no field of its own into the notes. Scanning a coffee you already have offers to add it as a **new batch** rather than a duplicate bean.
 
-### Suggestions and history
+### Three panes
 
-Two carousels at the top of the bean, side by side:
+A bean page does three separate jobs, so it has a tab each:
 
-- **Suggested profiles** — ask AI which of *your installed* profiles suits this coffee. Five ranked cards, each with its curve and a one-line reason. Saved with the bean, so reopening it costs no API call.
-- **Most used with this bean** — counted from your own shot history, with how many shots and when the last one was.
+| | |
+|---|---|
+| **Bean** | the scan strip, every field, the batch |
+| **Profiles** | which profile for this coffee |
+| **History** | what it has actually been pulled at |
 
-**Use** on either loads that profile.
+It opens on **Bean**. A new bean has no History tab yet, and the Profiles tab carries a count as soon as a scan produces suggestions, so a scan's result is visible from the pane you are typing in.
+
+### Profiles for this bean
+
+![Profiles for this bean](docs/bean-profiles.png)
+
+One list, whatever the source. Each row is the profile's curve, its name and the badges that apply — `Pick 1` with the reason the AI gave, `14 shots` with the date it was last used, or both on the same row when a suggestion is also something you already brew. **Use** loads it.
+
+- **Suggest a profile for this bean** asks AI which of *your installed* profiles suits this coffee, and ranks five. Saved with the bean, so reopening it costs no API call.
+- The counts come from your own shot history — no AI needed.
 
 ### This bean so far
 
 ![This bean so far](docs/bean-history.png)
 
-Everything the shot history knows about this coffee, in one panel — it appears once the bean has been pulled at least once and stays hidden until then.
+Everything the shot history knows about this coffee. It appears once the bean has been pulled at least once.
 
 | | |
 |---|---|
-| **Avg dose / yield / ratio** | Averaged over every recorded shot. A shot's own annotation wins over the recipe it was pulled with, because that is what really landed on the scale. The ratio is averaged per shot, not derived from the two averages |
+| **Avg dose / yield / ratio / grind** | Averaged over every recorded shot. A shot's own annotation wins over the recipe it was pulled with, because that is what really landed on the scale. The ratio is averaged per shot, not derived from the two averages. Grind averages the numbers when the grinder uses a dial, and falls back to the setting used most when it uses named positions |
 | **Avg rating** | Shown only if you have rated any of them |
 | **Shot count and date range** | Beside the heading |
-| **Grinder & grind used** | Every grinder-and-setting pair this coffee has gone through, most used first, with a count and when it was last used |
+| **Every shot** | The latest 20, each with its profile's curve, when it was pulled, dose to yield with the ratio, the grinder and grind it went through, and its rating |
 
 ### Grinders
 
