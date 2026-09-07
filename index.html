@@ -2017,7 +2017,7 @@ function loadPresets(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prese
   if(!presets.steam.length) presets.steam=[{n:'Latte',temp:150,dur:50,flow:0.8},{n:'Cappa',temp:155,dur:40,flow:1.0}];
   if(!presets.flush.length) presets.flush=[{n:'Quick',temp:88,dur:5,flow:6},{n:'Deep',temp:92,dur:12,flow:6.5}];
   if(!presets.water.length) presets.water=[{n:'Tea',temp:95,vol:250,dur:40,flow:10},{n:'Americano',temp:80,vol:120,dur:20,flow:8}]; }
-function savePresets(){ try{ localStorage.setItem('aurora_presets',JSON.stringify(presets)); }catch(_){} }
+function savePresets(){ lsSet('aurora_presets',presets); storeSave('presets',presets); }
 function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); wrap.innerHTML='';
   presets[kind].forEach(function(ps,i){ var chip=document.createElement('button'); chip.className='preset-chip';
     chip.innerHTML='<span>'+escapeHtml(ps.n)+'</span>';
@@ -2146,6 +2146,66 @@ function syncRecipe(){
     document.getElementById('monYield').textContent=settings.doseOut.toFixed(1);
     document.getElementById('monRatio').textContent=ratio?('1:'+ratio.toFixed(1)):'—'; } }
 
+// ── Settings that survive an update ─────────────────────────────────
+// The gateway serves each skin generation from its own port, so every update
+// lands the browser on a new origin and localStorage starts empty. Anything kept
+// only there is lost on the next patch. The gateway's key-value store is the one
+// place that outlives a generation, so it holds the settings and localStorage
+// stays as a same-origin cache -- which also keeps the skin usable when the
+// gateway cannot be reached.
+var STORE_NS='liquid-aqua';
+var STORE_KEYS=['prefs','favs','presets','shotai'];
+var _storeT={}, _storeReady=false;
+function storeUrl(key){ return '/api/v1/store/'+STORE_NS+(key?('/'+key):''); }
+// POST, not PUT: the spec says PUT but the gateway answers 404 to it.
+function storePut(key,value){
+  return api('POST',storeUrl(key),value).catch(function(){}); }
+function storeAll(){
+  return api('GET',storeUrl()+'?full=1').catch(function(){ return null; }); }
+// Settings change a toggle at a time; the trailing edge is enough.
+function storeSave(key,value){
+  if(_storeT[key]) clearTimeout(_storeT[key]);
+  _storeT[key]=setTimeout(function(){ _storeT[key]=null; storePut(key,value); },400); }
+function lsGet(name){ try{ return JSON.parse(localStorage.getItem(name)||'null'); }catch(_){ return null; } }
+function lsSet(name,value){ try{ localStorage.setItem(name,JSON.stringify(value)); }catch(_){} }
+
+// Read the store, apply whatever it holds, and push up anything it is missing so
+// the settings this browser still has are carried over on the first run after an
+// update rather than lost.
+function hydrateFromStore(){
+  return storeAll().then(function(all){
+    if(!all||typeof all!=='object') return;
+    _storeReady=true;
+    var changed=false;
+    if(all.prefs&&typeof all.prefs==='object'){ applyPrefsObject(all.prefs); lsSet('aurora_prefs',prefs); changed=true; }
+    else if(Object.keys(prefs).length) storePut('prefs',prefs);
+    if(all.favs&&typeof all.favs==='object'){ favIds=all.favs; lsSet('aurora_favs',favIds); changed=true; }
+    else if(Object.keys(favIds).length) storePut('favs',favIds);
+    if(all.presets&&typeof all.presets==='object'){
+      presets.steam=all.presets.steam||presets.steam; presets.flush=all.presets.flush||presets.flush;
+      presets.water=all.presets.water||presets.water; lsSet('aurora_presets',presets); changed=true; }
+    else storePut('presets',presets);
+    if(all.shotai&&typeof all.shotai==='object') lsSet('aurora_shotai',all.shotai);
+    else { var local=lsGet('aurora_shotai'); if(local&&Object.keys(local).length) storePut('shotai',local); }
+    if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
+      updateBeanInfo(); if(carItems.length) buildCarousel(); }
+  }); }
+function applyPrefsObject(p){
+  if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye;
+  if(typeof p.night==='boolean') prefs.night=p.night;
+  if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto;
+  if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey;
+  if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost;
+  if(typeof p.lang==='string') prefs.lang=p.lang;
+  if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit;
+  if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit;
+  if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull;
+  if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto;
+  if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim;
+  if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness;
+  if(p.waterCal&&typeof p.waterCal==='object'){
+    for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }
+
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
 var KP_CFG={ doseIn:{title:'Dose (g)',unit:'g',min:5,max:30}, doseOut:{title:'Yield (g)',unit:'g',min:10,max:80}, ratio:{title:'Ratio (1:x)',unit:'',min:1,max:4} };
@@ -2177,7 +2237,7 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'',
   // twopoint: hEmpty/hFull (mm) + capacity(ml). pour: hEmpty(mm) + poured(ml) at hPour(mm).
   waterCal:{ mode:'off', hEmpty:null, hFull:null, capacity:1500, poured:null, hPour:null } };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto; if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim; if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
+function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
 // the chosen calibration. Falls back to treating the raw value as % (legacy).
 function tankPercent(mm){ var c=prefs.waterCal||{};
@@ -2210,7 +2270,7 @@ function relocalizeDynamic(){ try{ renderCarousel(); updateShotBtn(); updateConn
   if(document.getElementById('beanPage').classList.contains('show')){ renderBgList(); if(bgSel) renderBgEditor(); }
   if(document.getElementById('settingsPage')&&document.getElementById('settingsPage').classList.contains('show')){ renderSpNav(); renderSpContent(); }
 }catch(_){ } }
-function savePrefs(){ try{ localStorage.setItem('aurora_prefs',JSON.stringify(prefs)); }catch(_){ } }
+function savePrefs(){ lsSet('aurora_prefs',prefs); storeSave('prefs',prefs); }
 function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
@@ -2444,7 +2504,7 @@ function splitTitle(raw){ var t=String(raw||''); var i=t.indexOf('/'); if(i<0) r
   return {group:t.slice(0,i).trim(), name:t.slice(i+1).trim()||t.trim()}; }
 function profTitle(p){ return (p&&p.profile&&p.profile.title)||(p&&p.id)||''; }
 function loadFavs(){ try{ favIds=JSON.parse(localStorage.getItem('aurora_favs')||'{}'); }catch(_){ favIds={}; } }
-function saveFavs(){ try{ localStorage.setItem('aurora_favs',JSON.stringify(favIds)); }catch(_){} }
+function saveFavs(){ lsSet('aurora_favs',favIds); storeSave('favs',favIds); }
 function loadProfiles(){ return api('GET','/api/v1/profiles?includeHidden=true').then(function(data){ allProfiles=data||[];
   var stage=document.getElementById('carouselStage'); if(!stage) return;
   if(Object.keys(favIds).length===0){ allProfiles.filter(function(p){return p.isDefault;}).slice(0,5).forEach(function(p){ favIds[p.id]=true; }); saveFavs(); }
@@ -6594,12 +6654,13 @@ function aiResultHtml(r){
           +'<div class="ai-sug-w">'+escapeHtml(String((x&&x.why)||''))+'</div></div>'; }).join('')+'</div>':''); }
 function aiCacheKey(rows){ return rows.map(function(r){ return r.id; }).sort().join(','); }
 function loadShotAi(rows){ if(!rows||!rows.length) return null;
-  try{ var all=JSON.parse(localStorage.getItem('aurora_shotai')||'{}');
-    return all[aiCacheKey(rows)]||null; }catch(_){ return null; } }
-function saveShotAi(rows,val){ try{ var all=JSON.parse(localStorage.getItem('aurora_shotai')||'{}');
+  var all=lsGet('aurora_shotai')||{};
+  return all[aiCacheKey(rows)]||null; }
+function saveShotAi(rows,val){
+  var all=lsGet('aurora_shotai')||{};
   all[aiCacheKey(rows)]=val;
   var keys=Object.keys(all); while(keys.length>40){ delete all[keys.shift()]; }
-  localStorage.setItem('aurora_shotai',JSON.stringify(all)); }catch(_){} }
+  lsSet('aurora_shotai',all); storeSave('shotai',all); }
 function aiRows(){ return (slCompare.length>=2)?slCompare.slice():(slSel?[slSel]:[]); }
 function analyzeShots(){
   if(slAiBusy) return Promise.resolve();
@@ -6741,7 +6802,7 @@ function bootMobileBeanScan(){
 window.addEventListener('load', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
-  fitStage(); loadFavs(); loadPrefs(); loadPresets(); initWebSockets();   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); loadFavs(); loadPrefs(); loadPresets(); hydrateFromStore(); initWebSockets();   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});

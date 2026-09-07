@@ -409,6 +409,21 @@ Measured with the machine driven through idle and sleeping: **2 ms of CPU per se
 
 | Key | |
 |---|---|
+Settings live on **the gateway**, under the key-value namespace `liquid-aqua`, and the browser keeps a copy.
+
+The gateway serves each skin generation from its own port, so every update lands the browser on a new origin and `localStorage` starts empty — anything kept only there is lost on the next patch. The store outlives a generation; the local copy makes the skin start instantly and keeps working when the gateway cannot be reached.
+
+| On the gateway | |
+|---|---|
+| `prefs` | language, units, night mode, monitor and sleep options, water calibration, Gemini key |
+| `favs` | favourite profiles |
+| `presets` | steam, flush and water presets |
+| `shotai` | AI readings, keyed by the shots they were made from |
+
+The first run after an update finds an empty store only if you have never saved anything; otherwise whatever this browser still holds is pushed up, so existing settings carry over rather than being lost.
+
+| Cached in the browser | |
+|---|---|
 | `aurora_prefs` | language, units, night mode, sleep options, water calibration |
 | `aurora_favs` | favourite profiles |
 | `aurora_presets` | steam, flush and water presets |
