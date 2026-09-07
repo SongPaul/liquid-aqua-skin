@@ -26,8 +26,7 @@ body.night{--ink:#e8e6f5; --ink-soft:#b8b4d8; --ink-mute:#7d7aa0;
 body.night::before{background:radial-gradient(circle at 18% 22%,rgba(99,102,241,.28),transparent 46%),radial-gradient(circle at 84% 18%,rgba(56,189,248,.22),transparent 48%),radial-gradient(circle at 78% 84%,rgba(236,72,153,.2),transparent 48%),linear-gradient(135deg,#0d0b1c,#140f26)}
 /* base surfaces */
 body.night .glass{background:rgba(30,27,54,.72);border-color:rgba(255,255,255,.08)}
-body.night.overlay-active .app .glass{background:rgba(30,27,54,.9)}
-body.night .modal{background:#1a1730;border-color:rgba(255,255,255,.1)}
+body.night.body.night .modal{background:#1a1730;border-color:rgba(255,255,255,.1)}
 body.night .modal-head{background:#1a1730}
 body.night .modal-title{color:var(--ink)}
 body.night .editpage{background:linear-gradient(135deg,#14111f,#1a1526)}
@@ -69,9 +68,10 @@ body.night .ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(
 .stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 .app{width:1280px;height:800px;display:grid;grid-template-columns:1fr 440px;grid-template-rows:80px 1fr;gap:10px;padding:10px;flex-shrink:0}
 .glass{background:rgba(255,255,255,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-line);border-radius:var(--r-md);box-shadow:var(--shadow)}
+body.scaled .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.85)}
+body.scaled.night .glass{background:rgba(30,27,54,.9)}
 /* While a modal/full-page overlay is open, the background is hidden behind it —
    drop the (expensive) backdrop blur on background panels for a smoother modal. */
-body.overlay-active .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.85)}
 
 /* Sleep / screen-saver lock: dark, static, big clock. Tap to wake. */
 .lockscreen{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 120% at 50% 40%,#1a1730,#0a0814);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .35s ease;cursor:pointer;-webkit-user-select:none;user-select:none;will-change:opacity;transform:translateZ(0)}
@@ -366,8 +366,8 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bean-edit{min-height:44px;padding:0 12px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;background:none;border:none;-webkit-appearance:none}
 
 /* ── Profile Editor full page ────────────────────────────────────── */
-.editpage{position:fixed;inset:0;z-index:250;background:linear-gradient(135deg,#eef1ff,#f5edff);display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:scale(1.02);transition:opacity .25s,transform .25s}
-.editpage.show{opacity:1;pointer-events:auto;transform:scale(1)}
+.editpage{position:fixed;inset:0;z-index:250;background:linear-gradient(135deg,#eef1ff,#f5edff);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .18s ease;will-change:opacity;contain:layout paint}
+.editpage.show{opacity:1;pointer-events:auto}
 body.page-swap .editpage{transition:none}
 .ep-head{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--glass-line);background:rgba(255,255,255,.6)}
 .ep-title{font-size:20px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -435,6 +435,7 @@ body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255
 .ep-list::-webkit-scrollbar{width:6px}.ep-list::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .ep-group-head{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:6px 4px 2px;position:sticky;top:0;background:linear-gradient(135deg,#eef1ff,#f5edff);z-index:1}
 .ep-group-head:first-child{padding-top:0}
+#bgList .ep-item,#slList .ep-item{content-visibility:auto;contain-intrinsic-size:0 64px}
 .ep-item{background:#fff;border:1px solid var(--glass-line);border-radius:12px;padding:7px 10px;cursor:pointer;transition:all .18s;display:flex;gap:10px;align-items:center}
 .ep-item:hover{transform:translateX(3px);box-shadow:var(--shadow)}
 .ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.18)}
@@ -1257,8 +1258,12 @@ function applyI18n(){ _lang=resolveLang(prefs.lang||'auto'); document.documentEl
 // ── Fit 1280x800 ────────────────────────────────────────────────────
 function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window.innerWidth/1280,window.innerHeight/800,1.6);
   // Snap near-1 scales to exactly 1 and drop the transform entirely so text stays pixel-crisp.
-  if(s>=0.97&&s<=1.04){ a.style.transform='none'; }
-  else { a.style.transform='scale('+s+')'; a.style.transformOrigin='center center'; } }
+  var scaled=!(s>=0.97&&s<=1.04);
+  if(!scaled){ a.style.transform='none'; }
+  else { a.style.transform='scale('+s+')'; a.style.transformOrigin='center center'; }
+  // A non-integer scale over a backdrop-filter re-snapshots and re-blurs the
+  // backdrop every frame, so the glass gives up its blur exactly where it costs.
+  document.body.classList.toggle('scaled',scaled); }
 var _resizeT=null;
 window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requestAnimationFrame(function(){ _resizeT=null; fitStage(); _chartBgKey=null; drawChart(); }); });
 
@@ -6042,13 +6047,6 @@ function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
 var toastT=null; function toast(msg,type){ var el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); },2500); }
 setInterval(function(){ if(state.connected) api('POST','/api/v1/machine/heartbeat').catch(function(){}); },30000);
 
-// Toggle body.overlay-active whenever any modal/full-page is visible, so the
-// background glass panels can drop their backdrop-filter (a heavy per-frame cost).
-function watchOverlays(){ var els=[].slice.call(document.querySelectorAll('.overlay,.editpage'));
-  function refresh(){ var open=els.some(function(el){ return el.classList.contains('show'); }); document.body.classList.toggle('overlay-active',open); }
-  var mo=new MutationObserver(refresh);
-  els.forEach(function(el){ mo.observe(el,{attributes:true,attributeFilter:['class']}); });
-  refresh(); }
 
 // ── Init ─────────────────────────────────────────────────────────────
 function bootMobileBeanScan(){
@@ -6065,8 +6063,7 @@ function bootMobileBeanScan(){
 window.addEventListener('load', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
-  fitStage(); loadFavs(); loadPrefs(); loadPresets(); initWebSockets(); watchOverlays();
-  applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); loadFavs(); loadPrefs(); loadPresets(); initWebSockets();   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
