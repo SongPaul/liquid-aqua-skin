@@ -48,6 +48,8 @@ body.night .car-nav:hover,body.night .ep-stepnav .nav:hover{background:rgba(255,
 body.night .ep-visual,body.night .ep-step,body.night .ep-step-editor,body.night .browse-card{background:rgba(255,255,255,.05)}
 body.night .ep-visual canvas{background:transparent}
 body.night .sl-metric,body.night .last-shot .ls-stat{background:rgba(255,255,255,.06)}
+body.night .sl-ai{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.26)}
+body.night .sl-cmp,body.night .ai-sug{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .bean-chip{background:rgba(255,255,255,.06);color:var(--ink-soft)}
 /* form inputs */
 body.night .ep-name-input,body.night .ep-notes,body.night .field input,body.night .field textarea,body.night .field select{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
@@ -78,30 +80,22 @@ body.scaled.night .glass{background:rgba(30,27,54,.9)}
 .lockscreen.show{opacity:1;pointer-events:auto}
 /* During the sleep fade, drop the background glass blur so the transition is smooth. */
 body.asleep .app,body.page-open .app{visibility:hidden}
+/* visibility:hidden does not stop a CSS animation. Nothing behind the lock or
+   under a full-screen page can be seen, so nothing there should still run. */
+body.asleep .app *,body.page-open .app *{animation:none!important}
 body.asleep .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
-/* Burn-in guard: instead of moving the clock, we keep every pixel changing in place.
-   All three animations are opacity/filter/transform only (GPU composite, no paint),
-   so they cost almost nothing even while the rest of the UI is idle.
-     - breathe: the clock brightness gently rises and falls
-     - huedrift: the clock color slowly cycles through the aqua range (evens out
-       sub-pixel wear)
-     - ripple: a faint water-like sheen drifts behind the clock */
-.lock-shift{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px}
-.lock-clock{font-size:132px;font-weight:200;letter-spacing:-.03em;color:rgba(255,255,255,.82);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 2px 16px rgba(99,102,241,.22);will-change:opacity,filter}
-.lock-date{font-size:22px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.02em;will-change:opacity}
+/* Burn-in guard: the clock moves to a new offset once a minute and glides there.
+   A continuous animation -- even an opacity or filter one -- keeps the compositor
+   producing frames forever, which costs more on an idle screen than it saves;
+   one transform a minute lets the GPU and the display pipeline go idle between. */
+.lock-shift{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;
+  transition:transform 2.4s ease-in-out;will-change:transform}
+.lock-clock{font-size:132px;font-weight:200;letter-spacing:-.03em;color:rgba(255,255,255,.82);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 2px 16px rgba(99,102,241,.22)}
+.lock-date{font-size:22px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.02em}
 .lock-hint{position:absolute;bottom:48px;font-size:13px;font-weight:600;color:rgba(255,255,255,.35)}
 /* Faint drifting sheen behind the clock so the background pixels also cycle. */
 .lock-ripple{position:absolute;inset:-40% -20%;z-index:-1;border-radius:50%;pointer-events:none;
-  background:radial-gradient(60% 55% at 50% 50%,rgba(56,189,248,.10),rgba(99,102,241,.05) 45%,transparent 70%);will-change:transform,opacity}
-/* Only animate while the lock is actually shown, so nothing runs on the hidden layer. */
-.lockscreen.show .lock-clock{animation:lockbreathe 9s ease-in-out infinite,lockhue 48s linear infinite}
-.lockscreen.show .lock-date{animation:lockbreathe 9s ease-in-out infinite}
-.lockscreen.show .lock-hint{animation:lockpulse 2.8s ease-in-out infinite}
-.lockscreen.show .lock-ripple{animation:lockripple 14s ease-in-out infinite}
-@keyframes lockpulse{0%,100%{opacity:.35}50%{opacity:.7}}
-@keyframes lockbreathe{0%,100%{opacity:.6}50%{opacity:1}}
-@keyframes lockhue{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
-@keyframes lockripple{0%,100%{transform:scale(1) translateY(0);opacity:.7}50%{transform:scale(1.15) translateY(-3%);opacity:1}}
+  background:radial-gradient(60% 55% at 50% 50%,rgba(56,189,248,.10),rgba(99,102,241,.05) 45%,transparent 70%)}
 /* While asleep, stop the water-tank wave animation to save the panel/CPU. */
 body.asleep .wave-path,body.asleep .wave-path2{animation-play-state:paused!important}
 
@@ -213,16 +207,42 @@ header>*{position:relative;z-index:1}
 .timer-big.run{color:var(--hot)}
 
 .gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0;margin-top:14px;flex:1;align-items:stretch}
-.gauge{background:var(--glass-hi);border-radius:var(--r-sm);padding:11px 13px;min-width:0;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--glass-line)}
-.gauge-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-.gauge-name{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
-.gauge-val{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.gauge{background:var(--glass-hi);border-radius:var(--r-sm);padding:6px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid var(--glass-line)}
+.gauge-arc{position:relative;width:100%;max-width:128px}
+.gauge-arc svg{display:block;width:100%;height:auto}
+/* Every band is the same path normalised to a length of 100, so a zone is just a
+   dash of (end-start) offset to its start -- no arc maths at run time. */
+.ga-zone{fill:none;stroke-width:10;stroke-linecap:butt}
+.ga-zone.z1{stroke:rgba(148,163,184,.30)}
+.ga-zone.z2{stroke:rgba(245,158,11,.42)}
+.ga-zone.z3{stroke:rgba(16,185,129,.52)}
+.ga-zone.z4{stroke:rgba(244,63,94,.48)}
+.ga-mark{stroke-width:3.4;stroke-linecap:round;transform-box:view-box;transform-origin:58.5px 59.5px;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.ga-mark.pressure{stroke:var(--accent)}
+.ga-mark.flow{stroke:var(--steam)}
+.ga-min,.ga-max,.ga-tick{position:absolute;font-size:11px;font-weight:700;color:var(--ink-mute);line-height:1}
+.ga-min,.ga-max{bottom:0}
+.ga-min{left:12%} .ga-max{right:12%}
+/* The three inner marks sit on the sweep at a quarter, a half and three
+   quarters, just inside the band. Their places never change, so they are
+   plain percentages of the arc box rather than trigonometry at run time. */
+.ga-tick{transform:translate(-50%,-50%);white-space:nowrap}
+.ga-t1{left:24%;top:44.1%}
+.ga-t2{left:50%;top:25%}
+.ga-t3{left:76%;top:44.1%}
+body.night .ga-zone.z1{stroke:rgba(255,255,255,.16)}
+.gauge-read{position:absolute;left:8%;right:8%;bottom:3px;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.gauge-name{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.gauge-val{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1.15;white-space:nowrap}
 .gauge-val .u{font-size:11px;color:var(--ink-mute);font-weight:600}
 .gauge-val.pressure{color:var(--accent)} .gauge-val.flow{color:var(--steam)}
-.gauge-track{height:6px;background:rgba(139,92,246,.12);border-radius:100px;overflow:hidden}
-.gauge-fill{height:100%;border-radius:100px;transition:width .3s cubic-bezier(.4,0,.2,1)}
-.gauge-fill.pressure{background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.gauge-fill.flow{background:linear-gradient(90deg,var(--steam),#7dd3fc)}
+.gauge-name.gz1{color:var(--ink-mute)}
+.gauge-name.gz2{color:#d97706}
+.gauge-name.gz3{color:#059669}
+.gauge-name.gz4{color:#e11d48}
+body.night .gauge-name.gz2{color:#fbbf24}
+body.night .gauge-name.gz3{color:#34d399}
+body.night .gauge-name.gz4{color:#fb7185}
 
 .temps{display:flex;gap:10px}
 .temp-pill{flex:1;background:var(--glass-hi);border-radius:var(--r-sm);padding:11px 13px;border:1px solid var(--glass-line);display:flex;align-items:center;gap:9px;cursor:help}
@@ -351,7 +371,8 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .last-shot{flex-shrink:0}
-.ls-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ls-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ls-acts{display:flex;align-items:center;flex-shrink:0}
 .ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
 .ls-profile:empty{display:none}
 .ls-profile .grp{font-weight:600;color:var(--ink-mute)}
@@ -570,6 +591,68 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .sl-metric{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:12px;padding:12px 8px;text-align:center}
 .sl-metric .v{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
 .sl-metric .l{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
+.monpage{padding:18px 22px;gap:14px}
+.mon-head{display:flex;align-items:center;gap:18px;flex-shrink:0}
+.mon-id{min-width:0;flex:1}
+.mon-title{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mon-bean{font-size:14px;font-weight:600;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.mon-bean:empty{display:none}
+.mon-state{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);
+  background:rgba(99,102,241,.1);border-radius:100px;padding:9px 16px;flex-shrink:0}
+.mon-state:empty{display:none}
+.mon-body{flex:1;display:grid;grid-template-columns:1fr 380px;gap:14px;min-height:0}
+.mon-chart-card{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;min-width:0}
+.mon-chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0}
+.mon-chart-wrap{position:relative;flex:3;min-height:0}
+.mon-temp-wrap{position:relative;flex:1;min-height:0}
+.mon-chart-wrap canvas,.mon-temp-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.mon-temp-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px;flex-shrink:0}
+.mon-temp-title{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em}
+.mon-side{display:flex;flex-direction:column;gap:14px;min-height:0}
+.mon-read{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mon-cell{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px}
+.mon-lbl{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em}
+.mon-big{font-size:58px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin-top:2px}
+.mon-u{font-size:20px;font-weight:700;color:var(--ink-mute);margin-left:3px}
+.mon-gauges{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0}
+.mon-gauge{padding:10px 8px;flex:1;justify-content:center;min-height:0}
+.mon-gauge .gauge-arc{max-width:318px}
+.mon-gauge .gauge-val{font-size:44px}
+.mon-gauge .gauge-name{font-size:15px}
+.mon-gauge .ga-min,.mon-gauge .ga-max,.mon-gauge .ga-tick{font-size:13px}
+.mon-recipe{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px}
+.mon-recipe-row{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:700;color:var(--ink-mute);margin-top:4px}
+.mon-recipe-row b{font-size:30px;font-weight:800;color:var(--ink)}
+.mon-arrow{color:var(--ink-mute)}
+.mon-ratio{margin-left:auto;font-size:20px;font-weight:800;color:var(--accent)}
+body.night .mon-cell,body.night .mon-recipe,body.night .mon-chart-card{background:rgba(255,255,255,.06)}
+body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
+.chart-canvas-wrap{cursor:pointer}
+.sl-cmp{width:40px;height:40px;flex-shrink:0;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:15px;font-weight:800;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.sl-cmp:hover{border-color:var(--accent);color:var(--accent)}
+.sl-cmp.on{color:#fff;border-color:transparent}
+.cmp-keys{display:flex;flex-wrap:wrap;gap:8px 14px;margin:-4px 0 12px}
+.cmp-key{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.cmp-key i{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+.cmp-styles{margin:-6px 0 12px;color:var(--ink-mute)}
+.cmp-styles .cmp-key{color:var(--ink-mute);font-weight:700}
+.cmp-styles svg{flex-shrink:0}
+.cmp-key b{color:var(--ink-mute);font-weight:700}
+.cmp-tabs{display:flex;gap:8px;margin-bottom:12px}
+.cmp-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.cmp-table th{width:24%;text-align:left;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;padding:9px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp-table td{text-align:center;font-size:15px;font-weight:800;color:var(--ink);padding:9px 8px}
+.cmp-table tr{border-bottom:1px solid var(--glass-line)}
+.cmp-table tr:last-child{border-bottom:0}
+.sl-ai{margin-top:16px;border:1px solid rgba(99,102,241,.16);border-radius:14px;padding:14px;background:rgba(99,102,241,.05)}
+.sl-ai-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sl-ai-head span{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em}
+.ai-verdict{font-size:15px;font-weight:700;color:var(--ink);line-height:1.5;margin-top:12px}
+.ai-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink-soft)}
+.ai-sugs{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.ai-sug{background:#fff;border:1px solid var(--glass-line);border-radius:11px;padding:10px 12px}
+.ai-sug-c{font-size:14px;font-weight:800;color:var(--accent)}
+.ai-sug-w{font-size:12px;color:var(--ink-mute);line-height:1.5;margin-top:3px}
 /* step carousel in editor */
 .ep-stepnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .ep-stepnav .nav{width:40px;height:40px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-size:16px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
@@ -797,8 +880,40 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <div><div class="live-label" style="text-align:right" data-i18n="timer">Timer</div><div class="timer-big" id="timerBig">0:00</div></div>
       </div>
       <div class="gauges">
-        <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge1Name">Pressure</span><span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span></div><div class="gauge-track"><div class="gauge-fill pressure" id="pressureBar" style="width:0%"></div></div></div>
-        <div class="gauge"><div class="gauge-head"><span class="gauge-name" id="gauge2Name">Flow</span><span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span></div><div class="gauge-track"><div class="gauge-fill flow" id="flowBar" style="width:0%"></div></div></div>
+        <div class="gauge">
+          <div class="gauge-arc">
+            <svg viewBox="0 0 117 66" aria-hidden="true">
+              <path class="ga-zone z1" id="pressureZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <path class="ga-zone z2" id="pressureZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <path class="ga-zone z3" id="pressureZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <path class="ga-zone z4" id="pressureZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <line class="ga-mark pressure" id="pressureMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
+            </svg>
+            <span class="ga-min">0</span><span class="ga-max" id="pressureMax">12</span>
+            <span class="ga-tick ga-t1" id="pressureT1"></span><span class="ga-tick ga-t2" id="pressureT2"></span><span class="ga-tick ga-t3" id="pressureT3"></span>
+            <div class="gauge-read">
+              <span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span>
+              <span class="gauge-name" id="gauge1Name">Pressure</span>
+            </div>
+          </div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-arc">
+            <svg viewBox="0 0 117 66" aria-hidden="true">
+              <path class="ga-zone z1" id="flowZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <path class="ga-zone z2" id="flowZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <path class="ga-zone z3" id="flowZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <path class="ga-zone z4" id="flowZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+              <line class="ga-mark flow" id="flowMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
+            </svg>
+            <span class="ga-min">0</span><span class="ga-max" id="flowMax">12</span>
+            <span class="ga-tick ga-t1" id="flowT1"></span><span class="ga-tick ga-t2" id="flowT2"></span><span class="ga-tick ga-t3" id="flowT3"></span>
+            <div class="gauge-read">
+              <span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span>
+              <span class="gauge-name" id="gauge2Name">Flow</span>
+            </div>
+          </div>
+        </div>
       </div>
       </div>
       <div class="recipe">
@@ -839,14 +954,13 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
     <div class="chart-card glass">
       <div class="chart-head"><span class="chart-title" id="chartTitle" onclick="exitReview()" style="cursor:pointer" data-i18n="extractionGraph">Extraction Graph</span>
-        <button class="cur-browse" onclick="openShotLog()" style="margin-right:auto;margin-left:12px"><span data-i18n="shotLog">Shot Log</span> ▤</button>
         <div class="chart-legend" id="chartLegend">
           <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Pressure</span>
           <span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>Flow</span>
           <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Weight</span>
         </div>
       </div>
-      <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
+      <div class="chart-canvas-wrap" onclick="openMonitor(false)"><canvas id="chart"></canvas></div>
     </div>
   </div>
 
@@ -880,7 +994,11 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
     <div class="lastshot-card glass">
       <div class="last-shot" id="lastShot">
-        <div class="ls-head"><span data-i18n="lastShot">Last Shot</span><button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button></div>
+        <div class="ls-head"><span data-i18n="lastShot">Last Shot</span>
+          <span class="ls-acts">
+            <button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button>
+            <button class="cur-browse" onclick="openShotLog()"><span data-i18n="shotLog">Shot Log</span> ▤</button>
+          </span></div>
         <div class="ls-profile" id="lsProfile"></div>
         <div class="ls-stats" id="lsStats"><div class="ls-empty" data-i18n="noShots">No shots recorded yet</div></div>
       </div>
@@ -888,6 +1006,79 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
   </div>
 
 </div>
+</div>
+
+<!-- ── Monitor: one action, full screen ────────────────────────── -->
+<div class="editpage monpage" id="monPage">
+  <div class="mon-head">
+    <div class="mon-id">
+      <div class="mon-title" id="monTitle">—</div>
+      <div class="mon-bean" id="monBean"></div>
+    </div>
+    <div class="mon-state" id="monState"></div>
+    <button class="ep-close" onclick="closeMonitor()">✕ <span data-i18n="close">Close</span></button>
+  </div>
+  <div class="mon-body">
+    <div class="mon-chart-card">
+      <div class="mon-chart-head"><span class="chart-title" id="monChartTitle">—</span>
+        <div class="chart-legend" id="monChartLegend"></div></div>
+      <div class="mon-chart-wrap"><canvas id="monChart"></canvas></div>
+      <div class="mon-temp-head"><span class="mon-temp-title" data-i18n="tempGraph">Temperature</span>
+        <div class="chart-legend" id="monTempLegend"></div></div>
+      <div class="mon-temp-wrap"><canvas id="monTempChart"></canvas></div>
+    </div>
+    <div class="mon-side">
+      <div class="mon-read">
+        <div class="mon-cell"><div class="mon-lbl" data-i18n="monWeight">Weight</div>
+          <div class="mon-big" id="monWeight">0.0<span class="mon-u" id="monWeightU">g</span></div></div>
+        <div class="mon-cell"><div class="mon-lbl" data-i18n="monElapsed">Elapsed</div>
+          <div class="mon-big" id="monTimer">0:00</div></div>
+      </div>
+      <div class="mon-gauges">
+        <div class="gauge mon-gauge">
+          <div class="gauge-arc">
+            <svg viewBox="0 0 117 66" aria-hidden="true">
+            <path class="ga-zone z1" id="monPressureZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <path class="ga-zone z2" id="monPressureZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <path class="ga-zone z3" id="monPressureZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <path class="ga-zone z4" id="monPressureZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <line class="ga-mark pressure" id="monPressureMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
+            </svg>
+            <span class="ga-min">0</span><span class="ga-max" id="monPressureMax">12</span>
+            <span class="ga-tick ga-t1" id="monPressureT1"></span><span class="ga-tick ga-t2" id="monPressureT2"></span><span class="ga-tick ga-t3" id="monPressureT3"></span>
+            <div class="gauge-read">
+              <span class="gauge-val pressure" id="monPressureVal">0.0<span class="u"> bar</span></span>
+              <span class="gauge-name" id="monGauge1Name">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="gauge mon-gauge">
+          <div class="gauge-arc">
+            <svg viewBox="0 0 117 66" aria-hidden="true">
+            <path class="ga-zone z1" id="monFlowZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <path class="ga-zone z2" id="monFlowZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <path class="ga-zone z3" id="monFlowZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <path class="ga-zone z4" id="monFlowZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
+            <line class="ga-mark flow" id="monFlowMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
+            </svg>
+            <span class="ga-min">0</span><span class="ga-max" id="monFlowMax">12</span>
+            <span class="ga-tick ga-t1" id="monFlowT1"></span><span class="ga-tick ga-t2" id="monFlowT2"></span><span class="ga-tick ga-t3" id="monFlowT3"></span>
+            <div class="gauge-read">
+              <span class="gauge-val flow" id="monFlowVal">0.0<span class="u"> bar</span></span>
+              <span class="gauge-name" id="monGauge2Name">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mon-recipe">
+        <div class="mon-lbl" data-i18n="monRecipe">Recipe</div>
+        <div class="mon-recipe-row">
+          <span><b id="monDose">—</b> g</span><span class="mon-arrow">→</span>
+          <span><b id="monYield">—</b> g</span><span class="mon-ratio" id="monRatio">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ── Same bean again: batch or new bean ──────────────────────── -->
@@ -1157,6 +1348,12 @@ var I18N={
     aiClassify:'✨ Classify with AI', aiClassifyingShort:'Classifying…', aiClear:'Clear AI',
     aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
+    zFar:'Well under', zUnder:'Under', zOk:'On profile', zOver:'Over',
+    monAuto:'Full-screen monitor', monAutoDesc:'Open the monitor by itself when a shot, steam, flush or hot water starts. Tap the graph to open it at any time.',
+    espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
+    flushGraph:'Flush Graph',
+    rating:'Rating', cmpAll:'All', cmpAdd:'Add to comparison', cmpMax:'Compare up to {n} shots', cmpHead:'Comparing shots', cmpSub:'{n} shots overlaid', cmpClear:'Clear',
+    aiAnalysis:'AI reading', aiRun:'Analyse', aiAgain:'Again', aiReading:'Reading the shot…', aiNoResult:'No analysis came back', aiFailed:'Analysis failed:',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
     usageHead:'Most used with this bean', usageCount:'{n} shots', profHead:'Profiles for this bean', recRank:'Pick {n}', avgGrind:'Avg grind', shotList:'Every shot', openShot:'Open this shot', noShotsForProfile:'No shots with this profile', showingN:'latest {n}', tabBeanInfo:'Bean', tabBeanProfiles:'Profiles', tabBeanHistory:'History', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
@@ -1227,6 +1424,12 @@ var I18N={
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
     aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
+    zFar:'크게 미달', zUnder:'미달', zOk:'적정', zOver:'초과',
+    monAuto:'전체화면 모니터', monAutoDesc:'추출·스팀·플러시·온수가 시작되면 모니터를 자동으로 엽니다. 그래프를 누르면 언제든 열 수 있습니다.',
+    espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
+    flushGraph:'플러시 그래프',
+    rating:'평점', cmpAll:'전체', cmpAdd:'비교에 추가', cmpMax:'최대 {n}개까지 비교할 수 있습니다', cmpHead:'추출 비교', cmpSub:'{n}개 겹쳐보기', cmpClear:'해제',
+    aiAnalysis:'AI 추출 분석', aiRun:'분석', aiAgain:'다시 분석', aiReading:'추출을 읽는 중…', aiNoResult:'분석 결과가 없습니다', aiFailed:'분석 실패:',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
     usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', profHead:'이 원두의 프로파일', recRank:'추천 {n}', avgGrind:'평균 분쇄도', shotList:'추출 기록', openShot:'이 샷 열기', noShotsForProfile:'이 프로파일로 내린 샷 없음', showingN:'최근 {n}건', tabBeanInfo:'원두 정보', tabBeanProfiles:'추출 프로파일', tabBeanHistory:'기록', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
@@ -1271,7 +1474,7 @@ var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='htt
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
   connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
-  water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0 };
+  flushRunning:false, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[], groupTemp:[], mixTemp:[], targetTemp:[], mode:'espresso', max:600 };
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
@@ -1405,6 +1608,7 @@ function onMachineState(ms,prev){
   var extracting=inEspresso && (sub==='preinfusion'||sub==='pouring');
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
+  var flushing=(ms.state==='flush');
   function resetChart(mode){ chart.mode=mode; chartReviewing=false; _chartLegendMode=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[]; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
@@ -1421,22 +1625,78 @@ function onMachineState(ms,prev){
   if(watering&&!state.waterRunning){ startTimer(); resetChart('water'); }
   if(!watering&&state.waterRunning){ stopTimer(); drawChart(); }
   state.waterRunning=watering;
+  // Flush records the same three series as hot water; without this the monitor
+  // would open on a flush and show an empty graph.
+  if(flushing&&!state.flushRunning){ startTimer(); resetChart('flush'); }
+  if(!flushing&&state.flushRunning){ stopTimer(); drawChart(); }
+  state.flushRunning=flushing;
   syncAuxPanel();
+  monitorOnState(ms.state,prev||'');
 
   if(extracting){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetTemp.push(state.targetMixTemp||state.targetGroupTemp||0);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); if(chart.targetTemp.length>chart.max)chart.targetTemp.shift(); drawChart(); }
   else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
-  else if(watering){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
+  else if(watering||flushing){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); drawChart(); }
 }
 function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } loadLastShot(); }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
-function setGauge(nameEl,valEl,barEl,label,value,unit,frac){
-  document.getElementById(nameEl).textContent=label;
-  document.getElementById(valEl).innerHTML=value+'<span class="u"> '+unit+'</span>';
-  document.getElementById(barEl).style.width=Math.max(0,Math.min(frac,1))*100+'%'; }
+// A pressure step targets its own pressure, and a flow step's limiter is the
+// pressure it must not exceed; for flow the two roles swap. Steps that target
+// almost nothing are the drip and pre-fill stages, not a range worth banding.
+var GA_FLOOR={pressure:1.0,flow:0.3};
+function profileTargets(prof,kind){
+  var out=[];
+  ((prof&&prof.steps)||[]).forEach(function(st){
+    var isFlow=(st.pump==='flow'), lim=(st.limiter&&st.limiter.value)||0;
+    if(kind==='pressure'){ if(!isFlow&&st.pressure!=null) out.push(st.pressure); if(isFlow&&lim>0) out.push(lim); }
+    else { if(isFlow&&st.flow!=null) out.push(st.flow); if(!isFlow&&lim>0) out.push(lim); } });
+  return out.filter(function(v){ return v>=GA_FLOOR[kind]; }); }
+// The band is where the loaded profile actually works. Below it the puck is not
+// taking the pressure the profile asked for -- usually a grind that is too
+// coarse -- and above it the machine is pushing harder than the profile ever
+// wanted, so the two failures read differently rather than as one "outside".
+function gaugeBand(kind){
+  var v=profileTargets(curProfileObj&&curProfileObj.profile,kind);
+  return v.length?[Math.min.apply(null,v),Math.max.apply(null,v)]:null; }
+function gaugeSeg(id,a,b){ var el=document.getElementById(id); if(!el) return;
+  var len=Math.max(0,b-a);
+  el.style.strokeDasharray=len+' 100'; el.style.strokeDashoffset=-a;
+  el.style.opacity=len>0.4?'':'0'; }
+function setGaugeZones(pfx,kind,scale){
+  var band=kind?gaugeBand(kind):null;
+  if(!band){ gaugeSeg(pfx+'Z1',0,100); gaugeSeg(pfx+'Z2',0,0); gaugeSeg(pfx+'Z3',0,0); gaugeSeg(pfx+'Z4',0,0); return; }
+  var pct=function(v){ return Math.max(0,Math.min(v/scale,1))*100; };
+  var lo=pct(band[0]), hi=pct(band[1]);
+  // 1 far short, 2 short, 3 on profile, 4 over.
+  gaugeSeg(pfx+'Z1',0,lo/2); gaugeSeg(pfx+'Z2',lo/2,lo); gaugeSeg(pfx+'Z3',lo,hi); gaugeSeg(pfx+'Z4',hi,100); }
+function setGaugeTicks(pfx,scale){
+  for(var i=1;i<=3;i++){ var el=document.getElementById(pfx+'T'+i);
+    if(el) el.textContent=gaugeScaleLabel(scale*i/4); } }
+function gaugeScaleLabel(v){ return (Math.round(v)===v)?String(v):v.toFixed(1); }
+var GA_ZONE_KEYS=['zFar','zUnder','zOk','zOver'];
+// Which band the needle is standing in, or -1 when this reading has no bands
+// (steam, hot water, or no profile loaded).
+function gaugeZoneIndex(kind,scale,frac){
+  var band=kind?gaugeBand(kind):null; if(!band) return -1;
+  var lo=band[0]/scale, hi=band[1]/scale;
+  if(frac<lo/2) return 0;
+  if(frac<lo) return 1;
+  if(frac<=hi) return 2;
+  return 3; }
+function setGauge(nameEl,pfx,label,value,unit,frac,scale,kind){
+  var f0=Math.max(0,Math.min(frac,1)), zi=gaugeZoneIndex(kind,scale,f0), nm=document.getElementById(nameEl);
+  // The unit beside the reading already says which gauge this is, so the label
+  // is better spent on what the needle is telling you.
+  nm.textContent=(zi>=0)?t(GA_ZONE_KEYS[zi]):label;
+  nm.className='gauge-name'+(zi>=0?(' gz'+(zi+1)):'');
+  document.getElementById(pfx+'Val').innerHTML=value+'<span class="u"> '+unit+'</span>';
+  document.getElementById(pfx+'Max').textContent=gaugeScaleLabel(scale);
+  setGaugeTicks(pfx,scale);
+  document.getElementById(pfx+'Mark').style.transform='rotate('+((f0-0.5)*180)+'deg)';
+  setGaugeZones(pfx,kind,scale); }
 function updateMachineUI(){
   // Asleep: the whole app is hidden under the opaque lock screen. Skip the per-tick
   // DOM writes (temps, gauges, water gradient) so the tablet isn't repainting for
@@ -1445,27 +1705,34 @@ function updateMachineUI(){
   document.getElementById('groupTemp').textContent=convTemp(state.groupTemp).toFixed(prefs.tempUnit==='F'?0:1);
   document.getElementById('mixTemp').textContent=convTemp(state.mixTemp).toFixed(prefs.tempUnit==='F'?0:1);
   document.getElementById('steamTempDisp').textContent=convTemp(state.steamTemp).toFixed(0);
-  // The two gauges adapt to the current action: steam/hot-water report no useful
-  // pressure, so we surface the relevant temperature instead.
-  var st=state.machine.state;
-  if(st==='steam'){
-    // steam reports no live flow — fall back to the configured steam flow setting
-    var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0);
-    setGauge('gauge1Name','pressureVal','pressureBar',t('pressure'),state.pressure.toFixed(1),'bar',state.pressure/12);
-    setGauge('gauge2Name','flowVal','flowBar',t('steam')+' '+t('flow'),sflow.toFixed(1),'ml/s',sflow/2.5);
-  } else if(st==='hotWater'){
-    setGauge('gauge1Name','pressureVal','pressureBar',t('water')+' °',convTemp(state.mixTemp).toFixed(0),tempUnitLabel(),state.mixTemp/100);
-    setGauge('gauge2Name','flowVal','flowBar',t('flow'),state.flow.toFixed(1),'ml/s',state.flow/10);
-  } else {
-    setGauge('gauge1Name','pressureVal','pressureBar',t('pressure'),state.pressure.toFixed(1),'bar',state.pressure/12);
-    setGauge('gauge2Name','flowVal','flowBar',t('flow'),state.flow.toFixed(1),'ml/s',state.flow/8);
-  }
+  applyGauges('gauge1Name','pressure','gauge2Name','flow');
+  if(_monOpen) applyGauges('monGauge1Name','monPressure','monGauge2Name','monFlow');
   updateWaterVisual();
   updateShotBtn();
 }
+// The two gauges adapt to the current action: steam and hot water report no
+// useful pressure, so the relevant temperature takes that dial instead. Described
+// once here because the monitor draws the same pair at a larger size.
+function gaugeSpecs(){
+  var st=state.machine.state;
+  if(st==='steam'){
+    // steam reports no live flow -- fall back to the configured steam flow setting
+    var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0);
+    return [{label:t('pressure'),value:state.pressure.toFixed(1),unit:'bar',frac:state.pressure/12,scale:12,kind:'pressure'},
+            {label:t('steam')+' '+t('flow'),value:sflow.toFixed(1),unit:'ml/s',frac:sflow/2.5,scale:2.5,kind:null}]; }
+  if(st==='hotWater')
+    return [{label:t('water')+' °',value:convTemp(state.mixTemp).toFixed(0),unit:tempUnitLabel(),frac:state.mixTemp/100,scale:convTemp(100),kind:null},
+            {label:t('flow'),value:state.flow.toFixed(1),unit:'ml/s',frac:state.flow/10,scale:10,kind:null}];
+  return [{label:t('pressure'),value:state.pressure.toFixed(1),unit:'bar',frac:state.pressure/12,scale:12,kind:'pressure'},
+          {label:t('flow'),value:state.flow.toFixed(1),unit:'ml/s',frac:state.flow/8,scale:8,kind:'flow'}]; }
+function applyGauges(nameA,pfxA,nameB,pfxB){
+  var g=gaugeSpecs();
+  setGauge(nameA,pfxA,g[0].label,g[0].value,g[0].unit,g[0].frac,g[0].scale,g[0].kind);
+  setGauge(nameB,pfxB,g[1].label,g[1].value,g[1].unit,g[1].frac,g[1].scale,g[1].kind); }
 function updateScaleUI(){ if(_asleep) return; var el=document.getElementById('weightNum'); var uEl=document.querySelector('.weight-unit'); if(uEl) uEl.textContent=weightUnitLabel();
   if(!state.scaleConnected||state.scaleWeight===null){ el.textContent=convWeight(0).toFixed(1); el.className='weight-num zero'; return; }
-  el.textContent=convWeight(state.scaleWeight).toFixed(1); el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':''); }
+  el.textContent=convWeight(state.scaleWeight).toFixed(1); el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':'');
+  if(_monOpen) syncMonitorLive(); }
 // Temperature -> RGB for the tank fill/waves. Blue holds to 80C, then the ramp
 // runs through the warm hues one degree at a time and reaches red at 95C.
 // Values are interpolated between the anchors, so every degree in that window is
@@ -1543,25 +1810,42 @@ function updateConnUI(s){ var btn=document.getElementById('btnConnect');
 // ── Timer & chart ───────────────────────────────────────────────────
 function startTimer(){ state.shotStart=Date.now(); if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
 function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
-function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000); document.getElementById('timerBig').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000);
+  var txt=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  document.getElementById('timerBig').textContent=txt;
+  var m=document.getElementById('monTimer'); if(m) m.textContent=txt; }
 var _chartRAF=null;
-function drawChart(){ if(_asleep||_pageOpen||_chartRAF) return; _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow(); }); }
+// The monitor is a full-screen page, but it is the one page that exists to show
+// the graph, so it does not suppress drawing the way the others do.
+function drawChart(){ if(_asleep||(_pageOpen&&!_monOpen)||_chartRAF) return;
+  _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow();
+    if(_monOpen) drawMonTempChart(); }); }
 var _chartDims={w:0,h:0}; var _chartLegendMode=null; var _chartBg=null, _chartBgKey=null;
-function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
+function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
   if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
   var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height;
-  var isSteam=(chart.mode==='steam'), isWater=(chart.mode==='water'), isEsp=(!isSteam&&!isWater), hasTempAxis=true;
+  var isSteam=(chart.mode==='steam'), isFlush=(chart.mode==='flush');
+  var isWater=(chart.mode==='water'||isFlush), isEsp=(!isSteam&&!isWater);
+  // In the monitor the temperatures are a chart of their own underneath, so the
+  // extraction graph keeps its whole height for pressure, flow and weight.
+  var hasTempAxis=!_monOpen;
   // title + legend reflect the current mode (only rewritten when the mode changes)
   if(_chartLegendMode!==chart.mode){ _chartLegendMode=chart.mode;
-    var titleEl=document.getElementById('chartTitle'), legEl=document.getElementById('chartLegend');
-    if(titleEl) titleEl.textContent=isSteam?t('steamGraph'):(isWater?t('hotWaterGraph'):(chartReviewing?(t('lastShotGraph')+' ↩'):t('extractionGraph')));
+    var titleEl=document.getElementById(_monOpen?'monChartTitle':'chartTitle');
+    var legEl=document.getElementById(_monOpen?'monChartLegend':'chartLegend');
+    if(titleEl) titleEl.textContent=isSteam?t('steamGraph'):(isFlush?t('flushGraph'):(isWater?t('hotWaterGraph'):(chartReviewing?(t('lastShotGraph')+' ↩'):t('extractionGraph'))));
     function li(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+label+'</span>'; }
     if(legEl) legEl.innerHTML=isSteam
-      ? li('#f472b6',t('steam')+' '+'°')+li('var(--steam)',t('flow'))+li('var(--accent)',t('pressure'))
+      ? (hasTempAxis?li('#f472b6',t('steam')+' '+'°'):'')+li('var(--steam)',t('flow'))+li('var(--accent)',t('pressure'))
       : isWater
-      ? li('#0ea5e9',t('water')+' °')+li('var(--steam)',t('flow'))+li('var(--accent)',t('pressure'))
-      : li('var(--accent)',t('pressure'))+li('var(--steam)',t('flow'))+li('var(--green)',t('weight'))+li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target')); }
+      ? (hasTempAxis?li('#0ea5e9',t('water')+' °'):'')+li('var(--steam)',t('flow'))+li('var(--accent)',t('pressure'))
+      : li('var(--accent)',t('pressure'))+li('var(--steam)',t('flow'))+li('var(--green)',t('weight'))
+        +(hasTempAxis?li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target')):'');
+    var tLeg=document.getElementById('monTempLegend');
+    if(tLeg) tLeg.innerHTML=isSteam?li('#f472b6',t('steam')+' °')
+      :isWater?li('#0ea5e9',t('water')+' °')
+      :li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target')); }
   var padL=34, padR=hasTempAxis?34:8, padT=18, padB=22; // steam/water add a right gutter for the temp axis
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
   var PMAX=12;
@@ -1583,8 +1867,8 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
     var gridC=night?'rgba(255,255,255,.06)':'rgba(139,92,246,.08)', axisC=night?'#8b88a8':'#6b6890';
     bx.strokeStyle=gridC; bx.lineWidth=1; bx.font='700 12px Inter,sans-serif'; bx.fillStyle=axisC; bx.textAlign='right'; bx.textBaseline='middle';
     for(var gi=0;gi<=4;gi++){ var gy=Y0+(gi/4)*PH; bx.beginPath(); bx.moveTo(X0,gy); bx.lineTo(X0+PW,gy); bx.stroke(); bx.fillText(String(Math.round(PMAX-(gi/4)*PMAX)), X0-4, gy); }
-    bx.fillStyle=isWater?'#0284c7':(isSteam?'#d1477f':'#c2620b'); bx.font='700 11px Inter,sans-serif'; bx.textAlign='left';
-    for(var gti=0;gti<=4;gti++){ var gty=Y0+(gti/4)*PH; bx.fillText(String(Math.round(TMAX-(gti/4)*TMAX)),X0+PW+4,gty); }
+    if(hasTempAxis){ bx.fillStyle=isWater?'#0284c7':(isSteam?'#d1477f':'#c2620b'); bx.font='700 11px Inter,sans-serif'; bx.textAlign='left';
+      for(var gti=0;gti<=4;gti++){ var gty=Y0+(gti/4)*PH; bx.fillText(String(Math.round(TMAX-(gti/4)*TMAX)),X0+PW+4,gty); } }
   }
   // blit cached background (it already includes the clear)
   ctx.clearRect(0,0,W,H);
@@ -1620,13 +1904,15 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
 
   function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx));else ctx.lineTo(px(i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   if(isSteam){
-    line(chart.steamTemp,'#f472b6',TMAX,'rgba(244,114,182,.15)'); // steam temp (right axis scale)
+    if(hasTempAxis) line(chart.steamTemp,'#f472b6',TMAX,'rgba(244,114,182,.15)'); // steam temp (right axis scale)
     line(chart.flow,'#38bdf8',FMAX,null);                          // steam flow (small-range scale)
     line(chart.pressure,'#6366f1',PMAX,null);                      // steam pressure
   } else if(isWater){
-    line(chart.waterTemp,'#0ea5e9',TMAX,'rgba(14,165,233,.15)');   // water temp (right axis scale)
+    if(hasTempAxis) line(chart.waterTemp,'#0ea5e9',TMAX,'rgba(14,165,233,.15)');  // water temp (right axis scale)
     line(chart.flow,'#38bdf8',FMAX,null);                          // water flow
     line(chart.pressure,'#6366f1',PMAX,null);                      // water pressure
+  } else if(!hasTempAxis){
+    line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',FMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
   } else {
     // target temperature (dashed) on the right (°C) axis
     if(chart.targetTemp.length>1){ ctx.save(); ctx.setLineDash([4,4]); ctx.beginPath(); for(var ti2=0;ti2<chart.targetTemp.length;ti2++){ var xt=px(ti2),yt=py(chart.targetTemp[ti2],TMAX); if(ti2===0)ctx.moveTo(xt,yt);else ctx.lineTo(xt,yt); } ctx.strokeStyle='rgba(148,163,184,.85)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore(); }
@@ -1640,8 +1926,8 @@ function _drawChartNow(){ var cv=document.getElementById('chart'); if(!cv) retur
   if(N>=1 && running){
     var lx=px(N-1);
     function tag(v,mx,color){ var y=py(v,mx); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(lx,y,3.5,0,Math.PI*2); ctx.fill(); ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(v.toFixed(1), lx-6, y); }
-    if(isSteam){ tag(chart.steamTemp[N-1],TMAX,'#f472b6'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
-    else if(isWater){ tag(chart.waterTemp[N-1],TMAX,'#0ea5e9'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
+    if(isSteam){ if(hasTempAxis) tag(chart.steamTemp[N-1],TMAX,'#f472b6'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
+    else if(isWater){ if(hasTempAxis) tag(chart.waterTemp[N-1],TMAX,'#0ea5e9'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
     else { tag(chart.pressure[N-1],PMAX,'#6366f1'); tag(chart.flow[N-1],FMAX,'#38bdf8'); }
   }
 }
@@ -1667,11 +1953,11 @@ function pauseSvgAnimations(on){
   for(var i=0;i<list.length;i++){ var sv=list[i];
     try{ if(on){ if(sv.pauseAnimations) sv.pauseAnimations(); } else if(sv.unpauseAnimations) sv.unpauseAnimations(); }catch(_){} } }
 // Called on both enter paths (button + machine-reported). Flips the sleep flag,
-// shows the lock, and starts a 1s clock. Sets the clock to update only while the
-// tab is visible so a backgrounded tablet stops the timer entirely.
-// The burn-in guard is pure CSS (breathe/hue-drift/ripple), so no JS loop is needed.
+// shows the lock, and starts the clock. The clock reads H:MM, so it wakes once a
+// minute -- on the minute -- rather than once a second, and each tick also nudges
+// the lock to a new offset, which is the whole burn-in guard.
 function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock(); pauseSvgAnimations(true);
-  updateLockClock(); if(_lockClockT) clearInterval(_lockClockT); _lockClockT=setInterval(function(){ if(!document.hidden) updateLockClock(); },1000);
+  if(_lockClockT) clearTimeout(_lockClockT); _lockShiftI=0; tickLockClock();
   // Dim the panel while asleep (a dark, low-brightness screen resists burn-in and
   // saves power). Remember the level so it can be restored on wake.
   if(prefs.sleepDim){ if(displayState&&displayState.brightness!=null) _preSleepBrightness=displayState.brightness;
@@ -1679,7 +1965,8 @@ function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); do
 // Called on both wake paths. Clears the flag/clock, then repaints the live UI once
 // so everything reflects the current state after the sleep gap.
 function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show'); syncWakeLock(); pauseSvgAnimations(false);
-  if(_lockClockT){ clearInterval(_lockClockT); _lockClockT=null; }
+  if(_lockClockT){ clearTimeout(_lockClockT); _lockClockT=null; }
+  var sh=document.getElementById('lockShift'); if(sh) sh.style.transform='';
   // Restore pre-sleep brightness.
   if(_preSleepBrightness!=null){ var b=_preSleepBrightness; _preSleepBrightness=null; api('PUT','/api/v1/display/brightness',{brightness:b}).catch(function(){}); }
   updateMachineUI(); updateWaterUI(); updateScaleUI(); _chartBgKey=null; drawChart(); }
@@ -1687,6 +1974,16 @@ function enterSleep(){ beginSleepUI();
   api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast('Sleep failed','err'); }); }
 function wakeFromSleep(){ endSleepUI();
   if(state.machine.state==='sleeping') api('PUT','/api/v1/machine/state/idle').catch(function(){ toast('Wake failed','err'); }); }
+// Eight offsets, none of them large enough to notice across a minute, all of them
+// far enough apart that no pixel carries the same glyph for long.
+var LOCK_SHIFTS=[[0,0],[11,-7],[-9,9],[7,11],[-12,-8],[13,5],[-7,-12],[5,-4]];
+var _lockShiftI=0;
+function shiftLockScreen(){ var el=document.getElementById('lockShift'); if(!el) return;
+  var o=LOCK_SHIFTS[_lockShiftI++%LOCK_SHIFTS.length];
+  el.style.transform='translate('+o[0]+'px,'+o[1]+'px)'; }
+function tickLockClock(){ updateLockClock(); shiftLockScreen();
+  if(!_asleep) return;
+  _lockClockT=setTimeout(tickLockClock, 60000-(Date.now()%60000)+50); }
 function updateLockClock(){ var d=new Date();
   document.getElementById('lockClock').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
   document.getElementById('lockDate').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
@@ -1829,7 +2126,11 @@ function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){
 function syncRecipe(){
   document.getElementById('doseIn').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOut').textContent=settings.doseOut.toFixed(1);
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
-  document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—'; }
+  document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
+  var md=document.getElementById('monDose');
+  if(md){ md.textContent=settings.doseIn.toFixed(1);
+    document.getElementById('monYield').textContent=settings.doseOut.toFixed(1);
+    document.getElementById('monRatio').textContent=ratio?('1:'+ratio.toFixed(1)):'—'; } }
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
@@ -1857,12 +2158,12 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, sleepDim:true, sleepBrightness:20,
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:true, sleepDim:true, sleepBrightness:20,
   // Water tank calibration. mode: 'off' | 'twopoint' | 'pour'.
   // twopoint: hEmpty/hFull (mm) + capacity(ml). pour: hEmpty(mm) + poured(ml) at hPour(mm).
   waterCal:{ mode:'off', hEmpty:null, hFull:null, capacity:1500, poured:null, hPour:null } };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim; if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
+function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prefs')||'{}'); if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye; if(typeof p.night==='boolean') prefs.night=p.night; if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto; if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey; if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost; if(typeof p.lang==='string') prefs.lang=p.lang; if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit; if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit; if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull; if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto; if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim; if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness; if(p.waterCal&&typeof p.waterCal==='object'){ for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }catch(_){ } applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
 // the chosen calibration. Falls back to treating the raw value as % (legacy).
 function tankPercent(mm){ var c=prefs.waterCal||{};
@@ -1940,6 +2241,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('brightness','brightnessDesc','<div class="opt-ctrl"><input type="range" class="slider" min="10" max="100" step="1" value="'+br+'"'+(brSupported?'':' disabled')+' oninput="setBrightness(this.value,true)" onchange="setBrightness(this.value,false)"><span class="opt-val" id="brVal">'+br+'</span></div>');
     h+=row('wakeLock','wakeLockDesc',sw('setWake',!!gwSettings.keepAwake,'setKeepAwake(this.checked)'));
     h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
+    h+=row('monAuto','monAutoDesc',sw('setMonAuto',!!prefs.monAuto,'setMonAuto(this.checked)'));
     h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
     var sb=prefs.sleepBrightness||20;
     h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
@@ -1990,6 +2292,7 @@ function setBrightness(v,live){ document.getElementById('brVal').textContent=v; 
 function setKeepAwake(on){ gwSettings.keepAwake=on; syncWakeLock(); api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast('Save failed','err'); }); }
 function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
+function setMonAuto(on){ prefs.monAuto=!!on; savePrefs(); }
 function setSleepBright(v,live){ document.getElementById('sbVal').textContent=v; if(live) return; prefs.sleepBrightness=parseInt(v,10); savePrefs(); }
 function setRefillLevel(v){ state.water.refill=parseInt(v,10); api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)}).then(function(){ toast('Refill level saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setRefillKit(v){ var n=parseInt(v,10); gwSettings.refillKitSetting=n; api('POST','/api/v1/settings',{refillKitSetting:n}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
@@ -5908,9 +6211,15 @@ function renderShotList(){ var list=document.getElementById('slList'); if(!list)
     var badge=document.createElement('div'); badge.className='sl-badge'; badge.textContent=stars||'☕';
     var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
     body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(fmtShotDate(s))+ry+'</div>';
-    it.appendChild(badge); it.appendChild(body);
+    var ci=cmpIndex(s.id);
+    var add=document.createElement('button'); add.className='sl-cmp'+(ci>=0?' on':'');
+    add.textContent=ci>=0?String(ci+1):'+'; add.title=t('cmpAdd');
+    if(ci>=0) add.style.background=CMP_COLORS[ci%CMP_COLORS.length];
+    add.onclick=function(e){ e.stopPropagation(); toggleCompare(s.id); };
+    it.appendChild(badge); it.appendChild(body); it.appendChild(add);
     it.onclick=function(){ slSelect(s); }; list.appendChild(it); }); }
-function slSelect(summary){ slSel=summary; renderShotList();
+function slSelect(summary){ slSel=summary; slAi=loadShotAi([summary]); renderShotList();
+  if(slCompare.length>=2){ renderCompare(); return; }
   var wrap=document.getElementById('slDetail'); wrap.innerHTML='<div class="ep-placeholder">Loading shot…</div>';
   api('GET','/api/v1/shots/'+summary.id).then(function(s){ if(!s){ wrap.innerHTML='<div class="ep-placeholder">Not found</div>'; return; } renderShotDetail(s); })
     .catch(function(){ renderShotDetail(summary); }); }
@@ -5922,7 +6231,7 @@ function shotContextLine(s){ var c=(s.workflow&&s.workflow.context)||{}; var bit
   var grind=[c.grinderModel,c.grinderSetting!=null&&c.grinderSetting!==''?('@ '+c.grinderSetting):''].filter(Boolean).join(' ');
   if(grind) bits.push(grind);
   return bits.length?'<div class="sl-dt-sub">'+escapeHtml(bits.join('  ·  '))+'</div>':''; }
-function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
+function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s&&s.measurements&&s.measurements.length) slFull[s.id]=s; var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
   var ctx=(s.workflow&&s.workflow.context)||{}; var stats=shotStats(s);
   var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:(ctx.targetDoseWeight!=null?ctx.targetDoseWeight:null));
   var yld=(an.actualYield!=null?an.actualYield:(stats.weight!=null?Math.round(stats.weight*10)/10:(ctx.targetYield!=null?ctx.targetYield:null)));
@@ -5940,6 +6249,7 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); var 
       +metric(stats.groupTemp?stats.groupTemp.toFixed(1):null,t('group')+' °C')
       +metric(stats.volume!=null?stats.volume.toFixed(1):null,t('volume')+' ml')
     +'</div>'
+    +aiPanelHtml()
     +'<div class="ep-section-title" style="margin-top:16px">Tasting log</div>'
     +'<div class="field-row"><div class="field"><label>Actual Dose (g)</label><input id="slDose" type="number" step="0.1" value="'+(an.actualDoseWeight!=null?an.actualDoseWeight:'')+'"></div>'
       +'<div class="field"><label>Actual Yield (g)</label><input id="slYield" type="number" step="0.1" value="'+(an.actualYield!=null?an.actualYield:'')+'"></div></div>'
@@ -5960,6 +6270,48 @@ function saveShotLog(id){ var dose=parseFloat(document.getElementById('slDose').
 // Draw a recorded shot onto a canvas: pressure, flow, weight and the group /
 // mix / target temperatures, with the profile frame boundaries behind them.
 // Measurements are nested: m[i].machine.{...}, m[i].scale.{...}, m[i].volume.
+// The monitor's second graph. It shares the extraction graph's width, padding and
+// sample count, so a moment on one lines up with the same moment on the other.
+// Its own background cache, or alternating between the two canvases would
+// repaint the grid twice a frame.
+var _tempBg=null,_tempBgKey=null,_tempDims={w:0,h:0};
+function drawMonTempChart(){
+  if(!_monOpen||_asleep) return;
+  var cv=document.getElementById('monTempChart'); if(!cv) return;
+  var dpr=window.devicePixelRatio||1, r=cv.parentElement.getBoundingClientRect();
+  if(r.width===0||r.height===0) return;
+  if(_tempDims.w!==r.width||_tempDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _tempDims.w=r.width; _tempDims.h=r.height; }
+  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  var W=r.width,H=r.height;
+  var isSteam=(chart.mode==='steam'), isWater=(chart.mode==='water'||chart.mode==='flush');
+  var TMAX=isSteam?165:100, TMIN=isSteam?0:60;   // espresso sits in a narrow band, so the axis starts high
+  var padL=34,padR=8,padT=10,padB=16;
+  var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
+  var N=chart.pressure.length;
+  function px(i){ return X0+(N<2?0:(i/(N-1))*PW); }
+  function py(v){ return Y0+PH-Math.min(Math.max((v-TMIN)/(TMAX-TMIN),0),1)*(PH-4)-2; }
+  var night=document.body.classList.contains('night');
+  var key=W+'x'+H+'|'+chart.mode+'|'+(night?'n':'d');
+  if(_tempBgKey!==key){ _tempBgKey=key;
+    if(!_tempBg) _tempBg=document.createElement('canvas');
+    _tempBg.width=cv.width; _tempBg.height=cv.height;
+    var bx=_tempBg.getContext('2d'); bx.setTransform(dpr,0,0,dpr,0,0); bx.clearRect(0,0,W,H);
+    bx.strokeStyle=night?'rgba(255,255,255,.06)':'rgba(139,92,246,.08)'; bx.lineWidth=1;
+    bx.font='700 11px Inter,sans-serif'; bx.fillStyle=night?'#8b88a8':'#6b6890';
+    bx.textAlign='right'; bx.textBaseline='middle';
+    for(var g=0;g<=2;g++){ var gy=Y0+(g/2)*PH;
+      bx.beginPath(); bx.moveTo(X0,gy); bx.lineTo(X0+PW,gy); bx.stroke();
+      bx.fillText(String(Math.round(TMAX-(g/2)*(TMAX-TMIN))),X0-4,gy); } }
+  ctx.clearRect(0,0,W,H);
+  if(_tempBg) ctx.drawImage(_tempBg,0,0,W,H);
+  function tline(d,c,dash){ if(!d||d.length<2) return;
+    ctx.save(); if(dash) ctx.setLineDash(dash);
+    ctx.beginPath(); for(var i=0;i<d.length;i++){ var x=px(i),y=py(d[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+    ctx.strokeStyle=c; ctx.lineWidth=dash?1.5:2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); ctx.restore(); }
+  if(isSteam) tline(chart.steamTemp,'#f472b6');
+  else if(isWater) tline(chart.waterTemp,'#0ea5e9');
+  else { tline(chart.targetTemp,'rgba(148,163,184,.85)',[4,4]); tline(chart.groupTemp,'#f97316'); tline(chart.mixTemp,'#60a5fa'); }
+}
 function shotSeconds(s){ var m=s.measurements||[]; if(m.length<2) return 0;
   var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
   return (isNaN(a)||isNaN(b))?0:Math.max(0,(b-a)/1000); }
@@ -6018,6 +6370,290 @@ function shotLegend(s){
   function li(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+escapeHtml(label)+'</span>'; }
   return '<div class="chart-legend sl-legend">'+li('#6366f1',t('pressure'))+li('#38bdf8',t('flow'))
     +(hasWeight?li('#10b981',t('weight')):'')+li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target'))+'</div>'; }
+
+// -- Comparing shots ------------------------------------------------
+// A shot only means something next to another one, so any row can be added to a
+// set; two or more and the detail pane becomes an overlay of them instead.
+var CMP_COLORS=['#6366f1','#ec4899','#10b981','#f59e0b'];
+var slCompare=[], slFull={}, slSeries='pressure', slAiBusy=false, slAi=null, _cmpToken=0;
+function cmpIndex(id){ for(var i=0;i<slCompare.length;i++) if(slCompare[i].id===id) return i; return -1; }
+function toggleCompare(id){
+  var i=cmpIndex(id);
+  if(i>=0) slCompare.splice(i,1);
+  else {
+    if(slCompare.length>=CMP_COLORS.length){ toast(t('cmpMax').replace('{n}',CMP_COLORS.length),'err'); return; }
+    var row=shotList.filter(function(x){ return x.id===id; })[0]||((slSel&&slSel.id===id)?slSel:null);
+    if(!row) return;
+    slCompare.push(row); }
+  slAi=loadShotAi(slCompare.length>=2?slCompare:(slSel?[slSel]:[]));
+  renderShotList();
+  if(slCompare.length>=2) renderCompare();
+  else if(slSel) slSelect(slSel); }
+function clearCompare(){ slCompare=[]; renderShotList(); if(slSel) slSelect(slSel); }
+function setCmpSeries(k){ slSeries=k; renderCompare(); }
+// The list endpoint carries no measurements, so each recording is fetched once
+// and kept for as long as the page is open.
+function withFullShots(rows){
+  return Promise.all(rows.map(function(r){
+    if(slFull[r.id]) return Promise.resolve(slFull[r.id]);
+    return api('GET','/api/v1/shots/'+r.id).then(function(f){ slFull[r.id]=f||r; return slFull[r.id]; })
+      .catch(function(){ return r; }); })); }
+var CMP_SERIES=[
+  ['pressure', function(pt){ var o=pt.machine||{}; return o.pressure!=null?o.pressure:null; }, 12, []],
+  ['flow',     function(pt){ var o=pt.machine||{}; return o.flow!=null?o.flow:null; }, 8, [5,3]],
+  ['weight',   function(pt){ return (pt.scale&&pt.scale.weight!=null)?pt.scale.weight:null; }, 0, [1.5,2.5]],
+  ['group',    function(pt){ var o=pt.machine||{}; return o.groupTemperature!=null?o.groupTemperature:null; }, 100, [8,4]]
+];
+function cmpSeriesDef(){ for(var i=0;i<CMP_SERIES.length;i++) if(CMP_SERIES[i][0]===slSeries) return CMP_SERIES[i];
+  return CMP_SERIES[0]; }
+function cmpAllOn(){ return slSeries==='all'; }
+// Weight has no ceiling of its own, so it takes one from the heaviest shot on
+// screen -- shared, or the same gram would sit at a different height per shot.
+function cmpWeightMax(shots){ var w=0;
+  shots.forEach(function(sh){ (sh.measurements||[]).forEach(function(pt){
+    var v=pt.scale&&pt.scale.weight; if(v>w) w=v; }); });
+  return w>0?Math.max(10,Math.ceil(w/10)*10):0; }
+function cmpPoints(sh,get){ var m=sh.measurements||[]; if(m.length<2) return [];
+  var t0=Date.parse((m[0].machine||{}).timestamp)||0, out=[];
+  m.forEach(function(pt){ var v=get(pt); if(v==null) return;
+    out.push({t:((Date.parse((pt.machine||{}).timestamp)||0)-t0)/1000, v:v}); });
+  return out; }
+function cmpSeconds(sh){ var m=sh.measurements||[]; if(m.length<2) return 0;
+  var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
+  return (isNaN(a)||isNaN(b))?0:Math.max(0,(b-a)/1000); }
+function cmpStyleKeys(){
+  return '<div class="cmp-keys cmp-styles">'+CMP_SERIES.map(function(sp){
+    return '<span class="cmp-key"><svg width="24" height="8" aria-hidden="true">'
+      +'<line x1="1" y1="4" x2="23" y2="4" stroke="currentColor" stroke-width="2"'
+      +(sp[3].length?' stroke-dasharray="'+sp[3].join(',')+'"':'')+'></line></svg>'
+      +escapeHtml(t(sp[0]))+'</span>'; }).join('')+'</div>'; }
+// One series across every shot on a shared axis -- same seconds, same scale --
+// so the difference between two pulls is the distance between two lines.
+function drawCompare(canvas,shots){
+  var dpr=window.devicePixelRatio||1, r=canvas.getBoundingClientRect();
+  if(r.width===0) r={width:canvas.width||600,height:canvas.height||150};
+  canvas.width=r.width*dpr; canvas.height=r.height*dpr;
+  var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  var night=document.body.classList.contains('night');
+  var all=cmpAllOn();
+  var padL=26,padR=all?26:12,padT=8,padB=18, PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
+  // The time axis comes from the recordings, not from the measurement on show,
+  // so switching tabs never moves a shot along the x axis.
+  var tMax=0;
+  shots.forEach(function(sh){ var sec=cmpSeconds(sh); if(sec>tMax) tMax=sec; });
+  if(!tMax) tMax=1;
+
+  ctx.strokeStyle=night?'rgba(255,255,255,.06)':'rgba(139,92,246,.10)'; ctx.lineWidth=1;
+  for(var gi=0;gi<=2;gi++){ var gy=Y0+(gi/2)*PH; ctx.beginPath(); ctx.moveTo(X0,gy); ctx.lineTo(X0+PW,gy); ctx.stroke(); }
+  ctx.font='700 11px Inter,sans-serif';
+  ctx.textBaseline='top'; ctx.textAlign='center'; ctx.fillStyle=night?'#8b88a8':'#6b6890';
+  for(var ti=0;ti<=2;ti++) ctx.fillText(Math.round((ti/2)*tMax)+'s', X0+(ti/2)*PW, Y0+PH+4);
+
+  function stroke(pts,color,mx,dash,width){
+    if(pts.length<2||!mx) return;
+    ctx.setLineDash(dash||[]); ctx.strokeStyle=color; ctx.lineWidth=width;
+    ctx.lineJoin='round'; ctx.lineCap=dash&&dash.length?'butt':'round';
+    ctx.beginPath();
+    pts.forEach(function(q,j){ var x=X0+Math.min(q.t/tMax,1)*PW, y=Y0+PH-Math.min(Math.max(q.v,0)/mx,1)*(PH-4)-2;
+      if(j===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.stroke(); ctx.setLineDash([]); }
+
+  ctx.textBaseline='middle';
+  if(all){
+    // Four measurements on two axes, the way a single shot already draws them:
+    // pressure on the left, temperature on the right, flow and weight between.
+    var wMax=cmpWeightMax(shots);
+    ctx.textAlign='right'; ctx.fillStyle=night?'#8b88a8':'#6b6890';
+    for(var la=0;la<=2;la++) ctx.fillText(String(Math.round(12-(la/2)*12)), X0-3, Y0+(la/2)*PH);
+    ctx.textAlign='left'; ctx.fillStyle='#c2620b';
+    for(var ra=0;ra<=2;ra++) ctx.fillText(String(Math.round(100-(ra/2)*100)), X0+PW+3, Y0+(ra/2)*PH);
+    CMP_SERIES.forEach(function(sp){
+      var mx=sp[2]||wMax; if(!mx) return;
+      shots.forEach(function(sh,i){
+        stroke(cmpPoints(sh,sp[1]), CMP_COLORS[i%CMP_COLORS.length], mx, sp[3], sp[3].length?1.4:2); }); });
+    return; }
+
+  var def=cmpSeriesDef(), get=def[1], fixed=def[2];
+  var series=shots.map(function(sh){ return cmpPoints(sh,get); });
+  var vMax=0;
+  series.forEach(function(a){ a.forEach(function(q){ if(q.v>vMax) vMax=q.v; }); });
+  vMax=fixed||(vMax>0?Math.max(10,Math.ceil(vMax/10)*10):1);
+  ctx.textAlign='right'; ctx.fillStyle=night?'#8b88a8':'#6b6890';
+  for(var li=0;li<=2;li++) ctx.fillText(String(Math.round(vMax-(li/2)*vMax)), X0-3, Y0+(li/2)*PH);
+  series.forEach(function(a,i){ stroke(a, CMP_COLORS[i%CMP_COLORS.length], vMax, [], 2); }); }
+function cmpShotCols(shots){
+  return shots.map(function(sh,i){
+    var st=shotStats(sh), a=sh.annotations||{}, c=(sh.workflow&&sh.workflow.context)||{};
+    var d=(a.actualDoseWeight!=null?a.actualDoseWeight:(c.targetDoseWeight!=null?c.targetDoseWeight:null));
+    var y=(a.actualYield!=null?a.actualYield:(st.weight!=null?Math.round(st.weight*10)/10:(c.targetYield!=null?c.targetYield:null)));
+    return {sh:sh,st:st,d:d,y:y,i:i}; }); }
+function cmpMetricRows(){ return [
+  [t('dose')+' g',   function(c){ return c.d; }],
+  [t('yield')+' g',  function(c){ return c.y; }],
+  [t('ratio'),       function(c){ return (c.d&&c.y)?('1:'+(c.y/c.d).toFixed(1)):null; }],
+  [t('time')+' s',   function(c){ return c.st.seconds?c.st.seconds.toFixed(1):null; }],
+  [t('peak')+' bar', function(c){ return c.st.peakPressure?c.st.peakPressure.toFixed(1):null; }],
+  [t('group')+' °C', function(c){ return c.st.groupTemp?c.st.groupTemp.toFixed(1):null; }],
+  [t('grinder'),     function(c){ var x=((c.sh.workflow&&c.sh.workflow.context)||{}).grinderSetting;
+    return (x!=null&&x!=='')?String(x):null; }],
+  ['TDS %',          function(c){ var a=c.sh.annotations||{}; return a.drinkTds!=null?a.drinkTds:null; }],
+  ['EY %',           function(c){ var a=c.sh.annotations||{}; return a.drinkEy!=null?a.drinkEy:null; }],
+  [t('rating'),      function(c){ var a=c.sh.annotations||{}; return a.enjoyment?('★'+Math.round(a.enjoyment)):null; }]
+]; }
+function cmpCell(v){ return (v==null||v==='')?'—':escapeHtml(String(v)); }
+function renderCompare(){
+  var wrap=document.getElementById('slDetail'); if(!wrap) return;
+  var rows=slCompare.slice(), tok=++_cmpToken;
+  if(!slFull[rows[0].id]) wrap.innerHTML='<div class="ep-placeholder">'+escapeHtml(t('loading'))+'</div>';
+  withFullShots(rows).then(function(shots){
+    if(tok!==_cmpToken||slCompare.length<2) return;
+    var cols=cmpShotCols(shots);
+    wrap.innerHTML='<div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(t('cmpHead'))+'</div>'
+        +'<div class="sl-dt-sub">'+escapeHtml(t('cmpSub').replace('{n}',shots.length))+'</div></div>'
+        +'<button class="m-btn" onclick="clearCompare()">'+escapeHtml(t('cmpClear'))+'</button></div>'
+      +'<div class="cmp-keys">'+cols.map(function(c){
+          return '<span class="cmp-key"><i style="background:'+CMP_COLORS[c.i%CMP_COLORS.length]+'"></i>'
+            +escapeHtml(splitTitle(((c.sh.workflow&&c.sh.workflow.profile)||{}).title||'Shot').name)
+            +' <b>'+escapeHtml(fmtShotDate(c.sh))+'</b></span>'; }).join('')+'</div>'
+      +'<div class="cmp-tabs">'+CMP_SERIES.map(function(x){ return x[0]; }).concat(['all']).map(function(k){
+          return '<button class="bg-tab2'+(slSeries===k?' on':'')+'" onclick="setCmpSeries(\''+k+'\')">'
+            +escapeHtml(t(k==='all'?'cmpAll':k))+'</button>'; }).join('')+'</div>'
+      +'<div class="sl-canvas-wrap"><canvas id="cmpCurve"></canvas></div>'
+      +(cmpAllOn()?cmpStyleKeys():'')
+      +'<table class="cmp-table"><tbody>'+cmpMetricRows().map(function(mr){
+          return '<tr><th>'+escapeHtml(mr[0])+'</th>'+cols.map(function(c){
+            return '<td>'+cmpCell(mr[1](c))+'</td>'; }).join('')+'</tr>'; }).join('')+'</tbody></table>'
+      +aiPanelHtml();
+    var cv=document.getElementById('cmpCurve');
+    if(cv) requestAnimationFrame(function(){ drawCompare(cv,shots); }); }); }
+
+// -- AI reading of what the curve did --------------------------------
+// The model gets the profile it was pulled on, the bean and grind, the measured
+// numbers and a downsampled curve: enough to say something specific without
+// shipping three hundred points per shot.
+function shotDigestForAi(sh){
+  var pr=(sh.workflow&&sh.workflow.profile)||{}, c=(sh.workflow&&sh.workflow.context)||{};
+  var a=sh.annotations||{}, st=shotStats(sh), m=sh.measurements||[], pts=[];
+  if(m.length>1){
+    var t0=Date.parse((m[0].machine||{}).timestamp)||0, step=Math.max(1,Math.floor(m.length/24));
+    for(var i=0;i<m.length;i+=step){ var pt=m[i], mac=pt.machine||{};
+      pts.push({ t:Math.round(((Date.parse(mac.timestamp)||0)-t0)/100)/10,
+        p:mac.pressure!=null?Math.round(mac.pressure*10)/10:null,
+        f:mac.flow!=null?Math.round(mac.flow*10)/10:null,
+        w:(pt.scale&&pt.scale.weight!=null)?Math.round(pt.scale.weight*10)/10:null }); } }
+  var d=(a.actualDoseWeight!=null?a.actualDoseWeight:(c.targetDoseWeight!=null?c.targetDoseWeight:null));
+  var y=(a.actualYield!=null?a.actualYield:(st.weight!=null?Math.round(st.weight*10)/10:(c.targetYield!=null?c.targetYield:null)));
+  return { when:fmtShotDate(sh), profile:pr.title||'',
+    steps:(pr.steps||[]).slice(0,12).map(function(x){
+      return { name:x.name, pump:x.pump, pressure:x.pressure, flow:x.flow, seconds:x.seconds, temperature:x.temperature }; }),
+    coffee:[c.coffeeRoaster,c.coffeeName].filter(Boolean).join(' · '),
+    grinder:c.grinderModel||'', grind:c.grinderSetting,
+    dose:d, yield:y, ratio:(d&&y)?Math.round((y/d)*100)/100:null,
+    seconds:st.seconds?Math.round(st.seconds*10)/10:null,
+    peakBar:st.peakPressure?Math.round(st.peakPressure*10)/10:null,
+    groupC:st.groupTemp?Math.round(st.groupTemp*10)/10:null,
+    tds:a.drinkTds, ey:a.drinkEy, rating:a.enjoyment, notes:a.espressoNotes||'',
+    curve:pts }; }
+function shotAiPrompt(digests,lang){
+  return 'You are an espresso dial-in assistant. Answer in '+(lang==='ko'?'Korean':'English')+'.\n'
+    +(digests.length>1
+      ? 'Compare these recorded shots. Say what actually differs between them, what the curves show, and what to pull next.\n'
+      : 'Read this recorded shot. Say what the curve shows and what to change next.\n')
+    +'Ground every claim in the numbers given. Never invent a measurement that is not there; where something cannot be judged from the data, say so.\n'
+    +'In curve, t is seconds, p is bar, f is ml/s, w is grams on the scale.\n'
+    +'Reply as JSON: {"verdict":"one sentence","observations":["..."],"suggestions":[{"change":"short imperative","why":"one sentence"}]}\n'
+    +'At most 4 observations and 3 suggestions.\n\nSHOTS: '+JSON.stringify(digests); }
+function aiPanelHtml(){
+  var body='';
+  if(slAiBusy) body='<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>';
+  else if(slAi) body=aiResultHtml(slAi);
+  return '<div class="sl-ai" id="slAi"><div class="sl-ai-head"><span>'+escapeHtml(t('aiAnalysis'))+'</span>'
+    +'<button class="m-btn" onclick="analyzeShots()"'+(slAiBusy?' disabled':'')+'>&#10024; '
+    +escapeHtml(slAi?t('aiAgain'):t('aiRun'))+'</button></div>'+body+'</div>'; }
+function aiResultHtml(r){
+  return '<div class="ai-verdict">'+escapeHtml(String(r.verdict||''))+'</div>'
+    +((r.observations||[]).length?'<ul class="ai-list">'+r.observations.map(function(o){
+        return '<li>'+escapeHtml(String(o))+'</li>'; }).join('')+'</ul>':'')
+    +((r.suggestions||[]).length?'<div class="ai-sugs">'+r.suggestions.map(function(x){
+        return '<div class="ai-sug"><div class="ai-sug-c">'+escapeHtml(String((x&&x.change)||''))+'</div>'
+          +'<div class="ai-sug-w">'+escapeHtml(String((x&&x.why)||''))+'</div></div>'; }).join('')+'</div>':''); }
+function aiCacheKey(rows){ return rows.map(function(r){ return r.id; }).sort().join(','); }
+function loadShotAi(rows){ if(!rows||!rows.length) return null;
+  try{ var all=JSON.parse(localStorage.getItem('aurora_shotai')||'{}');
+    return all[aiCacheKey(rows)]||null; }catch(_){ return null; } }
+function saveShotAi(rows,val){ try{ var all=JSON.parse(localStorage.getItem('aurora_shotai')||'{}');
+  all[aiCacheKey(rows)]=val;
+  var keys=Object.keys(all); while(keys.length>40){ delete all[keys.shift()]; }
+  localStorage.setItem('aurora_shotai',JSON.stringify(all)); }catch(_){} }
+function aiRows(){ return (slCompare.length>=2)?slCompare.slice():(slSel?[slSel]:[]); }
+function analyzeShots(){
+  if(slAiBusy) return Promise.resolve();
+  var rows=aiRows(); if(!rows.length) return Promise.resolve();
+  var key=(prefs.geminiKey||'').trim();
+  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
+  slAiBusy=true; slAi=null; refreshAiPanel();
+  return withFullShots(rows).then(function(shots){
+      return geminiJson(key,[{text:shotAiPrompt(shots.map(shotDigestForAi),_lang)}],0.2); })
+    .then(function(res){
+      slAi=(res&&(res.verdict||res.observations||res.suggestions))?res:null;
+      if(slAi) saveShotAi(rows,slAi); else toast(t('aiNoResult'),'err'); })
+    .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
+    .then(function(){ slAiBusy=false; refreshAiPanel(); }); }
+function refreshAiPanel(){ var el=document.getElementById('slAi'); if(el) el.outerHTML=aiPanelHtml(); }
+
+// ── Monitor ─────────────────────────────────────────────────────────
+// One action, full screen: the graph it is worth watching, the numbers worth
+// reading across a room, and nothing else. Opens itself when an action starts if
+// the setting says so, and can always be opened by tapping the graph.
+var _monOpen=false, _monAuto=false;
+var MON_STATES={espresso:1,steam:1,flush:1,hotWater:1};
+function monBeanLine(){
+  var c=context||{}, bits=[];
+  var bean=[c.coffeeRoaster,c.coffeeName].filter(Boolean).join(' · '); if(bean) bits.push(bean);
+  var grind=[c.grinderModel,(c.grinderSetting!=null&&c.grinderSetting!=='')?('@ '+c.grinderSetting):'']
+    .filter(Boolean).join(' ');
+  if(grind) bits.push(grind);
+  return bits.join('  ·  '); }
+function syncMonitorHead(){
+  if(!_monOpen) return;
+  var pr=(curProfileObj&&curProfileObj.profile)||null;
+  document.getElementById('monTitle').textContent=pr?splitTitle(pr.title||'').name:t('monNoProfile');
+  document.getElementById('monBean').textContent=monBeanLine();
+  var st=state.machine.state, el=document.getElementById('monState');
+  el.textContent=MON_STATES[st]?t(st==='hotWater'?'water':st):''; }
+function syncMonitorLive(){
+  var w=document.getElementById('monWeight'); if(!w) return;
+  var u=document.getElementById('monWeightU');
+  if(u) u.textContent=weightUnitLabel();
+  var v=(!state.scaleConnected||state.scaleWeight===null)?0:state.scaleWeight;
+  w.firstChild.nodeValue=convWeight(v).toFixed(1); }
+function openMonitor(auto){
+  if(_monOpen) return;
+  _monOpen=true; _monAuto=!!auto;
+  document.getElementById('monPage').classList.add('show');
+  afterPageChange();
+  // the two canvases are different sizes, so the cached backing-store dimensions
+  // and the mode-keyed legend both have to be re-derived
+  _chartDims.w=0; _chartDims.h=0; _chartLegendMode=null; _tempDims.w=0; _tempDims.h=0; _tempBgKey=null;
+  syncMonitorHead(); syncMonitorLive(); syncRecipe();
+  applyGauges('monGauge1Name','monPressure','monGauge2Name','monFlow');
+  tick(); drawChart(); }
+function closeMonitor(){
+  if(!_monOpen) return;
+  _monOpen=false; _monAuto=false;
+  document.getElementById('monPage').classList.remove('show');
+  afterPageChange();
+  _chartDims.w=0; _chartDims.h=0; _chartLegendMode=null; _chartBgKey=null; _tempBgKey=null;
+  drawChart(); }
+function toggleMonitor(){ if(_monOpen) closeMonitor(); else openMonitor(false); }
+// An action starting opens the monitor when asked; one ending closes it again
+// only if it was the action that opened it.
+function monitorOnState(st,prev){
+  var now=!!MON_STATES[st], was=!!MON_STATES[prev];
+  if(now&&!was&&prefs.monAuto&&!_monOpen&&!_asleep) openMonitor(true);
+  else if(!now&&was&&_monOpen&&_monAuto) closeMonitor();
+  if(_monOpen) syncMonitorHead(); }
 
 // ── Workflow bootstrap ──────────────────────────────────────────────
 function loadWorkflow(){ api('GET','/api/v1/workflow').then(function(w){ if(!w) return;

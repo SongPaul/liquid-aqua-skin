@@ -19,9 +19,12 @@ It is a single file. `index.html` holds the markup, the styles and the JavaScrip
 - [The main screen](#the-main-screen)
 - [Pulling a shot](#pulling-a-shot)
 - [Steam, flush and hot water](#steam-flush-and-hot-water)
+- [Monitor](#monitor)
 - [Profiles](#profiles)
 - [Beans and grinders](#beans-and-grinders)
 - [Shot log](#shot-log)
+  - [Comparing shots](#comparing-shots)
+  - [AI reading](#ai-reading)
 - [Settings](#settings)
 - [Sleep screen](#sleep-screen)
 - [Where things are stored](#where-things-are-stored)
@@ -96,7 +99,7 @@ If the tank is genuinely low it turns red regardless, and a warning appears next
 
 Across the top of this card sit the current **steam, flush and water settings** — the preset name if the numbers match one, otherwise `Custom`. Tap any of them to open its options.
 
-Below on the left: live weight with a **Tare** button, the shot timer, and pressure and flow. On the right, the recipe as four steppers:
+Below on the left: live weight with a **Tare** button, the shot timer, and the two [dials](#the-dials). On the right, the recipe as four steppers:
 
 | | |
 |---|---|
@@ -107,9 +110,32 @@ Below on the left: live weight with a **Tare** button, the shot timer, and press
 
 Tap any number to type it on a keypad instead. The grinder's name sits under its stepper — tap it to open that grinder's page.
 
+### The dials
+
+![The dials](docs/gauges.png)
+
+Pressure and flow are arc gauges. The band is not decoration — it is read off **the profile you have loaded**, so the same needle means different things under different profiles.
+
+A pressure step targets its own pressure, and a flow step's limiter is the pressure it must not exceed; for flow the two roles swap. Steps that target almost nothing — the drip and pre-fill stages — are left out. What remains is the range the profile actually works in, and the dial is divided around it:
+
+| Band | | |
+|---|---|---|
+| Grey | far short | the puck is not taking pressure at all |
+| Amber | short | usually a grind that is too coarse |
+| **Green** | **on profile** | **where the profile asked to be** |
+| Red | over | the machine is pushing harder than the profile ever wanted |
+
+The label under the reading names the band you are in, in its colour. The scale is quartered, so pressure reads 0 · 3 · 6 · 9 · 12 and flow 0 · 2 · 4 · 6 · 8.
+
+The dials retarget with the action: during hot water the left one becomes mix temperature on a 0–100 scale, during steam the right one becomes steam flow on 0–2.5. Neither carries the espresso bands, because the profile's pressure range has nothing to say about them.
+
+With no profile loaded the arc is a single neutral band and only the scale reads.
+
 ### Extraction graph
 
-Pressure, flow, weight, group and mix temperature and the target, with step boundaries marked and the final value labelled on each line. It switches to a steam or hot-water graph while those run. **Shot Log** at the top opens the [history](#shot-log).
+Pressure, flow, weight, group and mix temperature and the target, with step boundaries marked and the final value labelled on each line. It switches to a steam, flush or hot-water graph while those run.
+
+**Tap the graph** to open the [monitor](#monitor).
 
 ---
 
@@ -137,6 +163,27 @@ Tap the chip in the recipe card, or hold the header button, to open the options 
 Changes take effect as you tap. The gateway does no debouncing of its own and drops requests that queue too long, so the skin batches your taps and writes once, 450 ms after you stop — five taps produce one write.
 
 The chip band stays visible the whole time, with the running one outlined, so you can see the other two settings without leaving.
+
+---
+
+## Monitor
+
+![Monitor](docs/monitor.png)
+
+One action, full screen: the graph worth watching and the numbers worth reading from across the room. It opens itself when a shot, steam, flush or hot water starts — turn that off with *Full-screen monitor* in Settings — and tapping the extraction graph opens it at any time.
+
+| | |
+|---|---|
+| Heading | the profile name on its own, and under it the bean, roaster, grinder and grind |
+| **Extraction** | the large graph: pressure, flow and weight |
+| **Temperature** | a second, smaller graph beneath it — group, mix and target, or steam / water temperature depending on the action |
+| Weight · Elapsed | large enough to read at a distance |
+| The two dials | the same bands and scale as the main screen, at twice the size |
+| Recipe | dose, yield and ratio as configured |
+
+The two graphs share a width, a padding and a sample count, so a moment on one is directly above the same moment on the other. Splitting them lets the extraction graph keep its whole height for pressure and flow instead of sharing it with a temperature axis.
+
+A monitor that opened itself closes itself when the action ends. One you opened by hand stays until you close it.
 
 ---
 
@@ -257,6 +304,43 @@ Every recorded shot, newest first, with its rating. Pick one to see the recorded
 
 **Save Log** writes it back to the gateway. Turn on *Auto-open shot log* in Settings to have this open by itself when a shot ends.
 
+### Comparing shots
+
+![Comparing shots](docs/shot-compare.png)
+
+A shot on its own tells you what happened. Two of them tell you what changed.
+
+Every row in the list carries a **+** on its right. Press it and the shot joins a comparison, taking a colour and a number; press it again to drop it. Up to four at once.
+
+With two or more picked, the detail becomes an overlay instead: one measurement across every shot, on a shared axis, so the difference between two pulls is the distance between two lines.
+
+| | |
+|---|---|
+| **Pressure / Flow / Weight / Group** | pick which one to overlay; the axis rescales to whichever is showing |
+| **All** | every measurement at once — colour still says which shot, the dash says which measurement |
+| Colour key | which line is which shot, with the time it was pulled |
+| The table below | dose, yield, ratio, time, peak pressure, group temperature, grind setting, TDS, EY and rating, one column per shot |
+
+The time axis comes from the recordings themselves, not from the measurement on show, so switching tabs never moves a shot along it.
+
+![All measurements at once](docs/shot-compare-all.png)
+
+**All** draws the same two scales a single recorded shot uses — pressure down the left, temperature down the right, flow and weight between them — with a key under the chart for the dash patterns.
+
+**Clear** puts you back on the single shot you had open. Picking a single shot never disturbs a comparison — the **+** buttons and the row selection are independent.
+
+### AI reading
+
+![AI reading](docs/shot-ai.png)
+
+Under the numbers, **Analyse** sends the shot to Gemini and asks it what the curve did. It gets the profile it was pulled on, the bean and grind, the measured figures, your tasting notes, and the curve itself downsampled to about two dozen points — the same recording you are looking at, not a summary of it.
+
+It comes back as a verdict, a few observations and up to three things to change next, each with its reason.
+
+It works on a comparison too, and then the question changes: what actually differs between these shots, and which one to chase. The prompt tells it to ground every claim in the numbers it was given and to say so where the data cannot settle something.
+
+Readings are cached in your browser against the shots they were made from, so reopening a shot brings its reading back without spending another call. Needs a Gemini API key in Settings — without one, **Analyse** takes you there instead.
+
 ---
 
 ## Settings
@@ -279,6 +363,7 @@ Every recorded shot, newest first, with its rating. Pick one to see the recorded
 | | |
 |---|---|
 | Brightness | Panel brightness; 100 = auto |
+| Full-screen monitor | Open the [monitor](#monitor) by itself when an action starts |
 | Keep screen awake | Holds the screen on while the machine is awake. Released the moment it sleeps, so the tablet's own timeout can take over |
 | Low-battery dimming | Caps brightness when the battery is low |
 | Dim on sleep | Lowers brightness while the sleep screen shows |
@@ -324,6 +409,7 @@ Measured with the machine driven through idle and sleeping: **2 ms of CPU per se
 | `aurora_prefs` | language, units, night mode, sleep options, water calibration |
 | `aurora_favs` | favourite profiles |
 | `aurora_presets` | steam, flush and water presets |
+| `aurora_shotai` | AI readings, keyed by the shots they were made from |
 | `aurora_gemini` | the API key on a phone that scanned a bag |
 
 ---
