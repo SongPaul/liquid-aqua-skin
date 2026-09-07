@@ -491,6 +491,9 @@ body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255
 .prow-badge{display:inline-flex;align-items:center;min-height:18px;padding:0 7px;border-radius:100px;font-size:11px;font-weight:800;margin-right:6px}
 .prow-badge.rec{background:rgba(99,102,241,.12);color:var(--accent)}
 .prow-badge.use{background:rgba(16,185,129,.14);color:var(--green)}
+.prow.tapable{cursor:pointer;transition:border-color .15s,background .15s}
+.prow.tapable:hover{border-color:var(--accent);background:var(--glass-hi)}
+.prow-go{flex:none;font-size:20px;line-height:1;color:var(--ink-mute);padding:0 4px}
 .prow-acts{flex:none;display:flex;align-items:center;gap:6px}
 .prow-use{flex:none;min-height:40px;padding:8px 16px;font-size:12px}
 .prow-side{flex:none;min-height:40px;padding:8px 12px;font-size:11px;color:var(--ink-mute)}
@@ -1154,7 +1157,7 @@ var I18N={
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
-    usageHead:'Most used with this bean', usageCount:'{n} shots', profHead:'Profiles for this bean', recRank:'Pick {n}', avgGrind:'Avg grind', shotList:'Every shot', noShotsForProfile:'No shots with this profile', showingN:'latest {n}', tabBeanInfo:'Bean', tabBeanProfiles:'Profiles', tabBeanHistory:'History', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
+    usageHead:'Most used with this bean', usageCount:'{n} shots', profHead:'Profiles for this bean', recRank:'Pick {n}', avgGrind:'Avg grind', shotList:'Every shot', openShot:'Open this shot', noShotsForProfile:'No shots with this profile', showingN:'latest {n}', tabBeanInfo:'Bean', tabBeanProfiles:'Profiles', tabBeanHistory:'History', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
     recFailed:'Suggestion failed:', recNoMatch:'No profile matched', recNoProfiles:'No espresso profiles installed', use:'Use',
     cardColor:'Card colour', auto:'Auto', customColor:'Pick any colour',
     batch:'Batch', newBatch:'New batch', batchNoDate:'No date', confirmDeleteBatch:'Delete this batch?',
@@ -1224,7 +1227,7 @@ var I18N={
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
-    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', profHead:'이 원두의 프로파일', recRank:'추천 {n}', avgGrind:'평균 분쇄도', shotList:'추출 기록', noShotsForProfile:'이 프로파일로 내린 샷 없음', showingN:'최근 {n}건', tabBeanInfo:'원두 정보', tabBeanProfiles:'추출 프로파일', tabBeanHistory:'기록', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
+    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', profHead:'이 원두의 프로파일', recRank:'추천 {n}', avgGrind:'평균 분쇄도', shotList:'추출 기록', openShot:'이 샷 열기', noShotsForProfile:'이 프로파일로 내린 샷 없음', showingN:'최근 {n}건', tabBeanInfo:'원두 정보', tabBeanProfiles:'추출 프로파일', tabBeanHistory:'기록', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
     recFailed:'추천 실패:', recNoMatch:'일치하는 프로파일이 없습니다', recNoProfiles:'설치된 에스프레소 프로파일이 없습니다', use:'사용',
     cardColor:'카드 색', auto:'자동', customColor:'직접 지정',
     batch:'배치', newBatch:'새 배치', batchNoDate:'날짜 없음', confirmDeleteBatch:'이 배치를 삭제할까요?',
@@ -3026,6 +3029,7 @@ function renderBeanStats(){
          +cell(st.grind!=null?st.grind:'\u2014', t('avgGrind'))
          +(st.starN?cell(st.stars.toFixed(1)+'\u2605', t('avgRating')):'');
   var shots=picked.slice(0,20);
+  histRows=shots;
   var list=shots.map(function(sh,i){
     var c=((sh.workflow||{}).context)||{}, a=sh.annotations||{};
     var pr=((sh.workflow||{}).profile)||{};
@@ -3034,12 +3038,12 @@ function renderBeanStats(){
     if(d&&y) bits.push(d.toFixed(1)+' \u2192 '+y.toFixed(1)+'g \u00b7 1:'+(y/d).toFixed(1));
     if(c.grinderSetting!=null&&c.grinderSetting!=='') bits.push('\u2699\ufe0f '+(c.grinderModel?c.grinderModel+' \u00b7 ':'')+c.grinderSetting);
     if(num(a.enjoyment)) bits.push('\u2605'+Math.round(num(a.enjoyment)));
-    return '<div class="prow">'
+    return '<div class="prow tapable" onclick="openShotFromHistory('+i+')" title="'+escapeAttr(t('openShot'))+'">'
       +'<div class="prow-curve" style="background:'+albumGrad({id:sh.id,profile:pr,metadata:{}},i)+'"><canvas></canvas></div>'
       +'<div class="prow-body"><div class="prow-name">'+escapeHtml(splitTitle(pr.title||t('shotLog')).name)+'</div>'
       +'<div class="prow-meta">'+escapeHtml(fmtShotWhen(sh))+'</div>'
       +(bits.length?'<div class="prow-meta">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
-      +'</div></div>'; }).join('');
+      +'</div><span class="prow-go">\u203a</span></div>'; }).join('');
   box.innerHTML='<div class="bh-head"><span>'+escapeHtml(t('histHead'))+'</span>'
       +'<span class="bh-sub">'+escapeHtml(t('usageCount').replace('{n}',st.n)+(span?' \u00b7 '+span:''))+'</span></div>'
     +(histProfile?'<button class="bh-filter" onclick="clearHistProfile()">'
@@ -3051,6 +3055,15 @@ function renderBeanStats(){
   var cvs=box.querySelectorAll('.plist .prow-curve canvas');
   shots.forEach(function(sh,i){ var cv=cvs[i], pr=((sh.workflow||{}).profile)||null;
     if(cv&&pr) setTimeout(function(){ drawSimCurve(cv,pr,true); },0); }); }
+// The list rows carry no measurements -- the gateway only sends those for a
+// single shot -- so opening one hands it to the shot log, which fetches the
+// recording and draws what actually happened.
+var histRows=[];
+function openShotFromHistory(i){
+  var sh=histRows&&histRows[i]; if(!sh) return;
+  closeBeanPage();
+  document.getElementById('shotLogPage').classList.add('show');
+  loadShotList(sh); }
 function fmtShotWhen(sh){ var v=sh.timestamp||sh.createdAt||''; var d=new Date(v); if(isNaN(d)) return '';
   try{ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}); }
   catch(_){ return isoDay(v); } }
@@ -5822,9 +5835,13 @@ var shotList=[], slSel=null, lastShotSummary=null;
 function openShotLog(){ document.getElementById('shotLogPage').classList.add('show'); loadShotList(); }
 function closeShotLog(){ document.getElementById('shotLogPage').classList.remove('show'); }
 function fmtShotDate(s){ var d=new Date(s.createdAt||s.timestamp); if(isNaN(d)) return s.timestamp||''; return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
-function loadShotList(){ var list=document.getElementById('slList'); list.innerHTML='<div class="ep-group-head">Loading…</div>';
+function loadShotList(pick){ var list=document.getElementById('slList'); list.innerHTML='<div class="ep-group-head">Loading…</div>';
   api('GET','/api/v1/shots?limit=50').then(function(r){ shotList=(r&&(r.items||r.shots))||[]; renderShotList();
-    if(shotList.length) slSelect(shotList[0]); else document.getElementById('slDetail').innerHTML='<div class="ep-placeholder">No shots recorded yet</div>';
+    // a shot older than the newest fifty is still openable -- slSelect only needs its id
+    var want=pick&&(shotList.find(function(x){ return x.id===pick.id; })||pick);
+    if(want) slSelect(want);
+    else if(shotList.length) slSelect(shotList[0]);
+    else document.getElementById('slDetail').innerHTML='<div class="ep-placeholder">No shots recorded yet</div>';
   }).catch(function(){ list.innerHTML='<div class="ep-placeholder">Connect to load shots</div>'; }); }
 function renderShotList(){ var list=document.getElementById('slList'); list.innerHTML='';
   if(!shotList.length){ list.innerHTML='<div class="ep-placeholder">No shots</div>'; return; }

@@ -234,7 +234,7 @@ Everything the shot history knows about this coffee. It appears once the bean ha
 | **Avg dose / yield / ratio / grind** | Averaged over every recorded shot. A shot's own annotation wins over the recipe it was pulled with, because that is what really landed on the scale. The ratio is averaged per shot, not derived from the two averages. Grind averages the numbers when the grinder uses a dial, and falls back to the setting used most when it uses named positions |
 | **Avg rating** | Shown only if you have rated any of them |
 | **Shot count and date range** | Beside the heading |
-| **Every shot** | The latest 20, each with its profile's curve, when it was pulled, dose to yield with the ratio, the grinder and grind it went through, and its rating |
+| **Every shot** | The latest 20, each with its profile's curve, when it was pulled, dose to yield with the ratio, the grinder and grind it went through, and its rating. **Tap one** to open it in the shot log — the graph there is the recording, not the profile's shape, alongside every metric and the tasting log |
 
 ### Grinders
 
