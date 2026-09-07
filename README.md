@@ -174,12 +174,15 @@ One action, full screen: the graph worth watching and the numbers worth reading 
 
 | | |
 |---|---|
-| Heading | the profile name on its own, and under it the bean, roaster, grinder and grind |
+| Heading | for a shot, the profile name on its own with the bean, roaster, grinder and grind beneath. Steam, flush and water are not pulled on a profile and have nothing to do with the bean, so the **action names itself** instead |
 | **Extraction** | the large graph: pressure, flow and weight |
 | **Temperature** | a second, smaller graph beneath it — group, mix and target, or steam / water temperature depending on the action |
 | Weight · Elapsed | large enough to read at a distance |
 | The two dials | the same bands and scale as the main screen, at twice the size |
-| Recipe | dose, yield and ratio as configured |
+| Settings | the recipe for a shot — dose, yield, ratio. For the other actions, that action's own settings: `150° · 50s · 0.8 ml/s` |
+| **Stop** | stops whatever is running, without leaving the page |
+
+**Close puts the page away; it does not stop the machine.** Those are separate acts, so the monitor carries its own **Stop** while an action runs. It is hidden when a GHC is fitted — the group head owns starting and stopping there, which is why the main screen hides its Start for the same reason.
 
 The two graphs share a width, a padding and a sample count, so a moment on one is directly above the same moment on the other. Splitting them lets the extraction graph keep its whole height for pressure and flow instead of sharing it with a temperature axis.
 
