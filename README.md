@@ -209,6 +209,10 @@ The caption says which is which. When the centred card *is* the loaded one it re
 - **☆ in the header** adds the profile you are looking at to your favourites, or removes it.
 - **Edit ✎** opens the editor.
 
+Favour as many as you like. The carousel draws a few at a time and the strip beneath scrolls, keeping the centred card in view.
+
+Favour as many as you like. The carousel draws a few at a time and the strip beneath scrolls, keeping the centred card in view.
+
 ### The editor
 
 The left column lists every profile with its curve, its tags and a star. Above it:

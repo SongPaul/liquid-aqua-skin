@@ -298,7 +298,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .album.loaded{box-shadow:0 0 0 2px var(--green),0 6px 18px rgba(30,25,70,.14)}
 .album.loaded.center{box-shadow:0 0 0 3px var(--green),0 14px 32px rgba(80,70,160,.3)}
 /* card navigation strip: tap to load instantly */
-.nav-cards{display:flex;justify-content:center;gap:7px;margin-top:8px;overflow-x:auto;padding:2px 0 2px}
+.nav-cards{display:flex;justify-content:safe center;gap:7px;margin-top:8px;overflow-x:auto;scroll-behavior:smooth;padding:2px 0 2px}
 .nav-cards::-webkit-scrollbar{height:0}
 .nav-card{position:relative;flex-shrink:0;width:58px;height:44px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:11px;font-weight:800;color:#fff;line-height:1.1;overflow:hidden;transition:transform .15s,box-shadow .15s;border:2px solid transparent;background-color:#4f46e5}
 .nav-card:hover{transform:translateY(-2px)}
@@ -2619,6 +2619,10 @@ function renderCarousel(){
     var isLoaded=!!(curProfileObj&&curProfileObj.id===p.id);
     p._el.classList.toggle('loaded', isLoaded);
     if(p._navEl){ p._navEl.classList.toggle('active', i===carIndex); p._navEl.classList.toggle('loaded', isLoaded); } });
+  // With more favourites than the strip can show, the active card would sit off
+  // to one side. 'nearest' keeps this to the strip's own scroller.
+  var act=carItems[carIndex];
+  if(act&&act._navEl&&act._navEl.scrollIntoView) act._navEl.scrollIntoView({block:'nearest',inline:'nearest'});
   // redraw center curve crisp at its scaled size after transform applies
   var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); }
   var cur=carItems[carIndex]; if(cur){ var pr=cur.profile||{};
@@ -2907,9 +2911,7 @@ function renderEpList(){ var list=document.getElementById('epList'); list.innerH
   order.forEach(function(key){
     var hd=document.createElement('div'); hd.className='ep-group-head'; hd.textContent=key+' · '+groups[key].length; list.appendChild(hd);
     groups[key].forEach(function(rec){ addItem(rec.p,rec.st); }); }); }
-var FAV_MAX=5;
-function toggleFav(id){ if(favIds[id]){ delete favIds[id]; }
-  else { if(Object.keys(favIds).length>=FAV_MAX){ toast('Favorites limited to '+FAV_MAX,'err'); return; } favIds[id]=true; }
+function toggleFav(id){ if(favIds[id]) delete favIds[id]; else favIds[id]=true;
   saveFavs(); renderEpList(); buildCarousel(); }
 function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
   // just move the active highlight — no full list rebuild (keeps it fast)
