@@ -79,11 +79,11 @@ body.scaled.night .glass{background:rgba(30,27,54,.9)}
 .lockscreen{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 120% at 50% 40%,#1a1730,#0a0814);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .35s ease;cursor:pointer;-webkit-user-select:none;user-select:none;will-change:opacity;transform:translateZ(0)}
 .lockscreen.show{opacity:1;pointer-events:auto}
 /* During the sleep fade, drop the background glass blur so the transition is smooth. */
-body.asleep .app,body.page-open .app{visibility:hidden}
+body.asleep-settled .app,body.page-open .app{visibility:hidden}
 /* visibility:hidden does not stop a CSS animation. Nothing behind the lock or
    under a full-screen page can be seen, so nothing there should still run. */
-body.asleep .app *,body.page-open .app *{animation:none!important}
-body.asleep .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
+body.asleep-settled .app *,body.page-open .app *{animation:none!important}
+body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
 /* Burn-in guard: the clock moves to a new offset once a minute and glides there.
    A continuous animation -- even an opacity or filter one -- keeps the compositor
    producing frames forever, which costs more on an idle screen than it saves;
@@ -97,7 +97,7 @@ body.asleep .app .glass{backdrop-filter:none;-webkit-backdrop-filter:none}
 .lock-ripple{position:absolute;inset:-40% -20%;z-index:-1;border-radius:50%;pointer-events:none;
   background:radial-gradient(60% 55% at 50% 50%,rgba(56,189,248,.10),rgba(99,102,241,.05) 45%,transparent 70%)}
 /* While asleep, stop the water-tank wave animation to save the panel/CPU. */
-body.asleep .wave-path,body.asleep .wave-path2{animation-play-state:paused!important}
+body.asleep-settled .wave-path,body.asleep-settled .wave-path2{animation-play-state:paused!important}
 
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
@@ -1985,7 +1985,14 @@ function pauseSvgAnimations(on){
 // shows the lock, and starts the clock. The clock reads H:MM, so it wakes once a
 // minute -- on the minute -- rather than once a second, and each tick also nudges
 // the lock to a new offset, which is the whole burn-in guard.
-function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock(); pauseSvgAnimations(true);
+var _sleepSettleT=null;
+function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock();
+  // The wave and the rest keep going for the length of the fade, so nothing
+  // visibly stops while it is still on screen.
+  if(_sleepSettleT) clearTimeout(_sleepSettleT);
+  _sleepSettleT=setTimeout(function(){ _sleepSettleT=null;
+    if(!_asleep) return;
+    document.body.classList.add('asleep-settled'); pauseSvgAnimations(true); },420);
   // syncWakeLock has already released the override over the display socket, so
   // it is safe to let that one go with the rest.
   parkSockets(true);
@@ -1996,7 +2003,12 @@ function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); do
     api('PUT','/api/v1/display/brightness',{brightness:prefs.sleepBrightness||20}).catch(function(){}); } }
 // Called on both wake paths. Clears the flag/clock, then repaints the live UI once
 // so everything reflects the current state after the sleep gap.
-function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show');
+function endSleepUI(){ _asleep=false;
+  if(_sleepSettleT){ clearTimeout(_sleepSettleT); _sleepSettleT=null; }
+  // Both come off at once: the interface is painting again before the lock has
+  // finished fading out, which is the crossfade the other direction wants.
+  document.body.classList.remove('asleep'); document.body.classList.remove('asleep-settled');
+  document.getElementById('lockScreen').classList.remove('show');
   parkSockets(false); syncWakeLock(); pauseSvgAnimations(false);
   if(_lockClockT){ clearTimeout(_lockClockT); _lockClockT=null; }
   var sh=document.getElementById('lockShift'); if(sh) sh.style.transform='';
