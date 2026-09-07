@@ -40,7 +40,8 @@ body.night .bg-tabs{background:linear-gradient(135deg,#14111f,#1a1526)}
 body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ep-aibtn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ms-btn:hover{background:rgba(139,92,246,.28)}
-body.night .car-nav,body.night .fav-btn,body.night .aux-chip,body.night .bh-cell{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
+body.night .bg-tab2.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
+body.night .car-nav,body.night .fav-btn,body.night .aux-chip,body.night .bh-cell,body.night .bg-tab2{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
 body.night .kp-key{color:var(--ink)}
 body.night .car-nav:hover,body.night .ep-stepnav .nav:hover{background:rgba(255,255,255,.14)}
 /* editor panels */
@@ -493,7 +494,12 @@ body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255
 .ep-section-title{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 
 /* AI bean-label scan */
-.ai-scan{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(56,189,248,.08));border:1px solid var(--glass-line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.ai-scan{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(56,189,248,.08));border:1px solid var(--glass-line);border-radius:12px;padding:9px 12px;margin-bottom:14px}
+.bg-title{font-size:18px;font-weight:800;margin-bottom:12px}
+.bg-tabs2{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--glass-line);padding-bottom:10px}
+.bg-tab2{min-height:40px;padding:0 14px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;font-weight:800;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.bg-tab2:hover{border-color:var(--accent)}
+.bg-tab2.on{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.32);color:var(--accent)}
 .bean-hist{border:1px solid var(--glass-line);border-radius:14px;padding:12px 16px 14px;margin-bottom:18px;background:var(--glass-hi)}
 .bh-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
 .bh-head>span:first-child{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
@@ -507,16 +513,18 @@ body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255
 .bh-g{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:30px}
 .bh-gn{font-size:12px;font-weight:700;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bh-gc{font-size:11px;font-weight:700;color:var(--ink-mute);white-space:nowrap;flex:none}
-.ai-scan-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
+.ai-scan-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px}
 .ai-scan-head>span:first-child{font-size:13px;font-weight:800;color:var(--accent)}
 .ai-scan-sub{font-size:11px;color:var(--ink-mute)}
 .ai-thumbs{display:flex;flex-wrap:wrap;gap:8px}
 .ai-thumbs:empty{display:none}
 .ai-thumb{width:52px;height:52px;border-radius:10px;background-size:cover;background-position:center;position:relative;border:1px solid var(--glass-line)}
 .ai-thumb-x{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:12px;line-height:1;cursor:pointer;-webkit-appearance:none}
-.ai-scan-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ai-scan-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.ai-scan-actions .m-btn{min-height:40px;padding:8px 14px;font-size:12px}
 .ai-scan-actions .m-btn{padding:8px 14px;font-size:13px}
-.ai-status{font-size:11px;color:var(--ink-mute);margin-top:8px;min-height:14px}
+.ai-status{font-size:11px;color:var(--ink-mute);margin-top:6px;min-height:0}
+.ai-status:empty{display:none}
 .ai-qr{margin-top:12px;text-align:center;background:#fff;border:1px solid var(--glass-line);border-radius:12px;padding:14px}
 .ai-qr canvas{border-radius:8px}
 .ai-qr-url{font-size:11px;color:var(--ink-mute);word-break:break-all;margin-top:8px}
@@ -1144,7 +1152,7 @@ var I18N={
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
-    usageHead:'Most used with this bean', usageCount:'{n} shots', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
+    usageHead:'Most used with this bean', usageCount:'{n} shots', tabBeanInfo:'Bean', tabBeanProfiles:'Profiles', tabBeanHistory:'History', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
     recFailed:'Suggestion failed:', recNoMatch:'No profile matched', recNoProfiles:'No espresso profiles installed', use:'Use',
     cardColor:'Card colour', auto:'Auto', customColor:'Pick any colour',
     batch:'Batch', newBatch:'New batch', batchNoDate:'No date', confirmDeleteBatch:'Delete this batch?',
@@ -1214,7 +1222,7 @@ var I18N={
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
-    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
+    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', tabBeanInfo:'원두 정보', tabBeanProfiles:'추출 프로파일', tabBeanHistory:'기록', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
     recFailed:'추천 실패:', recNoMatch:'일치하는 프로파일이 없습니다', recNoProfiles:'설치된 에스프레소 프로파일이 없습니다', use:'사용',
     cardColor:'카드 색', auto:'자동', customColor:'직접 지정',
     batch:'배치', newBatch:'새 배치', batchNoDate:'날짜 없음', confirmDeleteBatch:'이 배치를 삭제할까요?',
@@ -2623,6 +2631,16 @@ function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&qu
 // ── Beans & Grinder ─────────────────────────────────────────────────
 function openBeanModal(){ loadBeansGrinders(); document.getElementById('beanOverlay').classList.add('show'); }
 var bgSel=null; // {type:'bean'|'grinder', obj}
+// The bean page carries three separate jobs -- the coffee itself, the profiles for
+// it, and what it has been pulled at -- so they get a pane each instead of one
+// long scroll. A new bean only ever needs the first.
+var bgPane='info';
+function setBgTab(k){ bgPane=k;
+  ['info','profiles','history'].forEach(function(x){
+    var el=document.getElementById('bgPane'+x.charAt(0).toUpperCase()+x.slice(1));
+    if(el) el.style.display=(x===k)?'':'none'; });
+  var i=0; document.querySelectorAll('.bg-tab2').forEach(function(b){
+    b.classList.toggle('on', ['info','profiles','history'][i++]===k); }); }
 // Tapping the grinder in the recipe opens Beans & Grinders on that grinder.
 function openGrinderPage(){
   document.getElementById('beanPage').classList.add('show');
@@ -2788,10 +2806,20 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
     if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); usageResults=null; _usageFor=null;
       bgBatchId=null; bgNewBatch=false; }
     recPfx='bg';
-    wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
+    if(isNew) bgPane='info';
+    wrap.innerHTML='<div class="bg-title">'+t(isNew?'newBean':'editBean')+'</div>'
+      +(isNew?'':'<div class="bg-tabs2">'
+        +['info','profiles','history'].map(function(k){
+          return '<button class="bg-tab2'+(bgPane===k?' on':'')+'" onclick="setBgTab(\''+k+'\')">'+escapeHtml(t('tabBean'+k.charAt(0).toUpperCase()+k.slice(1)))+'</button>'; }).join('')
+        +'</div>')
+      +'<div class="bg-pane" id="bgPaneProfiles"'+(bgPane==='profiles'&&!isNew?'':' style="display:none"')+'>'
       +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')">'+t('recButton')+'</button></div>'
       +'<div class="rec-cols"><div id="bgRec" class="rec-box"></div><div id="bgUse" class="rec-box"></div></div>'
+      +'</div>'
+      +'<div class="bg-pane" id="bgPaneHistory"'+(bgPane==='history'&&!isNew?'':' style="display:none"')+'>'
       +'<div class="bean-hist" id="bgStats" style="display:none"></div>'
+      +'</div>'
+      +'<div class="bg-pane" id="bgPaneInfo"'+(bgPane==='info'||isNew?'':' style="display:none"')+'>'
       +'<div class="ai-scan" id="aiScan">'
         +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
         +'<div class="ai-thumbs" id="aiThumbs"></div>'
@@ -2815,6 +2843,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
+      +'</div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
     renderRecBox(); renderUsageBox(); renderBeanStats(); loadBeanUsage('bg');
   } else {
