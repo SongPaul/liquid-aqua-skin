@@ -40,7 +40,7 @@ body.night .bg-tabs{background:linear-gradient(135deg,#14111f,#1a1526)}
 body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ep-aibtn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ms-btn:hover{background:rgba(139,92,246,.28)}
-body.night .car-nav,body.night .fav-btn,body.night .aux-chip{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
+body.night .car-nav,body.night .fav-btn,body.night .aux-chip,body.night .bh-cell{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
 body.night .kp-key{color:var(--ink)}
 body.night .car-nav:hover,body.night .ep-stepnav .nav:hover{background:rgba(255,255,255,.14)}
 /* editor panels */
@@ -494,6 +494,19 @@ body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255
 
 /* AI bean-label scan */
 .ai-scan{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(56,189,248,.08));border:1px solid var(--glass-line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.bean-hist{border:1px solid var(--glass-line);border-radius:14px;padding:12px 16px 14px;margin-bottom:18px;background:var(--glass-hi)}
+.bh-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+.bh-head>span:first-child{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
+.bh-sub{font-size:11px;font-weight:700;color:var(--ink-mute);white-space:nowrap}
+.bh-nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px}
+.bh-cell{background:#fff;border:1px solid var(--glass-line);border-radius:11px;padding:8px 6px;text-align:center;min-width:0}
+.bh-v{font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--accent);line-height:1.1}
+.bh-l{font-size:11px;font-weight:700;color:var(--ink-mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bh-glist{margin-top:12px;padding-top:10px;border-top:1px solid var(--glass-line)}
+.bh-gh{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:6px}
+.bh-g{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:30px}
+.bh-gn{font-size:12px;font-weight:700;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bh-gc{font-size:11px;font-weight:700;color:var(--ink-mute);white-space:nowrap;flex:none}
 .ai-scan-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
 .ai-scan-head>span:first-child{font-size:13px;font-weight:800;color:var(--accent)}
 .ai-scan-sub{font-size:11px;color:var(--ink-mute)}
@@ -1131,7 +1144,7 @@ var I18N={
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
-    usageHead:'Most used with this bean', usageCount:'{n} shots', usageWorking:'Reading the shot history…',
+    usageHead:'Most used with this bean', usageCount:'{n} shots', histHead:'This bean so far', avgDose:'Avg dose', avgYield:'Avg yield', avgRatio:'Avg ratio', avgRating:'Avg rating', grindersUsed:'Grinder & grind used', grinder:'Grinder', usageWorking:'Reading the shot history…',
     recFailed:'Suggestion failed:', recNoMatch:'No profile matched', recNoProfiles:'No espresso profiles installed', use:'Use',
     cardColor:'Card colour', auto:'Auto', customColor:'Pick any colour',
     batch:'Batch', newBatch:'New batch', batchNoDate:'No date', confirmDeleteBatch:'Delete this batch?',
@@ -1201,7 +1214,7 @@ var I18N={
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
-    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', usageWorking:'샷 기록을 읽는 중…',
+    usageHead:'이 원두로 많이 쓴 프로파일', usageCount:'{n}회', histHead:'이 원두 기록', avgDose:'평균 도징', avgYield:'평균 추출량', avgRatio:'평균 비율', avgRating:'평균 평점', grindersUsed:'사용한 그라인더 · 분쇄도', grinder:'그라인더', usageWorking:'샷 기록을 읽는 중…',
     recFailed:'추천 실패:', recNoMatch:'일치하는 프로파일이 없습니다', recNoProfiles:'설치된 에스프레소 프로파일이 없습니다', use:'사용',
     cardColor:'카드 색', auto:'자동', customColor:'직접 지정',
     batch:'배치', newBatch:'새 배치', batchNoDate:'날짜 없음', confirmDeleteBatch:'이 배치를 삭제할까요?',
@@ -2778,6 +2791,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+t(isNew?'newBean':'editBean')+'</div>'
       +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')">'+t('recButton')+'</button></div>'
       +'<div class="rec-cols"><div id="bgRec" class="rec-box"></div><div id="bgUse" class="rec-box"></div></div>'
+      +'<div class="bean-hist" id="bgStats" style="display:none"></div>'
       +'<div class="ai-scan" id="aiScan">'
         +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
         +'<div class="ai-thumbs" id="aiThumbs"></div>'
@@ -2802,7 +2816,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
-    renderRecBox(); renderUsageBox(); loadBeanUsage('bg');
+    renderRecBox(); renderUsageBox(); renderBeanStats(); loadBeanUsage('bg');
   } else {
     var isPreset=(o.settingType==='preset');
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Grinder':'Edit Grinder')+'</div>'
@@ -2873,7 +2887,7 @@ function recommendPrompt(bean,cat,lang){
     +'the days off roast or the flavour it should bring out - not a generic description of the profile. '
     +'Write every "why" in '+(lang==='ko'?'Korean':'English')+'.\n\nBEAN:\n'+JSON.stringify(bean)
     +'\n\nCATALOGUE:\n'+JSON.stringify(cat); }
-var usageResults=null, usageBusy=false, _usageFor=null;
+var usageResults=null, usageBusy=false, _usageFor=null, usageStats=null;
 // Shots record the bean by name and roaster; beanId only matches through batches,
 // so a bean with no batch would look unused. Both are asked and the answers merged.
 function loadBeanUsage(pfx){
@@ -2882,9 +2896,9 @@ function loadBeanUsage(pfx){
   var roaster=v('Roaster'), name=v('Name');
   var id=(pfx==='bg'&&bgSel&&bgSel.obj&&bgSel.obj.id)||'';
   var key=id||(roaster+'|'+name);
-  if(!name&&!roaster){ usageResults=null; _usageFor=null; renderUsageBox(); return Promise.resolve(); }
+  if(!name&&!roaster){ usageResults=null; usageStats=null; _usageFor=null; renderUsageBox(); renderBeanStats(); return Promise.resolve(); }
   if(_usageFor===key) return Promise.resolve();
-  _usageFor=key; usageBusy=true; usageResults=null; renderUsageBox();
+  _usageFor=key; usageBusy=true; usageResults=null; usageStats=null; renderUsageBox(); renderBeanStats();
   var qs=[];
   if(name||roaster) qs.push('/api/v1/shots?limit=100'
     +(name?'&coffeeName='+encodeURIComponent(name):'')
@@ -2900,13 +2914,61 @@ function loadBeanUsage(pfx){
         var when=sh.timestamp||sh.createdAt||'';
         if(!tally[title]) tally[title]={n:0,last:''};
         tally[title].n++; if(when>tally[title].last) tally[title].last=when; });
+      usageStats=beanStatsFrom(rows);
       usageResults=Object.keys(tally).map(function(title){
         var match=allProfiles.find(function(p){ return profTitle(p)===title; });
         return match?{p:match,n:tally[title].n,last:tally[title].last}:null; })
         .filter(Boolean)
         .sort(function(a,b){ return b.n-a.n || (b.last>a.last?1:-1); })
         .slice(0,5);
-    }).then(function(){ usageBusy=false; renderUsageBox(); }); }
+    }).then(function(){ usageBusy=false; renderUsageBox(); renderBeanStats(); }); }
+// What this coffee has actually been pulled at: the grinder and grind it went
+// through, and the dose, yield and ratio averaged over every recorded shot.
+// Annotations win over the recipe, because they are what really landed.
+function beanStatsFrom(rows){
+  if(!rows||!rows.length) return null;
+  var dose=[], yld=[], ratio=[], stars=[], grind={}, first='', last='';
+  rows.forEach(function(sh){
+    var c=((sh.workflow||{}).context)||{}, a=sh.annotations||{};
+    var when=sh.timestamp||sh.createdAt||'';
+    if(when){ if(!first||when<first) first=when; if(when>last) last=when; }
+    var d=num(a.actualDoseWeight)||num(c.targetDoseWeight);
+    var y=num(a.actualYield)||num(c.targetYield);
+    if(d) dose.push(d);
+    if(y) yld.push(y);
+    if(d&&y) ratio.push(y/d);
+    if(num(a.enjoyment)) stars.push(num(a.enjoyment));
+    var g=c.grinderModel||'', gs=(c.grinderSetting!=null&&c.grinderSetting!=='')?String(c.grinderSetting):'';
+    if(g||gs){ var k=g+'\u0000'+gs;
+      if(!grind[k]) grind[k]={model:g,setting:gs,n:0,last:''};
+      grind[k].n++; if(when>grind[k].last) grind[k].last=when; } });
+  var avg=function(a){ return a.length?a.reduce(function(x,y){ return x+y; },0)/a.length:null; };
+  return { n:rows.length, first:first, last:last,
+    dose:avg(dose), yield:avg(yld), ratio:avg(ratio), stars:avg(stars), starN:stars.length,
+    grinders:Object.keys(grind).map(function(k){ return grind[k]; })
+      .sort(function(a,b){ return b.n-a.n || (b.last>a.last?1:-1); }) }; }
+function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
+function renderBeanStats(){
+  var box=document.getElementById(recPfx+'Stats'); if(!box) return;
+  var st=usageStats;
+  if(usageBusy){ box.style.display=''; box.innerHTML='<div class="rec-wait">'+escapeHtml(t('usageWorking'))+'</div>'; return; }
+  if(!st||!st.n){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='';
+  var span=st.first&&st.last&&fmtShortDate(st.first)!==fmtShortDate(st.last)
+    ? fmtShortDate(st.first)+' \u2013 '+fmtShortDate(st.last) : fmtShortDate(st.last);
+  var cell=function(v,l){ return '<div class="bh-cell"><div class="bh-v">'+escapeHtml(v)+'</div><div class="bh-l">'+escapeHtml(l)+'</div></div>'; };
+  var nums=cell(st.dose?st.dose.toFixed(1):'\u2014', t('avgDose'))
+         +cell(st.yield?st.yield.toFixed(1):'\u2014', t('avgYield'))
+         +cell(st.ratio?('1:'+st.ratio.toFixed(1)):'\u2014', t('avgRatio'))
+         +(st.starN?cell(st.stars.toFixed(1)+'\u2605', t('avgRating')):'');
+  var gr=st.grinders.map(function(g){
+    var name=(g.model||t('grinder'))+(g.setting?' \u00b7 '+g.setting:'');
+    return '<div class="bh-g"><span class="bh-gn">\u2699\ufe0f '+escapeHtml(name)+'</span>'
+      +'<span class="bh-gc">'+escapeHtml(t('usageCount').replace('{n}',g.n)+(g.last?' \u00b7 '+fmtShortDate(g.last):''))+'</span></div>'; }).join('');
+  box.innerHTML='<div class="bh-head"><span>'+escapeHtml(t('histHead'))+'</span>'
+      +'<span class="bh-sub">'+escapeHtml(t('usageCount').replace('{n}',st.n)+(span?' \u00b7 '+span:''))+'</span></div>'
+    +'<div class="bh-nums">'+nums+'</div>'
+    +(gr?'<div class="bh-glist"><div class="bh-gh">'+escapeHtml(t('grindersUsed'))+'</div>'+gr+'</div>':''); }
 function fmtShortDate(v){ var d=new Date(v); if(isNaN(d)) return '';
   try{ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(_){ return isoDay(v); } }
 function useMostUsed(i){ var r=usageResults&&usageResults[i]; if(!r) return;
@@ -3203,7 +3265,7 @@ function togglePhoneQR(){
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
   var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing'); document.getElementById('mbAnalyzeBtn').disabled=true;
-  recResults=null; usageResults=null; _usageFor=null; recPfx='mb'; renderRecBox(); renderUsageBox();
+  recResults=null; usageResults=null; usageStats=null; _usageFor=null; recPfx='mb'; renderRecBox(); renderUsageBox(); renderBeanStats();
   geminiAnalyze(key,aiImages).then(function(data){
     data=cleanBeanText(data);
     document.getElementById('mbFields').style.display='block';
@@ -3239,8 +3301,8 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
         : api('POST','/api/v1/beans',body,15000); })
     .then(function(saved){ return (saved&&saved.id)?saveBeanBatch(saved.id,v('mbRoastDate'),v('mbRoast'),null):null; })
     .then(function(){ st.textContent=t('mbSaved');
-      aiImages=[]; renderAiThumbs(true); recResults=null; usageResults=null; _usageFor=null;
-      renderRecBox(); renderUsageBox();
+      aiImages=[]; renderAiThumbs(true); recResults=null; usageResults=null; usageStats=null; _usageFor=null;
+      renderRecBox(); renderUsageBox(); renderBeanStats();
       document.getElementById('mbFields').style.display='none'; })
     .catch(function(e){ if(!(e&&e.cancelled)) st.textContent=t('mbSaveFailed')+' '+apiErrorText(e); })
     .then(function(){ if(btn) btn.disabled=false; return loadBeanBatches(); }); }

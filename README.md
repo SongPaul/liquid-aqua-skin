@@ -205,6 +205,19 @@ Two carousels at the top of the bean, side by side:
 
 **Use** on either loads that profile.
 
+### This bean so far
+
+![This bean so far](docs/bean-history.png)
+
+Everything the shot history knows about this coffee, in one panel — it appears once the bean has been pulled at least once and stays hidden until then.
+
+| | |
+|---|---|
+| **Avg dose / yield / ratio** | Averaged over every recorded shot. A shot's own annotation wins over the recipe it was pulled with, because that is what really landed on the scale. The ratio is averaged per shot, not derived from the two averages |
+| **Avg rating** | Shown only if you have rated any of them |
+| **Shot count and date range** | Beside the heading |
+| **Grinder & grind used** | Every grinder-and-setting pair this coffee has gone through, most used first, with a count and when it was last used |
+
 ### Grinders
 
 Model, burrs, burr type and size, and a grind setting that is either a **numeric dial** with your own fine and coarse step, or a list of **named presets**. Notes for anything else.
