@@ -292,6 +292,14 @@ Everything the shot history knows about this coffee. It appears once the bean ha
 
 ### Grinders
 
+A grinder is a **brand** and a **model**, and then whatever its burrs are.
+
+**✨ Fill from AI** takes the two names and fills in the burr set, the geometry, the diameter and a few sentences on what the grinder is like to use. It is told never to guess a burr size: a grinder it does not recognise comes back empty rather than plausible, because a wrong 64mm would go on to mislead every reading that follows. Everything it fills stays editable.
+
+The gateway stores a grinder under a single name, so the brand and model are joined for it and the skin remembers where they split.
+
+**What it grinds with reaches the rest.** The AI reading of a shot and the profile recommendations for a bean are both given the grinder — geometry, size, burr set, its notes and the dial it was on. A grind change is then suggested in terms of *your* grinder's dial, and a profile is weighed against burrs that can actually feed it.
+
 Model, burrs, burr type and size, and a grind setting that is either a **numeric dial** with your own fine and coarse step, or a list of **named presets**. Notes for anything else.
 
 ---
@@ -304,6 +312,7 @@ Every recorded shot, newest first, with its rating. Pick one to see the recorded
 
 | | |
 |---|---|
+| Bean & grinder | the roaster, coffee, grinder and grind the shot was recorded with — correct them here when the wrong bean was loaded or the grind was typed after the fact |
 | Actual dose / yield | what really landed on the scale |
 | TDS % / Extraction yield % | if you measure it |
 | Enjoyment | five stars |

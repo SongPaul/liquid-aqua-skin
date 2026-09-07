@@ -445,6 +445,9 @@ body.night .ep-dot{border-color:#1a1526}
 .rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .rec-head{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
 .rec-wait{font-size:12px;color:var(--ink-mute);padding:10px 2px}
+.g-ai{display:flex;align-items:center;gap:10px;margin:-2px 0 12px;flex-wrap:wrap}
+.g-ai .ep-aibtn{flex:0 0 auto;width:auto}
+.g-ai-hint{font-size:12px;color:var(--ink-mute)}
 .rec-why{flex:1;font-size:11px;color:var(--ink-mute);line-height:1.45;padding:7px 8px}
 .ep-roastlab{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-right:4px}
 .ep-roast{min-height:36px;padding:0 14px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
@@ -1340,6 +1343,8 @@ var I18N={
     close:'Close', save:'Save', cancel:'Cancel', saveOptions:'Save Options', delete:'Delete', useForShot:'Use for shot', set:'Set',
     beans:'Beans', grinders:'Grinders', addBean:'+ Add Bean', addGrinder:'+ Add Grinder', newBean:'New Bean', editBean:'Edit Bean', newGrinder:'New Grinder', editGrinder:'Edit Grinder',
     roaster:'Roaster', name:'Name', origin:'Origin', process:'Process', roastLevel:'Roast level', notes:'Notes',
+    shotBeanGrinder:'Bean & grinder', roaster:'Roaster', coffee:'Coffee', shotFixed:'Shot updated',
+    brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Reading the grinder…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what is known about it', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
     model:'Model', burrs:'Burrs', burrType:'Burr type', burrSize:'Burr size (mm)', grindSetting:'Grind Setting', current:'Current setting',
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; Gemini fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
     qrNoLib:'QR library not loaded', qrNoLan:'The gateway did not report a LAN address. Enter the Wi-Fi/LAN address of the tablet so the phone can reach it.',
@@ -1416,6 +1421,8 @@ var I18N={
     close:'닫기', save:'저장', cancel:'취소', saveOptions:'옵션 저장', delete:'삭제', useForShot:'샷에 사용', set:'설정',
     beans:'원두', grinders:'그라인더', addBean:'+ 원두 추가', addGrinder:'+ 그라인더 추가', newBean:'새 원두', editBean:'원두 편집', newGrinder:'새 그라인더', editGrinder:'그라인더 편집',
     roaster:'로스터', name:'이름', origin:'원산지', process:'가공', roastLevel:'로스팅', notes:'메모',
+    shotBeanGrinder:'원두 · 그라인더', roaster:'로스터', coffee:'원두', shotFixed:'샷 정보 수정됨',
+    brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'그라인더를 찾는 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'알려진 내용을 채웠습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
     model:'모델', burrs:'버', burrType:'버 종류', burrSize:'버 크기 (mm)', grindSetting:'분쇄도 설정', current:'현재 값',
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 Gemini가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
     qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'게이트웨이가 LAN 주소를 알려주지 않았습니다. 폰이 접속할 태블릿의 Wi-Fi/LAN 주소를 입력하세요.',
@@ -2186,7 +2193,7 @@ function syncRecipe(){
 // stays as a same-origin cache -- which also keeps the skin usable when the
 // gateway cannot be reached.
 var STORE_NS='liquid-aqua';
-var STORE_KEYS=['prefs','favs','presets','shotai'];
+var STORE_KEYS=['prefs','favs','presets','shotai','gbrands'];
 var _storeT={}, _storeReady=false;
 function storeUrl(key){ return '/api/v1/store/'+STORE_NS+(key?('/'+key):''); }
 // POST, not PUT: the spec says PUT but the gateway answers 404 to it.
@@ -2219,6 +2226,8 @@ function hydrateFromStore(){
     else storePut('presets',presets);
     if(all.shotai&&typeof all.shotai==='object') lsSet('aurora_shotai',all.shotai);
     else { var local=lsGet('aurora_shotai'); if(local&&Object.keys(local).length) storePut('shotai',local); }
+    if(all.gbrands&&typeof all.gbrands==='object'){ grinderBrands=all.gbrands; lsSet('aurora_gbrands',grinderBrands); }
+    else if(Object.keys(grinderBrands).length) storePut('gbrands',grinderBrands);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
       updateBeanInfo(); if(carItems.length) buildCarousel(); }
   }); }
@@ -2237,6 +2246,78 @@ function applyPrefsObject(p){
   if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness;
   if(p.waterCal&&typeof p.waterCal==='object'){
     for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }
+
+// ── Grinder identity ────────────────────────────────────────────────
+// A grinder has one `model` field and no brand of its own, so the full name is
+// what every skin sees. Only the point it splits at is ours to remember, keyed
+// by grinder id, and a missing entry just means the whole name is the model.
+var grinderBrands={};
+function loadGrinderBrands(){ grinderBrands=lsGet('aurora_gbrands')||{}; }
+function saveGrinderBrands(){ lsSet('aurora_gbrands',grinderBrands); storeSave('gbrands',grinderBrands); }
+function splitGrinderName(g){
+  if(!g) return {brand:'',model:''};
+  var full=String(g.model||'');
+  var b=(typeof g._brand==='string')?g._brand:(g.id?grinderBrands[g.id]:'');
+  if(b&&full.indexOf(b+' ')===0) return {brand:b,model:full.slice(b.length+1)};
+  if(b&&full===b) return {brand:b,model:''};
+  return {brand:'',model:full}; }
+function joinGrinderName(brand,model){
+  brand=String(brand||'').trim(); model=String(model||'').trim();
+  return brand?(model?(brand+' '+model):brand):model; }
+
+// ── What a grinder is, in the few words a prompt can use ────────────
+// Every AI feature that talks about a shot should know what ground it: burr
+// geometry and size change how a profile behaves, and the dial only means
+// something next to them.
+function grinderByName(name){
+  if(!name) return null;
+  return (grinders||[]).find(function(g){ return String(g.model||'')===String(name); })||null; }
+function grinderDigest(g,setting){
+  if(!g) return null;
+  var d={ model:g.model||'' };
+  if(g.burrType) d.burrType=g.burrType;
+  if(g.burrSize!=null) d.burrSizeMm=g.burrSize;
+  if(g.burrs) d.burrs=g.burrs;
+  if(g.notes) d.notes=String(g.notes).replace(/\s+/g,' ').slice(0,300);
+  if(g.settingType) d.dial=g.settingType;
+  if(setting!=null&&setting!=='') d.setting=setting;
+  return d; }
+
+var gAiBusy=false;
+// Burr size is the field most worth getting wrong, so the prompt is told to
+// leave anything it does not actually know empty rather than produce a
+// plausible number. A grinder it has never heard of should come back empty.
+function grinderAiPrompt(name,lang){
+  return 'You are identifying a coffee grinder from its brand and model.\n'
+    +'Return ONLY JSON: {"burrs":"","burrType":"","burrSize":null,"notes":""}.\n'
+    +'burrType: "flat" or "conical", lower case, only if you know which this grinder uses.\n'
+    +'burrSize: burr diameter in millimetres as a number, only if you know it. null otherwise.\n'
+    +'burrs: the burr set as it is normally named for this grinder, e.g. "Stock 64mm" or "SSP MP". Empty if unknown.\n'
+    +'notes: two or three short sentences on what this grinder is like to use for espresso - '
+    +'grind quality and uniformity, how fine it can go, how its dial behaves, what it is known to suit. '
+    +'Write notes in '+(lang==='ko'?'Korean':'English')+'.\n'
+    +'If you do not recognise the grinder, or are unsure of a value, leave that field empty or null. '
+    +'Never guess a burr size. An empty answer is better than an invented one.\n\n'
+    +'GRINDER: '+name; }
+function grinderAiFill(){
+  if(gAiBusy||!bgSel||bgSel.type!=='grinder') return Promise.resolve();
+  bgReadGrinderForm();
+  var name=String(bgSel.obj.model||'').trim();
+  if(!name){ toast(t('gAiNeedModel'),'err'); return Promise.resolve(); }
+  var key=(prefs.geminiKey||'').trim();
+  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
+  gAiBusy=true; renderBgEditor();
+  return geminiJson(key,[{text:grinderAiPrompt(name,_lang)}],0.1,{search:true}).then(function(r){
+    if(!r||typeof r!=='object') { toast(t('gAiUnknown'),'err'); return; }
+    var o=bgSel.obj, got=0;
+    if(typeof r.burrs==='string'&&r.burrs.trim()){ o.burrs=r.burrs.trim(); got++; }
+    if(typeof r.burrType==='string'&&r.burrType.trim()){ o.burrType=r.burrType.trim().toLowerCase(); got++; }
+    var sz=(typeof r.burrSize==='number')?r.burrSize:parseFloat(r.burrSize);
+    if(!isNaN(sz)&&sz>0){ o.burrSize=sz; got++; }
+    if(typeof r.notes==='string'&&r.notes.trim()){ o.notes=r.notes.trim(); got++; }
+    toast(got?t('gAiFilled'):t('gAiUnknown'),got?'ok':'err');
+  }).catch(function(e){ toast(t('gAiFailed')+' '+((e&&e.message)||'error'),'err'); })
+    .then(function(){ gAiBusy=false; renderBgEditor(); }); }
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
@@ -3308,11 +3389,15 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="ep-save-bar">'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
     renderRecBox(); renderBeanStats(); renderBgTabs(); loadBeanUsage('bg');
   } else {
-    var isPreset=(o.settingType==='preset');
+    var isPreset=(o.settingType==='preset'), gname=splitGrinderName(o);
     wrap.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:16px">'+(isNew?'New Grinder':'Edit Grinder')+'</div>'
-      +'<div class="field"><label>Model</label><input id="bgModel" value="'+escapeAttr(o.model||'')+'"></div>'
-      +'<div class="field-row"><div class="field"><label>Burrs</label><input id="bgBurrs" value="'+escapeAttr(o.burrs||'')+'"></div><div class="field"><label>Burr type</label><input id="bgBurrType" value="'+escapeAttr(o.burrType||'')+'"></div></div>'
-      +'<div class="field"><label>Burr size (mm)</label><input id="bgBurrSize" type="number" step="0.5" value="'+(o.burrSize!=null?o.burrSize:'')+'"></div>'
+      +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('brand'))+'</label><input id="bgBrand" value="'+escapeAttr(gname.brand)+'" placeholder="Niche"></div>'
+        +'<div class="field"><label>'+escapeHtml(t('model'))+'</label><input id="bgModel" value="'+escapeAttr(gname.model)+'" placeholder="Zero"></div></div>'
+      +'<div class="g-ai"><button class="ep-aibtn" id="bgAiBtn" onclick="grinderAiFill()"'+(gAiBusy?' disabled':'')+'>'
+        +escapeHtml(gAiBusy?t('gAiWorking'):('\u2728 '+t('gAiFill')))+'</button>'
+        +'<span class="g-ai-hint">'+escapeHtml(t('gAiHint'))+'</span></div>'
+      +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('burrs'))+'</label><input id="bgBurrs" value="'+escapeAttr(o.burrs||'')+'"></div><div class="field"><label>'+escapeHtml(t('burrType'))+'</label><input id="bgBurrType" value="'+escapeAttr(o.burrType||'')+'"></div></div>'
+      +'<div class="field"><label>'+escapeHtml(t('burrSize'))+'</label><input id="bgBurrSize" type="number" step="0.5" value="'+(o.burrSize!=null?o.burrSize:'')+'"></div>'
       +'<div class="ep-section-title" style="margin-top:8px">Grind Setting</div>'
       +'<div class="field"><label>Setting type</label>'
         +'<div class="ep-pump-toggle" style="width:fit-content"><button class="'+(isPreset?'':'on')+'" onclick="bgSetGrindType(\'numeric\')">Numeric dial</button><button class="'+(isPreset?'on':'')+'" onclick="bgSetGrindType(\'preset\')">Named presets</button></div></div>'
@@ -3329,7 +3414,8 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
 function bgSetGrindType(t){ if(!bgSel||bgSel.type!=='grinder') return; bgReadGrinderForm(); bgSel.obj.settingType=t; renderBgEditor(); }
 // Read current grinder form values back into the selected object (before re-render).
 function bgReadGrinderForm(){ var o=bgSel.obj; var g=function(id){ var el=document.getElementById(id); return el?el.value:undefined; };
-  if(g('bgModel')!==undefined) o.model=g('bgModel').trim();
+  if(g('bgModel')!==undefined){ o._brand=String(g('bgBrand')||'').trim();
+    o.model=joinGrinderName(o._brand,g('bgModel')); }
   if(g('bgBurrs')!==undefined) o.burrs=g('bgBurrs').trim();
   if(g('bgBurrType')!==undefined) o.burrType=g('bgBurrType').trim();
   var bs=g('bgBurrSize'); if(bs!==undefined) o.burrSize=bs===''?null:parseFloat(bs);
@@ -3365,7 +3451,7 @@ function profileCatalogForAi(){
         tempC:temps.length?[Math.min.apply(null,temps),Math.max.apply(null,temps)]:null,
         peakBar:pres.length?Math.round(Math.max.apply(null,pres)*10)/10:null,
         notes:String(pr.notes||'').replace(/\s+/g,' ').slice(0,260) }; }); }
-function recommendPrompt(bean,cat,lang){
+function recommendPrompt(bean,cat,lang,grinder){
   return 'You are a barista choosing an espresso profile on a Decent machine for one specific coffee. '
     +'Pick the FIVE best profiles from the catalogue for this bean and rank them best first. '
     +'Respond ONLY with JSON: [{"title":"exact title from the catalogue","why":"one sentence"}]. '
@@ -3375,7 +3461,12 @@ function recommendPrompt(bean,cat,lang){
     +'A profile whose tags match the roast is a strong signal; temperature and pressure matter but do not decide roast on their own. '
     +'Each "why" must be one short sentence naming the concrete reason for THIS bean - the roast, the process, '
     +'the days off roast or the flavour it should bring out - not a generic description of the profile. '
-    +'Write every "why" in '+(lang==='ko'?'Korean':'English')+'.\n\nBEAN:\n'+JSON.stringify(bean)
+    +'Write every "why" in '+(lang==='ko'?'Korean':'English')+'.\n'
+    +(grinder?('The grinder is given too. Burr geometry and size bound what a profile can do - a conical and a flat '
+      +'of the same setting do not pour alike - so prefer profiles this grinder can actually feed, and say so in the '
+      +'"why" when it is the deciding reason.\n'):'')
+    +'\nBEAN:\n'+JSON.stringify(bean)
+    +(grinder?('\n\nGRINDER:\n'+JSON.stringify(grinder)):'')
     +'\n\nCATALOGUE:\n'+JSON.stringify(cat); }
 var usageResults=null, usageBusy=false, _usageFor=null, usageStats=null, usageShots=null;
 // Shots record the bean by name and roaster; beanId only matches through batches,
@@ -3533,7 +3624,8 @@ function recommendProfiles(pfx,quiet){
   var cat=profileCatalogForAi();
   if(!cat.length){ if(!quiet) toast(t('recNoProfiles'),'err'); return Promise.resolve(); }
   recBusy=true; recResults=null; renderRecBox();
-  return geminiJson(key,[{text:recommendPrompt(bean,cat,_lang)}],0.2).then(function(res){
+  return geminiJson(key,[{text:recommendPrompt(bean,cat,_lang,
+      grinderDigest(grinderByName(context&&context.grinderModel),context&&context.grinderSetting))}],0.2).then(function(res){
     var rows=Array.isArray(res)?res:(res&&res.picks)||[];
     recResults=rows.map(function(r){
       var match=allProfiles.find(function(p){ return profTitle(p)===r.title; });
@@ -3742,12 +3834,25 @@ function geminiAnalyze(key,images){
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   return geminiJson(key,parts,0.1); }
 // Ask Gemini for JSON, retrying transient overload and falling back to the lite model.
-function geminiJson(key,parts,temperature){
+// opts.search asks for Google Search grounding. That is a separately metered
+// feature: a key without it answers 429 to every grounded call while ordinary
+// calls on the same key and model succeed, so a refusal there means "not
+// entitled", not "busy" -- it is retried once without the tool rather than put
+// through the overload backoff, and the answer is simply ungrounded.
+function geminiJson(key,parts,temperature,opts){
+  var want=!!(opts&&opts.search);
+  return geminiJsonCall(key,parts,temperature,want).catch(function(e){
+    if(want&&(e.status===429||e.status===400)) return geminiJsonCall(key,parts,temperature,false);
+    throw e; }); }
+function geminiJsonCall(key,parts,temperature,search){
   var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:(temperature==null?0:temperature)}};
+  if(search) body.tools=[{google_search:{}}];
   return resolveGeminiModel(key).then(function(model){
     function attempt(m,tries){
       return geminiGenerate(key,m,body).catch(function(e){
         if(e.status===404){ _geminiModel=null; throw e; }
+        // a grounded call is not worth backing off over; the caller drops the tool
+        if(search) throw e;
         if(isOverload(e)){
           if(tries>0){ return _sleep(1200*(4-tries)).then(function(){ return attempt(m,tries-1); }); }
           if(m!==GEMINI_LITE){ return attempt(GEMINI_LITE,1); } // last resort: lite model
@@ -6173,9 +6278,13 @@ function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
     settingType:o.settingType||'numeric' };
   if(body.settingType==='preset'){ body.settingValues=o.settingValues&&o.settingValues.length?o.settingValues:null; }
   else { body.settingSmallStep=(o.settingSmallStep!=null?o.settingSmallStep:null); body.settingBigStep=(o.settingBigStep!=null?o.settingBigStep:null); }
+  var brand=String(o._brand||'').trim();
   var req=o.id?api('PUT','/api/v1/grinders/'+o.id,body):api('POST','/api/v1/grinders',body);
-  req.then(function(){ toast('Grinder saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
-function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast('Deleted','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
+  req.then(function(saved){
+    var id=o.id||(saved&&saved.id);
+    if(id){ if(brand) grinderBrands[id]=brand; else delete grinderBrands[id]; saveGrinderBrands(); }
+    toast('Grinder saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">Saved ✓</div>'; }).catch(function(){ toast('Save failed','err'); }); }
+function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast('Deleted','ok'); delete grinderBrands[o.id]; saveGrinderBrands(); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
 function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
   api('PUT','/api/v1/workflow',{context:ctx}).then(function(){ toast('Grinder set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
 // The workflow context only carries the coffee's name and roaster, so the detail
@@ -6358,6 +6467,17 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
       +metric(stats.volume!=null?stats.volume.toFixed(1):null,t('volume')+' ml')
     +'</div>'
     +aiPanelHtml()
+    +'<div class="ep-section-title" style="margin-top:16px">'+escapeHtml(t('shotBeanGrinder'))+'</div>'
+    +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('roaster'))+'</label>'
+      +'<input id="slRoaster" value="'+escapeAttr(ctx.coffeeRoaster||'')+'"></div>'
+      +'<div class="field"><label>'+escapeHtml(t('coffee'))+'</label>'
+      +'<input id="slCoffee" value="'+escapeAttr(ctx.coffeeName||'')+'"></div></div>'
+    +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('grinder'))+'</label>'
+      +'<input id="slGrinder" list="slGrinderList" value="'+escapeAttr(ctx.grinderModel||'')+'">'
+      +'<datalist id="slGrinderList">'+(grinders||[]).map(function(g){
+          return '<option value="'+escapeAttr(g.model||'')+'"></option>'; }).join('')+'</datalist></div>'
+      +'<div class="field"><label>'+escapeHtml(t('grindSetting'))+'</label>'
+      +'<input id="slGrind" value="'+escapeAttr(ctx.grinderSetting!=null?String(ctx.grinderSetting):'')+'"></div></div>'
     +'<div class="ep-section-title" style="margin-top:16px">Tasting log</div>'
     +'<div class="field-row"><div class="field"><label>Actual Dose (g)</label><input id="slDose" type="number" step="0.1" value="'+(an.actualDoseWeight!=null?an.actualDoseWeight:'')+'"></div>'
       +'<div class="field"><label>Actual Yield (g)</label><input id="slYield" type="number" step="0.1" value="'+(an.actualYield!=null?an.actualYield:'')+'"></div></div>'
@@ -6370,11 +6490,34 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
   slSel=s; slSel._stars=an.enjoyment||0;
   var cv=document.getElementById('slCurve'); if(cv){ if(s.measurements&&s.measurements.length) drawShotMeasurements(cv,s); else drawSimCurve(cv,pr); } }
 function setSlStar(n){ if(slSel) slSel._stars=n; document.querySelectorAll('#slStars .star').forEach(function(el,i){ el.classList.toggle('on',i<n); }); }
+// The shot's own record of what it was pulled with can be wrong -- the wrong
+// bean left loaded, a grind typed after the fact. PUT accepts a workflow patch
+// and merges the context, which the REST spec does not document, so it is sent
+// on its own and only when something actually changed.
+function shotContextEdits(){
+  var g=function(id){ var el=document.getElementById(id); return el?el.value.trim():undefined; };
+  var was=(slSel&&slSel.workflow&&slSel.workflow.context)||{}, out={}, any=false;
+  var pairs=[['slRoaster','coffeeRoaster'],['slCoffee','coffeeName'],
+             ['slGrinder','grinderModel'],['slGrind','grinderSetting']];
+  pairs.forEach(function(pair){
+    var v=g(pair[0]); if(v===undefined) return;
+    var old=was[pair[1]]; old=(old==null?'':String(old));
+    if(v!==old){ out[pair[1]]=v; any=true; } });
+  return any?out:null; }
 function saveShotLog(id){ var dose=parseFloat(document.getElementById('slDose').value)||null, yld=parseFloat(document.getElementById('slYield').value)||null;
   var tds=parseFloat(document.getElementById('slTds').value)||null, ey=parseFloat(document.getElementById('slEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1));
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey, enjoyment:(slSel&&slSel._stars)||null, espressoNotes:document.getElementById('slNotes').value||null };
-  api('PUT','/api/v1/shots/'+id,{annotations:ann}).then(function(){ toast('Shot log saved','ok'); loadShotList(); }).catch(function(){ toast('Save failed','err'); }); }
+  var edits=shotContextEdits();
+  api('PUT','/api/v1/shots/'+id,{annotations:ann})
+    .then(function(){ return edits?api('PUT','/api/v1/shots/'+id,{workflow:{context:edits}}):null; })
+    .then(function(){
+      // a corrected bean or grinder changes what the reading was based on
+      if(edits){ try{ var all=lsGet('aurora_shotai')||{}; delete all[id]; lsSet('aurora_shotai',all); storeSave('shotai',all); }catch(_){}
+        delete slFull[id]; }
+      toast(edits?t('shotFixed'):'Shot log saved','ok');
+      loadShotList(slSel&&{id:id});
+    }).catch(function(){ toast('Save failed','err'); }); }
 // Draw a recorded shot onto a canvas: pressure, flow, weight and the group /
 // mix / target temperatures, with the profile frame boundaries behind them.
 // Measurements are nested: m[i].machine.{...}, m[i].scale.{...}, m[i].volume.
@@ -6656,7 +6799,9 @@ function shotDigestForAi(sh){
     steps:(pr.steps||[]).slice(0,12).map(function(x){
       return { name:x.name, pump:x.pump, pressure:x.pressure, flow:x.flow, seconds:x.seconds, temperature:x.temperature }; }),
     coffee:[c.coffeeRoaster,c.coffeeName].filter(Boolean).join(' · '),
-    grinder:c.grinderModel||'', grind:c.grinderSetting,
+    // the shot only records the grinder by name; the burrs come from the library
+    grinder:grinderDigest(grinderByName(c.grinderModel),c.grinderSetting)||{model:c.grinderModel||'',setting:c.grinderSetting},
+    grind:c.grinderSetting,
     dose:d, yield:y, ratio:(d&&y)?Math.round((y/d)*100)/100:null,
     seconds:st.seconds?Math.round(st.seconds*10)/10:null,
     peakBar:st.peakPressure?Math.round(st.peakPressure*10)/10:null,
@@ -6670,6 +6815,8 @@ function shotAiPrompt(digests,lang){
       : 'Read this recorded shot. Say what the curve shows and what to change next.\n')
     +'Ground every claim in the numbers given. Never invent a measurement that is not there; where something cannot be judged from the data, say so.\n'
     +'In curve, t is seconds, p is bar, f is ml/s, w is grams on the scale.\n'
+    +'grinder describes what ground the coffee. Burr geometry and size change how a grind setting behaves, '
+    +'so when you suggest a grind change, say it in terms of this grinder\'s own dial and what its burrs do.\n'
     +'Reply as JSON: {"verdict":"one sentence","observations":["..."],"suggestions":[{"change":"short imperative","why":"one sentence"}]}\n'
     +'At most 4 observations and 3 suggestions.\n\nSHOTS: '+JSON.stringify(digests); }
 function aiPanelHtml(){
@@ -6838,7 +6985,7 @@ function bootMobileBeanScan(){
 window.addEventListener('load', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
-  fitStage(); loadFavs(); loadPrefs(); loadPresets(); hydrateFromStore(); initWebSockets();   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); loadFavs(); loadPrefs(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
