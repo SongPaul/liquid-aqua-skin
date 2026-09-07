@@ -1539,12 +1539,28 @@ function syncWakeLock(){
   var want=((gwSettings||{}).keepAwake!==false)&&!_asleep;
   if(want===_wakeHeld) return; _wakeHeld=want;
   try{ ws.send(JSON.stringify({command:want?'requestWakeLock':'releaseWakeLock'})); }catch(_){ _wakeHeld=null; } }
+var _wsOpen={}, _wsParked={};
 function openWs(name,path,onMsg){ var url=GATEWAY.ws+path;
-  function connect(){ if(sockets[name]&&sockets[name].readyState<=1) return; var ws=new WebSocket(url); sockets[name]=ws;
+  function connect(){ if(_wsParked[name]) return;
+    if(sockets[name]&&sockets[name].readyState<=1) return; var ws=new WebSocket(url); sockets[name]=ws;
     ws.onopen=function(){ if(name==='display'){ _wakeHeld=null; syncWakeLock(); } };
     ws.onmessage=function(e){ try{ onMsg(JSON.parse(e.data)); }catch(_){} };
-    ws.onclose=function(){ setTimeout(connect,2000); }; ws.onerror=function(){ ws.close(); }; }
+    // The reconnect is what keeps a dropped socket alive, so parking has to be
+    // checked here too or a socket closed for sleep would come straight back.
+    ws.onclose=function(){ if(!_wsParked[name]) setTimeout(connect,2000); };
+    ws.onerror=function(){ ws.close(); }; }
+  _wsOpen[name]=connect;
   connect(); }
+// Sleep keeps only the machine snapshot, which is how a machine woken at the
+// group head is noticed. Water levels are not on the lock screen and cost a
+// packet a second; the other three send nothing and only hold connections open.
+var SLEEP_PARK=['water','scale','devices','display'];
+function parkSockets(on){
+  SLEEP_PARK.forEach(function(name){
+    if(on){ _wsParked[name]=true;
+      try{ if(sockets[name]) sockets[name].close(); }catch(_){} }
+    else if(_wsParked[name]){ _wsParked[name]=false;
+      if(_wsOpen[name]) _wsOpen[name](); } }); }
 function initWebSockets(){
   openWs('machine','/ws/v1/machine/snapshot',function(s){
     state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.targetGroupTemp=(s.targetGroupTemperature!=null?s.targetGroupTemperature:state.targetGroupTemp); state.targetMixTemp=(s.targetMixTemperature!=null?s.targetMixTemperature:state.targetMixTemp); state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame);
@@ -1970,6 +1986,9 @@ function pauseSvgAnimations(on){
 // minute -- on the minute -- rather than once a second, and each tick also nudges
 // the lock to a new offset, which is the whole burn-in guard.
 function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock(); pauseSvgAnimations(true);
+  // syncWakeLock has already released the override over the display socket, so
+  // it is safe to let that one go with the rest.
+  parkSockets(true);
   if(_lockClockT) clearTimeout(_lockClockT); _lockShiftI=0; tickLockClock();
   // Dim the panel while asleep (a dark, low-brightness screen resists burn-in and
   // saves power). Remember the level so it can be restored on wake.
@@ -1977,7 +1996,8 @@ function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); do
     api('PUT','/api/v1/display/brightness',{brightness:prefs.sleepBrightness||20}).catch(function(){}); } }
 // Called on both wake paths. Clears the flag/clock, then repaints the live UI once
 // so everything reflects the current state after the sleep gap.
-function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show'); syncWakeLock(); pauseSvgAnimations(false);
+function endSleepUI(){ _asleep=false; document.body.classList.remove('asleep'); document.getElementById('lockScreen').classList.remove('show');
+  parkSockets(false); syncWakeLock(); pauseSvgAnimations(false);
   if(_lockClockT){ clearTimeout(_lockClockT); _lockClockT=null; }
   var sh=document.getElementById('lockShift'); if(sh) sh.style.transform='';
   // Restore pre-sleep brightness.

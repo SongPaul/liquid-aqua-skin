@@ -400,8 +400,18 @@ It is built to cost as close to nothing as a screen can:
 
 The full-screen pages — beans, the profile editor, the shot log, settings — do the same while they are open: the interface behind them stops painting and its wave stops ticking, which takes a page from 38 to 5 ms of CPU per second.
 - brightness drops to your sleep level and is restored on wake
+- **four of the five WebSockets are closed** and reopened on wake
 
-Measured with the machine driven through idle and sleeping: **2 ms of CPU per second of wall clock** while asleep, against 26 ms awake.
+That last one is about the radio, not the processor. Water levels are not on the lock screen and cost a packet a second; the scale, devices and display channels send nothing at all and only hold connections open. Only the machine snapshot stays, because that is how a machine woken at the group head is noticed.
+
+Measured with the machine driven through idle and sleeping:
+
+| | awake | asleep |
+|---|---|---|
+| CPU | 26 ms/s | **0.6 ms/s** |
+| WebSocket frames | 2.8 /s | **1.8 /s** |
+
+The scale is not this skin's to manage: the gateway's *Scale power mode* already disconnects it when the machine sleeps.
 
 ---
 
