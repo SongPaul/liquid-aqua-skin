@@ -1353,12 +1353,8 @@ var I18N={
     lowBatt:'Low-battery dimming', lowBattDesc:'Cap brightness when the battery is low.',
     sleepDim:'Dim on sleep', sleepDimDesc:'Lower screen brightness while the sleep screen shows (saves the panel and battery).', sleepBright:'Sleep brightness', sleepBrightDesc:'Brightness level used while asleep.',
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
-    waterCal:'Water tank calibration', waterCalDesc:'The machine reports water height in mm. Calibrate to show a percentage.', waterCalNow:'Current reading',
-    waterCalMode:'Calibration method', wcOff:'Standard tank', wcTwoPoint:'Empty & full', wcPour:'Measured pour',
-    wcPourNote:'The amount you pour is the full mark: pour 700 ml and 700 ml reads 100%.',
+    waterCalNow:'Current reading',
     needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
-    wcEmpty:'Empty tank height', wcFull:'Full tank height', wcAfterPour:'Height after pour', wcCapacity:'Tank capacity', wcPoured:'Poured amount',
-    wcCapture:'Capture', wcCaptured:'Captured', wcNotSet:'not set',
     flowCal:'Flow Calibration', flowCalDesc:'Fine-tune the gateway flow/weight estimation multipliers.', fcWeight:'Weight flow multiplier', fcVolume:'Volume flow multiplier', fcHotWater:'Hot water flow multiplier',
     refillKit:'Refill kit', refillKitDesc:'Plumbed water supply. When on, the tank always shows full.', refillKitOverride:'Refill kit override', refillKitOverrideDesc:'Machine refill-kit register: auto, or force on/off.', rkAuto:'Auto', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
@@ -1434,12 +1430,8 @@ var I18N={
     lowBatt:'저전력 밝기 제한', lowBattDesc:'배터리가 낮을 때 밝기를 제한.',
     sleepDim:'절전 시 화면 어둡게', sleepDimDesc:'절전 화면이 표시되는 동안 밝기를 낮춥니다 (액정 잔상·배터리 보호).', sleepBright:'절전 밝기', sleepBrightDesc:'절전 중 사용할 밝기 레벨.',
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
-    waterCal:'물탱크 보정', waterCalDesc:'머신은 수위를 mm로 보고합니다. 퍼센트 표시를 위해 보정하세요.', waterCalNow:'현재 값',
-    waterCalMode:'보정 방법', wcOff:'표준 탱크', wcTwoPoint:'빈 탱크 & 가득', wcPour:'측정 투입',
-    wcPourNote:'부은 양이 곧 가득 찬 기준입니다. 700 ml를 부으면 700 ml가 100%로 표시됩니다.',
+    waterCalNow:'현재 수위',
     needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
-    wcEmpty:'빈 탱크 높이', wcFull:'가득 찬 높이', wcAfterPour:'투입 후 높이', wcCapacity:'탱크 용량', wcPoured:'투입량',
-    wcCapture:'캡처', wcCaptured:'캡처됨', wcNotSet:'미설정',
     flowCal:'유량 보정', flowCalDesc:'게이트웨이 유량/무게 추정 배수를 미세 조정합니다.', fcWeight:'무게 유량 배수', fcVolume:'볼륨 유량 배수', fcHotWater:'온수 유량 배수',
     refillKit:'리필 킷', refillKitDesc:'배관 급수 연결. 켜면 탱크가 항상 만수로 표시됩니다.', refillKitOverride:'리필 킷 오버라이드', refillKitOverrideDesc:'머신 리필 킷 레지스터: 자동 또는 강제 켜기/끄기.', rkAuto:'자동', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
@@ -2305,8 +2297,7 @@ function applyPrefsObject(p){
   if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto;
   if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim;
   if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness;
-  if(p.waterCal&&typeof p.waterCal==='object'){
-    for(var k in p.waterCal){ if(prefs.waterCal.hasOwnProperty(k)) prefs.waterCal[k]=p.waterCal[k]; } } }
+}
 
 // ── Grinder identity ────────────────────────────────────────────────
 // A grinder has one `model` field and no brand of its own, so the full name is
@@ -2406,10 +2397,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:true, sleepDim:true, sleepBrightness:20,
-  // Water tank calibration. mode: 'off' | 'twopoint' | 'pour'.
-  // twopoint: hEmpty/hFull (mm) + capacity(ml). pour: hEmpty(mm) + poured(ml) at hPour(mm).
-  waterCal:{ mode:'off', hEmpty:null, hFull:null, capacity:1500, poured:null, hPour:null } };
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:true, sleepDim:true, sleepBrightness:20 };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
 function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
@@ -2433,24 +2421,9 @@ function tankTableMl(mm){
   if(!(mm>0)) return 0;
   var i=Math.floor(mm); if(i>=TANK_MM_ML.length-1) return TANK_MAX_ML;
   return TANK_MM_ML[i]+(TANK_MM_ML[i+1]-TANK_MM_ML[i])*(mm-i); }
-function tankPercent(mm){ var c=prefs.waterCal||{};
-  if(c.mode==='twopoint' && c.hEmpty!=null && c.hFull!=null && c.hFull>c.hEmpty){
-    return Math.max(0,Math.min(100, 100*(mm-c.hEmpty)/(c.hFull-c.hEmpty))); }
-  // Measured pour: the amount poured IS the full mark. Someone pouring a known
-  // 700 ml is saying "this is a full tank for me", not "derive a slope and then
-  // measure me against some other number".
-  if(c.mode==='pour' && c.hEmpty!=null && c.hPour!=null && c.poured>0 && c.hPour>c.hEmpty){
-    var ml=Math.max(0,(mm-c.hEmpty)*(c.poured/(c.hPour-c.hEmpty)));
-    return Math.max(0,Math.min(100, 100*ml/c.poured)); }
-  return Math.max(0,Math.min(100, 100*tankTableMl(mm)/TANK_MAX_ML));
-}
-// Estimated remaining volume (ml) if calibration provides enough info; else null.
-function tankMl(mm){ var c=prefs.waterCal||{};
-  if(c.mode==='pour' && c.hEmpty!=null && c.hPour!=null && c.poured>0 && c.hPour>c.hEmpty){
-    return Math.max(0,(mm-c.hEmpty)*(c.poured/(c.hPour-c.hEmpty))); }
-  if(c.mode==='twopoint' && c.hEmpty!=null && c.hFull!=null && c.hFull>c.hEmpty && c.capacity){
-    return Math.max(0,Math.min(c.capacity, c.capacity*(mm-c.hEmpty)/(c.hFull-c.hEmpty))); }
-  return tankTableMl(mm); }
+function tankPercent(mm){ return Math.max(0,Math.min(100, 100*tankTableMl(mm)/TANK_MAX_ML)); }
+// Estimated volume (ml) at this height.
+function tankMl(mm){ return tankTableMl(mm); }
 // Unit conversion helpers. Machine/scale data is always metric (°C, g);
 // these convert only for display.
 function convTemp(c){ return prefs.tempUnit==='F'?(c*9/5+32):c; }
@@ -2530,11 +2503,9 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     var rl=Math.round(state.water.refill||0);
     h+=row('refillLevel','refillLevelDesc','<div class="opt-ctrl"><input type="range" class="slider" min="0" max="30" step="1" value="'+rl+'" oninput="document.getElementById(\'rlVal\').textContent=this.value" onchange="setRefillLevel(this.value)"><span class="opt-val" id="rlVal">'+rl+'</span></div>');
     // ── Water tank calibration ──
-    h+='<div class="ep-section-title" style="margin-top:20px">'+t('waterCal')+'</div>';
-    h+='<div class="set-desc" style="margin-bottom:10px">'+t('waterCalDesc')+' '+t('waterCalNow')+': <b>'+ (state.water.current!=null?state.water.current.toFixed(1):'—') +' mm</b></div>';
-    var cm=(prefs.waterCal&&prefs.waterCal.mode)||'off';
-    h+=row('waterCalMode','','<select class="set-select" onchange="setWaterCalMode(this.value)">'+opt('off',t('wcOff'),cm)+opt('twopoint',t('wcTwoPoint'),cm)+opt('pour',t('wcPour'),cm)+'</select>');
-    h+='<div id="waterCalBox">'+waterCalBoxHtml()+'</div>';
+    var wmm=state.water.current;
+    h+='<div class="set-desc" style="margin-top:8px">'+t('waterCalNow')+': <b>'
+      +(wmm!=null?(wmm.toFixed(1)+' mm  ·  '+Math.round(tankMl(wmm))+' ml'):'—')+'</b></div>';
     // ── Flow calibration (gateway multipliers) ──
     h+='<div class="ep-section-title" style="margin-top:20px">'+t('flowCal')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:6px">'+t('flowCalDesc')+'</div>';
@@ -2578,27 +2549,6 @@ function setRefillLevel(v){ state.water.refill=parseInt(v,10); api('POST','/api/
 function setRefillKit(v){ var n=parseInt(v,10); gwSettings.refillKitSetting=n; api('POST','/api/v1/settings',{refillKitSetting:n}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setRefillKitFull(on){ prefs.refillKitFull=!!on; savePrefs(); updateWaterUI(); }
 // ── Water tank calibration UI ──
-function setWaterCalMode(m){ prefs.waterCal.mode=m; savePrefs(); var b=document.getElementById('waterCalBox'); if(b) b.innerHTML=waterCalBoxHtml(); updateWaterUI(); }
-function waterCalBoxHtml(){ var c=prefs.waterCal||{}; if(c.mode==='off') return '';
-  function cap(id,label,val,unit){ return '<div class="set-row"><div class="set-info"><div class="set-name">'+label+'</div>'
-    +'<div class="set-desc">'+(val!=null?(val+' '+unit):t('wcNotSet'))+'</div></div>'
-    +'<button class="m-btn" onclick="captureWaterCal(\''+id+'\')">'+t('wcCapture')+'</button></div>'; }
-  var h='';
-  if(c.mode==='twopoint'){
-    h+=cap('hEmpty',t('wcEmpty'),c.hEmpty,'mm');
-    h+=cap('hFull',t('wcFull'),c.hFull,'mm');
-    h+=row('wcCapacity','','<div class="opt-ctrl"><input type="number" class="set-select" style="width:90px" value="'+(c.capacity||1500)+'" oninput="prefs.waterCal.capacity=parseInt(this.value,10)||1500;savePrefs();"> ml</div>');
-  } else if(c.mode==='pour'){
-    h+=cap('hEmpty',t('wcEmpty'),c.hEmpty,'mm');
-    h+=row('wcPoured','','<div class="opt-ctrl"><input type="number" class="set-select" style="width:90px" value="'+(c.poured||'')+'" placeholder="ml" oninput="prefs.waterCal.poured=parseFloat(this.value)||null;savePrefs();"> ml</div>');
-    h+=cap('hPour',t('wcAfterPour'),c.hPour,'mm');
-    h+='<div class="set-desc" style="margin-top:6px">'+escapeHtml(t('wcPourNote'))+'</div>';
-  }
-  return h; }
-function captureWaterCal(field){ var mm=state.water.current; if(mm==null){ toast('No water reading','err'); return; }
-  prefs.waterCal[field]=parseFloat(mm.toFixed(2)); savePrefs();
-  var b=document.getElementById('waterCalBox'); if(b) b.innerHTML=waterCalBoxHtml(); updateWaterUI();
-  toast(t('wcCaptured')+': '+mm.toFixed(1)+' mm','ok'); }
 // ── Flow calibration multipliers (gateway settings) ──
 function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0);
   return '<div class="set-row"><div class="set-info"><div class="set-name">'+label+'</div></div>'
