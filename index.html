@@ -717,6 +717,15 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .m-btn:hover{transform:translateY(-2px)}
 .m-btn.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3))}
 .m-btn.danger{border:none;color:#fff;background:var(--red)}
+/* A secondary action that still writes to the machine: tinted, never filled,
+   so the primary stays the only filled control on the view. */
+.m-btn.tinted{border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent)}
+.m-btn.tinted:hover:not(:disabled){background:var(--accent);color:#fff}
+/* Stopping something already running reads as a stop, not as an action. */
+.m-btn.stop{border:1.5px solid rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:var(--red)}
+.m-btn.stop:hover:not(:disabled){background:var(--red);color:#fff}
+.m-btn:disabled{opacity:.4;cursor:not-allowed}
+.m-btn:disabled:hover{transform:none}
 
 /* Header icon button (settings gear) */
 .icon-btn{width:44px;height:44px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-size:18px;cursor:pointer;-webkit-appearance:none;transition:all .2s;display:flex;align-items:center;justify-content:center}
@@ -2695,7 +2704,7 @@ function fwRunOperation(start,verb){
       cancel=document.getElementById('fwCancel');
   if(apply) apply.disabled=true;
   if(up) up.disabled=true;
-  if(cancel) cancel.style.display='';
+  if(cancel) cancel.disabled=false;
   fwShowProgress({phase:'erasing',percent:0,error:null});
   start(fwShowProgress)
     .then(function(){ fwShowProgress({phase:'done',percent:100,error:null});
@@ -2705,8 +2714,7 @@ function fwRunOperation(start,verb){
       toast(t('fwFailed'),'err'); })
     .then(function(){ _fwRunning=false;
       if(apply) apply.disabled=false;
-      if(up) up.disabled=!(_fwFile);
-      if(cancel) cancel.style.display='none'; }); }
+      if(up) up.disabled=!(_fwFile); }); }
 var _fwFile=null;
 function fwChooseFile(){ var el=document.getElementById('fwFile'); if(el) el.click(); }
 function fwFilePicked(input){
@@ -2744,15 +2752,17 @@ function loadFirmware(){ var box=document.getElementById('fwBox'); if(!box) retu
     if(note) h+='<div class="set-desc" style="margin-top:8px">'+escapeHtml(note)+'</div>';
     if(s.releaseNotes) h+='<div class="set-desc" style="margin-top:8px">'+escapeHtml(String(s.releaseNotes).slice(0,400))+'</div>';
     h+='<div id="fwProgress" class="fw-prog" style="display:none"></div>';
-    h+='<button class="m-btn" id="fwCancel" style="display:none;margin-top:10px" onclick="fwCancel()">'+escapeHtml(t('fwCancelBtn'))+'</button>';
     // manual file upload: the developer/recovery path the other skins also offer
     h+='<div class="set-desc" style="margin-top:18px">'+escapeHtml(t('fwManual'))+'</div>';
     h+='<input type="file" id="fwFile" accept=".dat,.bin,.fw,.dfu" style="display:none" onchange="fwFilePicked(this)">';
     h+='<div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">'
       +'<button class="m-btn" onclick="fwChooseFile()">'+escapeHtml(t('fwChoose'))+'</button>'
       +'<span class="set-desc" id="fwFileName">'+escapeHtml(_fwFile?_fwFile.name:t('fwNoFile'))+'</span>'
-      +'<button class="m-btn" id="fwUpload" onclick="fwUploadPicked()"'+(_fwFile?'':' disabled')+'>'
+      +'<button class="m-btn tinted" id="fwUpload" onclick="fwUploadPicked()"'+(_fwFile?'':' disabled')+'>'
       +escapeHtml(t('fwUploadBtn'))+'</button></div>';
+    // Cancel stays on screen: it is idempotent, and the moment you most want it
+    // is when a flash has gone wrong and the page is not showing progress.
+    h+='<button class="m-btn stop" id="fwCancel" style="margin-top:18px" onclick="fwCancel()">'+escapeHtml(t('fwCancelBtn'))+'</button>';
     box.innerHTML=h; }); }
 function fwApplyClick(){
   var s=_fwSummary; if(!s||!s.artifactId){ toast(t('fwNoArtifact'),'err'); return; }
