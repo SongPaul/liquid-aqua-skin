@@ -1969,7 +1969,9 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
 }
 
 // ── REST ────────────────────────────────────────────────────────────
-function api(method,path,body,timeoutMs){ var o={method:method,headers:{}}; if(body){o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body);}
+function api(method,path,body,timeoutMs){ var o={method:method,headers:{}};
+  // Not `if(body)`: a store value of false, 0 or '' is a body, not an absent one.
+  if(body!==undefined&&body!==null){o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body);}
   var ac=null,timer=null;
   if(timeoutMs&&typeof AbortController!=='undefined'){ ac=new AbortController(); o.signal=ac.signal; timer=setTimeout(function(){ ac.abort(); },timeoutMs); }
   return fetch(GATEWAY.http+path,o).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); if(r.status===204) return null; return r.json(); })
@@ -2193,7 +2195,15 @@ function syncRecipe(){
 // stays as a same-origin cache -- which also keeps the skin usable when the
 // gateway cannot be reached.
 var STORE_NS='liquid-aqua';
-var STORE_KEYS=['prefs','favs','presets','shotai','gbrands'];
+// Settings are one store key each, "pref_"-prefixed so a whole-namespace read
+// can tell them from the other keys. They used to be a single "prefs" blob,
+// which made every write a full replace: a tab open long enough to hold a stale
+// copy sent back every field, undoing whatever another tab had just changed.
+// A per-field key means a write only ever touches the field that changed.
+var PREF_PREFIX='pref_';
+// What the store is believed to hold, per field. Anything equal to this is
+// already up there and is not written again.
+var _prefsBase={};
 var _storeT={}, _storeReady=false;
 function storeUrl(key){ return '/api/v1/store/'+STORE_NS+(key?('/'+key):''); }
 // POST, not PUT: the spec says PUT but the gateway answers 404 to it.
@@ -2216,8 +2226,15 @@ function hydrateFromStore(){
     if(!all||typeof all!=='object') return;
     _storeReady=true;
     var changed=false;
-    if(all.prefs&&typeof all.prefs==='object'){ applyPrefsObject(all.prefs); lsSet('aurora_prefs',prefs); changed=true; }
-    else if(Object.keys(prefs).length) storePut('prefs',prefs);
+    var split=null;
+    for(var sk in all){ if(sk.indexOf(PREF_PREFIX)===0){ (split=split||{})[sk.slice(PREF_PREFIX.length)]=all[sk]; } }
+    // Split keys win over the legacy blob: once migrated they are the only
+    // thing written, so the blob can only be older. It is left in place so a
+    // rollback to a version that reads it still finds settings.
+    if(split){ applyPrefsObject(split); lsSet('aurora_prefs',prefs); changed=true; snapshotPrefsBase(); }
+    else if(all.prefs&&typeof all.prefs==='object'){
+      applyPrefsObject(all.prefs); lsSet('aurora_prefs',prefs); changed=true; migratePrefs(); }
+    else if(Object.keys(prefs).length) migratePrefs();
     if(all.favs&&typeof all.favs==='object'){ favIds=all.favs; lsSet('aurora_favs',favIds); changed=true; }
     else if(Object.keys(favIds).length) storePut('favs',favIds);
     if(all.presets&&typeof all.presets==='object'){
@@ -2383,7 +2400,17 @@ function relocalizeDynamic(){ try{ renderCarousel(); updateShotBtn(); updateConn
   if(document.getElementById('beanPage').classList.contains('show')){ renderBgList(); if(bgSel) renderBgEditor(); }
   if(document.getElementById('settingsPage')&&document.getElementById('settingsPage').classList.contains('show')){ renderSpNav(); renderSpContent(); }
 }catch(_){ } }
-function savePrefs(){ lsSet('aurora_prefs',prefs); storeSave('prefs',prefs); }
+function prefEq(a,b){ try{ return JSON.stringify(a)===JSON.stringify(b); }catch(_){ return a===b; } }
+function prefCopy(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(_){ return v; } }
+function snapshotPrefsBase(){ _prefsBase={};
+  for(var k in prefs){ _prefsBase[k]=prefCopy(prefs[k]); } }
+function savePrefs(){ lsSet('aurora_prefs',prefs);
+  for(var k in prefs){
+    if(prefEq(_prefsBase[k],prefs[k])) continue;
+    _prefsBase[k]=prefCopy(prefs[k]);
+    storeSave(PREF_PREFIX+k,prefs[k]); } }
+// Forget what the store holds so the next save pushes every field up.
+function migratePrefs(){ _prefsBase={}; savePrefs(); }
 function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
