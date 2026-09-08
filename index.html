@@ -1369,6 +1369,9 @@ var I18N={
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; Gemini fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
     qrNoLib:'QR library not loaded', qrNoLan:'The gateway did not report a LAN address. Enter the Wi-Fi/LAN address of the tablet so the phone can reach it.',
     aiBusy:'The AI model is busy right now. Please try again in a moment.',
+    aiRate:'Too many AI requests just now. Please try again in a minute.',
+    aiCap:'Gemini has stopped: the project is over its spending cap. Raise it at ai.studio/spend.',
+    aiExhausted:'Gemini has stopped: the daily allowance for this key is used up. It resets tomorrow.',
     addToGateway:'Add to gateway', mbSaving:'Saving…', mbSaved:'Added ✓ — you can scan another',
     mbKeyLabel:'Gemini API key (stored on this phone)', mbSaveKey:'Save key',
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
@@ -1446,6 +1449,9 @@ var I18N={
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 Gemini가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
     qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'게이트웨이가 LAN 주소를 알려주지 않았습니다. 폰이 접속할 태블릿의 Wi-Fi/LAN 주소를 입력하세요.',
     aiBusy:'AI 모델이 지금 혼잡합니다. 잠시 후 다시 시도해 주세요.',
+    aiRate:'요청이 너무 잦습니다. 1분 뒤에 다시 시도해 주세요.',
+    aiCap:'Gemini가 중단되었습니다. 프로젝트가 결제 상한을 넘었습니다. ai.studio/spend 에서 상한을 조정하세요.',
+    aiExhausted:'Gemini가 중단되었습니다. 이 키의 일일 사용량을 모두 썼습니다. 내일 초기화됩니다.',
     addToGateway:'게이트웨이에 추가', mbSaving:'저장 중…', mbSaved:'추가됨 ✓ — 계속 스캔할 수 있어요',
     mbKeyLabel:'Gemini API 키 (이 폰에만 저장)', mbSaveKey:'키 저장',
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
@@ -4055,7 +4061,25 @@ function geminiGenerate(key,model,body){
     .then(function(j){ var txt=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text;
       if(!txt) throw new Error('Empty response'); var data; try{ data=JSON.parse(txt); }catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
       if(!data) throw new Error('Could not parse result'); return data; }); }
-function isOverload(e){ return e&&(e.status===503||e.status===429||/overload|high demand|unavailable|rate.?limit|quota/i.test(e.message||'')); }
+// Three different failures arrive as 429/503 and only one of them is worth
+// retrying. A spending cap or an exhausted daily allowance will answer the same
+// way no matter how long we wait, and on a different model too, so retrying
+// costs time and tells the owner the wrong thing.
+function geminiFailure(e){
+  var m=(e&&e.message)||'', st=e&&e.status;
+  // "spending cap" is the wording unique to a project spend limit; a daily
+  // allowance says so with PerDay, and everything else that mentions billing is
+  // ordinary quota text that a retry can still clear.
+  if(/spending cap|spend cap/i.test(m)) return 'cap';
+  if(/per ?day|daily limit|PerDay/i.test(m)) return 'exhausted';
+  if(st===503||/overload|high demand|unavailable/i.test(m)) return 'busy';
+  if(st===429||/rate.?limit|quota|RESOURCE_EXHAUSTED/i.test(m)) return 'rate';
+  return null; }
+// Worth another attempt: a saturated model, or a per-minute rate limit.
+function isOverload(e){ var k=geminiFailure(e); return k==='busy'||k==='rate'; }
+function geminiMessage(e){
+  var k=geminiFailure(e);
+  return t(k==='cap'?'aiCap':k==='exhausted'?'aiExhausted':k==='rate'?'aiRate':'aiBusy'); }
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
@@ -4073,6 +4097,8 @@ function geminiAnalyze(key,images){
 function geminiJson(key,parts,temperature,opts){
   var want=!!(opts&&opts.search);
   return geminiJsonCall(key,parts,temperature,want).catch(function(e){
+    // Dropping the search tool cannot help when the project is out of money.
+    if(e.kind==='cap'||e.kind==='exhausted') throw e;
     if(want&&(e.status===429||e.status===400||!e.status)) return geminiJsonCall(key,parts,temperature,false);
     throw e; }); }
 function geminiJsonCall(key,parts,temperature,search){
@@ -4086,12 +4112,17 @@ function geminiJsonCall(key,parts,temperature,search){
     function attempt(m,tries){
       return geminiGenerate(key,m,body).catch(function(e){
         if(e.status===404){ _geminiModel=null; throw e; }
+        // A cap or an exhausted allowance is the same answer on every model and
+        // at every moment; report it as itself instead of retrying into it.
+        var kind=geminiFailure(e);
+        if(kind==='cap'||kind==='exhausted'){
+          var ce=new Error(geminiMessage(e)); ce.status=e.status; ce.kind=kind; throw ce; }
         // a grounded call is not worth backing off over; the caller drops the tool
         if(search) throw e;
         if(isOverload(e)){
           if(tries>0){ return _sleep(1200*(4-tries)).then(function(){ return attempt(m,tries-1); }); }
           if(m!==GEMINI_LITE){ return attempt(GEMINI_LITE,1); } // last resort: lite model
-          var oe=new Error(t('aiBusy')); oe.status=e.status; throw oe;
+          var oe=new Error(geminiMessage(e)); oe.status=e.status; oe.kind=kind; throw oe;
         }
         throw e;
       });
