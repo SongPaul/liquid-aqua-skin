@@ -404,6 +404,8 @@ body.page-swap .editpage{transition:none}
 .ep-toolbar{position:sticky;top:0;z-index:2;display:flex;flex-direction:column;gap:8px;padding:2px 2px 8px;background:linear-gradient(135deg,#eef1ff,#f5edff)}
 .ep-search{width:100%;min-height:44px;padding:9px 12px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;color:var(--ink);-webkit-appearance:none}
 .ep-search:focus{outline:none;border-color:var(--accent)}
+/* the box stays put while the list scrolls under it */
+#bgList .ep-search,#slList .ep-search{position:sticky;top:0;z-index:2}
 .ep-kinds{display:flex;gap:4px;flex-wrap:wrap}
 .ep-kind{flex:0 1 auto;min-width:0;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ep-kind.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -1378,7 +1380,7 @@ var I18N={
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
-    searchProfiles:'Search profiles…', kindEspresso:'Espresso', kindBrew:'Brew · tea', kindOther:'Clean · manual', kindAll:'All',
+    searchProfiles:'Search profiles…', searchBeans:'Search beans…', searchGrinders:'Search grinders…', searchShots:'Search shots…', noMatches:'Nothing matches', kindEspresso:'Espresso', kindBrew:'Brew · tea', kindOther:'Clean · manual', kindAll:'All',
     favorites:'Favorites', recentlyUsed:'Recently used', noMatches:'Nothing matches',
     tagPressure:'pressure', tagFlow:'flow', tagMixed:'mixed', tagLowPressure:'low pressure',
     tagBloom:'bloom', tagDecline:'declining', tagCool:'cool', tagHot:'hot',
@@ -1458,7 +1460,7 @@ var I18N={
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
-    searchProfiles:'프로파일 검색…', kindEspresso:'에스프레소', kindBrew:'브루·티', kindOther:'청소·수동', kindAll:'전체',
+    searchProfiles:'프로파일 검색…', searchBeans:'원두 검색…', searchGrinders:'그라인더 검색…', searchShots:'샷 검색…', noMatches:'일치하는 항목 없음', kindEspresso:'에스프레소', kindBrew:'브루·티', kindOther:'청소·수동', kindAll:'전체',
     favorites:'즐겨찾기', recentlyUsed:'최근 사용', noMatches:'일치하는 프로파일 없음',
     tagPressure:'압력제어', tagFlow:'유량제어', tagMixed:'혼합', tagLowPressure:'저압',
     tagBloom:'블루밍', tagDecline:'디클라인', tagCool:'저온', tagHot:'고온',
@@ -3189,7 +3191,9 @@ function clearAiTags(){
 function allTagsOf(p){ return profileRoast(p).concat(profileAiExtras(p)).concat(profileTags((p&&p.profile)||{})); }
 function epSetKind(k){ epKind=k; epTag=''; renderEpList(); }
 function epSetTag(t){ epTag=(epTag===t)?'':t; renderEpList(); }
-function epSetQuery(v){ epQuery=String(v||'').trim().toLowerCase(); renderEpList(); }
+// epQuery is what was typed; the needle is what is matched against.
+function epNeedle(){ return epQuery.trim().toLowerCase(); }
+function epSetQuery(v){ epQuery=String(v||''); renderEpList(); }
 function epMatches(p){
   var pr=p.profile||{};
   var hid=(p.visibility==='hidden');
@@ -3198,9 +3202,10 @@ function epMatches(p){
   else { if(hid) return false;
     if(epKind!=='all'&&profileKind(pr)!==epKind) return false; }
   if(epTag&&allTagsOf(p).indexOf(epTag)<0) return false;
-  if(epQuery){ var hay=[pr.title,pr.author,pr.notes].join(' ').toLowerCase()
+  var needle=epNeedle();
+  if(needle){ var hay=[pr.title,pr.author,pr.notes].join(' ').toLowerCase()
       +' '+allTagsOf(p).map(function(k){ return t(k); }).join(' ').toLowerCase();
-    if(hay.indexOf(epQuery)<0) return false; }
+    if(hay.indexOf(needle)<0) return false; }
   return true; }
 function renderEpList(){ var list=document.getElementById('epList'); list.innerHTML=''; epItemEls={}; ensureCurveObserver();
   var shown=allProfiles.filter(epMatches);
@@ -3552,22 +3557,48 @@ function loadBeansGrinders(){
 }
 var bgTab='bean'; // which section is shown: 'bean' | 'grinder'
 function bgSetTab(t){ bgTab=t; renderBgList(); }
+// One query for both tabs: switching between beans and grinders while looking
+// for something keeps what you typed.
+var bgQuery='';
+function bgNeedle(){ return bgQuery.trim().toLowerCase(); }
+function bgSetQuery(v){ bgQuery=String(v||'');
+  var keep=document.activeElement===document.getElementById('bgSearch');
+  renderBgList();
+  if(keep){ var el=document.getElementById('bgSearch'); if(el){ el.focus();
+    el.setSelectionRange(el.value.length,el.value.length); } } }
+function bgMatches(o,kind){
+  var needle=bgNeedle();
+  if(!needle) return true;
+  var hay=(kind==='bean')
+    ? [o.roaster,o.name,o.country,o.region,o.producer,o.processing,o.species,o.notes,
+       (o.variety||[]).join(' ')].join(' ')
+    : [o.model,o.burrs,o.burrType,o.notes].join(' ');
+  return hay.toLowerCase().indexOf(needle)>=0; }
 function renderBgList(){ var list=document.getElementById('bgList'); list.innerHTML='';
   // tab switcher: Beans / Grinders shown separately
   var tabs=document.createElement('div'); tabs.className='bg-tabs';
   tabs.innerHTML='<button class="bg-tab'+(bgTab==='bean'?' active':'')+'" onclick="bgSetTab(\'bean\')">🫘 Beans</button>'
     +'<button class="bg-tab'+(bgTab==='grinder'?' active':'')+'" onclick="bgSetTab(\'grinder\')">⚙️ Grinders</button>';
   list.appendChild(tabs);
+  var sb=document.createElement('input'); sb.className='ep-search'; sb.id='bgSearch';
+  sb.placeholder=t(bgTab==='bean'?'searchBeans':'searchGrinders'); sb.value=bgQuery;
+  sb.style.margin='0 0 8px';
+  sb.oninput=function(){ bgSetQuery(this.value); };
+  list.appendChild(sb);
   if(bgTab==='bean'){
     var addB=document.createElement('button'); addB.className='ep-step-add'; addB.style.cssText='margin:4px 0 8px'; addB.textContent='+ Add Bean'; addB.onclick=function(){ bgSelectNew('bean'); }; list.appendChild(addB);
-    if(!beans.length){ var e=document.createElement('div'); e.className='ep-placeholder'; e.style.marginTop='40px'; e.textContent='No beans yet'; list.appendChild(e); }
-    beans.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
+    var shownB=beans.filter(function(b){ return bgMatches(b,'bean'); });
+    if(!shownB.length){ var e=document.createElement('div'); e.className='ep-placeholder'; e.style.marginTop='40px';
+      e.textContent=bgNeedle()?t('noMatches'):'No beans yet'; list.appendChild(e); }
+    shownB.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
       it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(249,115,22,.12)">🫘</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(b.name||'')+'</div><div class="mt">'+beanSubtitle(b)+'</div></div>';
       it.onclick=function(){ bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
   } else {
     var addG=document.createElement('button'); addG.className='ep-step-add'; addG.style.cssText='margin:4px 0 8px'; addG.textContent='+ Add Grinder'; addG.onclick=function(){ bgSelectNew('grinder'); }; list.appendChild(addG);
-    if(!grinders.length){ var e2=document.createElement('div'); e2.className='ep-placeholder'; e2.style.marginTop='40px'; e2.textContent='No grinders yet'; list.appendChild(e2); }
-    grinders.forEach(function(g){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='grinder'&&bgSel.obj.id===g.id?' active':'');
+    var shownG=grinders.filter(function(g){ return bgMatches(g,'grinder'); });
+    if(!shownG.length){ var e2=document.createElement('div'); e2.className='ep-placeholder'; e2.style.marginTop='40px';
+      e2.textContent=bgNeedle()?t('noMatches'):'No grinders yet'; list.appendChild(e2); }
+    shownG.forEach(function(g){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='grinder'&&bgSel.obj.id===g.id?' active':'');
       var sub=(g.burrs||g.burrType||'grinder')+(g.grinderSetting?(' · @'+g.grinderSetting):'');
       it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(sub)+'</div></div>';
       it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
@@ -6710,10 +6741,34 @@ function loadShotList(pick,keep){ slLoading=true; renderShotList();
     else if(shotList.length) slSelect(shotList[0]);
     else document.getElementById('slDetail').innerHTML='<div class="ep-placeholder">No shots recorded yet</div>';
   }).catch(function(){ slLoading=false; list.innerHTML='<div class="ep-placeholder">Connect to load shots</div>'; }); }
+var slQuery='';
+function slNeedle(){ return slQuery.trim().toLowerCase(); }
+function slSetQuery(v){ slQuery=String(v||'');
+  var keep=document.activeElement===document.getElementById('slSearch');
+  renderShotList();
+  if(keep){ var el=document.getElementById('slSearch'); if(el){ el.focus();
+    el.setSelectionRange(el.value.length,el.value.length); } } }
+// A shot is found by what it was pulled with, not only by its profile: the bean
+// and the grinder are what anyone actually remembers about one.
+function slMatches(s){
+  var needle=slNeedle();
+  if(!needle) return true;
+  var pr=(s.workflow&&s.workflow.profile)||{}, cx=(s.workflow&&s.workflow.context)||{};
+  var an=s.annotations||{};
+  return [pr.title,cx.coffeeName,cx.coffeeRoaster,cx.grinderModel,cx.grinderSetting,
+          an.notes,fmtShotDate(s)].join(' ').toLowerCase().indexOf(needle)>=0; }
 function renderShotList(){ var list=document.getElementById('slList'); if(!list) return; list.innerHTML='';
   if(!shotList.length){ list.innerHTML=slLoading?'<div class="ep-group-head">Loading…</div>':'<div class="ep-placeholder">No shots</div>'; return; }
-  var hd=document.createElement('div'); hd.className='ep-group-head'; hd.textContent='Recent · '+shotList.length; list.appendChild(hd);
-  shotList.forEach(function(s){ var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
+  var sb=document.createElement('input'); sb.className='ep-search'; sb.id='slSearch';
+  sb.placeholder=t('searchShots'); sb.value=slQuery; sb.style.margin='0 0 8px';
+  sb.oninput=function(){ slSetQuery(this.value); };
+  list.appendChild(sb);
+  var shownS=shotList.filter(slMatches);
+  var hd=document.createElement('div'); hd.className='ep-group-head';
+  hd.textContent='Recent \u00b7 '+shownS.length+(slNeedle()?(' / '+shotList.length):''); list.appendChild(hd);
+  if(!shownS.length){ var se=document.createElement('div'); se.className='ep-placeholder';
+    se.style.marginTop='30px'; se.textContent=t('noMatches'); list.appendChild(se); }
+  shownS.forEach(function(s){ var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
     var it=document.createElement('div'); it.className='ep-item'+(slSel&&slSel.id===s.id?' active':'');
     var stars=an.enjoyment?('★'+Math.round(an.enjoyment)):'';
     var ry=(an.actualDoseWeight&&an.actualYield)?(' · 1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'';
