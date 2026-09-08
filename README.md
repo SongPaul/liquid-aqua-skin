@@ -473,6 +473,7 @@ The first run after an update finds an empty store only if you have never saved 
 
 ```
 index.html          the entire skin
+inter-*.woff2       the interface font, so nothing is fetched from the internet
 skin-manifest.json  id, name, description, version
 docs/               screenshots for this README
 ```

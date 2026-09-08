@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Liquid Aqua</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* Inter ships with the skin. The CDN stylesheet was render-blocking and
+   an internet round trip from a machine that only needs its own LAN;
+   a local woff2 loads alongside the page instead of ahead of it. */
+@font-face{font-family:'Inter';font-style:normal;font-weight:300 800;font-display:swap;src:url(inter-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-weight:300 800;font-display:swap;src:url(inter-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+
 :root{
   --accent:#6366f1; --accent2:#8b5cf6; --accent3:#ec4899;
   --hot:#f97316; --steam:#38bdf8; --green:#10b981; --red:#ef4444; --amber:#f59e0b;
@@ -1598,7 +1603,13 @@ function initWebSockets(){
 }
 
 // ── GHC detection: decide Steam/Flush button behavior ───────────────
-function loadMachineInfo(){ api('GET','/api/v1/machine/info').then(function(info){ if(!info) return; state.ghc=!!info.GHC; applyActionMode(); syncMonitorGhc(); }).catch(function(){}); }
+// Boot, loadDevices and the machine coming online all want the same reads.
+// A read already on its way will apply its own result, so skip the repeat.
+var _loading={};
+function loadBusy(key){ if(_loading[key]) return true; _loading[key]=true; return false; }
+function loadFree(key){ _loading[key]=false; }
+function loadMachineInfo(){ if(loadBusy('info')) return;
+  api('GET','/api/v1/machine/info').then(function(info){ if(!info) return; state.ghc=!!info.GHC; applyActionMode(); syncMonitorGhc(); }).catch(function(){}).then(function(){ loadFree('info'); }); }
 function applyActionMode(){
   // GHC present -> physical buttons control the machine, so our buttons open SETTINGS.
   // No GHC -> our buttons perform the ACTION; long-press opens settings.
@@ -6352,7 +6363,9 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
       if(bean.decaf) chip(t('decaf'),bean.decafProcess||'✓'); } }
   updateGrindRow(); }
 // Populate the "Last Shot" mini panel + today's count from the shot history.
-function loadLastShot(){ api('GET','/api/v1/shots?limit=20').then(function(r){ var items=(r&&(r.items||r.shots))||[];
+function loadLastShot(){
+  if(loadBusy('lastshot')) return;
+  api('GET','/api/v1/shots?limit=20').then(function(r){ var items=(r&&(r.items||r.shots))||[];
   var box=document.getElementById('lsStats'); if(!box) return;
   var profEl=document.getElementById('lsProfile');
   lastShotSummary=items.length?items[0]:null;
@@ -6374,7 +6387,8 @@ function loadLastShot(){ api('GET','/api/v1/shots?limit=20').then(function(r){ v
     +stat(yld!=null?(convWeight(yld).toFixed(1)+weightUnitLabel()):'—',t('lastYield'))
     +stat(ratio,t('lastRatio'))
     +stat(cnt,t('todaysShots'));
-}).catch(function(){}); }
+}).catch(function(){}).then(function(){ loadFree('lastshot'); });
+}
 // Load the last shot's recorded measurements into the main Extraction Graph.
 var chartReviewing=false;
 function viewLastShotGraph(){ if(!lastShotSummary){ toast('No shots recorded yet','err'); return; }
@@ -6975,7 +6989,9 @@ function monitorOnState(st,prev){
 function syncMonitorGhc(){ if(_monOpen) syncMonitorHead(); }
 
 // ── Workflow bootstrap ──────────────────────────────────────────────
-function loadWorkflow(){ api('GET','/api/v1/workflow').then(function(w){ if(!w) return;
+function loadWorkflow(){
+  if(loadBusy('workflow')) return;
+  api('GET','/api/v1/workflow').then(function(w){ if(!w) return;
   if(w.context){ context=w.context;
     if(w.context.targetDoseWeight) settings.doseIn=w.context.targetDoseWeight; if(w.context.targetYield) settings.doseOut=w.context.targetYield; }
   if(w.steamSettings){ if(w.steamSettings.targetTemperature) settings.steamTemp=w.steamSettings.targetTemperature; if(w.steamSettings.duration) settings.steamDur=w.steamSettings.duration; if(w.steamSettings.flow) settings.steamFlow=w.steamSettings.flow; }
@@ -6983,7 +6999,8 @@ function loadWorkflow(){ api('GET','/api/v1/workflow').then(function(w){ if(!w) 
   if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.duration) settings.waterDur=w.hotWaterData.duration; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; }
   if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
     var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; }); if(match) curProfileObj=match; if(carItems.length) buildCarousel(); }
-  syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}); }
+  syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow'); });
+}
 function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
 
 // Initial device state via REST (WS may not push a snapshot immediately on connect)
@@ -7015,7 +7032,7 @@ function bootMobileBeanScan(){
   Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
     .then(function(r){ beans=r[0]||[]; }); // so a repeat purchase can be offered as a batch
 }
-window.addEventListener('load', function(){
+document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
   fitStage(); loadFavs(); loadPrefs(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); syncRecipe(); updateShotBtn(); drawChart();

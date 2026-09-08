@@ -471,6 +471,7 @@ Gemini 키를 넣어두면 **✨ AI로 라벨 스캔**이 봉투 사진으로 �
 
 ```
 index.html          스킨 전체
+inter-*.woff2       인터페이스 폰트. 인터넷에서 받아오지 않습니다
 skin-manifest.json  id, 이름, 설명, 버전
 docs/               이 문서의 스크린샷
 ```
