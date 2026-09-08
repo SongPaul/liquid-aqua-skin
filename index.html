@@ -3838,14 +3838,20 @@ function geminiAnalyze(key,images){
 // feature: a key without it answers 429 to every grounded call while ordinary
 // calls on the same key and model succeed, so a refusal there means "not
 // entitled", not "busy" -- it is retried once without the tool rather than put
-// through the overload backoff, and the answer is simply ungrounded.
+// through the overload backoff, and the answer is simply ungrounded. A grounded
+// call can also come back 200 with an empty candidate; that has no status, so
+// anything without one is retried the same way.
 function geminiJson(key,parts,temperature,opts){
   var want=!!(opts&&opts.search);
   return geminiJsonCall(key,parts,temperature,want).catch(function(e){
-    if(want&&(e.status===429||e.status===400)) return geminiJsonCall(key,parts,temperature,false);
+    if(want&&(e.status===429||e.status===400||!e.status)) return geminiJsonCall(key,parts,temperature,false);
     throw e; }); }
 function geminiJsonCall(key,parts,temperature,search){
-  var body={contents:[{parts:parts}],generationConfig:{responseMimeType:'application/json',temperature:(temperature==null?0:temperature)}};
+  var cfg={temperature:(temperature==null?0:temperature)};
+  // JSON mode alongside google_search is accepted but answers with an empty
+  // candidate, so a grounded call asks for JSON in the prompt alone.
+  if(!search) cfg.responseMimeType='application/json';
+  var body={contents:[{parts:parts}],generationConfig:cfg};
   if(search) body.tools=[{google_search:{}}];
   return resolveGeminiModel(key).then(function(model){
     function attempt(m,tries){
