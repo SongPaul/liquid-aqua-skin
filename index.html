@@ -775,6 +775,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .set-info{min-width:0}
 .set-name{font-size:14px;font-weight:800;color:var(--ink)}
 .set-desc{font-size:11px;color:var(--ink-mute);margin-top:2px;line-height:1.3}
+.htemp.tank.dry{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.45)}
+.htemp.tank.dry .ht-v,.htemp.tank.dry .ht-l{color:var(--red)}
 .fw-prog{margin-top:14px}
 .fw-prog-label{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
 .fw-prog-label.err{color:#ef4444}
@@ -1352,7 +1354,9 @@ var I18N={
     sleepDim:'Dim on sleep', sleepDimDesc:'Lower screen brightness while the sleep screen shows (saves the panel and battery).', sleepBright:'Sleep brightness', sleepBrightDesc:'Brightness level used while asleep.',
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
     waterCal:'Water tank calibration', waterCalDesc:'The machine reports water height in mm. Calibrate to show a percentage.', waterCalNow:'Current reading',
-    waterCalMode:'Calibration method', wcOff:'Off (raw)', wcTwoPoint:'Empty & full', wcPour:'Measured pour',
+    waterCalMode:'Calibration method', wcOff:'Standard tank', wcTwoPoint:'Empty & full', wcPour:'Measured pour',
+    wcPourNote:'The amount you pour is the full mark: pour 700 ml and 700 ml reads 100%.',
+    needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
     wcEmpty:'Empty tank height', wcFull:'Full tank height', wcAfterPour:'Height after pour', wcCapacity:'Tank capacity', wcPoured:'Poured amount',
     wcCapture:'Capture', wcCaptured:'Captured', wcNotSet:'not set',
     flowCal:'Flow Calibration', flowCalDesc:'Fine-tune the gateway flow/weight estimation multipliers.', fcWeight:'Weight flow multiplier', fcVolume:'Volume flow multiplier', fcHotWater:'Hot water flow multiplier',
@@ -1431,7 +1435,9 @@ var I18N={
     sleepDim:'절전 시 화면 어둡게', sleepDimDesc:'절전 화면이 표시되는 동안 밝기를 낮춥니다 (액정 잔상·배터리 보호).', sleepBright:'절전 밝기', sleepBrightDesc:'절전 중 사용할 밝기 레벨.',
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCal:'물탱크 보정', waterCalDesc:'머신은 수위를 mm로 보고합니다. 퍼센트 표시를 위해 보정하세요.', waterCalNow:'현재 값',
-    waterCalMode:'보정 방법', wcOff:'끔 (원시값)', wcTwoPoint:'빈 탱크 & 가득', wcPour:'측정 투입',
+    waterCalMode:'보정 방법', wcOff:'표준 탱크', wcTwoPoint:'빈 탱크 & 가득', wcPour:'측정 투입',
+    wcPourNote:'부은 양이 곧 가득 찬 기준입니다. 700 ml를 부으면 700 ml가 100%로 표시됩니다.',
+    needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
     wcEmpty:'빈 탱크 높이', wcFull:'가득 찬 높이', wcAfterPour:'투입 후 높이', wcCapacity:'탱크 용량', wcPoured:'투입량',
     wcCapture:'캡처', wcCaptured:'캡처됨', wcNotSet:'미설정',
     flowCal:'유량 보정', flowCalDesc:'게이트웨이 유량/무게 추정 배수를 미세 조정합니다.', fcWeight:'무게 유량 배수', fcVolume:'볼륨 유량 배수', fcHotWater:'온수 유량 배수',
@@ -1663,6 +1669,10 @@ function onMachineState(ms,prev){
   var lockShown=document.getElementById('lockScreen').classList.contains('show');
   if(ms.state==='sleeping'&&!lockShown){ enterSleepLocalOnly(); }
   else if(ms.state!=='sleeping'&&lockShown){ wakeLocalOnly(); }
+  // The tank chip reads the machine state, so it has to be redrawn when that
+  // changes and not only when a new water level arrives.
+  if(ms.state!==prev){ updateWaterUI();
+    if(ms.state==='needsWater') toast(t('needsWaterToast'),'err'); }
   var inEspresso=(ms.state==='espresso');
   // Only the preinfusion + pouring substates are real extraction. preparingForShot
   // (heating/prep) and pouringDone (ending) are still the espresso state but must
@@ -1840,12 +1850,19 @@ function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.wate
   var wp2=document.querySelector('.temps-bar .wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
 }
 function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.current);
+  // Out of water is the machine's own needsWater state and nothing else. The
+  // level-vs-threshold comparison is a warning, not a verdict: the DE1 decides
+  // when it stops, and a skin that guesses ends up disagreeing with the machine.
+  var dry=(state.machine.state==='needsWater');
+  var chip=document.querySelector('.htemp.tank'), lbl=document.getElementById('tankLbl');
+  if(chip) chip.classList.toggle('dry',dry);
+  if(lbl) lbl.textContent=dry?t('needsWater'):t('tank');
   // Refill kit ON = plumbed supply, tank is effectively always full.
-  if(prefs.refillKitFull){
+  if(prefs.refillKitFull&&!dry){
     document.getElementById('waterPct').textContent=100; document.getElementById('waterFill').style.height=fillHeight(100);
     document.getElementById('waterWarn').style.display='none'; updateWaterVisual(); return; }
   document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=fillHeight(pct);
-  document.getElementById('waterWarn').style.display=(state.water.current<=state.water.refill||pct<15)?'inline':'none';
+  document.getElementById('waterWarn').style.display=(dry||state.water.current<=state.water.refill||pct<15)?'inline':'none';
   updateWaterVisual(); }
 // Map a 0-100% tank level to a visual fill height. Full (100%) fills to 90% so the
 // water surface never touches the top of the panel and leaves headroom for the wave.
@@ -2397,13 +2414,35 @@ var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
 function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
 // the chosen calibration. Falls back to treating the raw value as % (legacy).
+// mm -> ml for the standard tank. Ported from the TCL skin via streamline.js so
+// the volume reads the same in every app. Index is the height in whole
+// millimetres. The tank widens around 40 mm -- 26-29 ml/mm below it, 35 ml/mm
+// above -- which a straight line misses by up to 127 ml, 6% of a full tank.
+var TANK_MM_ML=[
+  0,16,43,70,97,124,151,179,206,233,
+  261,288,316,343,371,398,426,453,481,509,
+  537,564,592,620,648,676,704,732,760,788,
+  816,844,872,900,929,957,985,1013,1042,1070,
+  1104,1138,1172,1207,1242,1277,1312,1347,1382,1417,
+  1453,1488,1523,1559,1594,1630,1665,1701,1736,1772,
+  1808,1843,1879,1915,1951,1986,2022,2058];
+var TANK_MAX_ML=2058;
+// Interpolated between whole millimetres so the gauge moves smoothly; the
+// values still agree with the table exactly on the millimetre.
+function tankTableMl(mm){
+  if(!(mm>0)) return 0;
+  var i=Math.floor(mm); if(i>=TANK_MM_ML.length-1) return TANK_MAX_ML;
+  return TANK_MM_ML[i]+(TANK_MM_ML[i+1]-TANK_MM_ML[i])*(mm-i); }
 function tankPercent(mm){ var c=prefs.waterCal||{};
   if(c.mode==='twopoint' && c.hEmpty!=null && c.hFull!=null && c.hFull>c.hEmpty){
     return Math.max(0,Math.min(100, 100*(mm-c.hEmpty)/(c.hFull-c.hEmpty))); }
+  // Measured pour: the amount poured IS the full mark. Someone pouring a known
+  // 700 ml is saying "this is a full tank for me", not "derive a slope and then
+  // measure me against some other number".
   if(c.mode==='pour' && c.hEmpty!=null && c.hPour!=null && c.poured>0 && c.hPour>c.hEmpty){
-    var mlPerMm=c.poured/(c.hPour-c.hEmpty); var ml=Math.max(0,(mm-c.hEmpty)*mlPerMm);
-    var cap=c.capacity||1500; return Math.max(0,Math.min(100, 100*ml/cap)); }
-  return Math.max(0,Math.min(100, mm)); // legacy: raw value already 0-100
+    var ml=Math.max(0,(mm-c.hEmpty)*(c.poured/(c.hPour-c.hEmpty)));
+    return Math.max(0,Math.min(100, 100*ml/c.poured)); }
+  return Math.max(0,Math.min(100, 100*tankTableMl(mm)/TANK_MAX_ML));
 }
 // Estimated remaining volume (ml) if calibration provides enough info; else null.
 function tankMl(mm){ var c=prefs.waterCal||{};
@@ -2411,7 +2450,7 @@ function tankMl(mm){ var c=prefs.waterCal||{};
     return Math.max(0,(mm-c.hEmpty)*(c.poured/(c.hPour-c.hEmpty))); }
   if(c.mode==='twopoint' && c.hEmpty!=null && c.hFull!=null && c.hFull>c.hEmpty && c.capacity){
     return Math.max(0,Math.min(c.capacity, c.capacity*(mm-c.hEmpty)/(c.hFull-c.hEmpty))); }
-  return null; }
+  return tankTableMl(mm); }
 // Unit conversion helpers. Machine/scale data is always metric (°C, g);
 // these convert only for display.
 function convTemp(c){ return prefs.tempUnit==='F'?(c*9/5+32):c; }
@@ -2553,6 +2592,7 @@ function waterCalBoxHtml(){ var c=prefs.waterCal||{}; if(c.mode==='off') return 
     h+=cap('hEmpty',t('wcEmpty'),c.hEmpty,'mm');
     h+=row('wcPoured','','<div class="opt-ctrl"><input type="number" class="set-select" style="width:90px" value="'+(c.poured||'')+'" placeholder="ml" oninput="prefs.waterCal.poured=parseFloat(this.value)||null;savePrefs();"> ml</div>');
     h+=cap('hPour',t('wcAfterPour'),c.hPour,'mm');
+    h+='<div class="set-desc" style="margin-top:6px">'+escapeHtml(t('wcPourNote'))+'</div>';
   }
   return h; }
 function captureWaterCal(field){ var mm=state.water.current; if(mm==null){ toast('No water reading','err'); return; }
