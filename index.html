@@ -766,6 +766,11 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .set-info{min-width:0}
 .set-name{font-size:14px;font-weight:800;color:var(--ink)}
 .set-desc{font-size:11px;color:var(--ink-mute);margin-top:2px;line-height:1.3}
+.fw-prog{margin-top:14px}
+.fw-prog-label{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+.fw-prog-label.err{color:#ef4444}
+.fw-prog-track{height:8px;border-radius:100px;background:var(--glass-hi);border:1px solid var(--glass-line);overflow:hidden}
+.fw-prog-fill{height:100%;border-radius:100px;background:var(--accent);transition:width .2s linear}
 .switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
 .switch input{opacity:0;width:0;height:0}
 .switch .track{position:absolute;inset:0;background:var(--glass-line);border-radius:100px;transition:.25s;cursor:pointer}
@@ -1344,7 +1349,8 @@ var I18N={
     flowCal:'Flow Calibration', flowCalDesc:'Fine-tune the gateway flow/weight estimation multipliers.', fcWeight:'Weight flow multiplier', fcVolume:'Volume flow multiplier', fcHotWater:'Hot water flow multiplier',
     refillKit:'Refill kit', refillKitDesc:'Plumbed water supply. When on, the tank always shows full.', refillKitOverride:'Refill kit override', refillKitOverrideDesc:'Machine refill-kit register: auto, or force on/off.', rkAuto:'Auto', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
-    installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Start the firmware update? Keep the machine powered.', updating:'Updating…',
+    installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Install firmware {v}? The machine will restart; this takes several minutes.', updating:'Updating…',
+    fwAhead:'Your firmware is newer than the bundled version.', fwUnknown:'Could not check for firmware updates', fwErasing:'Erasing…', fwUploading:'Uploading', fwVerifying:'Verifying…', fwDone:'Firmware upgraded — machine restarting', fwFailed:'Firmware update failed', fwFailedSuffix:'failed', fwTruncated:'Firmware stream ended before the update was confirmed', fwErrBody:'The gateway rejected the request body', fwErrUnknown:'Unknown firmware artifact', fwErrBusy:'A firmware update is already in progress', fwErrInvalid:'Firmware artifact failed validation', fwErrNoMachine:'No machine connected', fwNoArtifact:'No firmware artifact', fwInstallVerb:'Firmware install', fwUploadVerb:'Upload', fwCancelBtn:'Cancel firmware update', fwCancelSent:'Cancellation sent', fwCancelFailed:'Cancel failed', fwManual:'Or upload a firmware file manually (.dat/.bin). The machine restarts when the update completes.', fwChoose:'Choose file…', fwNoFile:'No file chosen', fwUploadBtn:'Upload firmware', fwUploadConfirm:'Upload {name}? The machine will restart.',
     close:'Close', save:'Save', cancel:'Cancel', saveOptions:'Save Options', delete:'Delete', useForShot:'Use for shot', set:'Set',
     beans:'Beans', grinders:'Grinders', addBean:'+ Add Bean', addGrinder:'+ Add Grinder', newBean:'New Bean', editBean:'Edit Bean', newGrinder:'New Grinder', editGrinder:'Edit Grinder',
     roaster:'Roaster', name:'Name', origin:'Origin', process:'Process', roastLevel:'Roast level', notes:'Notes',
@@ -1422,7 +1428,8 @@ var I18N={
     flowCal:'유량 보정', flowCalDesc:'게이트웨이 유량/무게 추정 배수를 미세 조정합니다.', fcWeight:'무게 유량 배수', fcVolume:'볼륨 유량 배수', fcHotWater:'온수 유량 배수',
     refillKit:'리필 킷', refillKitDesc:'배관 급수 연결. 켜면 탱크가 항상 만수로 표시됩니다.', refillKitOverride:'리필 킷 오버라이드', refillKitOverrideDesc:'머신 리필 킷 레지스터: 자동 또는 강제 켜기/끄기.', rkAuto:'자동', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
-    installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 업데이트를 시작할까요? 머신 전원을 유지하세요.', updating:'업데이트 중…',
+    installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 {v}를 설치할까요? 머신이 재시작되며 몇 분 걸립니다.', updating:'업데이트 중…',
+    fwAhead:'설치된 펌웨어가 번들된 버전보다 새 버전입니다.', fwUnknown:'펌웨어 업데이트를 확인하지 못했습니다', fwErasing:'지우는 중…', fwUploading:'업로드 중', fwVerifying:'검증 중…', fwDone:'펌웨어 업데이트 완료 — 머신 재시작 중', fwFailed:'펌웨어 업데이트 실패', fwFailedSuffix:'실패', fwTruncated:'업데이트가 확정되기 전에 스트림이 끊겼습니다', fwErrBody:'게이트웨이가 요청 본문을 거부했습니다', fwErrUnknown:'알 수 없는 펌웨어 아티팩트', fwErrBusy:'이미 펌웨어 업데이트가 진행 중입니다', fwErrInvalid:'펌웨어 검증에 실패했습니다', fwErrNoMachine:'머신이 연결되지 않았습니다', fwNoArtifact:'펌웨어 아티팩트 없음', fwInstallVerb:'펌웨어 설치', fwUploadVerb:'업로드', fwCancelBtn:'펌웨어 업데이트 취소', fwCancelSent:'취소 요청을 보냈습니다', fwCancelFailed:'취소 실패', fwManual:'또는 펌웨어 파일(.dat/.bin)을 직접 올립니다. 완료되면 머신이 재시작됩니다.', fwChoose:'파일 선택…', fwNoFile:'선택된 파일 없음', fwUploadBtn:'펌웨어 업로드', fwUploadConfirm:'{name}을(를) 올릴까요? 머신이 재시작됩니다.',
     close:'닫기', save:'저장', cancel:'취소', saveOptions:'옵션 저장', delete:'삭제', useForShot:'샷에 사용', set:'설정',
     beans:'원두', grinders:'그라인더', addBean:'+ 원두 추가', addGrinder:'+ 그라인더 추가', newBean:'새 원두', editBean:'원두 편집', newGrinder:'새 그라인더', editGrinder:'그라인더 편집',
     roaster:'로스터', name:'이름', origin:'원산지', process:'가공', roastLevel:'로스팅', notes:'메모',
@@ -2552,22 +2559,206 @@ function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSett
 function adjustFlowMult(key,delta,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0)+delta; v=Math.max(0,parseFloat(v.toFixed(digits))); gwSettings[key]=v;
   var el=document.getElementById('fm-'+key); if(el) el.textContent=v.toFixed(digits);
   var body={}; body[key]=v; clearTimeout(adjustFlowMult._t); adjustFlowMult._t=setTimeout(function(){ api('POST','/api/v1/settings',body).catch(function(){ toast('Save failed','err'); }); },500); }
-// Firmware
+// ── Firmware ────────────────────────────────────────────────────────
+// Ported from insight/streamline.js so the three skins behave alike: a firmware
+// flash is not something to get subtly different on one of them.
+//
+// Both firmware endpoints answer with a newline-delimited JSON stream: one
+// `erasing` when the operation starts, zero or more `uploading` events in ~1%
+// increments, then `done` (CRC verification passed) or `error` with progress
+// -1.0. Erase and verification emit no percentages, so the stream goes quiet at
+// both ends of the upload -- a bar that only moves on `uploading` looks hung
+// there, which is why the phase drives the label, not the number.
+//
+// A final `uploading` may report 1.0 BEFORE verification. 100% is not success.
+// Only `done` is.
+var FIRMWARE_PHASES=['erasing','uploading','done','error'];
+// Chunk boundaries are not line boundaries, so the caller keeps a buffer across
+// reads. That framing is what this does.
+function splitNdjson(buffer,chunk,atEnd){
+  var lines=(buffer+chunk).split('\n');
+  var rest=atEnd?'':lines.pop();
+  var events=[];
+  for(var i=0;i<lines.length;i++){ var text=lines[i].trim(); if(!text) continue;
+    // A malformed line is not worth aborting a firmware upload over.
+    try{ events.push(JSON.parse(text)); }catch(_){ } }
+  return {events:events,rest:rest}; }
+// The payload shape is documented by its event NAMES rather than by a schema,
+// so accept the usual spellings instead of betting the update UI on one.
+function normalizeFirmwareEvent(ev){
+  if(!ev||typeof ev!=='object') return {phase:null,progress:null};
+  var named=null, cand=[ev.event,ev.phase,ev.status,ev.state];
+  for(var i=0;i<cand.length&&!named;i++){
+    if(typeof cand[i]==='string'&&FIRMWARE_PHASES.indexOf(cand[i].toLowerCase())>=0) named=cand[i].toLowerCase(); }
+  var raw=(typeof ev.progress==='number')?ev.progress:null;
+  // -1.0 is the error sentinel, not a percentage.
+  return {phase:named,progress:(raw===null||raw<0)?null:Math.min(raw,1)}; }
+// Percent is monotonic: erase and verification carry no percentage, so they
+// hold the last known one rather than snapping the bar back to zero.
+function advanceFirmwareState(state,ev){
+  var n=normalizeFirmwareEvent(ev); if(!n.phase) return state;
+  return {phase:n.phase,
+    percent:(n.progress!==null)?Math.round(n.progress*100):(n.phase==='done'?100:state.percent),
+    error:(n.phase==='error')?(ev.message||ev.error||t('fwFailed')):null}; }
+var _fwInitial={phase:null,percent:0,error:null};
+// Resolves on `done`, rejects on `error` or a truncated stream -- a stream that
+// ends without `done` means CRC was never confirmed.
+function consumeFirmwareStream(res,onProgress){
+  if(!res.body||!res.body.getReader) return Promise.resolve();  // no streaming body -> legacy success
+  var reader=res.body.getReader(), decoder=new TextDecoder(), buffer='', state=_fwInitial;
+  function pump(){
+    return reader.read().then(function(r){
+      var chunk=r.done?'':decoder.decode(r.value,{stream:true});
+      var f=splitNdjson(buffer,chunk,r.done); buffer=f.rest;
+      for(var i=0;i<f.events.length;i++){ state=advanceFirmwareState(state,f.events[i]);
+        if(state.phase&&onProgress) onProgress(state); }
+      if(state.phase==='error') throw new Error(state.error);
+      if(state.phase==='done') return;
+      if(r.done) throw new Error(t('fwTruncated'));
+      return pump(); }); }
+  return pump(); }
+function fwHttpError(status){
+  var m={400:t('fwErrBody'),404:t('fwErrUnknown'),408:t('fwErrBody'),409:t('fwErrBusy'),
+         413:t('fwErrBody'),422:t('fwErrInvalid'),503:t('fwErrNoMachine')};
+  return new Error(m[status]||(t('fwFailed')+' ('+status+')')); }
+// Flash a bundled catalog artifact. `force` bypasses only the version-newer
+// policy, never the integrity or compatibility checks.
+function applyFirmwareArtifact(artifactId,onProgress,force){
+  return fetch(GATEWAY.http+'/api/v1/machine/firmware/apply',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({artifactId:artifactId,force:!!force})})
+    .then(function(r){ if(!r.ok) throw fwHttpError(r.status); return consumeFirmwareStream(r,onProgress); }); }
+// Push a raw file to the machine (developer/recovery path).
+function uploadFirmwareFile(file,onProgress){
+  return fetch(GATEWAY.http+'/api/v1/machine/firmware',{method:'POST',body:file})
+    .then(function(r){ if(!r.ok) throw fwHttpError(r.status); return consumeFirmwareStream(r,onProgress); }); }
+// Idempotent. The stream's own `error` event is what settles the in-flight
+// upload, so this only asks.
+function cancelFirmwareUpdate(){ return api('DELETE','/api/v1/machine/firmware'); }
+// `updateAvailable` is the middleware's own verdict and is authoritative. It is
+// nullable, and null means "could not decide" (offline, unknown build), which is
+// NOT the same as "up to date" -- telling someone they are current when nothing
+// was compared is the one wrong answer here. The installed build can also be
+// NEWER than anything bundled (a beta machine): that reads as `not_newer` and is
+// reported as ahead, not as an update.
+function summarizeFirmwareCatalog(cat){
+  var empty={status:'unknown',installedBuild:null,model:null,latestBuild:null,latestLabel:null,
+             artifactId:null,releaseNotes:null,reason:'unreachable',operationState:'idle'};
+  if(!cat||typeof cat!=='object') return empty;
+  var arts=Array.isArray(cat.artifacts)?cat.artifacts:[];
+  var mach=cat.machine||{};
+  var installedBuild=(typeof mach.build==='number')?mach.build:null;
+  var recommended=null;
+  for(var i=0;i<arts.length;i++){ if(arts[i]&&arts[i].id===cat.recommendedArtifactId){ recommended=arts[i]; break; } }
+  var highest=null;
+  for(var j=0;j<arts.length;j++){ var a=arts[j]; if(!a||typeof a.build!=='number') continue;
+    if(!highest||a.build>highest.build) highest=a; }
+  var latest=recommended||highest||null;
+  var reasons=latest&&latest.eligibility&&latest.eligibility.reasons;
+  var reason=(Array.isArray(reasons)&&reasons.length)?reasons[0]:null;
+  var status='unknown';
+  if(cat.updateAvailable===true) status='updateAvailable';
+  else if(cat.updateAvailable===false){
+    status=(reason==='not_newer'&&installedBuild!==null&&latest&&latest.build<installedBuild)?'ahead':'upToDate'; }
+  return {status:status,installedBuild:installedBuild,model:(mach.model==null?null:mach.model),
+    latestBuild:(latest&&typeof latest.build==='number')?latest.build:null,
+    latestLabel:(latest&&latest.versionLabel)||null,
+    artifactId:(latest&&latest.id)||null,
+    releaseNotes:(latest&&latest.releaseNotes)||null,
+    reason:reason,operationState:(cat.operation&&cat.operation.state)||'idle'}; }
+
+// ── Firmware panel ──────────────────────────────────────────────────
+var _fwSummary=null, _fwRunning=false;
+function fwProgressLabel(st){
+  if(!st||!st.phase) return '';
+  if(st.phase==='erasing') return t('fwErasing');
+  if(st.phase==='uploading') return st.percent>=100?t('fwVerifying'):(t('fwUploading')+' '+st.percent+'%');
+  if(st.phase==='done') return t('fwDone');
+  return st.error||t('fwFailed'); }
+function fwShowProgress(st){
+  var box=document.getElementById('fwProgress'); if(!box) return;
+  box.style.display='';
+  var pct=(st&&st.phase==='uploading'&&st.percent<100)?st.percent:(st&&st.phase==='done'?100:null);
+  box.innerHTML='<div class="fw-prog-label">'+escapeHtml(fwProgressLabel(st))+'</div>'
+    +'<div class="fw-prog-track"><div class="fw-prog-fill" style="width:'
+    +(pct==null?(st&&st.phase==='done'?100:(st?st.percent:0)):pct)+'%"></div></div>'; }
+function fwShowError(text){
+  var box=document.getElementById('fwProgress'); if(!box) return;
+  box.style.display='';
+  box.innerHTML='<div class="fw-prog-label err">'+escapeHtml(text)+'</div>'; }
+// One place for both the artifact path and the manual file path, so they cannot
+// drift apart.
+function fwRunOperation(start,verb){
+  if(_fwRunning) return;
+  _fwRunning=true;
+  var apply=document.getElementById('fwApply'), up=document.getElementById('fwUpload'),
+      cancel=document.getElementById('fwCancel');
+  if(apply) apply.disabled=true;
+  if(up) up.disabled=true;
+  if(cancel) cancel.style.display='';
+  fwShowProgress({phase:'erasing',percent:0,error:null});
+  start(fwShowProgress)
+    .then(function(){ fwShowProgress({phase:'done',percent:100,error:null});
+      toast(t('fwDone'),'ok');
+      setTimeout(loadFirmware,4000); })   // the installed build changed
+    .catch(function(e){ fwShowError(verb+' '+t('fwFailedSuffix')+': '+((e&&e.message)||'error'));
+      toast(t('fwFailed'),'err'); })
+    .then(function(){ _fwRunning=false;
+      if(apply) apply.disabled=false;
+      if(up) up.disabled=!(_fwFile);
+      if(cancel) cancel.style.display='none'; }); }
+var _fwFile=null;
+function fwChooseFile(){ var el=document.getElementById('fwFile'); if(el) el.click(); }
+function fwFilePicked(input){
+  _fwFile=(input.files&&input.files[0])||null;
+  var name=document.getElementById('fwFileName'), up=document.getElementById('fwUpload');
+  if(name) name.textContent=_fwFile?_fwFile.name:t('fwNoFile');
+  if(up) up.disabled=!_fwFile||_fwRunning; }
+function fwUploadPicked(){
+  if(!_fwFile) return;
+  if(!confirm(t('fwUploadConfirm').replace('{name}',_fwFile.name))) return;
+  var f=_fwFile;
+  fwRunOperation(function(p){ return uploadFirmwareFile(f,p); },t('fwUploadVerb')); }
+function fwCancel(){
+  cancelFirmwareUpdate().then(function(){ toast(t('fwCancelSent'),'ok'); })
+    .catch(function(e){ toast(t('fwCancelFailed')+' '+apiErrorText(e),'err'); }); }
 function loadFirmware(){ var box=document.getElementById('fwBox'); if(!box) return;
-  api('GET','/api/v1/machine/firmware').then(function(fw){ if(!box) return;
-    var cur=(fw&&fw.machine&&(fw.machine.version||fw.machine.installedVersion))||machineInfo.version||'—';
-    var arts=(fw&&fw.artifacts)||[]; var recId=fw&&fw.recommendedArtifactId;
-    var rec=recId?arts.find(function(a){return a.id===recId;}):(arts.length?arts[0]:null);
-    var avail=rec&&(rec.version||rec.name)||'—';
-    var updateAvailable=!!(fw&&fw.updateAvailable);
-    var h='<div class="sp-info-grid"><div class="sp-info-cell"><div class="k">'+t('installed')+'</div><div class="v">'+escapeHtml(String(cur))+'</div></div>';
-    h+='<div class="sp-info-cell"><div class="k">'+t('available')+'</div><div class="v">'+escapeHtml(String(avail))+'</div></div></div>';
-    h+='<div style="margin-top:16px"><button class="m-btn primary" id="fwApply"'+(updateAvailable&&recId?'':' disabled')+' onclick="applyFirmware(\''+(recId||'')+'\')">'+t('updateFirmware')+'</button></div>';
-    if(!updateAvailable) h+='<div class="set-desc" style="margin-top:8px">'+t('fwUpToDate')+'</div>';
-    box.innerHTML=h;
-  }).catch(function(){ if(box) box.innerHTML='<div class="ls-empty">'+t('fwUnavailable')+'</div>'; }); }
-function applyFirmware(id){ if(!id){ toast('No firmware artifact','err'); return; } if(!confirm(t('fwConfirm'))) return;
-  toast(t('updating'),'ok'); api('POST','/api/v1/machine/firmware/apply',{artifactId:id}).then(function(){ toast('Firmware update started','ok'); }).catch(function(e){ toast('Firmware failed: '+e.message,'err'); }); }
+  api('GET','/api/v1/machine/firmware').catch(function(){ return null; }).then(function(cat){
+    box=document.getElementById('fwBox'); if(!box) return;
+    var s=summarizeFirmwareCatalog(cat); _fwSummary=s;
+    var ver=s.latestLabel||(s.latestBuild!=null?String(s.latestBuild):'—');
+    var cur=(s.installedBuild!=null?String(s.installedBuild):(machineInfo.version||'—'));
+    var h='<div class="sp-info-grid"><div class="sp-info-cell"><div class="k">'+t('installed')+'</div><div class="v">'+escapeHtml(cur)+'</div></div>';
+    h+='<div class="sp-info-cell"><div class="k">'+t('available')+'</div><div class="v">'+escapeHtml(ver)+'</div></div></div>';
+    var note='';
+    if(s.status==='updateAvailable') note='';
+    else if(s.status==='upToDate') note=t('fwUpToDate');
+    else if(s.status==='ahead') note=t('fwAhead');
+    else note=t('fwUnknown')+(s.reason?(' ('+s.reason+')'):'');
+    if(s.status==='updateAvailable'&&s.artifactId){
+      h+='<div style="margin-top:16px"><button class="m-btn primary" id="fwApply" onclick="fwApplyClick()">'
+        +escapeHtml(t('updateFirmware'))+'</button></div>'; }
+    else {
+      h+='<div style="margin-top:16px"><button class="m-btn primary" id="fwApply" disabled>'
+        +escapeHtml(t('updateFirmware'))+'</button></div>'; }
+    if(note) h+='<div class="set-desc" style="margin-top:8px">'+escapeHtml(note)+'</div>';
+    if(s.releaseNotes) h+='<div class="set-desc" style="margin-top:8px">'+escapeHtml(String(s.releaseNotes).slice(0,400))+'</div>';
+    h+='<div id="fwProgress" class="fw-prog" style="display:none"></div>';
+    h+='<button class="m-btn" id="fwCancel" style="display:none;margin-top:10px" onclick="fwCancel()">'+escapeHtml(t('fwCancelBtn'))+'</button>';
+    // manual file upload: the developer/recovery path the other skins also offer
+    h+='<div class="set-desc" style="margin-top:18px">'+escapeHtml(t('fwManual'))+'</div>';
+    h+='<input type="file" id="fwFile" accept=".dat,.bin,.fw,.dfu" style="display:none" onchange="fwFilePicked(this)">';
+    h+='<div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">'
+      +'<button class="m-btn" onclick="fwChooseFile()">'+escapeHtml(t('fwChoose'))+'</button>'
+      +'<span class="set-desc" id="fwFileName">'+escapeHtml(_fwFile?_fwFile.name:t('fwNoFile'))+'</span>'
+      +'<button class="m-btn" id="fwUpload" onclick="fwUploadPicked()"'+(_fwFile?'':' disabled')+'>'
+      +escapeHtml(t('fwUploadBtn'))+'</button></div>';
+    box.innerHTML=h; }); }
+function fwApplyClick(){
+  var s=_fwSummary; if(!s||!s.artifactId){ toast(t('fwNoArtifact'),'err'); return; }
+  var ver=s.latestLabel||(s.latestBuild!=null?String(s.latestBuild):'');
+  if(!confirm(t('fwConfirm').replace('{v}',ver))) return;
+  fwRunOperation(function(p){ return applyFirmwareArtifact(s.artifactId,p,false); },t('fwInstallVerb')); }
 
 // ── Gateway plugins (list + enable/disable + open UI) ───────────────
 var pluginsCache=[];
