@@ -775,6 +775,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .set-info{min-width:0}
 .set-name{font-size:14px;font-weight:800;color:var(--ink)}
 .set-desc{font-size:11px;color:var(--ink-mute);margin-top:2px;line-height:1.3}
+.mon-stop.close{background:var(--glass-hi);border:1px solid var(--glass-line);color:var(--ink-soft)}
 .htemp.tank.dry{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.45)}
 .htemp.tank.dry .ht-v,.htemp.tank.dry .ht-l{color:var(--red)}
 .fw-prog{margin-top:14px}
@@ -1051,7 +1052,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="mon-bean" id="monBean"></div>
     </div>
     <div class="mon-state" id="monState"></div>
-    <button class="mon-stop" id="monStop" onclick="monStop()" style="display:none">⏹ <span data-i18n="stop">Stop</span></button>
+    <button class="mon-stop" id="monStop"></button>
     <button class="ep-close" onclick="closeMonitor()">✕ <span data-i18n="close">Close</span></button>
   </div>
   <div class="mon-body">
@@ -3372,7 +3373,6 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
 function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
 
 // ── Beans & Grinder ─────────────────────────────────────────────────
-function openBeanModal(){ loadBeansGrinders(); document.getElementById('beanOverlay').classList.add('show'); }
 var bgSel=null; // {type:'bean'|'grinder', obj}
 // The bean page carries three separate jobs -- the coffee itself, the profiles for
 // it, and what it has been pulled at -- so they get a pane each instead of one
@@ -3398,13 +3398,24 @@ function setBgTab(k){ bgPane=k;
   renderBgTabs(); }
 // Tapping the grinder in the recipe opens Beans & Grinders on that grinder.
 function openGrinderPage(){
-  document.getElementById('beanPage').classList.add('show');
+  document.getElementById('beanPage').classList.add('show'); afterPageChange();
   bgTab='grinder';
+  if(bgSel&&bgSel.type!=='grinder') bgSel=null;
   loadBeansGrinders().then(function(){
     var g=currentGrinder()||grinders[0];
     if(g){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; }
     renderBgList(); renderBgEditor(); }); }
-function openBeanModal(){ document.getElementById('beanPage').classList.add('show'); afterPageChange(); loadBeansGrinders(); }
+// Beans and Grinders share one page, so each way in has to say which of the two
+// it means. Without that the page simply kept whatever the last visit left, and
+// pressing Beans could land you on a grinder.
+function openBeanModal(){
+  document.getElementById('beanPage').classList.add('show'); afterPageChange();
+  bgTab='bean';
+  if(bgSel&&bgSel.type!=='bean') bgSel=null;
+  loadBeansGrinders().then(function(){
+    var b=currentBean();
+    if(b&&!bgSel) bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))};
+    renderBgList(); renderBgEditor(); }); }
 function closeBeanPage(){ document.getElementById('beanPage').classList.remove('show'); afterPageChange(); }
 // The four full-screen pages sit on top of the whole interface, which kept
 // laying out and painting behind them -- the same waste the sleep screen used
@@ -3866,8 +3877,21 @@ function recommendProfiles(pfx,quiet){
       var match=allProfiles.find(function(p){ return profTitle(p)===r.title; });
       return match?{p:match,why:String(r.why||'')}:null; }).filter(Boolean).slice(0,5);
     if(!recResults.length&&!quiet) toast(t('recNoMatch'),'err');
+    else persistRecommendations();
   }).catch(function(e){ if(!quiet) toast(t('recFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ recBusy=false; renderRecBox(); }); }
+// A recommendation costs an API call, so a bean that already exists keeps its
+// picks the moment they arrive rather than waiting for a Save that may never
+// come. A bean that has not been created yet has nothing to attach them to, so
+// those still ride along with its first Save.
+function persistRecommendations(){
+  var o=bgSel&&bgSel.type==='bean'&&bgSel.obj;
+  if(!o||!o.id||!recResults||!recResults.length) return;
+  var ex=recExtras(o.extras); if(!ex) return;
+  o.extras=ex;
+  api('PUT','/api/v1/beans/'+o.id,{extras:ex}).then(function(){
+    var b=beans.find(function(x){ return x.id===o.id; }); if(b) b.extras=ex;
+  }).catch(function(){}); }
 // The picks ride along on the bean, so opening it later costs no AI call.
 function recExtras(existing){
   var extras=JSON.parse(JSON.stringify(existing||{}));
@@ -7164,8 +7188,17 @@ function syncMonitorHead(){
   if(kind){ lbl.textContent=auxLabel(kind); rec.style.display='none';
     aux.style.display=''; aux.textContent=auxSummary(kind); }
   else { lbl.textContent=t('monRecipe'); rec.style.display=''; aux.style.display='none'; }
+  // The button is the way off this page, so it is always there. It stops the
+  // action when there is one to stop and the group head is not the one in
+  // charge; otherwise there is nothing to stop and it simply closes.
   var stop=document.getElementById('monStop');
-  if(stop) stop.style.display=(MON_STATES[st]&&!state.ghc)?'':'none'; }
+  if(stop){
+    var canStop=!!MON_STATES[st]&&!state.ghc;
+    stop.className='mon-stop'+(canStop?'':' close');
+    stop.innerHTML=canStop?('\u23f9 <span>'+escapeHtml(t('stop'))+'</span>')
+                          :('\u2715 <span>'+escapeHtml(t('close'))+'</span>');
+    stop.onclick=canStop?monStop:closeMonitor;
+    stop.style.display=''; } }
 function syncMonitorLive(){
   var w=document.getElementById('monWeight'); if(!w) return;
   var u=document.getElementById('monWeightU');
@@ -7188,8 +7221,14 @@ function closeMonitor(){
   _monOpen=false;
   document.getElementById('monPage').classList.remove('show');
   afterPageChange();
+  // Closing after the action has finished puts the live graph back to live. Mid
+  // action it keeps filling, because the main screen carries on showing it.
+  if(!MON_STATES[state.machine.state]) clearChartSeries();
   _chartDims.w=0; _chartDims.h=0; _chartLegendMode=null; _chartBgKey=null; _tempBgKey=null;
   drawChart(); }
+function clearChartSeries(){
+  chart.pressure=[]; chart.flow=[]; chart.weight=[]; chart.frame=[];
+  chart.steamTemp=[]; chart.waterTemp=[]; chart.groupTemp=[]; chart.mixTemp=[]; chart.targetTemp=[]; }
 function toggleMonitor(){ if(_monOpen) closeMonitor(); else openMonitor(false); }
 // Closing the monitor only puts the screen away. Stopping is a separate act, and
 // it belongs here: the monitor is what covers the screen while an action runs.
