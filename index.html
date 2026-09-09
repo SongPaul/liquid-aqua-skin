@@ -289,6 +289,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cam-pane{position:relative;flex:1;min-height:120px;margin-bottom:10px;border-radius:14px;overflow:hidden;background:#0b0a14;border:1px solid var(--glass-line)}
 .cam-pane[hidden]{display:none}
 .cam-pane img,.cam-pane video{width:100%;height:100%;object-fit:contain;display:block;background:#0b0a14}
+.cam-pane{--cam-frame:1}
 .cam-pane video[hidden],.cam-pane img[hidden]{display:none}
 .cam-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:12px;font-weight:700;line-height:1.5;color:rgba(255,255,255,.82);background:rgba(11,10,20,.85)}
 .cam-msg[hidden]{display:none}
@@ -1349,7 +1350,11 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <div class="mb-actions">
       <button class="m-btn primary" id="csLiveBtn" onclick="csLiveToggle()" data-i18n="csLiveStart">Use this camera</button>
       <button class="m-btn" id="csFlipBtn" onclick="csFlip()" hidden data-i18n="csFlip">Flip</button>
+      <button class="m-btn" id="csShapeBtn" onclick="csShape()" hidden data-i18n="csShapeLandscape">Landscape</button>
     </div>
+    <div class="field" id="csZoomBox" hidden><label data-i18n="csZoom">Camera zoom</label>
+      <div class="opt-ctrl"><input type="range" class="slider" id="csZoom" min="1" max="4" step="0.1" value="1"
+        oninput="csSetZoom(this.value)"><span class="opt-val" id="csZoomVal">1.0x</span></div></div>
     <div class="mb-sub" id="csLiveStatus"></div>
   </div>
 </div>
@@ -1450,6 +1455,10 @@ var I18N={
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
     camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are.',
     camUrlName:'Stream address', camUrlDesc:'The MJPEG address of a camera on this network -- an IP-camera app on a phone serves one, usually ending in /video.',
+    camRotate:'Turn the picture', camRotateDesc:'For a phone lying on its side or clipped upside down.',
+    camFit:'Fill the pane', camFitDesc:'Crop to the edges instead of leaving bars.',
+    camZoom:'Enlarge', camZoomDesc:'Crops in on the middle of the picture.',
+    camMirror:'Mirror', camMirrorDesc:'Flip left to right.',
     camNoUrl:'No stream address set', camConnecting:'Connecting\u2026',
     camScanTitle:'Scan with the phone that has the camera',
     camScanRetry:'Nothing answered at that address. Scan to send a different one.',
@@ -1460,6 +1469,7 @@ var I18N={
     csLiveTitle:"Or use this phone's camera",
     csLiveDesc:'Sends the camera straight to the machine, at full frame rate.',
     csLiveStart:'Use this camera', csLiveStop:'Stop', csFlip:'Flip',
+    csShapeLandscape:'Landscape', csShapePortrait:'Portrait', csZoom:'Camera zoom',
     csAsking:'Asking for the camera\u2026', csOffering:'Offering it to the machine\u2026',
     csWaiting:'Waiting for the machine\u2026', csLiveOn:'Live \u2014 the machine has the picture',
     csLiveStopped:'Stopped', csLiveFailed:'The connection failed',
@@ -1563,6 +1573,10 @@ var I18N={
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
     camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다.',
     camUrlName:'스트리밍 주소', camUrlDesc:'같은 네트워크에 있는 카메라의 MJPEG 주소. 폰의 IP 카메라 앱이 보통 /video 로 끝나는 주소를 제공합니다.',
+    camRotate:'화면 회전', camRotateDesc:'폰을 누이거나 거꾸로 물렸을 때.',
+    camFit:'여백 없이 채우기', camFitDesc:'상하 좌우 여백 대신 가장자리를 잘라 채웁니다.',
+    camZoom:'확대', camZoomDesc:'화면 가운데를 당겨 보여줍니다.',
+    camMirror:'좌우 반전', camMirrorDesc:'좌우를 뒤집습니다.',
     camNoUrl:'스트리밍 주소가 없습니다', camConnecting:'연결 중…',
     camScanTitle:'카메라를 쓸 폰으로 스캔하세요',
     camScanRetry:'그 주소에서 응답이 없습니다. 스캔해서 다른 주소를 보내세요.',
@@ -1573,6 +1587,7 @@ var I18N={
     csLiveTitle:'또는 이 폰의 카메라 쓰기',
     csLiveDesc:'카메라를 머신으로 바로 보냅니다. 프레임이 가장 높습니다.',
     csLiveStart:'이 카메라 쓰기', csLiveStop:'중지', csFlip:'전후 전환',
+    csShapeLandscape:'가로', csShapePortrait:'세로', csZoom:'카메라 줌',
     csAsking:'카메라 권한 요청 중…', csOffering:'머신에 연결 신청 중…',
     csWaiting:'머신 응답 기다리는 중…', csLiveOn:'연결됨 — 머신에 화면이 나옵니다',
     csLiveStopped:'중지했습니다', csLiveFailed:'연결에 실패했습니다',
@@ -2618,6 +2633,10 @@ function applyPrefsObject(p){
   if(typeof p.guideShot==='string') prefs.guideShot=p.guideShot;
   if(typeof p.cam==='boolean') prefs.cam=p.cam;
   if(typeof p.camUrl==='string') prefs.camUrl=p.camUrl;
+  if(p.camRotate===0||p.camRotate===90||p.camRotate===180||p.camRotate===270) prefs.camRotate=p.camRotate;
+  if(p.camFit==='contain'||p.camFit==='cover') prefs.camFit=p.camFit;
+  if(typeof p.camZoom==='number'&&p.camZoom>=1&&p.camZoom<=3) prefs.camZoom=p.camZoom;
+  if(typeof p.camMirror==='boolean') prefs.camMirror=p.camMirror;
 }
 
 // ── Grinder identity ────────────────────────────────────────────────
@@ -2723,7 +2742,9 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'',
   // 'off' | 'profile' | 'shot'; guideShot names the recorded shot when 'shot'
   guide:'off', guideShot:'',
   // an MJPEG endpoint on the LAN -- an IP-camera app on a phone, say
-  cam:false, camUrl:'' };
+  cam:false, camUrl:'',
+  // how the picture is laid in the pane, whatever it came from
+  camRotate:0, camFit:'contain', camZoom:1, camMirror:false };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
 function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
@@ -2839,6 +2860,14 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
         +'<div class="set-name">'+t('camUrlName')+'</div><div class="set-desc">'+t('camUrlDesc')+'</div></div>'
         +'<div class="field" style="margin:0"><input id="setCamUrl" placeholder="http://192.168.0.20:8080/video" value="'
         +escapeAttr(prefs.camUrl||'')+'" oninput="setCamUrl(this.value)"></div></div>'; }
+    if(prefs.cam){
+      var rot=String(prefs.camRotate|0);
+      h+=row('camRotate','camRotateDesc','<select class="set-select" onchange="setCamRotate(this.value)">'
+        +opt('0','0\u00b0',rot)+opt('90','90\u00b0',rot)+opt('180','180\u00b0',rot)+opt('270','270\u00b0',rot)+'</select>');
+      h+=row('camFit','camFitDesc',sw('setCamFit',prefs.camFit==='cover','setCamFit(this.checked)'));
+      var cz=Math.round((prefs.camZoom||1)*100);
+      h+=row('camZoom','camZoomDesc','<div class="opt-ctrl"><input type="range" class="slider" min="100" max="300" step="5" value="'+cz+'" oninput="setCamZoom(this.value/100,true)" onchange="setCamZoom(this.value/100,false)"><span class="opt-val" id="camZoomVal">'+cz+'%</span></div>');
+      h+=row('camMirror','camMirrorDesc',sw('setCamMirror',!!prefs.camMirror,'setCamMirror(this.checked)')); }
     h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
     var sb=prefs.sleepBrightness||20;
     h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
@@ -3187,8 +3216,9 @@ function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||
 // ── The camera ──────────────────────────────────────────────────────
 // An <img> pointed at an MJPEG endpoint. The connection stays open for as long
 // as the src is set, so it is cleared whenever the picture is not on screen.
-var _camPoll=null, _camQrUrl='', _camPc=null, _camSid=null;
+var _camPoll=null, _camQrUrl='', _camPc=null, _camSid=null, _camDeadline=null;
 var CAM_OFFER='cam_offer', CAM_ANSWER='cam_answer';
+var CAM_OFFER_TTL=120000, CAM_CONNECT_MS=12000;
 // Neither side trickles: each waits for its own gathering to finish and puts the
 // whole thing in one document, so the store carries two writes and no more.
 function camIceSettled(pc){ return new Promise(function(res){
@@ -3198,23 +3228,36 @@ function camIceSettled(pc){ return new Promise(function(res){
   var timer=setTimeout(done,3000);
   pc.addEventListener('icegatheringstatechange',chk); }); }
 function camPeerStop(){
+  clearTimeout(_camDeadline); _camDeadline=null;
   if(_camPc){ try{ _camPc.close(); }catch(_){} _camPc=null; }
   _camSid=null;
   var v=document.getElementById('camVideo');
-  if(v){ v.srcObject=null; v.hidden=true; } }
+  if(v){ v.onloadedmetadata=null; v.onplaying=null; v.srcObject=null; v.hidden=true; }
+  var i=document.getElementById('camImg'); if(i) i.hidden=false; }
 function camLive(){ var v=document.getElementById('camVideo'); return !!(v&&!v.hidden&&v.srcObject); }
 function camAnswer(offer){
   camPeerStop();
   var pc=new RTCPeerConnection({iceServers:[]}); _camPc=pc; _camSid=offer.sid;
+  // A track arriving is not a picture arriving. Nothing is put away until the
+  // video has real frames behind it.
   pc.ontrack=function(e){
     var v=document.getElementById('camVideo');
-    v.srcObject=e.streams[0]; v.hidden=false;
-    camStop(); document.getElementById('camImg').hidden=true;
-    camQrHide(); camMessage(null); };
+    v.srcObject=e.streams[0];
+    var show=function(){ if(pc!==_camPc||!v.videoWidth) return;
+      v.hidden=false; camStop(); document.getElementById('camImg').hidden=true;
+      camQrHide(); camMessage(null); camApplyView(); };
+    v.onloadedmetadata=show; v.onplaying=show; show(); };
   pc.onconnectionstatechange=function(){
     if(pc!==_camPc) return;
+    if(pc.connectionState==='connected'){ clearTimeout(_camDeadline); _camDeadline=null; return; }
     if(pc.connectionState==='failed'||pc.connectionState==='closed'||pc.connectionState==='disconnected'){
       camPeerStop(); if(prefs.cam&&!_asleep) camStart(); } };
+  // an answer nobody is listening for should not hold the pane for ever
+  clearTimeout(_camDeadline);
+  _camDeadline=setTimeout(function(){
+    if(pc!==_camPc) return;
+    if(pc.connectionState!=='connected'||!camLive()){
+      camPeerStop(); if(prefs.cam&&!_asleep) camStart(); } },CAM_CONNECT_MS);
   pc.setRemoteDescription({type:'offer',sdp:offer.sdp})
     .then(function(){ return pc.createAnswer(); })
     .then(function(a){ return pc.setLocalDescription(a); })
@@ -3236,6 +3279,9 @@ function camWatchStore(){
     // re-encode in the middle
     api('GET',storeUrl(CAM_OFFER)).then(function(o){
       if(!o||!o.sdp||!o.sid||o.sid===_camSid) return;
+      // a tab closed without stopping leaves its offer behind; it is not an
+      // invitation any more
+      if(o.ts&&Math.abs(Date.now()-o.ts)>CAM_OFFER_TTL) return;
       camAnswer(o);
     }).catch(function(){});
     api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
@@ -3261,6 +3307,32 @@ function camQrShow(noteKey){
     document.getElementById('camQrUrl').textContent=t('qrNoLan'); }
   api('GET','/api/v1/info').then(resolve).catch(function(){ resolve(null); });
   camWatchStore(); }
+// A quarter turn swaps what the picture has to fill, so the element is sized to
+// the pane's other side before it is turned.
+function camApplyView(){
+  var pane=document.getElementById('camPane'); if(!pane||pane.hidden) return;
+  var r=pane.getBoundingClientRect(); if(!r.width||!r.height) return;
+  var rot=prefs.camRotate|0, quarter=(rot===90||rot===270);
+  var w=quarter?r.height:r.width, h=quarter?r.width:r.height;
+  var t='translate(-50%,-50%) rotate('+rot+'deg) scale('+(prefs.camZoom||1)+')'
+    +(prefs.camMirror?' scaleX(-1)':'');
+  ['camVideo','camImg'].forEach(function(id){ var el=document.getElementById(id); if(!el) return;
+    el.style.position='absolute'; el.style.left='50%'; el.style.top='50%';
+    el.style.width=w+'px'; el.style.height=h+'px';
+    el.style.objectFit=(prefs.camFit==='cover'?'cover':'contain');
+    el.style.transform=t; }); }
+var _camRO=null;
+function camWatchSize(){
+  if(_camRO||typeof ResizeObserver==='undefined') return;
+  var pane=document.getElementById('camPane'); if(!pane) return;
+  _camRO=new ResizeObserver(function(){ camApplyView(); });
+  _camRO.observe(pane); }
+function setCamRotate(v){ prefs.camRotate=parseInt(v,10)||0; savePrefs(); camApplyView(); }
+function setCamFit(on){ prefs.camFit=on?'cover':'contain'; savePrefs(); camApplyView(); }
+function setCamZoom(v,live){ prefs.camZoom=Math.max(1,Math.min(3,parseFloat(v)||1));
+  var lbl=document.getElementById('camZoomVal'); if(lbl) lbl.textContent=Math.round(prefs.camZoom*100)+'%';
+  camApplyView(); if(!live) savePrefs(); }
+function setCamMirror(on){ prefs.camMirror=!!on; savePrefs(); camApplyView(); }
 function camMessage(key){ var m=document.getElementById('camMsg'); if(!m) return;
   if(!key){ m.hidden=true; m.textContent=''; return; }
   m.textContent=t(key); m.hidden=false; }
@@ -3273,7 +3345,7 @@ function camStart(){
   var url=(prefs.camUrl||'').trim();
   if(!url){ camStop(); camQrShow(); return; }
   camQrHide(); camMessage('camConnecting');
-  i.onload=function(){ camMessage(null); };
+  i.onload=function(){ camMessage(null); camApplyView(); };
   i.onerror=function(){ camStop(); camQrShow('camScanRetry'); };
   // a reconnect must not be answered out of the cache
   i.src=url+(url.indexOf('?')<0?'?':'&')+'_t='+Date.now(); }
@@ -3282,7 +3354,7 @@ function applyCam(){
   if(!card||!pane) return;
   var on=!!prefs.cam;
   card.classList.toggle('cam',on); document.body.classList.toggle('cam-on',on); pane.hidden=!on;
-  if(on&&!_asleep){ camStart(); if(!camLive()) camWatchStore(); }
+  if(on&&!_asleep){ camStart(); camWatchSize(); camApplyView(); if(!camLive()) camWatchStore(); }
   else { camStop(); camQrHide(); camPeerStop(); camMessage(null); }
   buildCarousel(); }
 function setCamOn(on){ prefs.cam=!!on; savePrefs(); applyCam(); renderSpContent(); }
@@ -8009,7 +8081,7 @@ function csSave(){
   storePut(PREF_PREFIX+'camUrl',url).then(function(){ el.value=url; st.textContent=t('camSetupSaved'); })
     .catch(function(){ st.textContent=t('camSetupFailed'); }); }
 // ── This phone's camera, offered to the machine ─────────────────────
-var _csPc=null, _csStream=null, _csSid=null, _csPoll=null, _csFacing='environment';
+var _csPc=null, _csStream=null, _csSid=null, _csPoll=null, _csFacing='environment', _csPortrait=false;
 function csSay(msg){ document.getElementById('csLiveStatus').textContent=msg; }
 function csLiveStop(){
   if(_csPoll){ clearInterval(_csPoll); _csPoll=null; }
@@ -8018,22 +8090,46 @@ function csLiveStop(){
   _csSid=null;
   var v=document.getElementById('csPreview'); v.srcObject=null; v.hidden=true;
   document.getElementById('csFlipBtn').hidden=true;
+  document.getElementById('csShapeBtn').hidden=true;
+  document.getElementById('csZoomBox').hidden=true;
   document.getElementById('csLiveBtn').textContent=t('csLiveStart');
   storePut(CAM_OFFER,{}).catch(function(){}); }
 function csLiveToggle(){ if(_csPc||_csStream){ csLiveStop(); csSay(t('csLiveStopped')); return; } csLiveStart(); }
 function csFlip(){ _csFacing=(_csFacing==='environment'?'user':'environment'); csLiveStart(); }
+// what the camera captures is what crosses the network, so the shape is asked
+// for here rather than turned at the other end
+function csShape(){ _csPortrait=!_csPortrait; csLiveStart(); }
+function csSetZoom(v){
+  var track=_csStream&&_csStream.getVideoTracks()[0]; if(!track) return;
+  var z=parseFloat(v)||1;
+  document.getElementById('csZoomVal').textContent=z.toFixed(1)+'x';
+  track.applyConstraints({advanced:[{zoom:z}]}).catch(function(){}); }
+// only some cameras report a zoom; the machine's own enlarge covers the rest
+function csZoomOffer(track){
+  var box=document.getElementById('csZoomBox');
+  var caps=(track.getCapabilities?track.getCapabilities():null)||{};
+  if(!caps.zoom){ box.hidden=true; return; }
+  var el=document.getElementById('csZoom');
+  el.min=caps.zoom.min; el.max=caps.zoom.max; el.step=caps.zoom.step||0.1;
+  var now=(track.getSettings&&track.getSettings().zoom)||caps.zoom.min;
+  el.value=now; document.getElementById('csZoomVal').textContent=Number(now).toFixed(1)+'x';
+  box.hidden=false; }
 function csLiveStart(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ csSay(t('csNoSecure')); return; }
   if(_csPc){ try{ _csPc.close(); }catch(_){} _csPc=null; }
   if(_csPoll){ clearInterval(_csPoll); _csPoll=null; }
   if(_csStream){ _csStream.getTracks().forEach(function(t){ t.stop(); }); _csStream=null; }
   csSay(t('csAsking'));
+  var wide=_csPortrait?720:1280, tall=_csPortrait?1280:720;
   navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:_csFacing},
-    width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}})
+    width:{ideal:wide},height:{ideal:tall},frameRate:{ideal:30}}})
   .then(function(stream){
     _csStream=stream;
     var v=document.getElementById('csPreview'); v.srcObject=stream; v.hidden=false;
     document.getElementById('csFlipBtn').hidden=false;
+    var shape=document.getElementById('csShapeBtn');
+    shape.hidden=false; shape.textContent=t(_csPortrait?'csShapePortrait':'csShapeLandscape');
+    csZoomOffer(stream.getVideoTracks()[0]);
     document.getElementById('csLiveBtn').textContent=t('csLiveStop');
     var pc=new RTCPeerConnection({iceServers:[]}); _csPc=pc;
     stream.getTracks().forEach(function(tr){ pc.addTrack(tr,stream); });
