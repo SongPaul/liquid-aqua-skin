@@ -302,14 +302,16 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cam-qr-url{font-size:11px;font-weight:700;color:rgba(255,255,255,.62);word-break:break-all;margin-bottom:6px}
 .cam-qr-note{font-size:11px;font-weight:600;line-height:1.5;color:rgba(255,255,255,.55)}
 /* streaming: the albums keep a strip, the picture takes the rest */
-.carousel-card.cam{flex:1 1 0;min-height:0}
+.cam-card{padding:8px;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+.cam-card[hidden]{display:none}
+.cam-card .cam-pane{margin:0}
 body.cam-on .bean-info{flex:0 0 auto}
-/* streaming: the albums stand down and the card strip takes over, which is
-   the one that marks what is loaded and what is being browsed */
+/* streaming: the albums stand down so the picture's card has the room, and
+   the strip carries on marking what is loaded and what is being browsed */
 .carousel-card.cam .carousel{display:none}
 .carousel-card.cam .cc-meta,.carousel-card.cam .cc-hint{display:none}
-.carousel-card.cam .nav-cards{margin-top:8px;flex:none}
-.carousel-card.cam .cc-name{flex:none}
+.carousel-card.cam .nav-cards{margin-top:0;flex:none}
+.carousel-card.cam{flex:none}
 /* the picture takes what the bean card can spare while it is on */
 body.cam-on .bean-info{min-height:56px}
 body.cam-on .bean-chips{display:none}
@@ -333,7 +335,7 @@ body.cam-on .bean-chips{display:none}
 body.brewing .car-nav,body.brewing #navCards,body.brewing .cur-fav{display:none}
 body.brewing .carousel{height:210px}
 body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
-.cc-name{font-size:16px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:center;line-height:1.15;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-name{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:left;line-height:1.2;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-meta{font-size:11px;color:var(--ink-mute);font-weight:500;text-align:center;margin-top:2px}
 .cc-hint{margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
 .cc-hint.current{color:var(--green)}
@@ -353,7 +355,8 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 /* Recipe / ratio */
 .recipe{flex-shrink:0}
 .right .recipe .recipe-title{margin-bottom:6px}
-.recipe-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.recipe-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:flex-end;align-items:center;min-height:0}
+.recipe-title:empty,.recipe-title:has(.rc-live:empty){margin:0}
 .recipe-title .bean-link{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer}
 .dose-row{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start;gap:8px}
 .dose-block{text-align:center;min-width:0}
@@ -418,7 +421,7 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .last-shot{flex-shrink:0}
-.ls-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ls-head{display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 .ls-acts{display:flex;align-items:center;flex-shrink:0}
 .ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
 .ls-profile:empty{display:none}
@@ -1022,11 +1025,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
   <!-- ── Right ─────────────────────────────────────────────────── -->
   <div class="right">
-    <!-- Album carousel: center = current profile, sides = favorites -->
-    <div class="carousel-card glass" id="carouselCard">
-      <div class="cc-head"><span class="cur-tag" data-i18n="profile">Profile</span>
-        <div class="cc-actions"><button class="cur-fav" id="ccFav" onclick="toggleCurrentFav()">☆</button>
-        <button class="cur-browse" onclick="openEditPage()"><span data-i18n="edit">Edit</span> ✎</button></div></div>
+    <div class="cam-card glass" id="camCard" hidden>
       <div class="cam-pane" id="camPane" hidden>
         <img id="camImg" alt="">
         <video id="camVideo" autoplay playsinline muted hidden></video>
@@ -1038,12 +1037,19 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
             <div class="cam-qr-note" id="camQrNote"></div></div>
         </div>
       </div>
+    </div>
+
+    <!-- Album carousel: center = current profile, sides = favorites -->
+    <div class="carousel-card glass" id="carouselCard">
+      <div class="cc-head"><div class="cc-name" id="curName">—</div>
+        <div class="cc-actions"><button class="cur-fav" id="ccFav" onclick="toggleCurrentFav()">☆</button>
+        <button class="cur-browse" onclick="openEditPage()"><span data-i18n="edit">Edit</span> ✎</button></div></div>
+
       <div class="carousel">
         <button class="car-nav prev" onclick="carouselMove(-1)">‹</button>
         <div class="carousel-stage" id="carouselStage"><div class="car-empty">Loading…</div></div>
         <button class="car-nav next" onclick="carouselMove(1)">›</button>
       </div>
-      <div class="cc-name" id="curName">—</div>
       <div class="cc-meta" id="curMeta" hidden>—</div>
       <div class="cc-hint" id="ccHint" hidden>Tap center album to load</div>
       <!-- card navigation: tap a card to load that profile instantly -->
@@ -1051,7 +1057,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     </div>
 
     <div class="recipe glass">
-        <div class="recipe-title"><span data-i18n="recipe">Recipe</span><span class="rc-live" id="recipeLiveTag"></span></div>
+        <div class="recipe-title"><span class="rc-live" id="recipeLiveTag"></span></div>
         <div id="recipeNormal">
         <div class="dose-row">
           <div class="dose-block">
@@ -1096,7 +1102,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
     <div class="lastshot-card glass">
       <div class="last-shot" id="lastShot">
-        <div class="ls-head"><span data-i18n="lastShot">Last Shot</span>
+        <div class="ls-head">
           <span class="ls-acts">
             <button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button>
             <button class="cur-browse" onclick="openShotLog()"><span data-i18n="shotLog">Shot Log</span> ▤</button>
@@ -3365,9 +3371,10 @@ function camToMonitor(on){
   host.classList.toggle('on',show);
   if(show){ if(pane.parentElement!==host) host.appendChild(pane); }
   else if(pane.parentElement===host){
-    var card=document.getElementById('carouselCard');
-    var before=card?card.querySelector('.carousel'):null;
-    if(card) card.insertBefore(pane,before); }
+    var home=document.getElementById('camCard');
+    if(home){ home.appendChild(pane); home.hidden=!prefs.cam; } }
+  var camCard=document.getElementById('camCard');
+  if(camCard&&show) camCard.hidden=true;
   camApplyView(); }
 function camStart(){
   var i=document.getElementById('camImg'); if(!i) return;
@@ -3385,6 +3392,8 @@ function applyCam(){
   if(!card||!pane) return;
   var on=!!prefs.cam;
   card.classList.toggle('cam',on); document.body.classList.toggle('cam-on',on); pane.hidden=!on;
+  var camCard=document.getElementById('camCard');
+  if(camCard) camCard.hidden=!on||pane.parentElement!==camCard;
   if(on&&!_asleep){ camStart(); camWatchSize(); camApplyView(); if(!camLive()) camWatchStore(); }
   else { camStop(); camQrHide(); camPeerStop(); camMessage(null); }
   buildCarousel(); }
