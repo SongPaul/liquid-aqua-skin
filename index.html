@@ -1568,6 +1568,9 @@ var GOAL_DASH=[5,4];
 // The scrub guide is not a series -- it marks a moment, so it takes the
 // interface accent rather than any line's colour.
 var GUIDE={ day:'#5b5bd6', night:'#c4b5fd' };
+// A number on its own does not say what it is. The chart is metric: the
+// display unit preference converts what the panels show, not the graph.
+var U_BAR=' bar', U_FLOW=' ml/s', U_TEMP='\u00b0C', U_G=' g';
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
 var beans=[], grinders=[], context={};
 
@@ -2115,17 +2118,17 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     // the chip is TAG_H tall; stack them TAG_GAP apart so two never touch
     function tags(items){
       drawReadouts(ctx, items.map(function(it){
-        return (it.v==null||isNaN(it.v))?null:{v:it.v,c:it.c,y:py(it.v,it.mx)}; }), lx, Y0, Y0+PH); }
-    if(isSteam){ tags([{v:hasTempAxis?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam},
-                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow},
-                       {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure}]); }
-    else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water},
-                            {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow},
-                            {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure}]); }
-    else { tags([{v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure},
-                 {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow},
-                 {v:hasTempAxis?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket},
-                 {v:hasTempAxis?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix}]); }
+        return (it.v==null||isNaN(it.v))?null:{v:it.v,c:it.c,u:it.u,y:py(it.v,it.mx)}; }), lx, Y0, Y0+PH); }
+    if(isSteam){ tags([{v:hasTempAxis?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam,u:U_TEMP},
+                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                       {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
+    else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
+                            {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                            {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
+    else { tags([{v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR},
+                 {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                 {v:hasTempAxis?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket,u:U_TEMP},
+                 {v:hasTempAxis?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix,u:U_TEMP}]); }
   }
 }
 
@@ -2155,13 +2158,14 @@ function drawReadouts(ctx,rows,lx,top,bottom,leftLimit){
   ctx.font='800 12px Inter,sans-serif'; ctx.textBaseline='middle';
   // scrubbing near the left edge leaves no room on the left, so the labels go
   // to the other side of the guide rather than off the chart
+  rows.forEach(function(r){ r.txt=r.v.toFixed(1)+(r.u||''); });
   var widest=0;
-  rows.forEach(function(r){ widest=Math.max(widest,ctx.measureText(r.v.toFixed(1)).width); });
+  rows.forEach(function(r){ widest=Math.max(widest,ctx.measureText(r.txt).width); });
   var right=(leftLimit!=null && lx-16-widest<leftLimit);
   ctx.textAlign=right?'left':'right';
   var ground=document.body.classList.contains('night')?'rgba(12,10,24,.88)':'rgba(255,255,255,.88)';
   rows.forEach(function(r){
-    var txt=r.v.toFixed(1), w=ctx.measureText(txt).width, dir=right?1:-1;
+    var txt=r.txt, w=ctx.measureText(txt).width, dir=right?1:-1;
     if(Math.abs(r.ly-r.y)>1){ ctx.strokeStyle=r.c; ctx.globalAlpha=.45; ctx.lineWidth=1;
       ctx.beginPath(); ctx.moveTo(lx+dir*5,r.y); ctx.lineTo(lx+dir*9,r.ly); ctx.stroke(); ctx.globalAlpha=1; }
     ctx.fillStyle=r.c; ctx.beginPath(); ctx.arc(lx,r.y,3.5,0,Math.PI*2); ctx.fill();
@@ -7002,8 +7006,9 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
   wrap.innerHTML=''
     +'<div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(st.name)+'</div><div class="sl-dt-sub">'+(st.group?escapeHtml(st.group)+' · ':'')+escapeHtml(fmtShotDate(s))+(s.stopReason?' · '+escapeHtml(s.stopReason):'')+'</div>'+shotContextLine(s)+'</div></div>'
     +'<div class="sl-canvas-wrap"><canvas id="slCurve"></canvas></div>'
+    +shotLegend(s,false)
     +'<div class="sl-temp-wrap"><canvas id="slTempCurve"></canvas></div>'
-    +shotLegend(s)
+    +shotLegend(s,true)
     +'<div class="sl-metrics">'
       +metric(dose,t('dose')+' g')
       +metric(yld,t('yield')+' g')
@@ -7125,7 +7130,7 @@ function drawMonTempChart(){
       :isWater?[{v:last(chart.waterTemp),c:SERIES.water}]
       :[{v:last(chart.groupTemp),c:SERIES.basket},{v:last(chart.mixTemp),c:SERIES.mix}];
     drawReadouts(ctx, rows.map(function(r){
-      return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,y:py(r.v)}; }), px(N-1), Y0, Y0+PH); }
+      return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,u:U_TEMP,y:py(r.v)}; }), px(N-1), Y0, Y0+PH); }
 }
 function shotSeconds(s){ var m=s.measurements||[]; if(m.length<2) return 0;
   var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
@@ -7249,15 +7254,15 @@ function drawShotMeasurements(canvas,s,temps){
       var v=d.w?(pt.scale?pt.scale.weight:null):mac(d.f)(pt);
       if(v==null||isNaN(v)) return null;
       if(d.f&&d.f.indexOf('target')===0&&!(v>0)) return null;   // no goal, nothing to say
-      return {v:v,c:d.c,y:d.s(v)}; }), gx, Y0, Y0+PH, X0); }
+      return {v:v,c:d.c,u:d.u,y:d.s(v)}; }), gx, Y0, Y0+PH, X0); }
 
   if(temps){
     line(mac('targetGroupTemperature'),pyT,SERIES.basketGoal,GOAL_DASH);
     line(mac('targetMixTemperature'),pyT,SERIES.mixGoal,GOAL_DASH);
     line(mac('groupTemperature'),pyT,SERIES.basket);
     line(mac('mixTemperature'),pyT,SERIES.mix);
-    scrub([{f:'groupTemperature',c:SERIES.basket,s:pyT},{f:'targetGroupTemperature',c:SERIES.basketGoal,s:pyT},
-           {f:'mixTemperature',c:SERIES.mix,s:pyT},{f:'targetMixTemperature',c:SERIES.mixGoal,s:pyT}]);
+    scrub([{f:'groupTemperature',c:SERIES.basket,s:pyT,u:U_TEMP},{f:'targetGroupTemperature',c:SERIES.basketGoal,s:pyT,u:U_TEMP},
+           {f:'mixTemperature',c:SERIES.mix,s:pyT,u:U_TEMP},{f:'targetMixTemperature',c:SERIES.mixGoal,s:pyT,u:U_TEMP}]);
     return; }
 
   line(mac('targetPressure'),P,SERIES.pressureGoal,GOAL_DASH);
@@ -7266,16 +7271,26 @@ function drawShotMeasurements(canvas,s,temps){
                 function(v){ return py(v,WMAX); },SERIES.weight);
   line(mac('flow'),F,SERIES.flow);
   line(mac('pressure'),P,SERIES.pressure);
-  var rows=[{f:'pressure',c:SERIES.pressure,s:P},{f:'targetPressure',c:SERIES.pressureGoal,s:P},
-            {f:'flow',c:SERIES.flow,s:F},{f:'targetFlow',c:SERIES.flowGoal,s:F}];
-  if(WMAX) rows.push({w:true,c:SERIES.weight,s:function(v){ return py(v,WMAX); }});
+  var rows=[{f:'pressure',c:SERIES.pressure,s:P,u:U_BAR},{f:'targetPressure',c:SERIES.pressureGoal,s:P,u:U_BAR},
+            {f:'flow',c:SERIES.flow,s:F,u:U_FLOW},{f:'targetFlow',c:SERIES.flowGoal,s:F,u:U_FLOW}];
+  if(WMAX) rows.push({w:true,c:SERIES.weight,s:function(v){ return py(v,WMAX); },u:U_G});
   scrub(rows); }
 
-function shotLegend(s){
-  var hasWeight=(s.measurements||[]).some(function(pt){ return pt.scale&&pt.scale.weight!=null; });
-  function li(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+escapeHtml(label)+'</span>'; }
-  return '<div class="chart-legend sl-legend">'+li('#6366f1',t('pressure'))+li('#38bdf8',t('flow'))
-    +(hasWeight?li('#10b981',t('weight')):'')+li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target'))+'</div>'; }
+// One legend per chart, under the chart it describes, in the shared colours --
+// a dot for something measured and a dash for the goal behind it.
+function legendDot(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+escapeHtml(label)+'</span>'; }
+function legendDash(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+escapeHtml(label)+'</span>'; }
+function shotLegend(s,temps){
+  var m=s.measurements||[];
+  var has=function(f){ return m.some(function(pt){ var o=pt.machine||{}; return o[f]!=null&&o[f]>0; }); };
+  if(temps) return '<div class="chart-legend sl-legend">'
+    +legendDot(SERIES.basket,t('tempBasket'))+(has('targetGroupTemperature')?legendDash(SERIES.basketGoal,t('basketGoal')):'')
+    +legendDot(SERIES.mix,t('tempMix'))+(has('targetMixTemperature')?legendDash(SERIES.mixGoal,t('mixGoal')):'')+'</div>';
+  var hasWeight=m.some(function(pt){ return pt.scale&&pt.scale.weight!=null; });
+  return '<div class="chart-legend sl-legend">'
+    +legendDot(SERIES.pressure,t('pressure'))+(has('targetPressure')?legendDash(SERIES.pressureGoal,t('pressureGoal')):'')
+    +legendDot(SERIES.flow,t('flow'))+(has('targetFlow')?legendDash(SERIES.flowGoal,t('flowGoal')):'')
+    +(hasWeight?legendDot(SERIES.weight,t('weight')):'')+'</div>'; }
 
 // -- Comparing shots ------------------------------------------------
 // A shot only means something next to another one, so any row can be added to a
