@@ -288,7 +288,8 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cur-browse{min-height:44px;padding:0 8px;font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;-webkit-appearance:none}
 .cam-pane{position:relative;flex:1;min-height:120px;margin-bottom:10px;border-radius:14px;overflow:hidden;background:#0b0a14;border:1px solid var(--glass-line)}
 .cam-pane[hidden]{display:none}
-.cam-pane img{width:100%;height:100%;object-fit:contain;display:block;background:#0b0a14}
+.cam-pane img,.cam-pane video{width:100%;height:100%;object-fit:contain;display:block;background:#0b0a14}
+.cam-pane video[hidden],.cam-pane img[hidden]{display:none}
 .cam-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:12px;font-weight:700;line-height:1.5;color:rgba(255,255,255,.82);background:rgba(11,10,20,.85)}
 .cam-msg[hidden]{display:none}
 .cam-qr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;background:rgba(11,10,20,.92)}
@@ -1047,6 +1048,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <button class="cur-browse" onclick="openEditPage()"><span data-i18n="edit">Edit</span> ✎</button></div></div>
       <div class="cam-pane" id="camPane" hidden>
         <img id="camImg" alt="">
+        <video id="camVideo" autoplay playsinline muted hidden></video>
         <div class="cam-msg" id="camMsg" hidden></div>
         <div class="cam-qr" id="camQr" hidden>
           <canvas id="camQrCanvas"></canvas>
@@ -1339,8 +1341,16 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="mb-sub" data-i18n="camSetupDesc">Type the address your IP-camera app shows, and the machine picks it up.</div></div>
     <div class="field"><label data-i18n="camUrlName">Stream address</label>
       <input id="csUrl" placeholder="http://192.168.0.20:8080/video" inputmode="url" autocapitalize="off" autocorrect="off"></div>
-    <div class="mb-actions"><button class="m-btn primary" onclick="csSave()" data-i18n="camSetupSave">Send to the machine</button></div>
+    <div class="mb-actions"><button class="m-btn" id="csSaveBtn" onclick="csSave()" data-i18n="camSetupSave">Send to the machine</button></div>
     <div class="mb-sub" id="csStatus"></div>
+    <div class="mb-head" style="margin-top:18px"><div class="mb-title"><span data-i18n="csLiveTitle">Or use this phone's camera</span></div>
+      <div class="mb-sub" data-i18n="csLiveDesc">Sends the camera straight to the machine, at full frame rate.</div></div>
+    <video id="csPreview" autoplay playsinline muted hidden style="width:100%;border-radius:14px;background:#000"></video>
+    <div class="mb-actions">
+      <button class="m-btn primary" id="csLiveBtn" onclick="csLiveToggle()" data-i18n="csLiveStart">Use this camera</button>
+      <button class="m-btn" id="csFlipBtn" onclick="csFlip()" hidden data-i18n="csFlip">Flip</button>
+    </div>
+    <div class="mb-sub" id="csLiveStatus"></div>
   </div>
 </div>
 <div id="mobilePage" style="display:none">
@@ -1447,6 +1457,14 @@ var I18N={
     camSetupTitle:'Camera for the machine', camSetupDesc:'Type the address your IP-camera app shows and the machine picks it up.',
     camSetupSave:'Send to the machine', camSetupSaved:'Sent \u2014 the machine is connecting',
     camSetupNeed:'Type an address first', camSetupFailed:'Could not reach the machine',
+    csLiveTitle:"Or use this phone's camera",
+    csLiveDesc:'Sends the camera straight to the machine, at full frame rate.',
+    csLiveStart:'Use this camera', csLiveStop:'Stop', csFlip:'Flip',
+    csAsking:'Asking for the camera\u2026', csOffering:'Offering it to the machine\u2026',
+    csWaiting:'Waiting for the machine\u2026', csLiveOn:'Live \u2014 the machine has the picture',
+    csLiveStopped:'Stopped', csLiveFailed:'The connection failed',
+    csDenied:'Camera permission was refused', csNoCamera:'No camera could be opened',
+    csNoSecure:'This browser will not give a camera to a plain http:// page. In Chrome open chrome://flags/#unsafely-treat-insecure-origin-as-secure, add this page\u2019s address, and restart it.',
     camError:'The stream could not be reached',
     guideLine:'Extraction guideline', guideLineDesc:'Draw what the shot should look like under the live graph.',
     guideOff:'Off', guideProfile:'The loaded profile', guideShot:'A previous shot',
@@ -1552,6 +1570,14 @@ var I18N={
     camSetupTitle:'머신에 카메라 연결', camSetupDesc:'IP 카메라 앱이 보여주는 주소를 입력하면 머신이 받아갑니다.',
     camSetupSave:'머신으로 보내기', camSetupSaved:'보냈습니다 — 머신이 연결 중입니다',
     camSetupNeed:'주소를 먼저 입력하세요', camSetupFailed:'머신에 연결하지 못했습니다',
+    csLiveTitle:'또는 이 폰의 카메라 쓰기',
+    csLiveDesc:'카메라를 머신으로 바로 보냅니다. 프레임이 가장 높습니다.',
+    csLiveStart:'이 카메라 쓰기', csLiveStop:'중지', csFlip:'전후 전환',
+    csAsking:'카메라 권한 요청 중…', csOffering:'머신에 연결 신청 중…',
+    csWaiting:'머신 응답 기다리는 중…', csLiveOn:'연결됨 — 머신에 화면이 나옵니다',
+    csLiveStopped:'중지했습니다', csLiveFailed:'연결에 실패했습니다',
+    csDenied:'카메라 권한이 거부됐습니다', csNoCamera:'카메라를 열지 못했습니다',
+    csNoSecure:'브라우저가 http:// 페이지에는 카메라를 주지 않습니다. 크롬에서 chrome://flags/#unsafely-treat-insecure-origin-as-secure 를 열어 이 페이지 주소를 등록하고 재시작하세요.',
     camError:'스트림에 연결하지 못했습니다',
     guideLine:'추출 가이드라인', guideLineDesc:'실시간 그래프 아래에 목표 모양을 깔아둡니다.',
     guideOff:'끔', guideProfile:'프로파일 기본', guideShot:'이전 추출로그',
@@ -3161,7 +3187,40 @@ function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||
 // ── The camera ──────────────────────────────────────────────────────
 // An <img> pointed at an MJPEG endpoint. The connection stays open for as long
 // as the src is set, so it is cleared whenever the picture is not on screen.
-var _camPoll=null, _camQrUrl='';
+var _camPoll=null, _camQrUrl='', _camPc=null, _camSid=null;
+var CAM_OFFER='cam_offer', CAM_ANSWER='cam_answer';
+// Neither side trickles: each waits for its own gathering to finish and puts the
+// whole thing in one document, so the store carries two writes and no more.
+function camIceSettled(pc){ return new Promise(function(res){
+  if(pc.iceGatheringState==='complete'){ res(); return; }
+  var done=function(){ clearTimeout(timer); pc.removeEventListener('icegatheringstatechange',chk); res(); };
+  var chk=function(){ if(pc.iceGatheringState==='complete') done(); };
+  var timer=setTimeout(done,3000);
+  pc.addEventListener('icegatheringstatechange',chk); }); }
+function camPeerStop(){
+  if(_camPc){ try{ _camPc.close(); }catch(_){} _camPc=null; }
+  _camSid=null;
+  var v=document.getElementById('camVideo');
+  if(v){ v.srcObject=null; v.hidden=true; } }
+function camLive(){ var v=document.getElementById('camVideo'); return !!(v&&!v.hidden&&v.srcObject); }
+function camAnswer(offer){
+  camPeerStop();
+  var pc=new RTCPeerConnection({iceServers:[]}); _camPc=pc; _camSid=offer.sid;
+  pc.ontrack=function(e){
+    var v=document.getElementById('camVideo');
+    v.srcObject=e.streams[0]; v.hidden=false;
+    camStop(); document.getElementById('camImg').hidden=true;
+    camQrHide(); camMessage(null); };
+  pc.onconnectionstatechange=function(){
+    if(pc!==_camPc) return;
+    if(pc.connectionState==='failed'||pc.connectionState==='closed'||pc.connectionState==='disconnected'){
+      camPeerStop(); if(prefs.cam&&!_asleep) camStart(); } };
+  pc.setRemoteDescription({type:'offer',sdp:offer.sdp})
+    .then(function(){ return pc.createAnswer(); })
+    .then(function(a){ return pc.setLocalDescription(a); })
+    .then(function(){ return camIceSettled(pc); })
+    .then(function(){ return storePut(CAM_ANSWER,{sid:offer.sid,sdp:pc.localDescription.sdp,ts:Date.now()}); })
+    .catch(function(){ camPeerStop(); }); }
 function camSetupUrl(host){ var port=window.location.port||'';
   var hasPort=host.indexOf(':')>=0;
   return 'http://'+host+((hasPort||!port)?'':(':'+port))+window.location.pathname+'?camsetup=1'; }
@@ -3173,9 +3232,15 @@ function camWatchStore(){
   if(_camPoll) return;
   _camPoll=setInterval(function(){
     if(!prefs.cam||document.getElementById('camQr').hidden){ camQrHide(); return; }
+    // a phone offering its own camera wins: it is the same picture without a
+    // re-encode in the middle
+    api('GET',storeUrl(CAM_OFFER)).then(function(o){
+      if(!o||!o.sdp||!o.sid||o.sid===_camSid) return;
+      camAnswer(o);
+    }).catch(function(){});
     api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
       var url=(typeof v==='string'?v:(v&&v.value)||'').trim();
-      if(!url||url===prefs.camUrl) return;
+      if(!url||url===prefs.camUrl||camLive()) return;
       prefs.camUrl=url; _prefsBase.camUrl=url; lsSet('aurora_prefs',prefs);
       camQrHide(); camStart(); renderSpContent();
     }).catch(function(){});
@@ -3200,9 +3265,11 @@ function camMessage(key){ var m=document.getElementById('camMsg'); if(!m) return
   if(!key){ m.hidden=true; m.textContent=''; return; }
   m.textContent=t(key); m.hidden=false; }
 function camStop(){ var i=document.getElementById('camImg'); if(i&&i.getAttribute('src')) i.removeAttribute('src'); }
-function camPause(){ camStop(); camQrHide(); }
+function camPause(){ camStop(); camQrHide(); camPeerStop(); }
 function camStart(){
   var i=document.getElementById('camImg'); if(!i) return;
+  if(camLive()) return;
+  var i2=document.getElementById('camImg'); i2.hidden=false;
   var url=(prefs.camUrl||'').trim();
   if(!url){ camStop(); camQrShow(); return; }
   camQrHide(); camMessage('camConnecting');
@@ -3215,7 +3282,8 @@ function applyCam(){
   if(!card||!pane) return;
   var on=!!prefs.cam;
   card.classList.toggle('cam',on); document.body.classList.toggle('cam-on',on); pane.hidden=!on;
-  if(on&&!_asleep) camStart(); else { camStop(); camQrHide(); camMessage(null); }
+  if(on&&!_asleep){ camStart(); if(!camLive()) camWatchStore(); }
+  else { camStop(); camQrHide(); camPeerStop(); camMessage(null); }
   buildCarousel(); }
 function setCamOn(on){ prefs.cam=!!on; savePrefs(); applyCam(); renderSpContent(); }
 function setCamUrl(v){ prefs.camUrl=(v||'').trim(); clearTimeout(setCamUrl._t);
@@ -7940,6 +8008,58 @@ function csSave(){
   st.textContent='\u2026';
   storePut(PREF_PREFIX+'camUrl',url).then(function(){ el.value=url; st.textContent=t('camSetupSaved'); })
     .catch(function(){ st.textContent=t('camSetupFailed'); }); }
+// ── This phone's camera, offered to the machine ─────────────────────
+var _csPc=null, _csStream=null, _csSid=null, _csPoll=null, _csFacing='environment';
+function csSay(msg){ document.getElementById('csLiveStatus').textContent=msg; }
+function csLiveStop(){
+  if(_csPoll){ clearInterval(_csPoll); _csPoll=null; }
+  if(_csPc){ try{ _csPc.close(); }catch(_){} _csPc=null; }
+  if(_csStream){ _csStream.getTracks().forEach(function(t){ t.stop(); }); _csStream=null; }
+  _csSid=null;
+  var v=document.getElementById('csPreview'); v.srcObject=null; v.hidden=true;
+  document.getElementById('csFlipBtn').hidden=true;
+  document.getElementById('csLiveBtn').textContent=t('csLiveStart');
+  storePut(CAM_OFFER,{}).catch(function(){}); }
+function csLiveToggle(){ if(_csPc||_csStream){ csLiveStop(); csSay(t('csLiveStopped')); return; } csLiveStart(); }
+function csFlip(){ _csFacing=(_csFacing==='environment'?'user':'environment'); csLiveStart(); }
+function csLiveStart(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ csSay(t('csNoSecure')); return; }
+  if(_csPc){ try{ _csPc.close(); }catch(_){} _csPc=null; }
+  if(_csPoll){ clearInterval(_csPoll); _csPoll=null; }
+  if(_csStream){ _csStream.getTracks().forEach(function(t){ t.stop(); }); _csStream=null; }
+  csSay(t('csAsking'));
+  navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:_csFacing},
+    width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}})
+  .then(function(stream){
+    _csStream=stream;
+    var v=document.getElementById('csPreview'); v.srcObject=stream; v.hidden=false;
+    document.getElementById('csFlipBtn').hidden=false;
+    document.getElementById('csLiveBtn').textContent=t('csLiveStop');
+    var pc=new RTCPeerConnection({iceServers:[]}); _csPc=pc;
+    stream.getTracks().forEach(function(tr){ pc.addTrack(tr,stream); });
+    pc.onconnectionstatechange=function(){
+      if(pc!==_csPc) return;
+      if(pc.connectionState==='connected') csSay(t('csLiveOn'));
+      else if(pc.connectionState==='failed') csSay(t('csLiveFailed')); };
+    _csSid='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+    csSay(t('csOffering'));
+    return pc.createOffer().then(function(o){ return pc.setLocalDescription(o); })
+      .then(function(){ return camIceSettled(pc); })
+      .then(function(){ return storePut(CAM_OFFER,{sid:_csSid,sdp:pc.localDescription.sdp,ts:Date.now()}); })
+      .then(function(){ csWaitAnswer(pc); });
+  }).catch(function(e){
+    csSay((e&&e.name==='NotAllowedError')?t('csDenied'):t('csNoCamera')); }); }
+function csWaitAnswer(pc){
+  if(_csPoll) clearInterval(_csPoll);
+  csSay(t('csWaiting'));
+  _csPoll=setInterval(function(){
+    if(pc!==_csPc){ clearInterval(_csPoll); _csPoll=null; return; }
+    if(pc.remoteDescription){ clearInterval(_csPoll); _csPoll=null; return; }
+    api('GET',storeUrl(CAM_ANSWER)).then(function(a){
+      if(!a||!a.sdp||a.sid!==_csSid||pc.remoteDescription) return;
+      pc.setRemoteDescription({type:'answer',sdp:a.sdp}).catch(function(){});
+    }).catch(function(){});
+  },1200); }
 function bootCamSetup(){
   loadPrefs();
   document.querySelector('.stage-wrap').style.display='none';
