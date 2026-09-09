@@ -2048,7 +2048,11 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   function drawGuide(){
     if(!guide) return;
     ctx.save(); ctx.lineWidth=2; ctx.lineJoin='round';
-    [['p',PMAX,SERIES.pressure],['f',FMAX,SERIES.flow]].forEach(function(d){
+    var series=[['p',PMAX,SERIES.pressure],['f',FMAX,SERIES.flow]];
+    // temperature first, so it sits behind pressure and flow the way the live
+    // lines do; the monitor keeps its temperatures in a chart of their own
+    if(hasTempAxis&&guide.hasTemp) series.unshift(['temp',TMAX,SERIES.basket]);
+    series.forEach(function(d){
       ctx.beginPath();
       guide.pts.forEach(function(pt,i){ var x=pxT(pt.t), y=py(pt[d[0]],d[1]);
         if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
@@ -2126,9 +2130,9 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   } else {
     // target temperature (dashed) on the right (°C) axis
     // group/mix temperature on the right (°C) axis, drawn under the pressure/flow lines
+    drawGuide();
     goal(chart.targetGroup,SERIES.basketGoal,TMAX); goal(chart.targetMix,SERIES.mixGoal,TMAX);
     line(chart.groupTemp,SERIES.basket,TMAX,null); line(chart.mixTemp,SERIES.mix,TMAX,null);
-    drawGuide();
     goal(chart.targetPressure,SERIES.pressureGoal,PMAX); goal(chart.targetFlow,SERIES.flowGoal,FMAX);
     line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)'); line(chart.flow,SERIES.flow,FMAX,null); line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
   }
@@ -3070,6 +3074,7 @@ function guideKey(){
   if(prefs.guide==='profile') return 'p:'+(curProfileObj&&curProfileObj.id||'');
   if(prefs.guide==='shot') return 's:'+(prefs.guideShot||'');
   return null; }
+function guideHasTemp(pts){ for(var i=0;i<pts.length;i++){ if(pts[i].temp>0) return true; } return false; }
 function guideFromShot(s){
   var m=(s&&s.measurements)||[]; if(m.length<2) return null;
   function tOf(pt){ return Date.parse((pt.machine||{}).timestamp)||0; }
@@ -3078,7 +3083,7 @@ function guideFromShot(s){
     pts.push({ t:(tOf(pt)-t0)/1000, p:o.pressure||0, f:o.flow||0,
                temp:(o.groupTemperature!=null?o.groupTemperature:0) }); });
   var total=pts.length?pts[pts.length-1].t:0;
-  return total>0?{pts:pts,total:total}:null; }
+  return total>0?{pts:pts,total:total,hasTemp:guideHasTemp(pts)}:null; }
 function currentGuide(){
   var key=guideKey();
   if(!key){ _guide=null; _guideKey=null; return null; }
@@ -3086,7 +3091,8 @@ function currentGuide(){
   _guideKey=key; _guide=null;
   if(prefs.guide==='profile'){
     var pr=curProfileObj&&curProfileObj.profile;
-    if(pr){ var sim=simulateProfile(pr); if(sim.pts.length>1&&sim.total>0) _guide=sim; }
+    if(pr){ var sim=simulateProfile(pr);
+      if(sim.pts.length>1&&sim.total>0){ sim.hasTemp=guideHasTemp(sim.pts); _guide=sim; } }
     return _guide; }
   var full=slFull[prefs.guideShot];
   if(full){ _guide=guideFromShot(full); return _guide; }
@@ -7177,7 +7183,12 @@ function drawMonTempChart(){
   var padL=34,padR=8,padT=10,padB=16;
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
   var N=chart.pressure.length;
-  function px(i){ return X0+(N<2?0:(i/(N-1))*PW); }
+  // the extraction chart above spans the guideline when there is one, so this
+  // one has to as well or the two disagree about where a second is
+  var guide=(!isSteam&&!isWater&&!chartReviewing)?currentGuide():null;
+  var SPAN=guide?Math.max(guide.total,N/10):0;
+  function px(i){ if(guide) return X0+Math.min((i/10)/SPAN,1)*PW;
+    return X0+(N<2?0:(i/(N-1))*PW); }
   function py(v){ return Y0+PH-Math.min(Math.max((v-TMIN)/(TMAX-TMIN),0),1)*(PH-4)-2; }
   var night=document.body.classList.contains('night');
   var key=W+'x'+H+'|'+chart.mode+'|'+(night?'n':'d');
@@ -7198,6 +7209,10 @@ function drawMonTempChart(){
     ctx.save(); if(dash) ctx.setLineDash(dash);
     ctx.beginPath(); for(var i=0;i<d.length;i++){ var x=px(i),y=py(d[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
     ctx.strokeStyle=c; ctx.lineWidth=dash?1.5:2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); ctx.restore(); }
+  if(guide&&guide.hasTemp){ ctx.save(); ctx.globalAlpha=.22; ctx.lineWidth=2; ctx.lineJoin='round';
+    ctx.beginPath(); guide.pts.forEach(function(pt,i){ var x=X0+Math.min(pt.t/SPAN,1)*PW, y=py(pt.temp);
+      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.strokeStyle=SERIES.basket; ctx.stroke(); ctx.globalAlpha=1; ctx.restore(); }
   if(isSteam) tline(chart.steamTemp,SERIES.steam);
   else if(isWater) tline(chart.waterTemp,SERIES.water);
   else { tline(chart.targetGroup,SERIES.basketGoal,GOAL_DASH); tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
