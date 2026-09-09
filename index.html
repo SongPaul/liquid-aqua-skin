@@ -46,7 +46,7 @@ body.night .ep-group-head{background:linear-gradient(135deg,#14111f,#1a1526);col
 body.night .ep-group-head.fav{background:linear-gradient(135deg,#241a12,#26141a);color:var(--amber)}
 body.night .bg-tabs{background:var(--sheet)}
 /* pill / button surfaces */
-body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .dose-take,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
+body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ep-aibtn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ms-btn:hover{background:rgba(139,92,246,.28)}
 body.night .bg-tab2.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
@@ -214,10 +214,6 @@ header>*{position:relative;z-index:1}
 .tare-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;min-height:44px;padding:8px 16px;border-radius:100px;border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
 .tare-btn:hover:not(:disabled){background:var(--accent);color:#fff;transform:translateY(-2px)}
 .tare-btn:disabled{opacity:.35;cursor:not-allowed}
-.dose-take{display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;min-height:40px;padding:6px 12px;border-radius:100px;border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:700;text-transform:none;cursor:pointer;transition:all .2s;-webkit-appearance:none}
-.dose-take:hover:not(:disabled){background:var(--accent);color:#fff}
-.dose-take:disabled{opacity:.35;cursor:not-allowed}
-.dose-take[hidden]{display:none}
 .timer-big{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
 .timer-big.run{color:var(--hot)}
 
@@ -336,8 +332,9 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .dose-adj{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
 .dose-num{font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
 .dose-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px;min-height:26px;display:flex;align-items:center;justify-content:center;gap:8px}
-.dose-row.has-take .dose-lbl{min-height:40px}
-.dose-num.tap,.rv.tap{cursor:pointer;border-radius:9px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:2px 3px;transition:background .15s,transform .1s}
+.dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:10px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:2px 6px;border:1px solid var(--edge);background:var(--field);transition:background .15s,border-color .15s,transform .1s}
+.du{font-size:13px;font-weight:700;color:var(--ink-mute)}
+.dose-ico{font-size:12px;line-height:1;opacity:.75}
 .dose-num.tap:hover,.rv.tap:hover{background:var(--glass-hi)}
 .dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
 .ms-btn.sm{width:36px;height:36px;font-size:16px;border-radius:11px}
@@ -981,14 +978,13 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <div class="dose-row">
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
-              <div class="dose-num tap" id="doseIn" onclick="openKeypad('doseIn')">18.0</div>
+              <div class="dose-num tap" id="doseIn" onclick="doseTap()"><span class="dose-ico" id="doseIco" hidden>⚖</span><span id="doseInVal">18.0</span><span class="du">g</span></div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
-            <div class="dose-lbl"><span data-i18n="doseG">Dose g</span>
-              <button class="dose-take" id="btnToDose" onclick="doseFromScale()" hidden>⚖ <span data-i18n="fromScale">From scale</span></button></div>
+            <div class="dose-lbl" data-i18n="doseG">Dose</div>
           </div>
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
-              <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')">36.0</div>
+              <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')"><span id="doseOutVal">36.0</span><span class="du">g</span></div>
               <button class="ms-btn" onclick="adjust('doseOut',0.5)">+</button></div>
             <div class="dose-lbl" data-i18n="yieldG">Yield g</div>
           </div>
@@ -1362,10 +1358,10 @@ var I18N={
     start:'Start', stop:'Stop', steam:'Steam', flush:'Flush', water:'Water', sleep:'Sleep', connect:'Connect',
     custom:'Custom', liveAdjust:'Live', tempShort:'°C', secShort:'sec', mlShort:'ml', flowShort:'ml/s',
     machine:'Machine', scale:'Scale', group:'Group', mix:'Mix', tank:'Tank',
-    fromScale:'From scale', doseFromScaleOk:'Dose taken from the scale',
+    doseFromScaleOk:'Dose taken from the scale',
     doseNoScale:'The scale has not sent a reading',
     liveWeight:'Live Weight', tare:'Tare', timer:'Timer', pressure:'Pressure', flow:'Flow',
-    profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose g', yieldG:'Yield g', ratio:'Ratio',
+    profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight', target:'Target',
     lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
@@ -1457,10 +1453,10 @@ var I18N={
     start:'추출', stop:'정지', steam:'스팀', flush:'플러시', water:'물', sleep:'절전', connect:'연결',
     custom:'커스텀', liveAdjust:'실시간 조정', tempShort:'°C', secShort:'초', mlShort:'ml', flowShort:'ml/s',
     machine:'머신', scale:'저울', group:'그룹', mix:'믹스', tank:'물탱크',
-    fromScale:'저울값', doseFromScaleOk:'저울값을 도징으로 넣었습니다',
+    doseFromScaleOk:'저울값을 도징으로 넣었습니다',
     doseNoScale:'저울이 값을 보내지 않습니다',
     liveWeight:'실시간 무게', tare:'영점', timer:'타이머', pressure:'압력', flow:'유량',
-    profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징 g', yieldG:'추출량 g', ratio:'비율',
+    profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'무게', target:'목표',
     lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
@@ -2239,9 +2235,11 @@ function apiErrorText(e){ if(e&&e.name==='AbortError') return t('mbTimeout')+' (
 
 // ── Actions ─────────────────────────────────────────────────────────
 function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
-function syncDoseTake(){ var b=document.getElementById('btnToDose'); if(!b) return;
-  b.hidden=!state.scaleConnected;
-  var row=b.closest('.dose-row'); if(row) row.classList.toggle('has-take',!b.hidden); }
+// A tap on the dose takes the scale when there is one reading to take, and
+// opens the keypad when there is not, so a dose can always be typed.
+function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
+function syncDoseTake(){ var i=document.getElementById('doseIco'); if(i) i.hidden=!scaleHasReading(); }
+function doseTap(){ if(scaleHasReading()) doseFromScale(); else openKeypad('doseIn'); }
 function doseFromScale(){ var w=state.scaleWeight;
   if(!state.scaleConnected||w===null){ toast(t('doseNoScale'),'err'); return; }
   settings.doseIn=parseFloat(w.toFixed(1)); syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
@@ -2448,7 +2446,7 @@ function adjustRatio(delta){ var r=settings.doseIn>0?(settings.doseOut/settings.
   settings.doseOut=parseFloat((settings.doseIn*r).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); syncRecipe(); pushRecipe(); }
 function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){ api('PUT','/api/v1/workflow',{context:{targetDoseWeight:settings.doseIn,targetYield:settings.doseOut}}).catch(function(){}); },600); }
 function syncRecipe(){
-  document.getElementById('doseIn').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOut').textContent=settings.doseOut.toFixed(1);
+  document.getElementById('doseInVal').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOutVal').textContent=settings.doseOut.toFixed(1);
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
   document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
   var md=document.getElementById('monDose');
