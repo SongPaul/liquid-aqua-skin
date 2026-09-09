@@ -264,6 +264,7 @@ body.night .gauge-name.gz4{color:#fb7185}
 .chart-legend{display:flex;gap:12px}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ink-soft)}
 .legend-dot{width:9px;height:9px;border-radius:3px}
+.legend-dash{width:14px;height:3px;border-radius:2px}
 .chart-canvas-wrap{flex:1;min-height:0;position:relative}
 canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 
@@ -1386,6 +1387,9 @@ var I18N={
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
+    pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
+    tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
+    basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     lockedBrewing:'The profile cannot be changed while a shot is running.',
     brewingNow:'Brewing — this profile is locked',
     searchProfiles:'Search profiles…', searchBeans:'Search beans…', searchGrinders:'Search grinders…', searchShots:'Search shots…', noMatches:'Nothing matches', kindEspresso:'Espresso', kindBrew:'Brew · tea', kindOther:'Clean · manual', kindAll:'All',
@@ -1468,6 +1472,9 @@ var I18N={
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
+    pressureGoal:'압력 목표', flowGoal:'유량 목표',
+    tempBasket:'바스켓 온도', tempMix:'믹스 온도',
+    basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
     brewingNow:'추출 중 — 프로파일 잠김',
     searchProfiles:'프로파일 검색…', searchBeans:'원두 검색…', searchGrinders:'그라인더 검색…', searchShots:'샷 검색…', noMatches:'일치하는 항목 없음', kindEspresso:'에스프레소', kindBrew:'브루·티', kindOther:'청소·수동', kindAll:'전체',
@@ -1532,9 +1539,21 @@ var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='htt
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
   connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
-  flushRunning:false, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0 };
+  flushRunning:false, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
-var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[], groupTemp:[], mixTemp:[], targetTemp:[], mode:'espresso', max:600 };
+var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[],
+  groupTemp:[], mixTemp:[], targetGroup:[], targetMix:[], targetFlow:[], targetPressure:[],
+  mode:'espresso', max:600 };
+// The shot chart people read elsewhere uses one convention: a solid line for
+// what the machine did, the same hue darker and dashed for what it was asked
+// to do. Matching it means a graph from this skin reads the same as any other.
+var SERIES={ pressure:'#1fbfa8', pressureGoal:'#0e7c6b',
+             flow:'#38a8de',     flowGoal:'#1d5b87',
+             weight:'#9a7b0a',
+             basket:'#f08a3c',   basketGoal:'#e87ba0',
+             mix:'#d6402b',      mixGoal:'#9c4a9c',
+             steam:'#f472b6',    water:'#0ea5e9' };
+var GOAL_DASH=[5,4];
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
 var beans=[], grinders=[], context={};
 
@@ -1608,7 +1627,7 @@ function parkSockets(on){
       if(_wsOpen[name]) _wsOpen[name](); } }); }
 function initWebSockets(){
   openWs('machine','/ws/v1/machine/snapshot',function(s){
-    state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.targetGroupTemp=(s.targetGroupTemperature!=null?s.targetGroupTemperature:state.targetGroupTemp); state.targetMixTemp=(s.targetMixTemperature!=null?s.targetMixTemperature:state.targetMixTemp); state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame);
+    state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.targetGroupTemp=(s.targetGroupTemperature!=null?s.targetGroupTemperature:state.targetGroupTemp); state.targetMixTemp=(s.targetMixTemperature!=null?s.targetMixTemperature:state.targetMixTemp); state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame); state.targetFlow=(s.targetFlow!=null?s.targetFlow:state.targetFlow); state.targetPressure=(s.targetPressure!=null?s.targetPressure:state.targetPressure);
     var ms=s.state||{state:'idle',substate:'idle'}; var prev=state.machine.state; state.machine=ms; onMachineState(ms,prev); updateMachineUI(); });
   openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); updateConnUI(state.connected?'on':'off'); return; }
     if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); if(chart.weight.length>chart.max) chart.weight.shift(); } } });
@@ -1694,7 +1713,7 @@ function onMachineState(ms,prev){
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
   var flushing=(ms.state==='flush');
-  function resetChart(mode){ chart.mode=mode; chartReviewing=false; _chartLegendMode=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[]; }
+  function resetChart(mode){ chart.mode=mode; chartReviewing=false; _chartLegendMode=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[]; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
   // espresso state ends (after pouringDone returns to idle).
@@ -1718,8 +1737,8 @@ function onMachineState(ms,prev){
   syncAuxPanel();
   monitorOnState(ms.state,prev||'');
 
-  if(extracting){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetTemp.push(state.targetMixTemp||state.targetGroupTemp||0);
-    if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); if(chart.targetTemp.length>chart.max)chart.targetTemp.shift(); drawChart(); }
+  if(extracting){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetGroup.push(state.targetGroupTemp||0); chart.targetMix.push(state.targetMixTemp||0); chart.targetFlow.push(state.targetFlow||0); chart.targetPressure.push(state.targetPressure||0);
+    if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); ['targetGroup','targetMix','targetFlow','targetPressure'].forEach(function(k){ if(chart[k].length>chart.max) chart[k].shift(); }); drawChart(); }
   else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
     if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
   else if(watering||flushing){ chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
@@ -1850,17 +1869,30 @@ function tempColor(t){ t=t||0;
 var _dispColor=null;
 // Hot enough to look hot. Two degrees of hysteresis so sitting exactly on the
 // boundary does not switch them on and off.
-var TANK_BUBBLE_ON=85, TANK_BUBBLE_OFF=83;
-var _bubblesOn=false;
-// cx, r, seconds to rise, delay -- spread across the bar and out of step with
-// each other so the rise never looks like a row.
-var TANK_BUBBLES=[[70,10,4.2,0],[190,7,5.3,1.4],[330,13,3.8,0.6],[470,8,4.7,2.2],
-                  [600,11,5.6,1.0],[730,7,4.1,2.7],[880,12,4.9,0.3],[1010,9,4.4,1.8],
-                  [1150,8,5.0,0.9],[1230,6,4.6,2.4]];
-function setTankBubbles(on){
+var TANK_BUBBLE_ON=85, TANK_BUBBLE_OFF=83, TANK_BUBBLE_FULL=98;
+var _bubblesOn=false, _bubbleLevel=-1;
+// The hotter it is the more of them there are and the faster they go. Levels
+// are two degrees wide: the reading wobbles, and rebuilding on every one of
+// those would restart the rise each time.
+function bubbleLevel(t){
+  if(t<TANK_BUBBLE_OFF) return -1;
+  var span=Math.floor((TANK_BUBBLE_FULL-TANK_BUBBLE_ON)/2);   // 85..98 -> 0..6
+  return Math.max(0,Math.min(span,Math.floor((t-TANK_BUBBLE_ON)/2))); }
+// cx spread across the bar, out of step with each other so the rise never looks
+// like a row.
+var TANK_BUBBLE_X=[70,190,330,470,600,730,880,1010,1150,1230];
+var TANK_BUBBLE_DELAY=[0,1.4,0.6,2.2,1.0,2.7,0.3,1.8,0.9,2.4];
+function bubbleSeeds(level){
+  var n=4+level;                                    // 4 at 85, 10 by 97
+  var dur=5.8-level*0.5;                            // 5.8 s down to 2.8 s
+  var out=[];
+  for(var i=0;i<n;i++){
+    out.push([TANK_BUBBLE_X[i],4+(i%3),(dur+(i%4)*0.35).toFixed(2),TANK_BUBBLE_DELAY[i]]); }
+  return out; }
+function setTankBubbles(on,level){
   var fill=document.getElementById('waterFill'); if(!fill) return;
-  if(on===_bubblesOn && !!fill.querySelector('.bubbles')===on) return;
-  _bubblesOn=on;
+  if(on===_bubblesOn && level===_bubbleLevel && !!fill.querySelector('.bubbles')===on) return;
+  _bubblesOn=on; _bubbleLevel=on?level:-1;
   var had=fill.querySelector('.bubbles');
   if(had) had.parentNode.removeChild(had);
   if(!on) return;
@@ -1868,7 +1900,7 @@ function setTankBubbles(on){
   svg.setAttribute('class','bubbles');
   svg.setAttribute('viewBox','0 0 1280 100');
   svg.setAttribute('preserveAspectRatio','none');
-  svg.innerHTML=TANK_BUBBLES.map(function(b){
+  svg.innerHTML=bubbleSeeds(level).map(function(b){
     var cx=b[0], r=b[1], dur=b[2]+'s', beg=b[3]+'s';
     return '<circle cx="'+cx+'" cy="110" r="'+r+'" fill="rgba(255,255,255,.85)">'
       +'<animate attributeName="cy" values="110;-12" dur="'+dur+'" begin="'+beg+'" repeatCount="indefinite"/>'
@@ -1887,7 +1919,8 @@ function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.wate
   fill.style.background='linear-gradient(180deg,rgba('+c[0]+','+c[1]+','+c[2]+',.30),rgba('+c[0]+','+c[1]+','+c[2]+',.48))';
   var wp=document.querySelector('.temps-bar .wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
   var wp2=document.querySelector('.temps-bar .wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
-  setTankBubbles(t >= (_bubblesOn?TANK_BUBBLE_OFF:TANK_BUBBLE_ON));
+  var want=(t >= (_bubblesOn?TANK_BUBBLE_OFF:TANK_BUBBLE_ON));
+  setTankBubbles(want, want?bubbleLevel(t):-1);
 }
 function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   // Out of water is the machine's own needsWater state and nothing else. The
@@ -1956,16 +1989,21 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     var legEl=document.getElementById(_monOpen?'monChartLegend':'chartLegend');
     if(titleEl) titleEl.textContent=isSteam?t('steamGraph'):(isFlush?t('flushGraph'):(isWater?t('hotWaterGraph'):(chartReviewing?(t('lastShotGraph')+' ↩'):t('extractionGraph'))));
     function li(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+label+'</span>'; }
+    // a goal is drawn dashed, so it is shown dashed
+    function lg(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+label+'</span>'; }
     if(legEl) legEl.innerHTML=isSteam
-      ? (hasTempAxis?li('#f472b6',t('steam')+' '+'°'):'')+li('var(--steam)',t('flow'))+li('var(--accent)',t('pressure'))
+      ? (hasTempAxis?li(SERIES.steam,t('steam')+' °'):'')+li(SERIES.flow,t('flow'))+li(SERIES.pressure,t('pressure'))
       : isWater
-      ? (hasTempAxis?li('#0ea5e9',t('water')+' °'):'')+li('var(--steam)',t('flow'))+li('var(--accent)',t('pressure'))
-      : li('var(--accent)',t('pressure'))+li('var(--steam)',t('flow'))+li('var(--green)',t('weight'))
-        +(hasTempAxis?li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target')):'');
+      ? (hasTempAxis?li(SERIES.water,t('water')+' °'):'')+li(SERIES.flow,t('flow'))+li(SERIES.pressure,t('pressure'))
+      : li(SERIES.pressure,t('pressure'))+lg(SERIES.pressureGoal,t('pressureGoal'))
+        +li(SERIES.flow,t('flow'))+lg(SERIES.flowGoal,t('flowGoal'))
+        +li(SERIES.weight,t('weight'))
+        +(hasTempAxis?li(SERIES.basket,t('tempBasket'))+li(SERIES.mix,t('tempMix')):'');
     var tLeg=document.getElementById('monTempLegend');
-    if(tLeg) tLeg.innerHTML=isSteam?li('#f472b6',t('steam')+' °')
-      :isWater?li('#0ea5e9',t('water')+' °')
-      :li('#f97316',t('group'))+li('#60a5fa',t('mix'))+li('#94a3b8',t('target')); }
+    if(tLeg) tLeg.innerHTML=isSteam?li(SERIES.steam,t('steam')+' °')
+      :isWater?li(SERIES.water,t('water')+' °')
+      :li(SERIES.basket,t('tempBasket'))+lg(SERIES.basketGoal,t('basketGoal'))
+       +li(SERIES.mix,t('tempMix'))+lg(SERIES.mixGoal,t('mixGoal')); }
   var padL=34, padR=hasTempAxis?34:8, padT=18, padB=22; // steam/water add a right gutter for the temp axis
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
   var PMAX=12;
@@ -2022,23 +2060,34 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   ctx.fillStyle='#6b6890'; ctx.font='600 11px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
   for(var j=0;j<=4;j++){ var xx=X0+(j/4)*PW; ctx.fillText(((j/4)*totalSec).toFixed(0)+'s', xx, Y0+PH+5); }
 
+  // Solid: what the machine did. Dashed and darker: what it was asked for.
+  function goal(d,c,mx){ if(!d||d.length<2) return;
+    // a profile that controls flow leaves the pressure goal at zero the whole
+    // way, and a flat line along the axis is noise, not information
+    var any=false; for(var g=0;g<d.length;g++){ if(d[g]>0){ any=true; break; } }
+    if(!any) return;
+    ctx.save(); ctx.setLineDash(GOAL_DASH); ctx.beginPath();
+    for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx)); else ctx.lineTo(px(i),py(d[i],mx)); }
+    ctx.strokeStyle=c; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
   function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx));else ctx.lineTo(px(i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   if(isSteam){
-    if(hasTempAxis) line(chart.steamTemp,'#f472b6',TMAX,'rgba(244,114,182,.15)'); // steam temp (right axis scale)
-    line(chart.flow,'#38bdf8',FMAX,null);                          // steam flow (small-range scale)
-    line(chart.pressure,'#6366f1',PMAX,null);                      // steam pressure
+    if(hasTempAxis) line(chart.steamTemp,SERIES.steam,TMAX,'rgba(244,114,182,.15)'); // steam temp (right axis scale)
+    line(chart.flow,SERIES.flow,FMAX,null);                        // steam flow (small-range scale)
+    line(chart.pressure,SERIES.pressure,PMAX,null);                // steam pressure
   } else if(isWater){
-    if(hasTempAxis) line(chart.waterTemp,'#0ea5e9',TMAX,'rgba(14,165,233,.15)');  // water temp (right axis scale)
-    line(chart.flow,'#38bdf8',FMAX,null);                          // water flow
-    line(chart.pressure,'#6366f1',PMAX,null);                      // water pressure
+    if(hasTempAxis) line(chart.waterTemp,SERIES.water,TMAX,'rgba(14,165,233,.15)');  // water temp (right axis scale)
+    line(chart.flow,SERIES.flow,FMAX,null);                        // water flow
+    line(chart.pressure,SERIES.pressure,PMAX,null);                // water pressure
   } else if(!hasTempAxis){
-    line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',FMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
+    goal(chart.targetPressure,SERIES.pressureGoal,PMAX); goal(chart.targetFlow,SERIES.flowGoal,FMAX);
+    line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)'); line(chart.flow,SERIES.flow,FMAX,null); line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
   } else {
     // target temperature (dashed) on the right (°C) axis
-    if(chart.targetTemp.length>1){ ctx.save(); ctx.setLineDash([4,4]); ctx.beginPath(); for(var ti2=0;ti2<chart.targetTemp.length;ti2++){ var xt=px(ti2),yt=py(chart.targetTemp[ti2],TMAX); if(ti2===0)ctx.moveTo(xt,yt);else ctx.lineTo(xt,yt); } ctx.strokeStyle='rgba(148,163,184,.85)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore(); }
     // group/mix temperature on the right (°C) axis, drawn under the pressure/flow lines
-    line(chart.groupTemp,'#f97316',TMAX,null); line(chart.mixTemp,'#60a5fa',TMAX,null);
-    line(chart.pressure,'#6366f1',PMAX,'rgba(99,102,241,.15)'); line(chart.flow,'#38bdf8',FMAX,null); line(chart.weight,'#10b981',settings.doseOut*1.2,null);
+    goal(chart.targetGroup,SERIES.basketGoal,TMAX); goal(chart.targetMix,SERIES.mixGoal,TMAX);
+    line(chart.groupTemp,SERIES.basket,TMAX,null); line(chart.mixTemp,SERIES.mix,TMAX,null);
+    goal(chart.targetPressure,SERIES.pressureGoal,PMAX); goal(chart.targetFlow,SERIES.flowGoal,FMAX);
+    line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)'); line(chart.flow,SERIES.flow,FMAX,null); line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
   }
 
   // live readouts at the leading edge
@@ -2072,7 +2121,7 @@ function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } els
 var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
 // Nothing may be left running behind the sleep screen, and bubbles are only
 // worth having when someone is looking.
-function dropTankBubbles(){ _bubblesOn=false;
+function dropTankBubbles(){ _bubblesOn=false; _bubbleLevel=-1;
   var fill=document.getElementById('waterFill'); if(!fill) return;
   var b=fill.querySelector('.bubbles'); if(b) b.parentNode.removeChild(b); }
 function pauseSvgAnimations(on){
@@ -6749,11 +6798,13 @@ function viewLastShotGraph(){ if(!lastShotSummary){ toast('No shots recorded yet
   api('GET','/api/v1/shots/'+lastShotSummary.id).then(function(s){ if(!s){ toast('Shot not found','err'); return; }
     var m=s.measurements||[]; if(m.length<2){ toast('No measurement data for this shot','err'); return; }
     chart.mode='espresso'; chartReviewing=true;
-    chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[];
+    chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
+    chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];
     m.forEach(function(pt,i){ var mac=pt.machine||{}; var sc=pt.scale||{};
       chart.pressure.push(mac.pressure||0); chart.flow.push(mac.flow||0);
       chart.frame.push(mac.profileFrame||0); chart.groupTemp.push(mac.groupTemperature||0); chart.mixTemp.push(mac.mixTemperature||0);
-      chart.targetTemp.push(mac.targetMixTemperature||mac.targetGroupTemperature||0);
+      chart.targetGroup.push(mac.targetGroupTemperature||0); chart.targetMix.push(mac.targetMixTemperature||0);
+      chart.targetFlow.push(mac.targetFlow||0); chart.targetPressure.push(mac.targetPressure||0);
       if(sc.weight!=null) chart.weight.push(sc.weight); });
     _chartLegendMode=null; drawChart();
     var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot');
@@ -6761,7 +6812,8 @@ function viewLastShotGraph(){ if(!lastShotSummary){ toast('No shots recorded yet
   }).catch(function(){ toast('Failed to load shot','err'); }); }
 // Leave last-shot review and return the graph to live extraction data.
 function exitReview(){ if(!chartReviewing) return; chartReviewing=false; chart.mode='espresso';
-  chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetTemp=[];
+  chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
+  chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];
   _chartLegendMode=null; drawChart(); }
 // Resolve the workflow's current grinder entity (for step size / preset positions).
 function currentGrinder(){ if(!context.grinderId) return null; return grinders.find(function(x){ return x.id===context.grinderId; })||null; }
@@ -6980,12 +7032,14 @@ function drawMonTempChart(){
   ctx.clearRect(0,0,W,H);
   if(_tempBg) ctx.drawImage(_tempBg,0,0,W,H);
   function tline(d,c,dash){ if(!d||d.length<2) return;
+    if(dash){ var any=false; for(var g=0;g<d.length;g++){ if(d[g]>0){ any=true; break; } } if(!any) return; }
     ctx.save(); if(dash) ctx.setLineDash(dash);
     ctx.beginPath(); for(var i=0;i<d.length;i++){ var x=px(i),y=py(d[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
     ctx.strokeStyle=c; ctx.lineWidth=dash?1.5:2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); ctx.restore(); }
-  if(isSteam) tline(chart.steamTemp,'#f472b6');
-  else if(isWater) tline(chart.waterTemp,'#0ea5e9');
-  else { tline(chart.targetTemp,'rgba(148,163,184,.85)',[4,4]); tline(chart.groupTemp,'#f97316'); tline(chart.mixTemp,'#60a5fa'); }
+  if(isSteam) tline(chart.steamTemp,SERIES.steam);
+  else if(isWater) tline(chart.waterTemp,SERIES.water);
+  else { tline(chart.targetGroup,SERIES.basketGoal,GOAL_DASH); tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
+         tline(chart.groupTemp,SERIES.basket); tline(chart.mixTemp,SERIES.mix); }
 }
 function shotSeconds(s){ var m=s.measurements||[]; if(m.length<2) return 0;
   var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
@@ -7359,7 +7413,8 @@ function closeMonitor(){
   drawChart(); }
 function clearChartSeries(){
   chart.pressure=[]; chart.flow=[]; chart.weight=[]; chart.frame=[];
-  chart.steamTemp=[]; chart.waterTemp=[]; chart.groupTemp=[]; chart.mixTemp=[]; chart.targetTemp=[]; }
+  chart.steamTemp=[]; chart.waterTemp=[]; chart.groupTemp=[]; chart.mixTemp=[];
+  chart.targetGroup=[]; chart.targetMix=[]; chart.targetFlow=[]; chart.targetPressure=[]; }
 function toggleMonitor(){ if(_monOpen) closeMonitor(); else openMonitor(false); }
 // Closing the monitor only puts the screen away. Stopping is a separate act, and
 // it belongs here: the monitor is what covers the screen while an action runs.
