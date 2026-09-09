@@ -306,6 +306,14 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cam-card[hidden]{display:none}
 .cam-card .cam-pane{margin:0}
 body.cam-on .bean-info{flex:0 0 auto}
+/* while a camera is on, the picture's card is the one that grows, and the
+   others give it what they can spare without losing a usable size */
+body.cam-on .lastshot-card{flex:none}
+body.cam-on .carousel-card{padding:8px 12px 6px}
+body.cam-on .right .recipe{padding:4px 12px 6px}
+body.cam-on .lastshot-card{padding:4px 12px 6px}
+body.cam-on .bean-info{padding:4px 12px}
+body.cam-on .ls-stat{padding:4px 4px}
 /* streaming: the albums stand down so the picture's card has the room, and
    the strip carries on marking what is loaded and what is being browsed */
 .carousel-card.cam .carousel{display:none}
@@ -421,9 +429,9 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .last-shot{flex-shrink:0}
-.ls-head{display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ls-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 .ls-acts{display:flex;align-items:center;flex-shrink:0}
-.ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
+.ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;text-transform:none;letter-spacing:0}
 .ls-profile:empty{display:none}
 .ls-profile .grp{font-weight:600;color:var(--ink-mute)}
 .ls-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -1103,11 +1111,11 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <div class="lastshot-card glass">
       <div class="last-shot" id="lastShot">
         <div class="ls-head">
+          <div class="ls-profile" id="lsProfile"></div>
           <span class="ls-acts">
             <button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button>
             <button class="cur-browse" onclick="openShotLog()"><span data-i18n="shotLog">Shot Log</span> ▤</button>
           </span></div>
-        <div class="ls-profile" id="lsProfile"></div>
         <div class="ls-stats" id="lsStats"><div class="ls-empty" data-i18n="noShots">No shots recorded yet</div></div>
       </div>
     </div>
@@ -3344,13 +3352,26 @@ function camApplyView(){
     el.style.position='absolute'; el.style.left='50%'; el.style.top='50%';
     el.style.width=w+'px'; el.style.height=h+'px';
     el.style.objectFit=(prefs.camFit==='cover'?'cover':'contain');
-    el.style.transform=t; }); }
+    el.style.transform=t; });
+  camFitCard(); }
 var _camRO=null;
 function camWatchSize(){
   if(_camRO||typeof ResizeObserver==='undefined') return;
   var pane=document.getElementById('camPane'); if(!pane) return;
   _camRO=new ResizeObserver(function(){ camApplyView(); });
   _camRO.observe(pane); }
+// The pane grows into whatever the column can spare, but never past the shape
+// of the picture itself -- a 16:9 stream stops at 16:9 instead of sitting in a
+// taller box with bars above and below it.
+function camFitCard(){
+  var pane=document.getElementById('camPane'); if(!pane||pane.hidden) return;
+  var v=document.getElementById('camVideo'), i=document.getElementById('camImg');
+  var live=v&&!v.hidden&&v.videoWidth;
+  var w=live?v.videoWidth:(i?i.naturalWidth:0), h=live?v.videoHeight:(i?i.naturalHeight:0);
+  if(!w||!h){ pane.style.maxHeight=''; return; }
+  var rot=prefs.camRotate|0; if(rot===90||rot===270){ var sw=w; w=h; h=sw; }
+  var width=pane.getBoundingClientRect().width||0; if(!width) return;
+  pane.style.maxHeight=Math.round(width*h/w)+'px'; }
 function setCamRotate(v){ prefs.camRotate=parseInt(v,10)||0; savePrefs(); camApplyView(); }
 function setCamFit(on){ prefs.camFit=on?'cover':'contain'; savePrefs(); camApplyView(); }
 function setCamZoom(v,live){ prefs.camZoom=Math.max(1,Math.min(3,parseFloat(v)||1));
