@@ -294,6 +294,11 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .car-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--glass-line);background:rgba(255,255,255,.9);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:transform .15s;-webkit-appearance:none}
 .car-nav:hover{background:#fff;transform:translateY(-50%) scale(1.1)} .car-nav:active{transform:translateY(-50%) scale(.92)}
 .car-nav.prev{left:0} .car-nav.next{right:0}
+/* mid shot the strip has nothing to offer, so it gets out of the way and
+   gives its room to the one album that matters */
+body.brewing .car-nav,body.brewing #navCards,body.brewing .cur-fav{display:none}
+body.brewing .carousel{height:210px}
+body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .cc-name{font-size:16px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:center;line-height:1.15;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-meta{font-size:11px;color:var(--ink-mute);font-weight:500;text-align:center;margin-top:2px}
 .cc-hint{margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
@@ -1380,6 +1385,8 @@ var I18N={
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
+    lockedBrewing:'The profile cannot be changed while a shot is running.',
+    brewingNow:'Brewing — this profile is locked',
     searchProfiles:'Search profiles…', searchBeans:'Search beans…', searchGrinders:'Search grinders…', searchShots:'Search shots…', noMatches:'Nothing matches', kindEspresso:'Espresso', kindBrew:'Brew · tea', kindOther:'Clean · manual', kindAll:'All',
     favorites:'Favorites', recentlyUsed:'Recently used', noMatches:'Nothing matches',
     tagPressure:'pressure', tagFlow:'flow', tagMixed:'mixed', tagLowPressure:'low pressure',
@@ -1460,6 +1467,8 @@ var I18N={
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
+    lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
+    brewingNow:'추출 중 — 프로파일 잠김',
     searchProfiles:'프로파일 검색…', searchBeans:'원두 검색…', searchGrinders:'그라인더 검색…', searchShots:'샷 검색…', noMatches:'일치하는 항목 없음', kindEspresso:'에스프레소', kindBrew:'브루·티', kindOther:'청소·수동', kindAll:'전체',
     favorites:'즐겨찾기', recentlyUsed:'최근 사용', noMatches:'일치하는 프로파일 없음',
     tagPressure:'압력제어', tagFlow:'유량제어', tagMixed:'혼합', tagLowPressure:'저압',
@@ -1675,6 +1684,7 @@ function onMachineState(ms,prev){
   if(ms.state!==prev){ updateWaterUI();
     if(ms.state==='needsWater') toast(t('needsWaterToast'),'err'); }
   var inEspresso=(ms.state==='espresso');
+  if(ms.state!==prev) syncCarouselLock();
   // Only the preinfusion + pouring substates are real extraction. preparingForShot
   // (heating/prep) and pouringDone (ending) are still the espresso state but must
   // not feed the graph -- there the profile display drives things, not live data.
@@ -2926,6 +2936,7 @@ function carListProfiles(){ // favorites, with whatever is actually loaded pinne
   return favs;
 }
 function buildCarousel(){
+  document.body.classList.toggle('brewing',brewLocked());
   carItems=carListProfiles();
   var stage=document.getElementById('carouselStage'); stage.innerHTML='';
   if(!carItems.length){ stage.innerHTML='<div class="car-empty">No profiles</div>'; return; }
@@ -2955,8 +2966,32 @@ function buildCarousel(){
   carIndex=curIdx>=0?curIdx:0;
   renderCarousel();
 }
+// While locked the strip is centred on what is actually being pulled, whatever
+// was last browsed to.
+function lockedIndex(){
+  if(!curProfileObj) return carIndex;
+  var found=-1;
+  carItems.forEach(function(x,k){ if(x.id===curProfileObj.id) found=k; });
+  return found>=0?found:carIndex; }
+function syncCarouselLock(){
+  var on=brewLocked();
+  document.body.classList.toggle('brewing',on);
+  if(on){ var i=lockedIndex(); if(i!==carIndex) carIndex=i; }
+  if(carItems.length) renderCarousel(); }
 function renderCarousel(){
+  var lock=brewLocked();
   carItems.forEach(function(p,i){ var off=i-carIndex; var abs=Math.abs(off);
+    if(lock){
+      // one card, filling the space the neighbours and the strip gave up
+      var here=(i===carIndex);
+      p._el.style.transform=here?'translateX(0) scale(1.72)':'translateX(0) scale(1)';
+      p._el.style.opacity=here?1:0;
+      p._el.style.zIndex=here?100:0;
+      p._el.style.pointerEvents='none';
+      p._el.classList.toggle('center',here); p._el.classList.toggle('side',!here);
+      p._el.classList.toggle('loaded',here);
+      if(p._navEl){ p._navEl.classList.toggle('active',here); p._navEl.classList.toggle('loaded',here); }
+      return; }
     if(off===0){
       p._el.style.transform='translateX(0) scale(1.12)';
     } else {
@@ -2982,17 +3017,18 @@ function renderCarousel(){
     document.getElementById('curMeta').textContent=(stc.group?stc.group+' · ':'')+(pr.author||'')+' · '+((pr.steps&&pr.steps.length)||0)+' steps';
     var isCur=curProfileObj&&curProfileObj.id===cur.id;
     var hint=document.getElementById('ccHint');
-    if(isCur){ hint.textContent=t('currentlyLoaded'); }
+    if(lock){ hint.textContent=t('brewingNow'); }
+    else if(isCur){ hint.textContent=t('currentlyLoaded'); }
     else if(curProfileObj){ hint.textContent=t('loadedIs').replace('{n}',splitTitle(profTitle(curProfileObj)).name); }
     else { hint.textContent=t('tapCenter'); }
-    hint.className='cc-hint'+(isCur?' current':'');
+    hint.className='cc-hint'+(lock?' brewing':isCur?' current':'');
     var fb=document.getElementById('ccFav');
     if(fb){ var on=!!favIds[cur.id]; fb.textContent=on?'★':'☆'; fb.className='cur-fav'+(on?' on':'');
       fb.title=t('toggleFav')+' — '+splitTitle(profTitle(cur)).name; }
   }
 }
-function carouselMove(dir){ if(!carItems.length) return; carIndex=(carIndex+dir+carItems.length)%carItems.length; renderCarousel(); }
-function loadCentered(){ var p=carItems[carIndex]; if(p) selectProfile(p); }
+function carouselMove(dir){ if(!carItems.length||brewLocked()) return; carIndex=(carIndex+dir+carItems.length)%carItems.length; renderCarousel(); }
+function loadCentered(){ if(brewLocked()) return; var p=carItems[carIndex]; if(p) selectProfile(p); }
 function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
   // A profile the library does not know cannot be keyed by id, so favouriting it
   // would store a key that never matches anything again.
@@ -3002,7 +3038,12 @@ function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
   else { favIds[p.id]=true; toast(t('favAdded').replace('{n}',name),'ok'); }
   saveFavs(); buildCarousel(); }
 
-function selectProfile(p){ var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
+// A profile write reaches the machine, and the machine is running frames from
+// the profile it holds. Changing it now changes the shot in progress.
+function brewLocked(){ return state.machine.state==='espresso'; }
+function selectProfile(p){
+  if(brewLocked()){ toast(t('lockedBrewing'),'err'); return; }
+  var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
   api('PUT','/api/v1/workflow',{profile:p.profile}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast('Profile error','err'); }); }
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
