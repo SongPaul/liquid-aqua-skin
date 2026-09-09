@@ -1398,8 +1398,10 @@ var I18N={
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
     guideLine:'Extraction guideline', guideLineDesc:'Draw what the shot should look like under the live graph.',
     guideOff:'Off', guideProfile:'The loaded profile', guideShot:'A previous shot',
-    guideWhich:'Which shot', guideWhichDesc:'The recorded shot to lay under the graph.',
-    guidePick:'Choose a shot\u2026', guideNoShots:'No recorded shots yet',
+    guideWhich:'Which shot', guideWhichDesc:'Chosen in the shot log, on the shot itself.',
+    guideNoPick:'None chosen', guideGoPick:'Open the shot log',
+    guideUse:'Use as guideline', guideUsing:'Guideline \u2713',
+    guideSet:'Guideline set from this shot', guideCleared:'Guideline off',
     kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpGrind:'Grind Setting', kpSet:'Set',
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
@@ -1488,8 +1490,10 @@ var I18N={
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
     guideLine:'추출 가이드라인', guideLineDesc:'실시간 그래프 아래에 목표 모양을 깔아둡니다.',
     guideOff:'끔', guideProfile:'프로파일 기본', guideShot:'이전 추출로그',
-    guideWhich:'사용할 샷', guideWhichDesc:'그래프 아래에 깔 기록된 샷.',
-    guidePick:'샷 선택…', guideNoShots:'기록된 샷이 없습니다',
+    guideWhich:'사용할 샷', guideWhichDesc:'추출로그에서 해당 샷을 열어 지정합니다.',
+    guideNoPick:'지정 안 됨', guideGoPick:'추출로그 열기',
+    guideUse:'가이드로 사용', guideUsing:'가이드 사용 중 ✓',
+    guideSet:'이 샷을 가이드로 지정했습니다', guideCleared:'가이드라인 끔',
     kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpGrind:'분쇄도', kpSet:'설정',
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
@@ -2713,13 +2717,11 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('guideLine','guideLineDesc','<select class="set-select" onchange="setGuideMode(this.value)">'
       +opt('off',t('guideOff'),gm)+opt('profile',t('guideProfile'),gm)+opt('shot',t('guideShot'),gm)+'</select>');
     if(gm==='shot'){
-      // the recent shots, named the way the shot log names them
-      var opts=(shotList||[]).slice(0,20).map(function(x){
-        var st=splitTitle(((x.workflow&&x.workflow.profile)||{}).title||'Shot');
-        return opt(x.id, st.name+' \u00b7 '+fmtShotDate(x), prefs.guideShot); }).join('');
-      h+=row('guideWhich','guideWhichDesc', opts
-        ? '<select class="set-select" onchange="setGuideShot(this.value)">'+opt('',t('guidePick'),prefs.guideShot)+opts+'</select>'
-        : '<span class="set-desc">'+escapeHtml(t('guideNoShots'))+'</span>'); }
+      // the shot itself is chosen in the shot log, where its curves are
+      var gn=guideShotName();
+      h+=row('guideWhich','guideWhichDesc','<div class="opt-ctrl"><span class="opt-val">'
+        +escapeHtml(gn||t('guideNoPick'))+'</span>'
+        +'<button class="m-btn" onclick="closeSettingsPage();openShotLog()">'+escapeHtml(t('guideGoPick'))+'</button></div>'); }
     h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
     var sb=prefs.sleepBrightness||20;
     h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
@@ -3103,6 +3105,18 @@ function currentGuide(){
   return null; }
 function setGuideMode(v){ prefs.guide=v; savePrefs(); _guideKey=null; renderSpContent(); drawChart(); }
 function setGuideShot(v){ prefs.guideShot=v; savePrefs(); _guideKey=null; drawChart(); }
+function guideShotName(){ var id=prefs.guideShot; if(!id) return null;
+  var s=slFull[id]||(shotList||[]).filter(function(x){ return x.id===id; })[0];
+  if(!s) return null;
+  return splitTitle(((s.workflow&&s.workflow.profile)||{}).title||'Shot').name+' \u00b7 '+fmtShotDate(s); }
+function isGuideShot(id){ return prefs.guide==='shot'&&prefs.guideShot===id; }
+function useShotAsGuide(id){
+  if(isGuideShot(id)){ prefs.guide='off'; }
+  else { prefs.guide='shot'; prefs.guideShot=id; }
+  savePrefs(); _guideKey=null; _guide=null;
+  toast(t(prefs.guide==='shot'?'guideSet':'guideCleared'),'ok');
+  if(slSel&&slSel.id===id) renderShotDetail(slSel);
+  drawChart(); }
 
 // ── Profiles ────────────────────────────────────────────────────────
 // Titles use "{group}/{name}" — split into group (optional) + display name.
@@ -7085,7 +7099,8 @@ function shotContextLine(s){ var c=(s.workflow&&s.workflow.context)||{}; var bit
   var grind=[c.grinderModel,c.grinderSetting!=null&&c.grinderSetting!==''?('@ '+c.grinderSetting):''].filter(Boolean).join(' ');
   if(grind) bits.push(grind);
   return bits.length?'<div class="sl-dt-sub">'+escapeHtml(bits.join('  ·  '))+'</div>':''; }
-function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s&&s.measurements&&s.measurements.length) slFull[s.id]=s; var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
+function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s&&s.measurements&&s.measurements.length) slFull[s.id]=s;
+  var have=!!(s&&s.measurements&&s.measurements.length); var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
   var ctx=(s.workflow&&s.workflow.context)||{}; var stats=shotStats(s);
   var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:(ctx.targetDoseWeight!=null?ctx.targetDoseWeight:null));
   var yld=(an.actualYield!=null?an.actualYield:(stats.weight!=null?Math.round(stats.weight*10)/10:(ctx.targetYield!=null?ctx.targetYield:null)));
@@ -7125,10 +7140,12 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
     +'<div class="field"><label>Enjoyment</label><div class="stars" id="slStars">'
       +[1,2,3,4,5].map(function(n){ return '<span class="star'+(an.enjoyment>=n?' on':'')+'" onclick="setSlStar('+n+')">★</span>'; }).join('')+'</div></div>'
     +'<div class="field"><label>Notes</label><textarea id="slNotes" rows="2">'+escapeHtml(an.espressoNotes||'')+'</textarea></div>'
-    +'<div class="ep-save-bar"><button class="m-btn primary" onclick="saveShotLog(\''+s.id+'\')">Save Log</button></div>';
+    +'<div class="ep-save-bar">'
+      +(have?'<button class="m-btn'+(isGuideShot(s.id)?' tinted':'')+'" onclick="useShotAsGuide(\''+s.id+'\')">'
+        +escapeHtml(t(isGuideShot(s.id)?'guideUsing':'guideUse'))+'</button>':'')
+      +'<button class="m-btn primary" onclick="saveShotLog(\''+s.id+'\')">Save Log</button></div>';
   slSel=s; slSel._stars=an.enjoyment||0;
   var cv=document.getElementById('slCurve'), tv=document.getElementById('slTempCurve');
-  var have=!!(s.measurements&&s.measurements.length);
   if(cv){ if(have) drawShotMeasurements(cv,s,false); else drawSimCurve(cv,pr); }
   // nothing recorded means nothing to plot temperatures from
   if(tv){ tv.parentElement.style.display=have?'':'none'; if(have) drawShotMeasurements(tv,s,true); }
