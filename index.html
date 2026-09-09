@@ -1363,7 +1363,7 @@ var I18N={
     custom:'Custom', liveAdjust:'Live', tempShort:'°C', secShort:'sec', mlShort:'ml', flowShort:'ml/s',
     machine:'Machine', scale:'Scale', group:'Group', mix:'Mix', tank:'Tank',
     fromScale:'From scale', doseFromScaleOk:'Dose taken from the scale',
-    doseOutOfRange:'The scale reads outside the dose range', doseNoScale:'No scale reading',
+    doseNoScale:'The scale has not sent a reading',
     liveWeight:'Live Weight', tare:'Tare', timer:'Timer', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose g', yieldG:'Yield g', ratio:'Ratio',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
@@ -1458,7 +1458,7 @@ var I18N={
     custom:'커스텀', liveAdjust:'실시간 조정', tempShort:'°C', secShort:'초', mlShort:'ml', flowShort:'ml/s',
     machine:'머신', scale:'저울', group:'그룹', mix:'믹스', tank:'물탱크',
     fromScale:'저울값', doseFromScaleOk:'저울값을 도징으로 넣었습니다',
-    doseOutOfRange:'저울값이 도징 범위를 벗어납니다', doseNoScale:'저울 값이 없습니다',
+    doseNoScale:'저울이 값을 보내지 않습니다',
     liveWeight:'실시간 무게', tare:'영점', timer:'타이머', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징 g', yieldG:'추출량 g', ratio:'비율',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
@@ -2240,13 +2240,11 @@ function apiErrorText(e){ if(e&&e.name==='AbortError') return t('mbTimeout')+' (
 // ── Actions ─────────────────────────────────────────────────────────
 function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
 function syncDoseTake(){ var b=document.getElementById('btnToDose'); if(!b) return;
-  b.hidden=!state.scaleConnected; b.disabled=(state.scaleWeight===null);
+  b.hidden=!state.scaleConnected;
   var row=b.closest('.dose-row'); if(row) row.classList.toggle('has-take',!b.hidden); }
 function doseFromScale(){ var w=state.scaleWeight;
   if(!state.scaleConnected||w===null){ toast(t('doseNoScale'),'err'); return; }
-  var c=KP_CFG.doseIn, v=parseFloat(w.toFixed(1));
-  if(v<c.min||v>c.max){ toast(t('doseOutOfRange'),'err'); return; }
-  settings.doseIn=v; syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
+  settings.doseIn=parseFloat(w.toFixed(1)); syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
 function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared','ok');}).catch(function(e){toast(e.message,'err');}); }
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
