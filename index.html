@@ -109,6 +109,7 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .water-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:var(--r-md)}
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill svg{position:absolute;top:-16px;left:0;width:100%;height:18px;display:block}
+.water-fill svg.bubbles{position:absolute;top:auto;bottom:0;left:0;width:100%;height:100%;pointer-events:none}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
@@ -1847,6 +1848,33 @@ function tempColor(t){ t=t||0;
 // Displayed tank color, eased toward the target so it glides instead of snapping
 // when the boiler temperature spikes during extraction.
 var _dispColor=null;
+// Hot enough to look hot. Two degrees of hysteresis so sitting exactly on the
+// boundary does not switch them on and off.
+var TANK_BUBBLE_ON=85, TANK_BUBBLE_OFF=83;
+var _bubblesOn=false;
+// cx, r, seconds to rise, delay -- spread across the bar and out of step with
+// each other so the rise never looks like a row.
+var TANK_BUBBLES=[[70,10,4.2,0],[190,7,5.3,1.4],[330,13,3.8,0.6],[470,8,4.7,2.2],
+                  [600,11,5.6,1.0],[730,7,4.1,2.7],[880,12,4.9,0.3],[1010,9,4.4,1.8],
+                  [1150,8,5.0,0.9],[1230,6,4.6,2.4]];
+function setTankBubbles(on){
+  var fill=document.getElementById('waterFill'); if(!fill) return;
+  if(on===_bubblesOn && !!fill.querySelector('.bubbles')===on) return;
+  _bubblesOn=on;
+  var had=fill.querySelector('.bubbles');
+  if(had) had.parentNode.removeChild(had);
+  if(!on) return;
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','bubbles');
+  svg.setAttribute('viewBox','0 0 1280 100');
+  svg.setAttribute('preserveAspectRatio','none');
+  svg.innerHTML=TANK_BUBBLES.map(function(b){
+    var cx=b[0], r=b[1], dur=b[2]+'s', beg=b[3]+'s';
+    return '<circle cx="'+cx+'" cy="110" r="'+r+'" fill="rgba(255,255,255,.85)">'
+      +'<animate attributeName="cy" values="110;-12" dur="'+dur+'" begin="'+beg+'" repeatCount="indefinite"/>'
+      +'<animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.12;.72;1" dur="'+dur+'" begin="'+beg+'" repeatCount="indefinite"/>'
+      +'</circle>'; }).join('');
+  fill.appendChild(svg); }
 function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   var low=!prefs.refillKitFull&&(state.water.current<=state.water.refill||pct<15);
   // Mix (brew water) temperature is the meaningful reference during a shot; the
@@ -1859,6 +1887,7 @@ function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.wate
   fill.style.background='linear-gradient(180deg,rgba('+c[0]+','+c[1]+','+c[2]+',.30),rgba('+c[0]+','+c[1]+','+c[2]+',.48))';
   var wp=document.querySelector('.temps-bar .wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
   var wp2=document.querySelector('.temps-bar .wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
+  setTankBubbles(t >= (_bubblesOn?TANK_BUBBLE_OFF:TANK_BUBBLE_ON));
 }
 function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   // Out of water is the machine's own needsWater state and nothing else. The
@@ -2041,7 +2070,13 @@ function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared'
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
 var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
+// Nothing may be left running behind the sleep screen, and bubbles are only
+// worth having when someone is looking.
+function dropTankBubbles(){ _bubblesOn=false;
+  var fill=document.getElementById('waterFill'); if(!fill) return;
+  var b=fill.querySelector('.bubbles'); if(b) b.parentNode.removeChild(b); }
 function pauseSvgAnimations(on){
+  if(on) dropTankBubbles();
   var list=document.querySelectorAll('.app svg');
   for(var i=0;i<list.length;i++){ var sv=list[i];
     try{ if(on){ if(sv.pauseAnimations) sv.pauseAnimations(); } else if(sv.unpauseAnimations) sv.unpauseAnimations(); }catch(_){} } }
