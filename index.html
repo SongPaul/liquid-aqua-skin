@@ -202,9 +202,10 @@ header>*{position:relative;z-index:1}
 .live{padding:14px 20px;flex-shrink:0;display:grid;grid-template-columns:1fr 424px;grid-template-areas:'aux aux' 'main recipe';gap:12px 16px;align-items:stretch}
 .live>.aux-row{grid-area:aux}
 .live-main{grid-area:main}
-.live>.recipe{grid-area:recipe}
+.live>.gauges{grid-area:recipe}
 .live-main{min-width:0;display:flex;flex-direction:column}
-.live .recipe{min-width:0;padding:0 0 0 18px;border-left:1px solid var(--glass-line)}
+.live>.gauges{min-width:0;padding:0 0 0 18px;border-left:1px solid var(--glass-line);align-self:center}
+.right .recipe{padding:6px 16px 8px;flex:none}
 .live-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
 .live-label{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase;margin-bottom:4px}
 .weight-row{display:flex;align-items:center;gap:12px}
@@ -274,11 +275,11 @@ body.night .gauge-name.gz4{color:#fb7185}
 canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 
 /* ── Right column ────────────────────────────────────────────────── */
-.right{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:14px;min-height:0}
+.right{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:10px;min-height:0}
 
 /* Current profile hero */
 /* Profile album carousel (current + favorites merged) */
-.carousel-card{padding:12px 16px;flex-shrink:0;display:flex;flex-direction:column}
+.carousel-card{padding:10px 16px 8px;flex-shrink:0;display:flex;flex-direction:column}
 .cc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .cc-actions{display:flex;align-items:center;gap:2px}
 .cur-fav{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;color:var(--ink-mute);background:none;border:none;cursor:pointer;-webkit-appearance:none;border-radius:11px;transition:color .15s,background .15s}
@@ -286,7 +287,7 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cur-fav.on{color:var(--amber)}
 .cur-tag{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase}
 .cur-browse{min-height:44px;padding:0 8px;font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;-webkit-appearance:none}
-.cam-pane{position:relative;flex:1;min-height:120px;margin-bottom:10px;border-radius:14px;overflow:hidden;background:#0b0a14;border:1px solid var(--glass-line)}
+.cam-pane{position:relative;flex:1;min-height:150px;margin-bottom:10px;border-radius:14px;overflow:hidden;background:#0b0a14;border:1px solid var(--glass-line)}
 .cam-pane[hidden]{display:none}
 .cam-pane img,.cam-pane video{width:100%;height:100%;object-fit:contain;display:block;background:#0b0a14}
 .cam-pane{--cam-frame:1}
@@ -303,11 +304,17 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* streaming: the albums keep a strip, the picture takes the rest */
 .carousel-card.cam{flex:1 1 0;min-height:0}
 body.cam-on .bean-info{flex:0 0 auto}
-.carousel-card.cam .carousel{height:88px}
-.carousel-card.cam .carousel-stage{transform:scale(.56)}
-.carousel-card.cam .cc-meta,.carousel-card.cam .cc-hint,.carousel-card.cam .nav-cards{display:none}
-.carousel{position:relative;height:150px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
-.carousel-stage{position:relative;width:100%;height:100%}
+/* streaming: the albums stand down and the card strip takes over, which is
+   the one that marks what is loaded and what is being browsed */
+.carousel-card.cam .carousel{display:none}
+.carousel-card.cam .cc-meta,.carousel-card.cam .cc-hint{display:none}
+.carousel-card.cam .nav-cards{margin-top:8px;flex:none}
+.carousel-card.cam .cc-name{flex:none}
+/* the picture takes what the bean card can spare while it is on */
+body.cam-on .bean-info{min-height:56px}
+body.cam-on .bean-chips{display:none}
+.carousel{position:relative;height:96px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
+.carousel-stage{position:relative;width:100%;height:100%;transform:scale(.72)}
 .car-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--ink-mute);font-size:12px}
 .album{position:absolute;top:50%;left:50%;width:146px;height:118px;margin:-59px 0 0 -73px;border-radius:16px;cursor:pointer;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
 .album.side{opacity:.55}
@@ -335,7 +342,7 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .album.loaded{box-shadow:0 0 0 2px var(--green),0 6px 18px rgba(30,25,70,.14)}
 .album.loaded.center{box-shadow:0 0 0 3px var(--green),0 14px 32px rgba(80,70,160,.3)}
 /* card navigation strip: tap to load instantly */
-.nav-cards{display:flex;justify-content:safe center;gap:7px;margin-top:8px;overflow-x:auto;scroll-behavior:smooth;padding:2px 0 2px}
+.nav-cards{display:flex;justify-content:safe center;gap:7px;margin-top:6px;overflow-x:auto;scroll-behavior:smooth;padding:2px 0 2px}
 .nav-cards::-webkit-scrollbar{height:0}
 .nav-card{position:relative;flex-shrink:0;width:58px;height:44px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:11px;font-weight:800;color:#fff;line-height:1.1;overflow:hidden;transition:transform .15s,box-shadow .15s;border:2px solid transparent;background-color:#4f46e5}
 .nav-card:hover{transform:translateY(-2px)}
@@ -345,20 +352,21 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 
 /* Recipe / ratio */
 .recipe{flex-shrink:0}
+.right .recipe .recipe-title{margin-bottom:6px}
 .recipe-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .recipe-title .bean-link{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer}
-.dose-row{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start;gap:10px}
+.dose-row{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start;gap:8px}
 .dose-block{text-align:center;min-width:0}
 .dose-adj{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
-.dose-num{font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
-.dose-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px;min-height:26px;display:flex;align-items:center;justify-content:center;gap:8px}
+.dose-num{font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
+.dose-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:1px;min-height:18px;display:flex;align-items:center;justify-content:center;gap:8px}
 .dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:10px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:2px 6px;border:1px solid var(--edge);background:var(--field);transition:background .15s,border-color .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
 .dose-num.tap:hover,.rv.tap:hover{background:var(--glass-hi)}
 .dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
 .ms-btn.sm{width:36px;height:36px;font-size:16px;border-radius:11px}
-.rv{font-size:28px;font-weight:800;color:var(--accent2);flex:1;min-width:0}
+.rv{font-size:24px;font-weight:800;color:var(--accent2);flex:1;min-width:0}
 .rl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase}
 .mini-steppers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .mini-step{display:flex;align-items:center;justify-content:space-between;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:5px 7px}
@@ -369,8 +377,8 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .ms-btn:active{transform:scale(.92);background:rgba(99,102,241,.24)}
 .ms-val{min-width:36px;text-align:center;font-size:13px;font-weight:700}
 
-.bean-info{padding:10px 16px;flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
-.lastshot-card{padding:10px 16px;flex:none;min-height:0}
+.bean-info{padding:6px 16px;flex:1;min-height:88px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.lastshot-card{padding:6px 16px 8px;flex:none;min-height:0}
 .bean-info::-webkit-scrollbar{width:5px}
 .bean-info::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .bean-row{display:flex;align-items:center;gap:10px;flex:none}
@@ -393,7 +401,7 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .live-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);margin-top:2px}
 .live-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
 .live-kind{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:var(--ink)}
-.mid-row{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--glass-line)}
+.mid-row{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid var(--glass-line)}
 .grind-label{display:flex;align-items:center;justify-content:center;gap:5px;overflow:hidden;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);width:100%;min-height:26px;margin-top:2px;background:none;border:none;padding:0 8px;border-radius:9px;cursor:pointer;font-family:var(--font);transition:background .15s}
 .grind-label #grindModel{overflow:hidden;text-overflow:ellipsis}
 .grind-label:hover{background:var(--glass-hi)}
@@ -402,7 +410,7 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .grind-label #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .grind-val{min-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:20px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
-.recipe .grind-val{flex:1;min-width:0;font-size:28px}
+.recipe .grind-val{flex:1;min-width:0;font-size:24px}
 .grind-val:hover{background:var(--glass-hi)}
 .bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;flex:none}
 .bean-chips::-webkit-scrollbar{display:none}
@@ -415,7 +423,7 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
 .ls-profile:empty{display:none}
 .ls-profile .grp{font-weight:600;color:var(--ink-mute)}
-.ls-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ls-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .ls-stat{text-align:center;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:9px 4px}
 .ls-stat .v{font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
 .ls-stat .l{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
@@ -657,6 +665,10 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .mon-body{flex:1;display:grid;grid-template-columns:1fr 380px;gap:14px;min-height:0}
 .mon-chart-card{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;min-width:0}
 .mon-chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0}
+/* streaming: the picture on top, the graphs under it */
+.mon-cam-host{position:relative;flex:4;min-height:0;margin-bottom:10px;display:none}
+.mon-cam-host.on{display:block}
+.mon-cam-host .cam-pane{position:absolute;inset:0;flex:none;min-height:0;margin:0}
 .mon-chart-wrap{position:relative;flex:3;min-height:0}
 .mon-temp-wrap{position:relative;flex:1;min-height:0}
 .mon-chart-wrap canvas,.mon-temp-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -955,6 +967,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         </div>
         <div><div class="live-label" style="text-align:right" data-i18n="timer">Timer</div><div class="timer-big" id="timerBig">0:00</div></div>
       </div>
+
+      </div>
       <div class="gauges">
         <div class="gauge">
           <div class="gauge-arc">
@@ -991,41 +1005,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
           </div>
         </div>
       </div>
-      </div>
-      <div class="recipe">
-        <div class="recipe-title"><span data-i18n="recipe">Recipe</span><span class="rc-live" id="recipeLiveTag"></span></div>
-        <div id="recipeNormal">
-        <div class="dose-row">
-          <div class="dose-block">
-            <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
-              <div class="dose-num tap" id="doseIn" onclick="doseTap()"><span class="dose-ico" id="doseIco" hidden>⚖</span><span id="doseInVal">18.0</span><span class="du">g</span></div>
-              <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
-            <div class="dose-lbl" data-i18n="doseG">Dose</div>
-          </div>
-          <div class="dose-block">
-            <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
-              <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')"><span id="doseOutVal">36.0</span><span class="du">g</span></div>
-              <button class="ms-btn" onclick="adjust('doseOut',0.5)">+</button></div>
-            <div class="dose-lbl" data-i18n="yieldG">Yield g</div>
-          </div>
-        </div>
-        <div class="mid-row">
-          <div class="dose-block">
-            <div class="dose-adj"><button class="ms-btn" onclick="adjustRatio(-0.1)">−</button>
-              <div class="rv tap" onclick="openKeypad('ratio')">1:<span id="ratioTag">2.0</span></div>
-              <button class="ms-btn" onclick="adjustRatio(0.1)">+</button></div>
-            <div class="dose-lbl" data-i18n="ratio">Ratio</div>
-          </div>
-          <div class="dose-block" id="grindRow" style="display:none">
-            <div class="dose-adj"><button class="ms-btn" onclick="adjustGrind(-1)">−</button>
-              <span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span>
-              <button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
-            <button class="grind-label" id="grindModelBtn" onclick="openGrinderPage()"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></button>
-          </div>
-        </div>
-        </div>
-        <div id="recipeLive" style="display:none"></div>
-      </div>
+
     </div>
 
     <div class="chart-card glass">
@@ -1064,11 +1044,46 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <button class="car-nav next" onclick="carouselMove(1)">›</button>
       </div>
       <div class="cc-name" id="curName">—</div>
-      <div class="cc-meta" id="curMeta">—</div>
-      <div class="cc-hint" id="ccHint">Tap center album to load</div>
+      <div class="cc-meta" id="curMeta" hidden>—</div>
+      <div class="cc-hint" id="ccHint" hidden>Tap center album to load</div>
       <!-- card navigation: tap a card to load that profile instantly -->
       <div class="nav-cards" id="navCards"></div>
     </div>
+
+    <div class="recipe glass">
+        <div class="recipe-title"><span data-i18n="recipe">Recipe</span><span class="rc-live" id="recipeLiveTag"></span></div>
+        <div id="recipeNormal">
+        <div class="dose-row">
+          <div class="dose-block">
+            <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
+              <div class="dose-num tap" id="doseIn" onclick="doseTap()"><span class="dose-ico" id="doseIco" hidden>⚖</span><span id="doseInVal">18.0</span><span class="du">g</span></div>
+              <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
+            <div class="dose-lbl" data-i18n="doseG">Dose</div>
+          </div>
+          <div class="dose-block">
+            <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
+              <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')"><span id="doseOutVal">36.0</span><span class="du">g</span></div>
+              <button class="ms-btn" onclick="adjust('doseOut',0.5)">+</button></div>
+            <div class="dose-lbl" data-i18n="yieldG">Yield g</div>
+          </div>
+        </div>
+        <div class="mid-row">
+          <div class="dose-block">
+            <div class="dose-adj"><button class="ms-btn" onclick="adjustRatio(-0.1)">−</button>
+              <div class="rv tap" onclick="openKeypad('ratio')">1:<span id="ratioTag">2.0</span></div>
+              <button class="ms-btn" onclick="adjustRatio(0.1)">+</button></div>
+            <div class="dose-lbl" data-i18n="ratio">Ratio</div>
+          </div>
+          <div class="dose-block" id="grindRow" style="display:none">
+            <div class="dose-adj"><button class="ms-btn" onclick="adjustGrind(-1)">−</button>
+              <span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span>
+              <button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
+            <button class="grind-label" id="grindModelBtn" onclick="openGrinderPage()"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></button>
+          </div>
+        </div>
+        </div>
+        <div id="recipeLive" style="display:none"></div>
+      </div>
 
     <div class="bean-info glass">
       <div class="bean-row">
@@ -1108,6 +1123,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
   </div>
   <div class="mon-body">
     <div class="mon-chart-card">
+      <div class="mon-cam-host" id="monCamHost"></div>
       <div class="mon-chart-head"><span class="chart-title" id="monChartTitle">—</span>
         <div class="chart-legend" id="monChartLegend"></div></div>
       <div class="mon-chart-wrap"><canvas id="monChart"></canvas></div>
@@ -2154,6 +2170,8 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   // still and the live trace advances along it. Without one it spans whatever
   // has been recorded, as before.
   var guide=(isEsp&&!chartReviewing)?currentGuide():null;
+  // a profile guideline is re-timed against the steps the machine has run
+  if(guide&&prefs.guide==='profile') guide=retimeGuide(guide);
   var SPAN=guide?Math.max(guide.total,N/10):0;
   function px(i){ if(guide) return X0+Math.min((i/10)/SPAN,1)*PW;
     return X0+(N<2?0:(i/(N-1))*PW); }
@@ -3200,8 +3218,8 @@ setInterval(function(){ if(prefs.nightAuto) applyNight(); },60000);
 
 // ── Curve simulation ────────────────────────────────────────────────
 function simulateProfile(profile){ var steps=(profile&&profile.steps)||[]; var pts=[]; var t=0; var prevP=0,prevF=0,prevT=null;
-  steps.forEach(function(st){ var dur=Math.max(st.seconds||0,0.5); var isP=(st.pump==='pressure'); var tP=isP?(st.pressure||0):prevP; var tF=!isP?(st.flow||0):prevF; var smooth=(st.transition==='smooth'); var seg=Math.max(2,Math.round(dur*2)); var tempT=(st.temperature!=null?st.temperature:prevT); if(prevT===null) prevT=(tempT!=null?tempT:93);
-    for(var i=1;i<=seg;i++){ var f=i/seg; var p=isP?(prevP+(tP-prevP)*(smooth?f:1)):tP; var fl=!isP?(prevF+(tF-prevF)*(smooth?f:1)):tF; var showP=isP?p:Math.min(9,fl*1.6); var showF=!isP?fl:Math.max(0,8-p*0.4); var tp=prevT+((tempT!=null?tempT:prevT)-prevT)*f; pts.push({t:t+dur*f,p:showP,f:showF,temp:tp}); }
+  steps.forEach(function(st,si){ var dur=Math.max(st.seconds||0,0.5); var isP=(st.pump==='pressure'); var tP=isP?(st.pressure||0):prevP; var tF=!isP?(st.flow||0):prevF; var smooth=(st.transition==='smooth'); var seg=Math.max(2,Math.round(dur*2)); var tempT=(st.temperature!=null?st.temperature:prevT); if(prevT===null) prevT=(tempT!=null?tempT:93);
+    for(var i=1;i<=seg;i++){ var f=i/seg; var p=isP?(prevP+(tP-prevP)*(smooth?f:1)):tP; var fl=!isP?(prevF+(tF-prevF)*(smooth?f:1)):tF; var showP=isP?p:Math.min(9,fl*1.6); var showF=!isP?fl:Math.max(0,8-p*0.4); var tp=prevT+((tempT!=null?tempT:prevT)-prevT)*f; pts.push({t:t+dur*f,p:showP,f:showF,temp:tp,step:si}); }
     t+=dur; prevP=isP?tP:Math.min(9,tF*1.6); prevF=!isP?tF:Math.max(0,8-tP*0.4); prevT=(tempT!=null?tempT:prevT); });
   return {pts:pts,total:t}; }
 function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
@@ -3338,6 +3356,19 @@ function camMessage(key){ var m=document.getElementById('camMsg'); if(!m) return
   m.textContent=t(key); m.hidden=false; }
 function camStop(){ var i=document.getElementById('camImg'); if(i&&i.getAttribute('src')) i.removeAttribute('src'); }
 function camPause(){ camStop(); camQrHide(); camPeerStop(); }
+// The pane is one element wherever it is shown: moved, not copied, so a live
+// peer connection survives the trip and an address is not fetched twice.
+function camToMonitor(on){
+  var pane=document.getElementById('camPane'), host=document.getElementById('monCamHost');
+  if(!pane||!host) return;
+  var show=on&&!!prefs.cam;
+  host.classList.toggle('on',show);
+  if(show){ if(pane.parentElement!==host) host.appendChild(pane); }
+  else if(pane.parentElement===host){
+    var card=document.getElementById('carouselCard');
+    var before=card?card.querySelector('.carousel'):null;
+    if(card) card.insertBefore(pane,before); }
+  camApplyView(); }
 function camStart(){
   var i=document.getElementById('camImg'); if(!i) return;
   if(camLive()) return;
@@ -3370,6 +3401,33 @@ function guideKey(){
   if(prefs.guide==='profile') return 'p:'+(curProfileObj&&curProfileObj.id||'');
   if(prefs.guide==='shot') return 's:'+(prefs.guideShot||'');
   return null; }
+// How long the machine has spent in each step so far, and which one it is in.
+// The live chart takes a sample every 100ms, so counting samples is timing.
+function shotStepTimes(){
+  var f=chart.frame||[], spent=[], last=-1;
+  for(var i=0;i<f.length;i++){ var k=f[i]|0; spent[k]=(spent[k]||0)+0.1; last=k; }
+  return {spent:spent,current:last}; }
+// A profile's step times are what it asks for, not what it gets. Lay the guide
+// on what the machine actually did: finished steps take the time they took, the
+// step in progress is held open at least as long as it has run, and the ones
+// ahead keep the profile's timing.
+function retimeGuide(g){
+  if(!g||!g.pts.length||g.pts[0].step===undefined) return g;
+  var run=shotStepTimes(); if(run.current<0) return g;
+  var nomEnd=[],nomStart=[],i,prev=0;
+  g.pts.forEach(function(p){ nomEnd[p.step]=Math.max(nomEnd[p.step]||0,p.t); });
+  for(i=0;i<nomEnd.length;i++){ if(nomEnd[i]===undefined) nomEnd[i]=prev; nomStart[i]=prev; prev=nomEnd[i]; }
+  function realOf(st){ var nom=nomEnd[st]-nomStart[st], spent=run.spent[st]||0;
+    if(st<run.current) return spent;
+    if(st===run.current) return Math.max(spent,nom);
+    return nom; }
+  var realStart=[],acc=0;
+  for(i=0;i<nomEnd.length;i++){ realStart[i]=acc; acc+=realOf(i); }
+  var pts=g.pts.map(function(p){
+    var nom=nomEnd[p.step]-nomStart[p.step];
+    var f=nom>0?((p.t-nomStart[p.step])/nom):1;
+    return {t:realStart[p.step]+f*realOf(p.step),p:p.p,f:p.f,temp:p.temp,step:p.step}; });
+  return {pts:pts,total:pts[pts.length-1].t,hasTemp:g.hasTemp}; }
 function guideHasTemp(pts){ for(var i=0;i<pts.length;i++){ if(pts[i].temp>0) return true; } return false; }
 function guideFromShot(s){
   var m=(s&&s.measurements)||[]; if(m.length<2) return null;
@@ -3402,8 +3460,12 @@ function currentGuide(){
     if(sh&&sh.measurements){ slFull[sh.id]=sh; if(_guideKey==='s:'+prefs.guideShot){ _guide=guideFromShot(sh); drawChart(); } }
   }).catch(function(){});
   return null; }
-function setGuideMode(v){ prefs.guide=v; savePrefs(); _guideKey=null; renderSpContent(); drawChart(); }
-function setGuideShot(v){ prefs.guideShot=v; savePrefs(); _guideKey=null; drawChart(); }
+function setGuideMode(v){ prefs.guide=v; savePrefs(); _guideKey=null;
+  if(v==='shot'&&prefs.guideShot) loadGuideProfile(prefs.guideShot);
+  renderSpContent(); drawChart(); }
+function setGuideShot(v){ prefs.guideShot=v; savePrefs(); _guideKey=null;
+  if(v&&prefs.guide==='shot') loadGuideProfile(v);
+  drawChart(); }
 function guideShotName(){ var id=prefs.guideShot; if(!id) return null;
   var s=slFull[id]||(shotList||[]).filter(function(x){ return x.id===id; })[0];
   if(!s) return null;
@@ -3414,8 +3476,23 @@ function useShotAsGuide(id){
   else { prefs.guide='shot'; prefs.guideShot=id; }
   savePrefs(); _guideKey=null; _guide=null;
   toast(t(prefs.guide==='shot'?'guideSet':'guideCleared'),'ok');
+  if(prefs.guide==='shot') loadGuideProfile(id);
   if(slSel&&slSel.id===id) renderShotDetail(slSel);
   drawChart(); }
+// The guideline is a shape to chase; chasing it with another profile loaded is
+// chasing nothing, so the shot's own profile goes on the machine with it.
+function loadGuideProfile(id){
+  var shot=slFull[id]||(shotList||[]).filter(function(x){ return x.id===id; })[0];
+  var pr=shot&&shot.workflow&&shot.workflow.profile;
+  if(!pr||!pr.title) return;
+  if(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.title===pr.title) return;
+  if(brewLocked()) return;
+  var match=(allProfiles||[]).filter(function(p){ return p.profile&&p.profile.title===pr.title; })[0];
+  if(match){ selectProfile(match); return; }
+  curProfileObj={id:'guide',profile:pr,isDefault:false};
+  api('PUT','/api/v1/workflow',{profile:pr})
+    .then(function(){ toast('\u25b6 '+pr.title,'ok'); refreshCarouselMark(); })
+    .catch(function(){ toast('Profile error','err'); }); }
 
 // ── Profiles ────────────────────────────────────────────────────────
 // Titles use "{group}/{name}" — split into group (optional) + display name.
@@ -7997,6 +8074,7 @@ function openMonitor(auto){
   if(_monOpen) return;
   _monOpen=true;
   document.getElementById('monPage').classList.add('show');
+  camToMonitor(true);
   afterPageChange();
   // the two canvases are different sizes, so the cached backing-store dimensions
   // and the mode-keyed legend both have to be re-derived
@@ -8008,6 +8086,7 @@ function closeMonitor(){
   if(!_monOpen) return;
   _monOpen=false;
   document.getElementById('monPage').classList.remove('show');
+  camToMonitor(false);
   afterPageChange();
   // Closing after the action has finished puts the live graph back to live. Mid
   // action it keeps filling, because the main screen carries on showing it.
