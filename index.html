@@ -2101,40 +2101,9 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     // the labels apart, tether each back to its dot, and put them on a chip so
     // the line underneath stays readable.
     // the chip is TAG_H tall; stack them TAG_GAP apart so two never touch
-    var TAG_H=15, TAG_GAP=19;
     function tags(items){
-      var rows=[];
-      items.forEach(function(it){
-        if(it.v==null||isNaN(it.v)) return;
-        rows.push({v:it.v,c:it.c,y:py(it.v,it.mx)}); });
-      if(!rows.length) return;
-      rows.sort(function(a,b){ return a.y-b.y; });
-      // clear of its own line to begin with, then apart from each other
-      var LIFT=11;
-      rows.forEach(function(r,i){ var want=r.y-LIFT;
-        r.ly=(i?Math.max(want,rows[i-1].ly+TAG_GAP):want); });
-      var over=rows[rows.length-1].ly-(Y0+PH-TAG_H/2);
-      if(over>0){ for(var i=rows.length-1;i>=0;i--){
-        rows[i].ly-=over;
-        if(i && rows[i-1].ly>rows[i].ly-TAG_GAP) over=rows[i-1].ly-(rows[i].ly-TAG_GAP); else break; } }
-      if(rows[0].ly<Y0+TAG_H/2){ var up=Y0+TAG_H/2-rows[0].ly;
-        rows.forEach(function(r){ r.ly=Math.min(Y0+PH-TAG_H/2,r.ly+up); }); }
-      ctx.save();
-      ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
-      rows.forEach(function(r){
-        var txt=r.v.toFixed(1), w=ctx.measureText(txt).width;
-        // a thread back to the value it belongs to, when it had to move
-        if(Math.abs(r.ly-r.y)>1){ ctx.strokeStyle=r.c; ctx.globalAlpha=.45; ctx.lineWidth=1;
-          ctx.beginPath(); ctx.moveTo(lx-5,r.y); ctx.lineTo(lx-9,r.ly); ctx.stroke(); ctx.globalAlpha=1; }
-        ctx.fillStyle=r.c; ctx.beginPath(); ctx.arc(lx,r.y,3.5,0,Math.PI*2); ctx.fill();
-        var x1=lx-8, x0=x1-w-7;
-        // the chip masks the line behind the text, so it has to be the page's
-        // own ground rather than always white
-        ctx.fillStyle=document.body.classList.contains('night')?'rgba(12,10,24,.88)':'rgba(255,255,255,.88)';
-        if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(x0,r.ly-TAG_H/2,w+9,TAG_H,4); ctx.fill(); }
-        else ctx.fillRect(x0,r.ly-TAG_H/2,w+9,TAG_H);
-        ctx.fillStyle=r.c; ctx.fillText(txt,x1-2,r.ly); });
-      ctx.restore(); }
+      drawReadouts(ctx, items.map(function(it){
+        return (it.v==null||isNaN(it.v))?null:{v:it.v,c:it.c,y:py(it.v,it.mx)}; }), lx, Y0, Y0+PH); }
     if(isSteam){ tags([{v:hasTempAxis?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam},
                        {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow},
                        {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure}]); }
@@ -2147,6 +2116,43 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
                  {v:hasTempAxis?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix}]); }
   }
 }
+
+// Live readouts at the leading edge of a chart. Both charts use this: the
+// temperatures moved to their own chart in the monitor and the readouts stayed
+// behind on the other one, which is what this being in one place prevents.
+//
+// Four numbers on one edge run into each other and into the lines they belong
+// to. The dot stays on the true value, the label lifts clear of its own line,
+// labels that would land on each other are pushed apart, a thread ties a
+// displaced one back to its dot, and the number sits on a chip in the page's
+// own ground so the line underneath stays readable.
+var TAG_H=15, TAG_GAP=19, TAG_LIFT=11;
+function drawReadouts(ctx,rows,lx,top,bottom){
+  rows=(rows||[]).filter(Boolean);
+  if(!rows.length) return;
+  rows.sort(function(a,b){ return a.y-b.y; });
+  rows.forEach(function(r,i){ var want=r.y-TAG_LIFT;
+    r.ly=(i?Math.max(want,rows[i-1].ly+TAG_GAP):want); });
+  var over=rows[rows.length-1].ly-(bottom-TAG_H/2);
+  if(over>0){ for(var i=rows.length-1;i>=0;i--){
+    rows[i].ly-=over;
+    if(i && rows[i-1].ly>rows[i].ly-TAG_GAP) over=rows[i-1].ly-(rows[i].ly-TAG_GAP); else break; } }
+  if(rows[0].ly<top+TAG_H/2){ var up=top+TAG_H/2-rows[0].ly;
+    rows.forEach(function(r){ r.ly=Math.min(bottom-TAG_H/2,r.ly+up); }); }
+  ctx.save();
+  ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  var ground=document.body.classList.contains('night')?'rgba(12,10,24,.88)':'rgba(255,255,255,.88)';
+  rows.forEach(function(r){
+    var txt=r.v.toFixed(1), w=ctx.measureText(txt).width;
+    if(Math.abs(r.ly-r.y)>1){ ctx.strokeStyle=r.c; ctx.globalAlpha=.45; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(lx-5,r.y); ctx.lineTo(lx-9,r.ly); ctx.stroke(); ctx.globalAlpha=1; }
+    ctx.fillStyle=r.c; ctx.beginPath(); ctx.arc(lx,r.y,3.5,0,Math.PI*2); ctx.fill();
+    var x1=lx-8, x0=x1-w-7;
+    ctx.fillStyle=ground;
+    if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(x0,r.ly-TAG_H/2,w+9,TAG_H,4); ctx.fill(); }
+    else ctx.fillRect(x0,r.ly-TAG_H/2,w+9,TAG_H);
+    ctx.fillStyle=r.c; ctx.fillText(txt,x1-2,r.ly); });
+  ctx.restore(); }
 
 // ── REST ────────────────────────────────────────────────────────────
 function api(method,path,body,timeoutMs){ var o={method:method,headers:{}};
@@ -7087,6 +7093,15 @@ function drawMonTempChart(){
   else if(isWater) tline(chart.waterTemp,SERIES.water);
   else { tline(chart.targetGroup,SERIES.basketGoal,GOAL_DASH); tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
          tline(chart.groupTemp,SERIES.basket); tline(chart.mixTemp,SERIES.mix); }
+  // the same readouts the extraction chart carries, for the lines that live here
+  var running=state.shotRunning||state.steamRunning||state.waterRunning;
+  if(N>=1 && running){
+    var last=function(d){ return (d&&d.length)?d[d.length-1]:null; };
+    var rows=isSteam?[{v:last(chart.steamTemp),c:SERIES.steam}]
+      :isWater?[{v:last(chart.waterTemp),c:SERIES.water}]
+      :[{v:last(chart.groupTemp),c:SERIES.basket},{v:last(chart.mixTemp),c:SERIES.mix}];
+    drawReadouts(ctx, rows.map(function(r){
+      return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,y:py(r.v)}; }), px(N-1), Y0, Y0+PH); }
 }
 function shotSeconds(s){ var m=s.measurements||[]; if(m.length<2) return 0;
   var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
