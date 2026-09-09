@@ -8053,17 +8053,16 @@ function syncMonitorHead(){
   if(kind){ lbl.textContent=auxLabel(kind); rec.style.display='none';
     aux.style.display=''; aux.textContent=auxSummary(kind); }
   else { lbl.textContent=t('monRecipe'); rec.style.display=''; aux.style.display='none'; }
-  // The button is the way off this page, so it is always there. It stops the
-  // action when there is one to stop and the group head is not the one in
-  // charge; otherwise there is nothing to stop and it simply closes.
+  // Close is its own button in the head and is always there. This one only
+  // stops, so it is only here when there is something to stop and the group
+  // head is not the one in charge of stopping it.
   var stop=document.getElementById('monStop');
   if(stop){
     var canStop=!!MON_STATES[st]&&!state.ghc;
-    stop.className='mon-stop'+(canStop?'':' close');
-    stop.innerHTML=canStop?('\u23f9 <span>'+escapeHtml(t('stop'))+'</span>')
-                          :('\u2715 <span>'+escapeHtml(t('close'))+'</span>');
-    stop.onclick=canStop?monStop:closeMonitor;
-    stop.style.display=''; } }
+    stop.className='mon-stop';
+    stop.innerHTML='\u23f9 <span>'+escapeHtml(t('stop'))+'</span>';
+    stop.onclick=monStop;
+    stop.style.display=canStop?'':'none'; } }
 function syncMonitorLive(){
   var w=document.getElementById('monWeight'); if(!w) return;
   var u=document.getElementById('monWeightU');
