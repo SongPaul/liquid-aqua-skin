@@ -1396,6 +1396,10 @@ var I18N={
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
+    guideLine:'Extraction guideline', guideLineDesc:'Draw what the shot should look like under the live graph.',
+    guideOff:'Off', guideProfile:'The loaded profile', guideShot:'A previous shot',
+    guideWhich:'Which shot', guideWhichDesc:'The recorded shot to lay under the graph.',
+    guidePick:'Choose a shot\u2026', guideNoShots:'No recorded shots yet',
     kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpGrind:'Grind Setting', kpSet:'Set',
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
@@ -1482,6 +1486,10 @@ var I18N={
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
+    guideLine:'추출 가이드라인', guideLineDesc:'실시간 그래프 아래에 목표 모양을 깔아둡니다.',
+    guideOff:'끔', guideProfile:'프로파일 기본', guideShot:'이전 추출로그',
+    guideWhich:'사용할 샷', guideWhichDesc:'그래프 아래에 깔 기록된 샷.',
+    guidePick:'샷 선택…', guideNoShots:'기록된 샷이 없습니다',
     kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpGrind:'분쇄도', kpSet:'설정',
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
@@ -1730,7 +1738,7 @@ function onMachineState(ms,prev){
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
   var flushing=(ms.state==='flush');
-  function resetChart(mode){ chart.mode=mode; chartReviewing=false; _chartLegendMode=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[]; }
+  function resetChart(mode){ chart.mode=mode; chartReviewing=false; _chartLegendMode=null; _guideKey=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[]; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
   // espresso state ends (after pouringDone returns to idle).
@@ -2028,8 +2036,24 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   var TMAX=isSteam?165:100; // temperature axis max (°C): steam ~165, espresso/water ~100
   var N=chart.pressure.length;
   var steps=(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[];
-  function px(i){ return X0+(N<2?0:(i/(N-1))*PW); }
+  // With a guideline the axis spans the guide's own duration, so the guide holds
+  // still and the live trace advances along it. Without one it spans whatever
+  // has been recorded, as before.
+  var guide=(isEsp&&!chartReviewing)?currentGuide():null;
+  var SPAN=guide?Math.max(guide.total,N/10):0;
+  function px(i){ if(guide) return X0+Math.min((i/10)/SPAN,1)*PW;
+    return X0+(N<2?0:(i/(N-1))*PW); }
+  function pxT(t){ return X0+Math.min(t/SPAN,1)*PW; }
   function py(v,mx){ return Y0+PH-Math.min(v/mx,1)*(PH-6)-3; }
+  function drawGuide(){
+    if(!guide) return;
+    ctx.save(); ctx.lineWidth=2; ctx.lineJoin='round';
+    [['p',PMAX,SERIES.pressure],['f',FMAX,SERIES.flow]].forEach(function(d){
+      ctx.beginPath();
+      guide.pts.forEach(function(pt,i){ var x=pxT(pt.t), y=py(pt[d[0]],d[1]);
+        if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+      ctx.globalAlpha=.22; ctx.strokeStyle=d[2]; ctx.stroke(); });
+    ctx.globalAlpha=1; ctx.restore(); }
 
   // ── Static background layer (grid + axis labels): cached offscreen and only
   //    repainted when size/mode/theme change. This is the biggest per-frame saving. ──
@@ -2073,7 +2097,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   }
 
   // X labels (time seconds)
-  var totalSec=Math.max(1,N/10);
+  var totalSec=guide?Math.max(1,SPAN):Math.max(1,N/10);
   ctx.fillStyle='#6b6890'; ctx.font='600 11px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
   for(var j=0;j<=4;j++){ var xx=X0+(j/4)*PW; ctx.fillText(((j/4)*totalSec).toFixed(0)+'s', xx, Y0+PH+5); }
 
@@ -2096,6 +2120,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     line(chart.flow,SERIES.flow,FMAX,null);                        // water flow
     line(chart.pressure,SERIES.pressure,PMAX,null);                // water pressure
   } else if(!hasTempAxis){
+    drawGuide();
     goal(chart.targetPressure,SERIES.pressureGoal,PMAX); goal(chart.targetFlow,SERIES.flowGoal,FMAX);
     line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)'); line(chart.flow,SERIES.flow,FMAX,null); line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
   } else {
@@ -2103,6 +2128,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     // group/mix temperature on the right (°C) axis, drawn under the pressure/flow lines
     goal(chart.targetGroup,SERIES.basketGoal,TMAX); goal(chart.targetMix,SERIES.mixGoal,TMAX);
     line(chart.groupTemp,SERIES.basket,TMAX,null); line(chart.mixTemp,SERIES.mix,TMAX,null);
+    drawGuide();
     goal(chart.targetPressure,SERIES.pressureGoal,PMAX); goal(chart.targetFlow,SERIES.flowGoal,FMAX);
     line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)'); line(chart.flow,SERIES.flow,FMAX,null); line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
   }
@@ -2475,6 +2501,8 @@ function applyPrefsObject(p){
   if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto;
   if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim;
   if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness;
+  if(p.guide==='off'||p.guide==='profile'||p.guide==='shot') prefs.guide=p.guide;
+  if(typeof p.guideShot==='string') prefs.guideShot=p.guideShot;
 }
 
 // ── Grinder identity ────────────────────────────────────────────────
@@ -2575,7 +2603,9 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:true, sleepDim:true, sleepBrightness:20 };
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:true, sleepDim:true, sleepBrightness:20,
+  // 'off' | 'profile' | 'shot'; guideShot names the recorded shot when 'shot'
+  guide:'off', guideShot:'' };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
 function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
@@ -2648,6 +2678,8 @@ function openSettingsPage(){ document.getElementById('settingsPage').classList.a
   api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='display'||spCat==='machine') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/display').then(function(d){ displayState=d||{}; if(spCat==='display') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/machine/info').then(function(i){ machineInfo=i||{}; if(spCat==='machine') renderSpContent(); }).catch(function(){});
+  // the guideline picker offers recent shots, so they have to be there
+  if(!shotList.length) loadShotList();
   spSelect(spCat); afterPageChange(); }
 function closeSettingsPage(){ document.getElementById('settingsPage').classList.remove('show'); afterPageChange(); }
 function renderSpNav(){ var nav=document.getElementById('spNav'); nav.innerHTML='';
@@ -2673,6 +2705,17 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('wakeLock','wakeLockDesc',sw('setWake',!!gwSettings.keepAwake,'setKeepAwake(this.checked)'));
     h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
     h+=row('monAuto','monAutoDesc',sw('setMonAuto',!!prefs.monAuto,'setMonAuto(this.checked)'));
+    var gm=prefs.guide||'off';
+    h+=row('guideLine','guideLineDesc','<select class="set-select" onchange="setGuideMode(this.value)">'
+      +opt('off',t('guideOff'),gm)+opt('profile',t('guideProfile'),gm)+opt('shot',t('guideShot'),gm)+'</select>');
+    if(gm==='shot'){
+      // the recent shots, named the way the shot log names them
+      var opts=(shotList||[]).slice(0,20).map(function(x){
+        var st=splitTitle(((x.workflow&&x.workflow.profile)||{}).title||'Shot');
+        return opt(x.id, st.name+' \u00b7 '+fmtShotDate(x), prefs.guideShot); }).join('');
+      h+=row('guideWhich','guideWhichDesc', opts
+        ? '<select class="set-select" onchange="setGuideShot(this.value)">'+opt('',t('guidePick'),prefs.guideShot)+opts+'</select>'
+        : '<span class="set-desc">'+escapeHtml(t('guideNoShots'))+'</span>'); }
     h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
     var sb=prefs.sleepBrightness||20;
     h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
@@ -3017,6 +3060,43 @@ function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||
   function draw(field,color,mx,fill){ ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-6)-3; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   draw('temp',tC,110,null); // temperature (0-110C scale), drawn first (background)
   draw('p',pC,12,pFill); draw('f',fC,8,null); }
+
+// ── The extraction guideline ────────────────────────────────────────
+// What the shot is meant to look like, drawn under the live trace: either the
+// loaded profile's own shape or a shot pulled before. Cached, because it is
+// rebuilt on every frame otherwise and neither source changes mid shot.
+var _guide=null, _guideKey=null;
+function guideKey(){
+  if(prefs.guide==='profile') return 'p:'+(curProfileObj&&curProfileObj.id||'');
+  if(prefs.guide==='shot') return 's:'+(prefs.guideShot||'');
+  return null; }
+function guideFromShot(s){
+  var m=(s&&s.measurements)||[]; if(m.length<2) return null;
+  function tOf(pt){ return Date.parse((pt.machine||{}).timestamp)||0; }
+  var t0=tOf(m[0]), pts=[];
+  m.forEach(function(pt){ var o=pt.machine||{};
+    pts.push({ t:(tOf(pt)-t0)/1000, p:o.pressure||0, f:o.flow||0,
+               temp:(o.groupTemperature!=null?o.groupTemperature:0) }); });
+  var total=pts.length?pts[pts.length-1].t:0;
+  return total>0?{pts:pts,total:total}:null; }
+function currentGuide(){
+  var key=guideKey();
+  if(!key){ _guide=null; _guideKey=null; return null; }
+  if(key===_guideKey) return _guide;
+  _guideKey=key; _guide=null;
+  if(prefs.guide==='profile'){
+    var pr=curProfileObj&&curProfileObj.profile;
+    if(pr){ var sim=simulateProfile(pr); if(sim.pts.length>1&&sim.total>0) _guide=sim; }
+    return _guide; }
+  var full=slFull[prefs.guideShot];
+  if(full){ _guide=guideFromShot(full); return _guide; }
+  // not loaded yet: fetch once, and redraw when it lands
+  api('GET','/api/v1/shots/'+encodeURIComponent(prefs.guideShot)).then(function(sh){
+    if(sh&&sh.measurements){ slFull[sh.id]=sh; if(_guideKey==='s:'+prefs.guideShot){ _guide=guideFromShot(sh); drawChart(); } }
+  }).catch(function(){});
+  return null; }
+function setGuideMode(v){ prefs.guide=v; savePrefs(); _guideKey=null; renderSpContent(); drawChart(); }
+function setGuideShot(v){ prefs.guideShot=v; savePrefs(); _guideKey=null; drawChart(); }
 
 // ── Profiles ────────────────────────────────────────────────────────
 // Titles use "{group}/{name}" — split into group (optional) + display name.
