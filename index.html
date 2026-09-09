@@ -31,7 +31,7 @@ body.night{--ink:#e8e6f5; --ink-soft:#b8b4d8; --ink-mute:#7d7aa0;
 body.night::before{background:radial-gradient(circle at 18% 22%,rgba(99,102,241,.28),transparent 46%),radial-gradient(circle at 84% 18%,rgba(56,189,248,.22),transparent 48%),radial-gradient(circle at 78% 84%,rgba(236,72,153,.2),transparent 48%),linear-gradient(135deg,#0d0b1c,#140f26)}
 /* base surfaces */
 body.night .glass{background:rgba(30,27,54,.72);border-color:rgba(255,255,255,.08)}
-body.night.body.night .modal{background:#1a1730;border-color:rgba(255,255,255,.1)}
+body.night .modal{background:#1a1730;border-color:rgba(255,255,255,.1)}
 body.night .modal-head{background:#1a1730}
 body.night .modal-title{color:var(--ink)}
 body.night .editpage{background:linear-gradient(135deg,#14111f,#1a1526)}
@@ -1267,7 +1267,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <button class="kp-key" onclick="kpPress('1')">1</button><button class="kp-key" onclick="kpPress('2')">2</button><button class="kp-key" onclick="kpPress('3')">3</button>
       <button class="kp-key" onclick="kpPress('.')">.</button><button class="kp-key" onclick="kpPress('0')">0</button><button class="kp-key kp-del" onclick="kpPress('del')">⌫</button>
     </div>
-    <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'keypadOverlay')">Cancel</button><button class="m-btn primary" onclick="kpConfirm()">Set</button></div>
+    <div class="modal-actions"><button class="m-btn" data-i18n="cancel" onclick="closeModal(null,'keypadOverlay')">Cancel</button><button class="m-btn primary" data-i18n="kpSet" onclick="kpConfirm()">Set</button></div>
   </div></div>
 </div>
 
@@ -1387,6 +1387,7 @@ var I18N={
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
+    kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpGrind:'Grind Setting', kpSet:'Set',
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
@@ -1472,6 +1473,7 @@ var I18N={
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
+    kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpGrind:'분쇄도', kpSet:'설정',
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
@@ -2521,11 +2523,11 @@ function grinderAiFill(){
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
-var KP_CFG={ doseIn:{title:'Dose (g)',unit:'g',min:5,max:30}, doseOut:{title:'Yield (g)',unit:'g',min:10,max:80}, ratio:{title:'Ratio (1:x)',unit:'',min:1,max:4} };
+var KP_CFG={ doseIn:{title:'kpDose',unit:'g',min:5,max:30}, doseOut:{title:'kpYield',unit:'g',min:10,max:80}, ratio:{title:'kpRatio',unit:'',min:1,max:4} };
 function openKeypad(field){ var c=KP_CFG[field]; if(!c) return; KP.field=field; KP.unit=c.unit; KP.fresh=true;
   var cur=field==='ratio'?(settings.doseIn>0?(settings.doseOut/settings.doseIn):2):settings[field];
   KP.str=String(parseFloat(cur.toFixed(field==='doseIn'?1:field==='ratio'?2:1)));
-  document.getElementById('kpTitle').textContent=c.title; document.getElementById('kpUnit').textContent=c.unit;
+  document.getElementById('kpTitle').textContent=t(c.title); document.getElementById('kpUnit').textContent=c.unit;
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 function kpRender(){ document.getElementById('kpValue').textContent=KP.str.length?KP.str:'0'; }
 function kpPress(k){
@@ -6877,7 +6879,7 @@ function setGrind(v){ context.grinderSetting=String(v); updateGrindRow();
 function openGrindKeypad(){ var gr=currentGrinder();
   if(gr&&gr.settingType==='preset'){ adjustGrind(1); return; } // preset: tapping cycles forward
   var cur=parseFloat(context.grinderSetting); KP.field='grind'; KP.unit=''; KP.fresh=true; KP.str=isNaN(cur)?'0':String(cur);
-  document.getElementById('kpTitle').textContent='Grind Setting'; document.getElementById('kpUnit').textContent='';
+  document.getElementById('kpTitle').textContent=t('kpGrind'); document.getElementById('kpUnit').textContent='';
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 
 // ── DYE (post-shot log) ─────────────────────────────────────────────
