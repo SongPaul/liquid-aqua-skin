@@ -291,6 +291,13 @@ canvas#chart{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cam-pane img{width:100%;height:100%;object-fit:contain;display:block;background:#0b0a14}
 .cam-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:12px;font-weight:700;line-height:1.5;color:rgba(255,255,255,.82);background:rgba(11,10,20,.85)}
 .cam-msg[hidden]{display:none}
+.cam-qr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;background:rgba(11,10,20,.92)}
+.cam-qr[hidden]{display:none}
+.cam-qr canvas{width:132px;height:132px;border-radius:10px;background:#fff;flex:none}
+.cam-qr-txt{min-width:0;color:rgba(255,255,255,.86)}
+.cam-qr-title{font-size:13px;font-weight:800;margin-bottom:5px}
+.cam-qr-url{font-size:11px;font-weight:700;color:rgba(255,255,255,.62);word-break:break-all;margin-bottom:6px}
+.cam-qr-note{font-size:11px;font-weight:600;line-height:1.5;color:rgba(255,255,255,.55)}
 /* streaming: the albums keep a strip, the picture takes the rest */
 .carousel-card.cam{flex:1 1 0;min-height:0}
 body.cam-on .bean-info{flex:0 0 auto}
@@ -1041,6 +1048,12 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="cam-pane" id="camPane" hidden>
         <img id="camImg" alt="">
         <div class="cam-msg" id="camMsg" hidden></div>
+        <div class="cam-qr" id="camQr" hidden>
+          <canvas id="camQrCanvas"></canvas>
+          <div class="cam-qr-txt"><div class="cam-qr-title" id="camQrTitle">Scan to set the address</div>
+            <div class="cam-qr-url" id="camQrUrl"></div>
+            <div class="cam-qr-note" id="camQrNote"></div></div>
+        </div>
       </div>
       <div class="carousel">
         <button class="car-nav prev" onclick="carouselMove(-1)">‹</button>
@@ -1320,6 +1333,16 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 </div>
 
 <!-- ── Mobile bean-scan page (opened via QR on a phone) ─────────── -->
+<div id="camSetupPage" style="display:none">
+  <div class="mb-wrap">
+    <div class="mb-head"><div class="mb-title"><span>📷 </span><span data-i18n="camSetupTitle">Camera for the machine</span></div>
+      <div class="mb-sub" data-i18n="camSetupDesc">Type the address your IP-camera app shows, and the machine picks it up.</div></div>
+    <div class="field"><label data-i18n="camUrlName">Stream address</label>
+      <input id="csUrl" placeholder="http://192.168.0.20:8080/video" inputmode="url" autocapitalize="off" autocorrect="off"></div>
+    <div class="mb-actions"><button class="m-btn primary" onclick="csSave()" data-i18n="camSetupSave">Send to the machine</button></div>
+    <div class="mb-sub" id="csStatus"></div>
+  </div>
+</div>
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>✨ </span><span data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" data-i18n="scanAIDesc">Photograph the bag — AI fills the details.</div></div>
@@ -1418,6 +1441,12 @@ var I18N={
     camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are.',
     camUrlName:'Stream address', camUrlDesc:'The MJPEG address of a camera on this network -- an IP-camera app on a phone serves one, usually ending in /video.',
     camNoUrl:'No stream address set', camConnecting:'Connecting\u2026',
+    camScanTitle:'Scan with the phone that has the camera',
+    camScanRetry:'Nothing answered at that address. Scan to send a different one.',
+    camScanNote:'Open an IP-camera app on it, then type the address it shows on the page this opens. The picture starts here on its own.',
+    camSetupTitle:'Camera for the machine', camSetupDesc:'Type the address your IP-camera app shows and the machine picks it up.',
+    camSetupSave:'Send to the machine', camSetupSaved:'Sent \u2014 the machine is connecting',
+    camSetupNeed:'Type an address first', camSetupFailed:'Could not reach the machine',
     camError:'The stream could not be reached',
     guideLine:'Extraction guideline', guideLineDesc:'Draw what the shot should look like under the live graph.',
     guideOff:'Off', guideProfile:'The loaded profile', guideShot:'A previous shot',
@@ -1517,6 +1546,12 @@ var I18N={
     camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다.',
     camUrlName:'스트리밍 주소', camUrlDesc:'같은 네트워크에 있는 카메라의 MJPEG 주소. 폰의 IP 카메라 앱이 보통 /video 로 끝나는 주소를 제공합니다.',
     camNoUrl:'스트리밍 주소가 없습니다', camConnecting:'연결 중…',
+    camScanTitle:'카메라를 쓸 폰으로 스캔하세요',
+    camScanRetry:'그 주소에서 응답이 없습니다. 스캔해서 다른 주소를 보내세요.',
+    camScanNote:'폰에서 IP 카메라 앱을 연 뒤, 열린 페이지에 그 앱이 보여주는 주소를 입력하세요. 화면은 여기에 자동으로 나옵니다.',
+    camSetupTitle:'머신에 카메라 연결', camSetupDesc:'IP 카메라 앱이 보여주는 주소를 입력하면 머신이 받아갑니다.',
+    camSetupSave:'머신으로 보내기', camSetupSaved:'보냈습니다 — 머신이 연결 중입니다',
+    camSetupNeed:'주소를 먼저 입력하세요', camSetupFailed:'머신에 연결하지 못했습니다',
     camError:'스트림에 연결하지 못했습니다',
     guideLine:'추출 가이드라인', guideLineDesc:'실시간 그래프 아래에 목표 모양을 깔아둡니다.',
     guideOff:'끔', guideProfile:'프로파일 기본', guideShot:'이전 추출로그',
@@ -2286,7 +2321,7 @@ function pauseSvgAnimations(on){
 // the lock to a new offset, which is the whole burn-in guard.
 var _sleepSettleT=null;
 function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); document.getElementById('lockScreen').classList.add('show'); syncWakeLock();
-  camStop();
+  camPause();
   // The wave and the rest keep going for the length of the fade, so nothing
   // visibly stops while it is still on screen.
   if(_sleepSettleT) clearTimeout(_sleepSettleT);
@@ -3126,17 +3161,53 @@ function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||
 // ── The camera ──────────────────────────────────────────────────────
 // An <img> pointed at an MJPEG endpoint. The connection stays open for as long
 // as the src is set, so it is cleared whenever the picture is not on screen.
+var _camPoll=null, _camQrUrl='';
+function camSetupUrl(host){ var port=window.location.port||'';
+  var hasPort=host.indexOf(':')>=0;
+  return 'http://'+host+((hasPort||!port)?'':(':'+port))+window.location.pathname+'?camsetup=1'; }
+function camQrHide(){ var q=document.getElementById('camQr'); if(q) q.hidden=true;
+  if(_camPoll){ clearInterval(_camPoll); _camPoll=null; } }
+// The phone writes the address into the store; nothing pushes it here, so the
+// key is read back while the code is on screen and let go of once it arrives.
+function camWatchStore(){
+  if(_camPoll) return;
+  _camPoll=setInterval(function(){
+    if(!prefs.cam||document.getElementById('camQr').hidden){ camQrHide(); return; }
+    api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
+      var url=(typeof v==='string'?v:(v&&v.value)||'').trim();
+      if(!url||url===prefs.camUrl) return;
+      prefs.camUrl=url; _prefsBase.camUrl=url; lsSet('aurora_prefs',prefs);
+      camQrHide(); camStart(); renderSpContent();
+    }).catch(function(){});
+  },2500); }
+function camQrShow(noteKey){
+  var q=document.getElementById('camQr'); if(!q) return;
+  camMessage(null); q.hidden=false;
+  document.getElementById('camQrTitle').textContent=t(noteKey?'camError':'camScanTitle');
+  document.getElementById('camQrNote').textContent=t(noteKey||'camScanNote');
+  function render(url){ _camQrUrl=url;
+    document.getElementById('camQrUrl').textContent=url;
+    drawQR(document.getElementById('camQrCanvas'),url,132); }
+  function resolve(info){
+    if(prefs.qrHost && !isLocalHost(prefs.qrHost)){ render(camSetupUrl(prefs.qrHost)); return; }
+    var ip=((info&&info.localIp)||'').trim();
+    if(ip && !isLocalHost(ip)){ render(camSetupUrl(ip)); return; }
+    if(!isLocalHost(window.location.hostname)){ render(camSetupUrl(window.location.host)); return; }
+    document.getElementById('camQrUrl').textContent=t('qrNoLan'); }
+  api('GET','/api/v1/info').then(resolve).catch(function(){ resolve(null); });
+  camWatchStore(); }
 function camMessage(key){ var m=document.getElementById('camMsg'); if(!m) return;
   if(!key){ m.hidden=true; m.textContent=''; return; }
   m.textContent=t(key); m.hidden=false; }
 function camStop(){ var i=document.getElementById('camImg'); if(i&&i.getAttribute('src')) i.removeAttribute('src'); }
+function camPause(){ camStop(); camQrHide(); }
 function camStart(){
   var i=document.getElementById('camImg'); if(!i) return;
   var url=(prefs.camUrl||'').trim();
-  if(!url){ camStop(); camMessage('camNoUrl'); return; }
-  camMessage('camConnecting');
+  if(!url){ camStop(); camQrShow(); return; }
+  camQrHide(); camMessage('camConnecting');
   i.onload=function(){ camMessage(null); };
-  i.onerror=function(){ camStop(); camMessage('camError'); };
+  i.onerror=function(){ camStop(); camQrShow('camScanRetry'); };
   // a reconnect must not be answered out of the cache
   i.src=url+(url.indexOf('?')<0?'?':'&')+'_t='+Date.now(); }
 function applyCam(){
@@ -3144,7 +3215,7 @@ function applyCam(){
   if(!card||!pane) return;
   var on=!!prefs.cam;
   card.classList.toggle('cam',on); document.body.classList.toggle('cam-on',on); pane.hidden=!on;
-  if(on&&!_asleep) camStart(); else { camStop(); camMessage(null); }
+  if(on&&!_asleep) camStart(); else { camStop(); camQrHide(); camMessage(null); }
   buildCarousel(); }
 function setCamOn(on){ prefs.cam=!!on; savePrefs(); applyCam(); renderSpContent(); }
 function setCamUrl(v){ prefs.camUrl=(v||'').trim(); clearTimeout(setCamUrl._t);
@@ -7860,6 +7931,26 @@ setInterval(function(){ if(state.connected) api('POST','/api/v1/machine/heartbea
 
 
 // ── Init ─────────────────────────────────────────────────────────────
+// ── The phone page the camera QR routes to (?camsetup=1) ────────────
+function csSave(){
+  var el=document.getElementById('csUrl'), st=document.getElementById('csStatus');
+  var url=(el.value||'').trim();
+  if(url && !/^https?:\/\//i.test(url)) url='http://'+url;
+  if(!url){ st.textContent=t('camSetupNeed'); return; }
+  st.textContent='\u2026';
+  storePut(PREF_PREFIX+'camUrl',url).then(function(){ el.value=url; st.textContent=t('camSetupSaved'); })
+    .catch(function(){ st.textContent=t('camSetupFailed'); }); }
+function bootCamSetup(){
+  loadPrefs();
+  document.querySelector('.stage-wrap').style.display='none';
+  document.getElementById('camSetupPage').style.display='block';
+  document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
+  if(prefs.night) document.body.classList.add('night');
+  applyI18n();
+  // whatever the machine is already pointed at, so it can be corrected
+  api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
+    var url=(typeof v==='string'?v:(v&&v.value)||'');
+    if(url) document.getElementById('csUrl').value=url; }).catch(function(){}); }
 function bootMobileBeanScan(){
   loadPrefs(); // picks up language + applies i18n
   document.querySelector('.stage-wrap').style.display='none';
@@ -7874,6 +7965,7 @@ function bootMobileBeanScan(){
 document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
+  if(/[?&]camsetup=1/.test(window.location.search)){ bootCamSetup(); return; }
   fitStage(); loadFavs(); loadPrefs(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
