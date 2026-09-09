@@ -1565,6 +1565,9 @@ var SERIES={ pressure:'#1fbfa8', pressureGoal:'#0e7c6b',
              mix:'#d6402b',      mixGoal:'#9c4a9c',
              steam:'#f472b6',    water:'#0ea5e9' };
 var GOAL_DASH=[5,4];
+// The scrub guide is not a series -- it marks a moment, so it takes the
+// interface accent rather than any line's colour.
+var GUIDE={ day:'#5b5bd6', night:'#c4b5fd' };
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
 var beans=[], grinders=[], context={};
 
@@ -2136,7 +2139,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
 // displaced one back to its dot, and the number sits on a chip in the page's
 // own ground so the line underneath stays readable.
 var TAG_H=15, TAG_GAP=19, TAG_LIFT=11;
-function drawReadouts(ctx,rows,lx,top,bottom){
+function drawReadouts(ctx,rows,lx,top,bottom,leftLimit){
   rows=(rows||[]).filter(Boolean);
   if(!rows.length) return;
   rows.sort(function(a,b){ return a.y-b.y; });
@@ -2149,18 +2152,24 @@ function drawReadouts(ctx,rows,lx,top,bottom){
   if(rows[0].ly<top+TAG_H/2){ var up=top+TAG_H/2-rows[0].ly;
     rows.forEach(function(r){ r.ly=Math.min(bottom-TAG_H/2,r.ly+up); }); }
   ctx.save();
-  ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.font='800 12px Inter,sans-serif'; ctx.textBaseline='middle';
+  // scrubbing near the left edge leaves no room on the left, so the labels go
+  // to the other side of the guide rather than off the chart
+  var widest=0;
+  rows.forEach(function(r){ widest=Math.max(widest,ctx.measureText(r.v.toFixed(1)).width); });
+  var right=(leftLimit!=null && lx-16-widest<leftLimit);
+  ctx.textAlign=right?'left':'right';
   var ground=document.body.classList.contains('night')?'rgba(12,10,24,.88)':'rgba(255,255,255,.88)';
   rows.forEach(function(r){
-    var txt=r.v.toFixed(1), w=ctx.measureText(txt).width;
+    var txt=r.v.toFixed(1), w=ctx.measureText(txt).width, dir=right?1:-1;
     if(Math.abs(r.ly-r.y)>1){ ctx.strokeStyle=r.c; ctx.globalAlpha=.45; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(lx-5,r.y); ctx.lineTo(lx-9,r.ly); ctx.stroke(); ctx.globalAlpha=1; }
+      ctx.beginPath(); ctx.moveTo(lx+dir*5,r.y); ctx.lineTo(lx+dir*9,r.ly); ctx.stroke(); ctx.globalAlpha=1; }
     ctx.fillStyle=r.c; ctx.beginPath(); ctx.arc(lx,r.y,3.5,0,Math.PI*2); ctx.fill();
-    var x1=lx-8, x0=x1-w-7;
+    var x1=lx+dir*8, x0=right?x1:(x1-w-7);
     ctx.fillStyle=ground;
     if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(x0,r.ly-TAG_H/2,w+9,TAG_H,4); ctx.fill(); }
     else ctx.fillRect(x0,r.ly-TAG_H/2,w+9,TAG_H);
-    ctx.fillStyle=r.c; ctx.fillText(txt,x1-2,r.ly); });
+    ctx.fillStyle=r.c; ctx.fillText(txt,right?(x1+4):(x1-2),r.ly); });
   ctx.restore(); }
 
 // ── REST ────────────────────────────────────────────────────────────
@@ -7031,7 +7040,8 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
   var have=!!(s.measurements&&s.measurements.length);
   if(cv){ if(have) drawShotMeasurements(cv,s,false); else drawSimCurve(cv,pr); }
   // nothing recorded means nothing to plot temperatures from
-  if(tv){ tv.parentElement.style.display=have?'':'none'; if(have) drawShotMeasurements(tv,s,true); } }
+  if(tv){ tv.parentElement.style.display=have?'':'none'; if(have) drawShotMeasurements(tv,s,true); }
+  _slScrub=null; if(have) wireShotScrub(); }
 function setSlStar(n){ if(slSel) slSel._stars=n; document.querySelectorAll('#slStars .star').forEach(function(el,i){ el.classList.toggle('on',i<n); }); }
 // The shot's own record of what it was pulled with can be wrong -- the wrong
 // bean left loaded, a grind typed after the fact. PUT accepts a workflow patch
@@ -7129,6 +7139,39 @@ function shotStats(s){
     if(pt.volume!=null) vol=pt.volume;
     if(pt.scale&&pt.scale.weight!=null) wt=pt.scale.weight; });
   return { seconds:shotSeconds(s), peakPressure:peak, groupTemp:tN?(tSum/tN):null, volume:vol, weight:wt }; }
+// Pointing at either chart of a recorded shot marks the same moment on both,
+// so the two are read together. Null means nothing is being pointed at.
+var _slScrub=null;
+function slScrubFrom(canvas,clientX){
+  var s=slSel&&slFull[slSel.id]; var m=(s&&s.measurements)||[];
+  if(m.length<2) return;
+  var r=canvas.getBoundingClientRect();
+  var padL=30, padR=(canvas.id==='slTempCurve')?10:30;
+  var PW=r.width-padL-padR;
+  var f=Math.min(Math.max((clientX-r.left-padL)/PW,0),1);
+  function tOf(pt){ return Date.parse((pt.machine||{}).timestamp)||0; }
+  var t0=tOf(m[0]), t1=tOf(m[m.length-1]);
+  var want=(t1>t0)?(t0+f*(t1-t0)):null;
+  var idx=0;
+  if(want==null) idx=Math.round(f*(m.length-1));
+  else { var best=Infinity;
+    for(var i=0;i<m.length;i++){ var d=Math.abs(tOf(m[i])-want); if(d<best){ best=d; idx=i; } } }
+  if(idx===_slScrub) return;
+  _slScrub=idx; redrawShotCharts(); }
+function slScrubClear(){ if(_slScrub===null) return; _slScrub=null; redrawShotCharts(); }
+function redrawShotCharts(){
+  var s=slSel&&slFull[slSel.id]; if(!s) return;
+  var cv=document.getElementById('slCurve'), tv=document.getElementById('slTempCurve');
+  if(cv) drawShotMeasurements(cv,s,false);
+  if(tv&&tv.parentElement.style.display!=='none') drawShotMeasurements(tv,s,true); }
+function wireShotScrub(){
+  ['slCurve','slTempCurve'].forEach(function(id){
+    var cv=document.getElementById(id); if(!cv) return;
+    cv.style.touchAction='none';
+    cv.onpointermove=function(e){ slScrubFrom(cv,e.clientX); };
+    cv.onpointerdown=function(e){ cv.setPointerCapture&&cv.setPointerCapture(e.pointerId); slScrubFrom(cv,e.clientX); };
+    cv.onpointerup=function(){ slScrubClear(); };
+    cv.onpointerleave=function(){ slScrubClear(); }; }); }
 // One chart or the other: `temps` draws the temperature strip, otherwise the
 // extraction one. Same conventions as the live graph -- SERIES for colour,
 // solid for what the machine did, dashed for what it was asked for.
@@ -7185,12 +7228,36 @@ function drawShotMeasurements(canvas,s,temps){
     ctx.lineWidth=dash?1.6:2.2; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
   var mac=function(f){ return function(pt){ var o=pt.machine||{}; return o[f]!=null?o[f]:null; }; };
   var P=function(v){ return py(v,PMAX); }, F=function(v){ return py(v,FMAX); };
+  // The guide and the values at the moment being pointed at. Both charts draw
+  // it from the same index, so the two are read together.
+  function scrub(defs){
+    if(_slScrub==null||_slScrub>=m.length) return;
+    var pt=m[_slScrub], gx=px(pt,_slScrub);
+    ctx.save();
+    ctx.strokeStyle=night?'rgba(255,255,255,.30)':'rgba(99,102,241,.38)';
+    ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(gx,Y0); ctx.lineTo(gx,Y0+PH); ctx.stroke();
+    ctx.restore();
+    if(!temps){  // the moment itself is named once, above the upper chart
+      var secs=((tOf(pt)-t0)/1000);
+      ctx.save(); ctx.font='800 11px Inter,sans-serif'; ctx.textBaseline='top';
+      ctx.textAlign=(gx>X0+PW-30)?'right':'left';
+      ctx.fillStyle=night?GUIDE.night:GUIDE.day;
+      ctx.fillText(secs.toFixed(1)+'s', gx+(ctx.textAlign==='right'?-4:4), Y0+1);
+      ctx.restore(); }
+    drawReadouts(ctx, defs.map(function(d){
+      var v=d.w?(pt.scale?pt.scale.weight:null):mac(d.f)(pt);
+      if(v==null||isNaN(v)) return null;
+      if(d.f&&d.f.indexOf('target')===0&&!(v>0)) return null;   // no goal, nothing to say
+      return {v:v,c:d.c,y:d.s(v)}; }), gx, Y0, Y0+PH, X0); }
 
   if(temps){
     line(mac('targetGroupTemperature'),pyT,SERIES.basketGoal,GOAL_DASH);
     line(mac('targetMixTemperature'),pyT,SERIES.mixGoal,GOAL_DASH);
     line(mac('groupTemperature'),pyT,SERIES.basket);
     line(mac('mixTemperature'),pyT,SERIES.mix);
+    scrub([{f:'groupTemperature',c:SERIES.basket,s:pyT},{f:'targetGroupTemperature',c:SERIES.basketGoal,s:pyT},
+           {f:'mixTemperature',c:SERIES.mix,s:pyT},{f:'targetMixTemperature',c:SERIES.mixGoal,s:pyT}]);
     return; }
 
   line(mac('targetPressure'),P,SERIES.pressureGoal,GOAL_DASH);
@@ -7198,7 +7265,11 @@ function drawShotMeasurements(canvas,s,temps){
   if(WMAX) line(function(pt){ return pt.scale?pt.scale.weight:null; },
                 function(v){ return py(v,WMAX); },SERIES.weight);
   line(mac('flow'),F,SERIES.flow);
-  line(mac('pressure'),P,SERIES.pressure); }
+  line(mac('pressure'),P,SERIES.pressure);
+  var rows=[{f:'pressure',c:SERIES.pressure,s:P},{f:'targetPressure',c:SERIES.pressureGoal,s:P},
+            {f:'flow',c:SERIES.flow,s:F},{f:'targetFlow',c:SERIES.flowGoal,s:F}];
+  if(WMAX) rows.push({w:true,c:SERIES.weight,s:function(v){ return py(v,WMAX); }});
+  scrub(rows); }
 
 function shotLegend(s){
   var hasWeight=(s.measurements||[]).some(function(pt){ return pt.scale&&pt.scale.weight!=null; });
