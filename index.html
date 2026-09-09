@@ -46,7 +46,7 @@ body.night .ep-group-head{background:linear-gradient(135deg,#14111f,#1a1526);col
 body.night .ep-group-head.fav{background:linear-gradient(135deg,#241a12,#26141a);color:var(--amber)}
 body.night .bg-tabs{background:var(--sheet)}
 /* pill / button surfaces */
-body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
+body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .dose-take,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ep-aibtn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ms-btn:hover{background:rgba(139,92,246,.28)}
 body.night .bg-tab2.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
@@ -211,9 +211,13 @@ header>*{position:relative;z-index:1}
 .weight-num{font-size:60px;font-weight:800;line-height:.85;letter-spacing:-.04em;background:linear-gradient(135deg,var(--ink),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .weight-num.zero{-webkit-text-fill-color:var(--ink-mute)}
 .weight-unit{font-size:20px;font-weight:700;color:var(--ink-mute)}
-.tare-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:8px 16px;border-radius:100px;border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
+.tare-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;min-height:44px;padding:8px 16px;border-radius:100px;border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
 .tare-btn:hover:not(:disabled){background:var(--accent);color:#fff;transform:translateY(-2px)}
 .tare-btn:disabled{opacity:.35;cursor:not-allowed}
+.dose-take{display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;min-height:40px;padding:6px 12px;border-radius:100px;border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:700;text-transform:none;cursor:pointer;transition:all .2s;-webkit-appearance:none}
+.dose-take:hover:not(:disabled){background:var(--accent);color:#fff}
+.dose-take:disabled{opacity:.35;cursor:not-allowed}
+.dose-take[hidden]{display:none}
 .timer-big{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
 .timer-big.run{color:var(--hot)}
 
@@ -331,7 +335,8 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .dose-block{text-align:center;min-width:0}
 .dose-adj{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
 .dose-num{font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
-.dose-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px;min-height:26px;display:flex;align-items:center;justify-content:center}
+.dose-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px;min-height:26px;display:flex;align-items:center;justify-content:center;gap:8px}
+.dose-row.has-take .dose-lbl{min-height:40px}
 .dose-num.tap,.rv.tap{cursor:pointer;border-radius:9px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:2px 3px;transition:background .15s,transform .1s}
 .dose-num.tap:hover,.rv.tap:hover{background:var(--glass-hi)}
 .dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
@@ -758,10 +763,6 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .kp-key{height:56px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:22px;font-weight:700;color:var(--ink);cursor:pointer;-webkit-appearance:none;transition:all .12s}
 .kp-key:hover{background:var(--glass-hi)} .kp-key:active{transform:scale(.94)}
 .kp-key.kp-del{color:var(--red);font-size:19px}
-.kp-scale{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding:8px 8px 8px 14px;border-radius:14px;border:1px solid var(--glass-line);background:var(--glass-hi)}
-.kp-scale-w{flex:1;font-size:21px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
-.kp-scale-w .kp-scale-u{font-size:13px;font-weight:700;color:var(--ink-mute);margin-left:3px}
-.kp-scale .m-btn{min-height:42px;padding:9px 14px;font-size:13px;border:1.5px solid var(--edge)}
 
 /* Settings rows + toggle switch */
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--glass-line)}
@@ -982,7 +983,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
               <div class="dose-num tap" id="doseIn" onclick="openKeypad('doseIn')">18.0</div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
-            <div class="dose-lbl" data-i18n="doseG">Dose g</div>
+            <div class="dose-lbl"><span data-i18n="doseG">Dose g</span>
+              <button class="dose-take" id="btnToDose" onclick="doseFromScale()" hidden>⚖ <span data-i18n="fromScale">From scale</span></button></div>
           </div>
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
@@ -1274,11 +1276,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
   <div class="modal keypad-modal"><div class="modal-head"><div class="modal-title" id="kpTitle">Enter value</div><button class="modal-close" onclick="closeModal(null,'keypadOverlay')">×</button></div>
   <div class="modal-body">
     <div class="kp-display"><span id="kpValue">0</span><span class="kp-unit" id="kpUnit">g</span></div>
-    <div class="kp-scale" id="kpScale" hidden>
-      <div class="kp-scale-w"><span id="kpScaleW">0.0</span><span class="kp-scale-u">g</span></div>
-      <button class="m-btn" onclick="kpTare()" data-i18n="tare">Tare</button>
-      <button class="m-btn tinted" id="kpUseBtn" onclick="kpFromScale()" data-i18n="kpUseScale">Use</button>
-    </div>
     <div class="kp-grid">
       <button class="kp-key" onclick="kpPress('7')">7</button><button class="kp-key" onclick="kpPress('8')">8</button><button class="kp-key" onclick="kpPress('9')">9</button>
       <button class="kp-key" onclick="kpPress('4')">4</button><button class="kp-key" onclick="kpPress('5')">5</button><button class="kp-key" onclick="kpPress('6')">6</button>
@@ -1365,6 +1362,8 @@ var I18N={
     start:'Start', stop:'Stop', steam:'Steam', flush:'Flush', water:'Water', sleep:'Sleep', connect:'Connect',
     custom:'Custom', liveAdjust:'Live', tempShort:'°C', secShort:'sec', mlShort:'ml', flowShort:'ml/s',
     machine:'Machine', scale:'Scale', group:'Group', mix:'Mix', tank:'Tank',
+    fromScale:'From scale', doseFromScaleOk:'Dose taken from the scale',
+    doseOutOfRange:'The scale reads outside the dose range', doseNoScale:'No scale reading',
     liveWeight:'Live Weight', tare:'Tare', timer:'Timer', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose g', yieldG:'Yield g', ratio:'Ratio',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
@@ -1412,7 +1411,7 @@ var I18N={
     guideNoPick:'None chosen', guideGoPick:'Open the shot log',
     guideUse:'Use as guideline', guideUsing:'Guideline \u2713',
     guideSet:'Guideline set from this shot', guideCleared:'Guideline off',
-    kpUseScale:'Use reading', kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpGrind:'Grind Setting', kpSet:'Set',
+    kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpGrind:'Grind Setting', kpSet:'Set',
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
@@ -1458,6 +1457,8 @@ var I18N={
     start:'추출', stop:'정지', steam:'스팀', flush:'플러시', water:'물', sleep:'절전', connect:'연결',
     custom:'커스텀', liveAdjust:'실시간 조정', tempShort:'°C', secShort:'초', mlShort:'ml', flowShort:'ml/s',
     machine:'머신', scale:'저울', group:'그룹', mix:'믹스', tank:'물탱크',
+    fromScale:'저울값', doseFromScaleOk:'저울값을 도징으로 넣었습니다',
+    doseOutOfRange:'저울값이 도징 범위를 벗어납니다', doseNoScale:'저울 값이 없습니다',
     liveWeight:'실시간 무게', tare:'영점', timer:'타이머', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징 g', yieldG:'추출량 g', ratio:'비율',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
@@ -1505,7 +1506,7 @@ var I18N={
     guideNoPick:'지정 안 됨', guideGoPick:'추출로그 열기',
     guideUse:'가이드로 사용', guideUsing:'가이드 사용 중 ✓',
     guideSet:'이 샷을 가이드로 지정했습니다', guideCleared:'가이드라인 끔',
-    kpUseScale:'저울값 쓰기', kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpGrind:'분쇄도', kpSet:'설정',
+    kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpGrind:'분쇄도', kpSet:'설정',
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
@@ -1669,7 +1670,7 @@ function initWebSockets(){
   openWs('machine','/ws/v1/machine/snapshot',function(s){
     state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.targetGroupTemp=(s.targetGroupTemperature!=null?s.targetGroupTemperature:state.targetGroupTemp); state.targetMixTemp=(s.targetMixTemperature!=null?s.targetMixTemperature:state.targetMixTemp); state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame); state.targetFlow=(s.targetFlow!=null?s.targetFlow:state.targetFlow); state.targetPressure=(s.targetPressure!=null?s.targetPressure:state.targetPressure);
     var ms=s.state||{state:'idle',substate:'idle'}; var prev=state.machine.state; state.machine=ms; onMachineState(ms,prev); updateMachineUI(); });
-  openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); kpSyncScale(); updateConnUI(state.connected?'on':'off'); return; }
+  openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); updateConnUI(state.connected?'on':'off'); return; }
     if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); if(chart.weight.length>chart.max) chart.weight.shift(); } } });
   openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
   openWs('devices','/ws/v1/devices',function(m){
@@ -1874,9 +1875,10 @@ function applyGauges(nameA,pfxA,nameB,pfxB){
   setGauge(nameA,pfxA,g[0].label,g[0].value,g[0].unit,g[0].frac,g[0].scale,g[0].kind);
   setGauge(nameB,pfxB,g[1].label,g[1].value,g[1].unit,g[1].frac,g[1].scale,g[1].kind); }
 function updateScaleUI(){ if(_asleep) return; var el=document.getElementById('weightNum'); var uEl=document.querySelector('.weight-unit'); if(uEl) uEl.textContent=weightUnitLabel();
-  if(!state.scaleConnected||state.scaleWeight===null){ el.textContent=convWeight(0).toFixed(1); el.className='weight-num zero'; return; }
+  if(!state.scaleConnected||state.scaleWeight===null){ el.textContent=convWeight(0).toFixed(1); el.className='weight-num zero';
+    syncDoseTake(); return; }
   el.textContent=convWeight(state.scaleWeight).toFixed(1); el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':'');
-  kpSyncScale();
+  syncDoseTake();
   if(_monOpen) syncMonitorLive(); }
 // Temperature -> RGB for the tank fill/waves. Blue holds to 80C, then the ramp
 // runs through the warm hues one degree at a time and reaches red at 95C.
@@ -1988,6 +1990,7 @@ function updateShotBtn(){ var st=state.machine.state;
   var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),water=document.getElementById('btnWater'),sleep=document.getElementById('btnSleep');
   steam.disabled=!state.connected; flush.disabled=!state.connected; water.disabled=!state.connected; sleep.disabled=!state.connected;
   document.getElementById('btnTare').disabled=!state.scaleConnected;
+  syncDoseTake();
   // reflect running state with an 'active' color (only meaningful when GHC-less / actions)
   steam.classList.toggle('active', st==='steam');
   flush.classList.toggle('active', st==='flush');
@@ -2236,6 +2239,14 @@ function apiErrorText(e){ if(e&&e.name==='AbortError') return t('mbTimeout')+' (
 
 // ── Actions ─────────────────────────────────────────────────────────
 function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
+function syncDoseTake(){ var b=document.getElementById('btnToDose'); if(!b) return;
+  b.hidden=!state.scaleConnected; b.disabled=(state.scaleWeight===null);
+  var row=b.closest('.dose-row'); if(row) row.classList.toggle('has-take',!b.hidden); }
+function doseFromScale(){ var w=state.scaleWeight;
+  if(!state.scaleConnected||w===null){ toast(t('doseNoScale'),'err'); return; }
+  var c=KP_CFG.doseIn, v=parseFloat(w.toFixed(1));
+  if(v<c.min||v>c.max){ toast(t('doseOutOfRange'),'err'); return; }
+  settings.doseIn=v; syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
 function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared','ok');}).catch(function(e){toast(e.message,'err');}); }
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
@@ -2604,19 +2615,9 @@ function openKeypad(field){ var c=KP_CFG[field]; if(!c) return; KP.field=field; 
   var cur=field==='ratio'?(settings.doseIn>0?(settings.doseOut/settings.doseIn):2):settings[field];
   KP.str=String(parseFloat(cur.toFixed(field==='doseIn'?1:field==='ratio'?2:1)));
   document.getElementById('kpTitle').textContent=t(c.title); document.getElementById('kpUnit').textContent=c.unit;
-  kpRender(); kpSyncScale(); document.getElementById('keypadOverlay').classList.add('show'); }
+  kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 function kpRender(){ document.getElementById('kpValue').textContent=KP.str.length?KP.str:'0'; }
-// The keypad works in grams whatever the display unit, so the strip does too.
-function kpSyncScale(){ var box=document.getElementById('kpScale'); if(!box) return;
-  var c=KP_CFG[KP.field];
-  if(!c||c.unit!=='g'||!state.scaleConnected){ box.hidden=true; return; }
-  box.hidden=false;
-  var w=state.scaleWeight;
-  document.getElementById('kpScaleW').textContent=(w==null?0:w).toFixed(1);
-  document.getElementById('kpUseBtn').disabled=(w==null); }
-function kpTare(){ doTare(); }
-function kpFromScale(){ var w=state.scaleWeight; if(w==null) return;
-  KP.str=String(parseFloat(w.toFixed(1))); KP.fresh=false; kpRender(); }
+
 function kpPress(k){
   // first key press after opening replaces the pre-filled value
   if(KP.fresh&&k!=='del'){ KP.str=''; KP.fresh=false; }
@@ -7037,7 +7038,7 @@ function openGrindKeypad(){ var gr=currentGrinder();
   if(gr&&gr.settingType==='preset'){ adjustGrind(1); return; } // preset: tapping cycles forward
   var cur=parseFloat(context.grinderSetting); KP.field='grind'; KP.unit=''; KP.fresh=true; KP.str=isNaN(cur)?'0':String(cur);
   document.getElementById('kpTitle').textContent=t('kpGrind'); document.getElementById('kpUnit').textContent='';
-  kpRender(); kpSyncScale(); document.getElementById('keypadOverlay').classList.add('show'); }
+  kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 
 // ── DYE (post-shot log) ─────────────────────────────────────────────
 function openDyeModal(){ state.dyeStars=0; document.querySelectorAll('#dyeStars .star').forEach(function(s){s.classList.remove('on');});
