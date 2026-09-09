@@ -3079,6 +3079,11 @@ function guideKey(){
 function guideHasTemp(pts){ for(var i=0;i<pts.length;i++){ if(pts[i].temp>0) return true; } return false; }
 function guideFromShot(s){
   var m=(s&&s.measurements)||[]; if(m.length<2) return null;
+  // the recording opens at preparingForShot, the live chart only starts at
+  // preinfusion, so the lead-in is dropped rather than shifting the whole guide
+  var pour=m.filter(function(pt){ var st=(pt.machine&&pt.machine.state)||{};
+    return st.substate==='preinfusion'||st.substate==='pouring'; });
+  if(pour.length>1) m=pour;
   function tOf(pt){ return Date.parse((pt.machine||{}).timestamp)||0; }
   var t0=tOf(m[0]), pts=[];
   m.forEach(function(pt){ var o=pt.machine||{};
