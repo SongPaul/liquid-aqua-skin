@@ -2094,10 +2094,55 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   var running=state.shotRunning||state.steamRunning||state.waterRunning;
   if(N>=1 && running){
     var lx=px(N-1);
-    function tag(v,mx,color){ var y=py(v,mx); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(lx,y,3.5,0,Math.PI*2); ctx.fill(); ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(v.toFixed(1), lx-6, y); }
-    if(isSteam){ if(hasTempAxis) tag(chart.steamTemp[N-1],TMAX,'#f472b6'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
-    else if(isWater){ if(hasTempAxis) tag(chart.waterTemp[N-1],TMAX,'#0ea5e9'); tag(chart.flow[N-1],FMAX,'#38bdf8'); tag(chart.pressure[N-1],PMAX,'#6366f1'); }
-    else { tag(chart.pressure[N-1],PMAX,'#6366f1'); tag(chart.flow[N-1],FMAX,'#38bdf8'); }
+    // Four readouts on one edge run into each other and into the lines they
+    // belong to. Lay them all out first: keep the dot on the true value, push
+    // the labels apart, tether each back to its dot, and put them on a chip so
+    // the line underneath stays readable.
+    // the chip is TAG_H tall; stack them TAG_GAP apart so two never touch
+    var TAG_H=15, TAG_GAP=19;
+    function tags(items){
+      var rows=[];
+      items.forEach(function(it){
+        if(it.v==null||isNaN(it.v)) return;
+        rows.push({v:it.v,c:it.c,y:py(it.v,it.mx)}); });
+      if(!rows.length) return;
+      rows.sort(function(a,b){ return a.y-b.y; });
+      // clear of its own line to begin with, then apart from each other
+      var LIFT=11;
+      rows.forEach(function(r,i){ var want=r.y-LIFT;
+        r.ly=(i?Math.max(want,rows[i-1].ly+TAG_GAP):want); });
+      var over=rows[rows.length-1].ly-(Y0+PH-TAG_H/2);
+      if(over>0){ for(var i=rows.length-1;i>=0;i--){
+        rows[i].ly-=over;
+        if(i && rows[i-1].ly>rows[i].ly-TAG_GAP) over=rows[i-1].ly-(rows[i].ly-TAG_GAP); else break; } }
+      if(rows[0].ly<Y0+TAG_H/2){ var up=Y0+TAG_H/2-rows[0].ly;
+        rows.forEach(function(r){ r.ly=Math.min(Y0+PH-TAG_H/2,r.ly+up); }); }
+      ctx.save();
+      ctx.font='800 12px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+      rows.forEach(function(r){
+        var txt=r.v.toFixed(1), w=ctx.measureText(txt).width;
+        // a thread back to the value it belongs to, when it had to move
+        if(Math.abs(r.ly-r.y)>1){ ctx.strokeStyle=r.c; ctx.globalAlpha=.45; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(lx-5,r.y); ctx.lineTo(lx-9,r.ly); ctx.stroke(); ctx.globalAlpha=1; }
+        ctx.fillStyle=r.c; ctx.beginPath(); ctx.arc(lx,r.y,3.5,0,Math.PI*2); ctx.fill();
+        var x1=lx-8, x0=x1-w-7;
+        // the chip masks the line behind the text, so it has to be the page's
+        // own ground rather than always white
+        ctx.fillStyle=document.body.classList.contains('night')?'rgba(12,10,24,.88)':'rgba(255,255,255,.88)';
+        if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(x0,r.ly-TAG_H/2,w+9,TAG_H,4); ctx.fill(); }
+        else ctx.fillRect(x0,r.ly-TAG_H/2,w+9,TAG_H);
+        ctx.fillStyle=r.c; ctx.fillText(txt,x1-2,r.ly); });
+      ctx.restore(); }
+    if(isSteam){ tags([{v:hasTempAxis?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam},
+                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow},
+                       {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure}]); }
+    else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water},
+                            {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow},
+                            {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure}]); }
+    else { tags([{v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure},
+                 {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow},
+                 {v:hasTempAxis?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket},
+                 {v:hasTempAxis?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix}]); }
   }
 }
 
