@@ -2191,6 +2191,11 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     return X0+(N<2?0:(i/(N-1))*PW); }
   function pxT(t){ return X0+Math.min(t/SPAN,1)*PW; }
   function py(v,mx){ return Y0+PH-Math.min(v/mx,1)*(PH-6)-3; }
+  // Weight comes off the scale's socket, which does not tick with the
+  // machine's. Both cover the same window, so a series of a different
+  // length is placed by its fraction of it rather than by its index.
+  function pxOf(d,i){ return (d.length===N||d.length<2||N<2)
+    ? px(i) : px((i/(d.length-1))*(N-1)); }
   function drawGuide(){
     if(!guide) return;
     ctx.save(); ctx.lineWidth=2; ctx.lineJoin='round';
@@ -2258,9 +2263,9 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     var any=false; for(var g=0;g<d.length;g++){ if(d[g]>0){ any=true; break; } }
     if(!any) return;
     ctx.save(); ctx.setLineDash(GOAL_DASH); ctx.beginPath();
-    for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx)); else ctx.lineTo(px(i),py(d[i],mx)); }
+    for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(pxOf(d,i),py(d[i],mx)); else ctx.lineTo(pxOf(d,i),py(d[i],mx)); }
     ctx.strokeStyle=c; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
-  function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(px(i),py(d[i],mx));else ctx.lineTo(px(i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
+  function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(pxOf(d,i),py(d[i],mx));else ctx.lineTo(pxOf(d,i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   if(isSteam){
     if(hasTempAxis) line(chart.steamTemp,SERIES.steam,TMAX,'rgba(244,114,182,.15)'); // steam temp (right axis scale)
     line(chart.flow,SERIES.flow,FMAX,null);                        // steam flow (small-range scale)
