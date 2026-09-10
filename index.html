@@ -1102,7 +1102,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <div class="dose-row">
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
-              <div class="dose-num tap" id="doseIn" onclick="doseTap()"><span class="dose-ico" id="doseIco" hidden>⚖</span><span id="doseInVal">18.0</span><span class="du">g</span></div>
+              <div class="dose-num tap" id="doseIn"><span class="dose-ico" id="doseIco" hidden>⚖</span><span id="doseInVal">18.0</span><span class="du">g</span></div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
             <div class="dose-lbl" data-i18n="doseG">Dose</div>
           </div>
@@ -1475,6 +1475,7 @@ var I18N={
     machine:'Machine', scale:'Scale', group:'Group', mix:'Mix', tank:'Tank',
     doseFromScaleOk:'Dose taken from the scale',
     doseNoScale:'The scale has not sent a reading',
+    doseHoldHint:'Tap to type it, hold to take it off the scale',
     liveWeight:'Live Weight', tare:'Tare', timer:'Timer', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
@@ -1593,6 +1594,7 @@ var I18N={
     machine:'머신', scale:'저울', group:'그룹', mix:'믹스', tank:'물탱크',
     doseFromScaleOk:'저울값을 도징으로 넣었습니다',
     doseNoScale:'저울이 값을 보내지 않습니다',
+    doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
     liveWeight:'실시간 무게', tare:'영점', timer:'타이머', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
@@ -2409,8 +2411,17 @@ function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/m
 // A tap on the dose takes the scale when there is one reading to take, and
 // opens the keypad when there is not, so a dose can always be typed.
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
-function syncDoseTake(){ var i=document.getElementById('doseIco'); if(i) i.hidden=!scaleHasReading(); }
-function doseTap(){ if(scaleHasReading()) doseFromScale(); else openKeypad('doseIn'); }
+function syncDoseTake(){ var i=document.getElementById('doseIco'); if(!i) return;
+  i.hidden=!scaleHasReading();
+  var el=document.getElementById('doseIn');
+  if(el) el.title=scaleHasReading()?t('doseHoldHint'):''; }
+// tap types it, hold takes it off the scale -- the same two gestures the steam,
+// flush and water buttons use
+function doseHold(){ if(scaleHasReading()) doseFromScale(); else toast(t('doseNoScale'),'err'); }
+function bindDoseGestures(){
+  var el=document.getElementById('doseIn'); if(!el||el._bound) return;
+  el._bound=true; el.onclick=null;
+  bindActionLongPress(el, function(){ openKeypad('doseIn'); }, doseHold); }
 function doseFromScale(){ var w=state.scaleWeight;
   if(!state.scaleConnected||w===null){ toast(t('doseNoScale'),'err'); return; }
   settings.doseIn=parseFloat(w.toFixed(1)); syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
@@ -8351,6 +8362,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
   if(/[?&]camsetup=1/.test(window.location.search)){ bootCamSetup(); return; }
+  bindDoseGestures();
   fitStage(); loadFavs(); loadPrefs(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
