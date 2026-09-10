@@ -343,7 +343,7 @@ body.cam-on .bean-chips{display:none}
 body.brewing .car-nav,body.brewing #navCards,body.brewing .cur-fav{display:none}
 body.brewing .carousel{height:210px}
 body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
-.cc-name.loaded::before{content:'';display:inline-block;width:8px;height:8px;border-radius:100px;background:var(--green);margin-right:7px;vertical-align:middle;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.cc-head.loaded::before{content:'';flex:none;width:9px;height:9px;border-radius:100px;background:var(--green);margin-right:9px;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
 .cc-name{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:left;line-height:1.2;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-meta{font-size:11px;color:var(--ink-mute);font-weight:500;text-align:center;margin-top:2px}
 .cc-hint{margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
@@ -357,6 +357,13 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .nav-cards::-webkit-scrollbar{height:0}
 .nav-card{position:relative;flex-shrink:0;width:58px;height:44px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-size:11px;font-weight:800;color:#fff;line-height:1.1;overflow:hidden;transition:transform .15s,box-shadow .15s;border:2px solid transparent;background-color:#4f46e5}
 .nav-card:hover{transform:translateY(-2px)}
+/* touch has no hover, so the feedback is the press itself */
+.nav-card:active{transform:scale(.92);filter:brightness(1.12)}
+.album:active{transform:scale(.97)}
+.album.center:active{transform:translateX(0) scale(1.28)}
+.ms-btn:active{transform:scale(.9);background:rgba(99,102,241,.22)}
+.dose-num.tap:active,.rv.tap:active,.recipe .grind-val:active{transform:scale(.95);background:rgba(99,102,241,.14);border-color:var(--accent)}
+.cur-fav:active,.cur-browse:active{transform:scale(.9)}
 .nav-card.active{border-color:#fff;box-shadow:0 0 0 2px var(--accent),0 4px 12px rgba(99,102,241,.35)}
 /* the loaded profile is the one that decides what the next shot does, so it is
    the one thing in the strip at full strength */
@@ -371,13 +378,17 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.9),inset 0 0 14px rgba(16,185,129,.55)}
 .album.loaded::before{background:linear-gradient(150deg,rgba(255,255,255,.26),rgba(255,255,255,0) 42%,rgba(16,185,129,.16));
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.75),inset 0 0 20px rgba(16,185,129,.35)}
-.nav-card.loaded::after,.album.loaded::after{content:'\2713';position:absolute;z-index:4;
+/* the strip card is 58px wide: the rim and the glow already say it, and a
+   check on top of them is one thing too many */
+.album.loaded::after{content:'\2713';position:absolute;z-index:4;top:8px;left:8px;
+  width:20px;height:20px;font-size:12px;font-weight:900;
   display:flex;align-items:center;justify-content:center;color:var(--green);
   background:rgba(255,255,255,.92);border-radius:100px;
   box-shadow:0 1px 4px rgba(0,0,0,.28),0 0 0 1px rgba(16,185,129,.5)}
-.nav-card.loaded::after{top:3px;left:3px;width:13px;height:13px;font-size:9px;font-weight:900}
-.album.loaded::after{top:8px;left:8px;width:20px;height:20px;font-size:12px;font-weight:900}
 .nav-card.loaded span,.album.loaded .al-name{position:relative;z-index:3}
+.al-shine{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s}
+.album.loaded .al-shine{opacity:1}
+
 
 .nav-card span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
@@ -3643,7 +3654,7 @@ function buildCarousel(){
     if(st.group){ var g=document.createElement('div'); g.className='al-group'; g.textContent=st.group; nm.appendChild(g); }
     var nmt=document.createElement('div'); nmt.className='al-nametext'; nmt.textContent=st.name; nm.appendChild(nmt);
     if(favIds[p.id]){ var fv=document.createElement('div'); fv.className='al-fav'; fv.textContent='★'; el.appendChild(fv); }
-    el.appendChild(curve); el.appendChild(nm);
+    el.appendChild(curve); el.appendChild(shine()); el.appendChild(nm);
     el.onclick=function(){ if(i===carIndex) loadCentered(); else { carIndex=i; renderCarousel(); } };
     stage.appendChild(el); p._el=el; p._curveCv=cv;
     setTimeout(function(){ drawSimCurve(cv,p.profile,true); },0); });
@@ -3673,6 +3684,25 @@ function syncCarouselLock(){
   document.body.classList.toggle('brewing',on);
   if(on){ var i=lockedIndex(); if(i!==carIndex) carIndex=i; }
   if(carItems.length) renderCarousel(); }
+// The same idea as the tank: an SVG animation, so the one call that pauses every
+// svg under .app on sleep pauses this too, and document.getAnimations() -- which
+// the idle-screen rule is measured with -- never sees it.
+var _shineN=0;
+function shine(){
+  var id='alShine'+(++_shineN);
+  var sv=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  sv.setAttribute('class','al-shine');
+  sv.setAttribute('viewBox','0 0 100 100');
+  sv.setAttribute('preserveAspectRatio','none');
+  sv.innerHTML='<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="0">'
+    +'<stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+    +'<stop offset="0.5" stop-color="#fff" stop-opacity="0.55"/>'
+    +'<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'
+    +'<g transform="rotate(12 50 50)">'
+    +'<rect y="-40" width="26" height="180" fill="url(#'+id+')">'
+    +'<animate attributeName="x" values="-40;130" dur="4.5s" begin="0s" repeatCount="indefinite"/>'
+    +'</rect></g>';
+  return sv; }
 function renderCarousel(){
   var lock=brewLocked();
   carItems.forEach(function(p,i){ var off=i-carIndex; var abs=Math.abs(off);
@@ -3711,7 +3741,7 @@ function renderCarousel(){
     document.getElementById('curName').textContent=stc.name;
     document.getElementById('curMeta').textContent=(stc.group?stc.group+' · ':'')+(pr.author||'')+' · '+((pr.steps&&pr.steps.length)||0)+' steps';
     var isCur=curProfileObj&&curProfileObj.id===cur.id;
-    document.getElementById('curName').classList.toggle('loaded',!!isCur);
+    document.getElementById('curName').parentElement.classList.toggle('loaded',!!isCur);
     var hint=document.getElementById('ccHint');
     if(lock){ hint.textContent=t('brewingNow'); }
     else if(isCur){ hint.textContent=t('currentlyLoaded'); }
