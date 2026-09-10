@@ -388,7 +388,7 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
   display:flex;align-items:center;justify-content:center;color:var(--green);
   background:rgba(255,255,255,.92);border-radius:100px;
   box-shadow:0 1px 4px rgba(0,0,0,.28),0 0 0 1px rgba(16,185,129,.5)}
-.nav-card.loaded span,.album.loaded .al-name{position:relative;z-index:3}
+.nav-card.loaded .nc-txt,.album.loaded .al-name{position:relative;z-index:3}
 .al-shine{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s}
 .album.loaded .al-shine{opacity:1}
 body.no-fx .al-shine{display:none}
@@ -396,7 +396,7 @@ body.no-fx .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:r
 body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 
 
-.nav-card span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nav-card .nc-txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* Recipe / ratio */
 .recipe{flex-shrink:0}
@@ -3753,7 +3753,7 @@ function buildCarousel(){
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id; var stn=splitTitle(title);
     var c=document.createElement('div'); c.className='nav-card';
     c.style.background='linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.35)),'+albumGrad(p,i);
-    c.innerHTML='<span>'+escapeHtml(stn.name)+'</span>'+(favIds[p.id]?'<i class="nc-fav">★</i>':'');
+    c.innerHTML='<span class="nc-txt">'+escapeHtml(stn.name)+'</span>'+(favIds[p.id]?'<i class="nc-fav">★</i>':'');
     c.title=title;
     c.onclick=function(){ carIndex=i; renderCarousel(); selectProfile(p); };
     nav.appendChild(c); p._navEl=c; });
