@@ -668,6 +668,11 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .mb-title{font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .mb-sub{font-size:13px;color:var(--ink-mute);margin-top:4px}
 .mb-actions{display:flex;gap:10px;justify-content:center}
+.cs-way{border:1px solid var(--glass-line);background:var(--glass-hi);border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.cs-way-h{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800;color:var(--ink)}
+.cs-way-n{flex:none;width:22px;height:22px;border-radius:100px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.cs-note{font-size:12px;font-weight:700;line-height:1.6;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:12px;padding:10px 12px;word-break:break-all}
+.cs-note[hidden]{display:none}
 .mb-actions .m-btn{flex:1;max-width:180px;padding:14px}
 .mb-analyze{width:100%;padding:15px;font-size:15px}
 .mb-fields{display:flex;flex-direction:column;gap:2px;background:#fff;border:1px solid var(--edge);border-radius:16px;padding:16px}
@@ -1401,23 +1406,32 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 <div id="camSetupPage" style="display:none">
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>📷 </span><span data-i18n="camSetupTitle">Camera for the machine</span></div>
-      <div class="mb-sub" data-i18n="camSetupDesc">Type the address your IP-camera app shows, and the machine picks it up.</div></div>
-    <div class="field"><label data-i18n="camUrlName">Stream address</label>
-      <input id="csUrl" placeholder="http://192.168.0.20:8080/video" inputmode="url" autocapitalize="off" autocorrect="off"></div>
-    <div class="mb-actions"><button class="m-btn" id="csSaveBtn" onclick="csSave()" data-i18n="camSetupSave">Send to the machine</button></div>
-    <div class="mb-sub" id="csStatus"></div>
-    <div class="mb-head" style="margin-top:18px"><div class="mb-title"><span data-i18n="csLiveTitle">Or use this phone's camera</span></div>
-      <div class="mb-sub" data-i18n="csLiveDesc">Sends the camera straight to the machine, at full frame rate.</div></div>
-    <video id="csPreview" autoplay playsinline muted hidden style="width:100%;border-radius:14px;background:#000"></video>
-    <div class="mb-actions">
-      <button class="m-btn primary" id="csLiveBtn" onclick="csLiveToggle()" data-i18n="csLiveStart">Use this camera</button>
-      <button class="m-btn" id="csFlipBtn" onclick="csFlip()" hidden data-i18n="csFlip">Flip</button>
-      <button class="m-btn" id="csShapeBtn" onclick="csShape()" hidden data-i18n="csShapeLandscape">Landscape</button>
+      <div class="mb-sub" data-i18n="camSetupDesc">Two ways, and you can use either.</div></div>
+
+    <div class="cs-way">
+      <div class="cs-way-h"><span class="cs-way-n">1</span><span data-i18n="csLiveTitle">This phone's camera</span></div>
+      <div class="mb-sub" data-i18n="csLiveDesc">The sharper picture, at the rate the camera runs, and no app to install. Chrome has to be told to trust this address once.</div>
+      <div class="cs-note" id="csSecureNote" hidden></div>
+      <video id="csPreview" autoplay playsinline muted hidden style="width:100%;border-radius:14px;background:#000"></video>
+      <div class="mb-actions">
+        <button class="m-btn primary" id="csLiveBtn" onclick="csLiveToggle()" data-i18n="csLiveStart">Use this camera</button>
+        <button class="m-btn" id="csFlipBtn" onclick="csFlip()" hidden data-i18n="csFlip">Flip</button>
+        <button class="m-btn" id="csShapeBtn" onclick="csShape()" hidden data-i18n="csShapeLandscape">Landscape</button>
+      </div>
+      <div class="field" id="csZoomBox" hidden><label data-i18n="csZoom">Camera zoom</label>
+        <div class="opt-ctrl"><input type="range" class="slider" id="csZoom" min="1" max="4" step="0.1" value="1"
+          oninput="csSetZoom(this.value)"><span class="opt-val" id="csZoomVal">1.0x</span></div></div>
+      <div class="mb-sub" id="csLiveStatus"></div>
     </div>
-    <div class="field" id="csZoomBox" hidden><label data-i18n="csZoom">Camera zoom</label>
-      <div class="opt-ctrl"><input type="range" class="slider" id="csZoom" min="1" max="4" step="0.1" value="1"
-        oninput="csSetZoom(this.value)"><span class="opt-val" id="csZoomVal">1.0x</span></div></div>
-    <div class="mb-sub" id="csLiveStatus"></div>
+
+    <div class="cs-way">
+      <div class="cs-way-h"><span class="cs-way-n">2</span><span data-i18n="csUrlTitle">An IP-camera app's address</span></div>
+      <div class="mb-sub" data-i18n="csUrlDesc">Needs an app on the phone -- IP Webcam, DroidCam -- but no browser setting. Start the app, then type the address it shows with /video on the end.</div>
+      <div class="field"><label data-i18n="camUrlName">Stream address</label>
+        <input id="csUrl" placeholder="http://192.168.0.20:8080/video" inputmode="url" autocapitalize="off" autocorrect="off"></div>
+      <div class="mb-actions"><button class="m-btn" id="csSaveBtn" onclick="csSave()" data-i18n="camSetupSave">Send to the machine</button></div>
+      <div class="mb-sub" id="csStatus"></div>
+    </div>
   </div>
 </div>
 <div id="mobilePage" style="display:none">
@@ -1516,8 +1530,8 @@ var I18N={
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
     apply:'Apply',
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
-    camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are.',
-    camUrlName:'Stream address', camUrlDesc:'The MJPEG address of a camera on this network -- an IP-camera app on a phone serves one, usually ending in /video.',
+    camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are. Scan the code it puts there with a phone: it can send its own camera, or the address of an IP-camera app on it.',
+    camUrlName:'Stream address', camUrlDesc:'For the IP-camera app way: the MJPEG address of a camera on this network, usually ending in /video. A phone sending its own camera does not use this.',
     camRotate:'Turn the picture', camRotateDesc:'For a phone lying on its side or clipped upside down.',
     camFit:'Fill the pane', camFitDesc:'Crop to the edges instead of leaving bars.',
     camZoom:'Enlarge', camZoomDesc:'Crops in on the middle of the picture.',
@@ -1525,19 +1539,21 @@ var I18N={
     camNoUrl:'No stream address set', camConnecting:'Connecting\u2026',
     camScanTitle:'Scan with the phone that has the camera',
     camScanRetry:'Nothing answered at that address. Scan to send a different one.',
-    camScanNote:'Open an IP-camera app on it, then type the address it shows on the page this opens. The picture starts here on its own.',
-    camSetupTitle:'Camera for the machine', camSetupDesc:'Type the address your IP-camera app shows and the machine picks it up.',
+    camScanNote:'The page it opens offers two ways: this phone\u2019s own camera, or the address of an IP-camera app running on it. Either one starts the picture here on its own.',
+    camSetupTitle:'Camera for the machine', camSetupDesc:'Two ways, and you can use either.',
+    csUrlTitle:"An IP-camera app's address",
+    csUrlDesc:'Needs an app on the phone \u2014 IP Webcam, DroidCam \u2014 but no browser setting. Start the app, then type the address it shows with /video on the end.',
     camSetupSave:'Send to the machine', camSetupSaved:'Sent \u2014 the machine is connecting',
     camSetupNeed:'Type an address first', camSetupFailed:'Could not reach the machine',
-    csLiveTitle:"Or use this phone's camera",
-    csLiveDesc:'Sends the camera straight to the machine, at full frame rate.',
+    csLiveTitle:"This phone's camera",
+    csLiveDesc:'The sharper picture, at the rate the camera runs, and no app to install. Chrome has to be told to trust this address once.',
     csLiveStart:'Use this camera', csLiveStop:'Stop', csFlip:'Flip',
     csShapeLandscape:'Landscape', csShapePortrait:'Portrait', csZoom:'Camera zoom',
     csAsking:'Asking for the camera\u2026', csOffering:'Offering it to the machine\u2026',
     csWaiting:'Waiting for the machine\u2026', csLiveOn:'Live \u2014 the machine has the picture',
     csLiveStopped:'Stopped', csLiveFailed:'The connection failed',
     csDenied:'Camera permission was refused', csNoCamera:'No camera could be opened',
-    csNoSecure:'This browser will not give a camera to a plain http:// page. In Chrome open chrome://flags/#unsafely-treat-insecure-origin-as-secure, add this page\u2019s address, and restart it.',
+    csNoSecure:'This browser gives no camera to a plain http:// page. In Chrome open chrome://flags/#unsafely-treat-insecure-origin-as-secure, add the address below, set it to Enabled and restart Chrome, then come back here. Or use way 2, which needs no browser setting:',
     camError:'The stream could not be reached',
     guideLine:'Extraction guideline', guideLineDesc:'Draw what the shot should look like under the live graph.',
     guideOff:'Off', guideProfile:'The loaded profile', guideShot:'A previous shot',
@@ -1635,8 +1651,8 @@ var I18N={
     confirmDeleteBean:'이 원두를 삭제할까요?', deleted:'삭제됨', deleteFailed:'삭제 실패:', selectItem:'항목을 선택하세요',
     apply:'적용',
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
-    camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다.',
-    camUrlName:'스트리밍 주소', camUrlDesc:'같은 네트워크에 있는 카메라의 MJPEG 주소. 폰의 IP 카메라 앱이 보통 /video 로 끝나는 주소를 제공합니다.',
+    camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다. 거기 뜨는 QR을 폰으로 스캔하면 폰 카메라를 보내거나 IP 카메라 앱 주소를 넣을 수 있습니다.',
+    camUrlName:'스트리밍 주소', camUrlDesc:'IP 카메라 앱 방식용 주소입니다. 같은 네트워크의 MJPEG 주소로, 보통 /video 로 끝납니다. 폰 카메라를 직접 보내는 경우에는 쓰지 않습니다.',
     camRotate:'화면 회전', camRotateDesc:'폰을 누이거나 거꾸로 물렸을 때.',
     camFit:'여백 없이 채우기', camFitDesc:'상하 좌우 여백 대신 가장자리를 잘라 채웁니다.',
     camZoom:'확대', camZoomDesc:'화면 가운데를 당겨 보여줍니다.',
@@ -1644,19 +1660,21 @@ var I18N={
     camNoUrl:'스트리밍 주소가 없습니다', camConnecting:'연결 중…',
     camScanTitle:'카메라를 쓸 폰으로 스캔하세요',
     camScanRetry:'그 주소에서 응답이 없습니다. 스캔해서 다른 주소를 보내세요.',
-    camScanNote:'폰에서 IP 카메라 앱을 연 뒤, 열린 페이지에 그 앱이 보여주는 주소를 입력하세요. 화면은 여기에 자동으로 나옵니다.',
-    camSetupTitle:'머신에 카메라 연결', camSetupDesc:'IP 카메라 앱이 보여주는 주소를 입력하면 머신이 받아갑니다.',
+    camScanNote:'열린 페이지에 두 가지 방법이 있습니다. 이 폰의 카메라를 그대로 보내거나, 폰에서 돌아가는 IP 카메라 앱의 주소를 넣으면 됩니다. 어느 쪽이든 화면은 여기에 자동으로 나옵니다.',
+    camSetupTitle:'머신에 카메라 연결', camSetupDesc:'방법은 두 가지, 어느 쪽을 써도 됩니다.',
+    csUrlTitle:'IP 카메라 앱 주소 넣기',
+    csUrlDesc:'폰에 앱이 필요하지만(IP Webcam, DroidCam 등) 브라우저 설정은 건드리지 않습니다. 앱을 실행한 뒤 그 앱이 보여주는 주소 뒤에 /video 를 붙여 입력하세요.',
     camSetupSave:'머신으로 보내기', camSetupSaved:'보냈습니다 — 머신이 연결 중입니다',
     camSetupNeed:'주소를 먼저 입력하세요', camSetupFailed:'머신에 연결하지 못했습니다',
-    csLiveTitle:'또는 이 폰의 카메라 쓰기',
-    csLiveDesc:'카메라를 머신으로 바로 보냅니다. 프레임이 가장 높습니다.',
+    csLiveTitle:'이 폰의 카메라 쓰기',
+    csLiveDesc:'화질과 프레임이 더 좋고 앱을 깔 필요가 없습니다. 대신 크롬에서 이 주소를 한 번 허용해야 합니다.',
     csLiveStart:'이 카메라 쓰기', csLiveStop:'중지', csFlip:'전후 전환',
     csShapeLandscape:'가로', csShapePortrait:'세로', csZoom:'카메라 줌',
     csAsking:'카메라 권한 요청 중…', csOffering:'머신에 연결 신청 중…',
     csWaiting:'머신 응답 기다리는 중…', csLiveOn:'연결됨 — 머신에 화면이 나옵니다',
     csLiveStopped:'중지했습니다', csLiveFailed:'연결에 실패했습니다',
     csDenied:'카메라 권한이 거부됐습니다', csNoCamera:'카메라를 열지 못했습니다',
-    csNoSecure:'브라우저가 http:// 페이지에는 카메라를 주지 않습니다. 크롬에서 chrome://flags/#unsafely-treat-insecure-origin-as-secure 를 열어 이 페이지 주소를 등록하고 재시작하세요.',
+    csNoSecure:'브라우저가 http:// 페이지에는 카메라를 주지 않습니다. 크롬에서 chrome://flags/#unsafely-treat-insecure-origin-as-secure 를 열어 아래 주소를 등록하고 Enabled로 바꾼 뒤 크롬을 재시작하고 다시 오세요. 브라우저 설정 없이 쓰려면 아래 2번 방법을 쓰시면 됩니다:',
     camError:'스트림에 연결하지 못했습니다',
     guideLine:'추출 가이드라인', guideLineDesc:'실시간 그래프 아래에 목표 모양을 깔아둡니다.',
     guideOff:'끔', guideProfile:'프로파일 기본', guideShot:'이전 추출로그',
@@ -8336,6 +8354,14 @@ function csWaitAnswer(pc){
       pc.setRemoteDescription({type:'answer',sdp:a.sdp}).catch(function(){});
     }).catch(function(){});
   },1200); }
+// Whether this browser will hand over a camera is knowable before anything is
+// pressed, so it is said before anything is pressed.
+function csSecureCheck(){
+  var note=document.getElementById('csSecureNote'), btn=document.getElementById('csLiveBtn');
+  if(!note) return;
+  var ok=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  note.hidden=ok; if(btn) btn.disabled=!ok;
+  if(!ok) note.textContent=t('csNoSecure')+' '+window.location.origin; }
 function bootCamSetup(){
   loadPrefs();
   document.querySelector('.stage-wrap').style.display='none';
@@ -8344,6 +8370,7 @@ function bootCamSetup(){
   if(prefs.night) document.body.classList.add('night');
   applyI18n();
   // whatever the machine is already pointed at, so it can be corrected
+  csSecureCheck();
   api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
     var url=(typeof v==='string'?v:(v&&v.value)||'');
     if(url) document.getElementById('csUrl').value=url; }).catch(function(){}); }
