@@ -668,12 +668,26 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .mb-title{font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .mb-sub{font-size:13px;color:var(--ink-mute);margin-top:4px}
 .mb-actions{display:flex;gap:10px;justify-content:center}
-/* the touch ring: over everything, through to nothing */
-.ripple{position:fixed;z-index:9999;pointer-events:none;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:100px;border:3px solid rgba(56,168,222,.75);box-shadow:0 0 16px rgba(56,168,222,.5),inset 0 0 12px rgba(56,168,222,.28);animation:rippleOut .78s cubic-bezier(.22,.7,.3,1) forwards}
-.ripple::after{content:'';position:absolute;inset:-2px;border-radius:100px;border:3px solid rgba(31,191,168,.6);animation:rippleOut .78s cubic-bezier(.22,.7,.3,1) .14s forwards}
-body.night .ripple{border-color:rgba(139,92,246,.55)}
-body.night .ripple::after{border-color:rgba(56,168,222,.45)}
-@keyframes rippleOut{from{transform:scale(.35);opacity:.9}to{transform:scale(8.5);opacity:0}}
+/* the ripple lives in the control it was pressed on, clipped to its shape */
+.rip-clip{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:6}
+.rip{position:absolute;border-radius:50%;pointer-events:none;transform-origin:50% 50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.9) 0 9%,rgba(198,240,255,.6) 22%,rgba(56,168,222,.32) 46%,rgba(56,168,222,.12) 70%,rgba(56,168,222,0) 100%);box-shadow:inset 0 -8px 16px rgba(255,255,255,.4),inset 0 8px 16px rgba(12,74,110,.22),0 0 16px rgba(56,168,222,.3);animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) forwards}
+.rip::after{content:'';position:absolute;inset:6%;border-radius:50%;border:2px solid rgba(255,255,255,.5);animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) .13s forwards}
+.rip::before{content:'';position:absolute;left:16%;top:12%;width:34%;height:26%;border-radius:50%;background:radial-gradient(ellipse at 40% 40%,rgba(255,255,255,.9),rgba(255,255,255,.25) 55%,rgba(255,255,255,0) 100%);filter:blur(1px);animation:ripGlint .8s ease-out forwards}
+body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7) 0 9%,rgba(167,139,250,.5) 24%,rgba(99,102,241,.3) 48%,rgba(56,168,222,.12) 72%,rgba(56,168,222,0) 100%)}
+/* the two axes fight each other on the way out, which is what makes a drop
+   read as liquid rather than as a circle getting bigger */
+@keyframes ripSwell{
+  0%{transform:scale(.06) scaleX(1.14) scaleY(.74);opacity:.95}
+  22%{transform:scale(.38) scaleX(.90) scaleY(1.14);opacity:.8}
+  45%{transform:scale(.6) scaleX(1.10) scaleY(.9);opacity:.6}
+  68%{transform:scale(.79) scaleX(.95) scaleY(1.06);opacity:.38}
+  86%{transform:scale(.92) scaleX(1.03) scaleY(.98);opacity:.18}
+  100%{transform:scale(1) scaleX(1) scaleY(1);opacity:0}}
+/* light moving on a curved surface */
+@keyframes ripGlint{
+  0%{transform:translate(-14%,-16%) scale(.7);opacity:.75}
+  55%{transform:translate(10%,8%) scale(1.05);opacity:.35}
+  100%{transform:translate(20%,16%) scale(1.2);opacity:0}}
 .cs-way{border:1px solid var(--glass-line);background:var(--glass-hi);border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
 .cs-way-h{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800;color:var(--ink)}
 .cs-way-n{flex:none;width:22px;height:22px;border-radius:100px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
@@ -2442,17 +2456,31 @@ function syncDoseTake(){ var i=document.getElementById('doseIco'); if(!i) return
 // tap types it, hold takes it off the scale -- the same two gestures the steam,
 // flush and water buttons use
 function doseHold(){ if(scaleHasReading()) doseFromScale(); else toast(t('doseNoScale'),'err'); }
-// One ring per press, removed when it has finished spreading. Asleep the screen
-// holds still, and the lock has its own reason for a touch, so neither gets one.
-function rippleAt(x,y){
-  if(_asleep) return;
-  var d=document.createElement('div'); d.className='ripple';
-  d.style.left=x+'px'; d.style.top=y+'px';
-  document.body.appendChild(d);
-  setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },700); }
+// Anything that can be pressed. A ripple on something that does nothing when
+// touched would be a lie about what just happened.
+var RIPPLE_SEL='button,.nav-card,.album,.tap,.aux-chip,.kp-key,.m-btn,.ms-btn,.tare-btn,'
+  +'.act-btn,.cur-browse,.cur-fav,.grind-val,.dose-take,.switch,.bean-edit,.preset-chip';
+// One swell per press, sized from where the finger landed to the furthest corner
+// of the control, so it covers that control exactly once and stops.
+function rippleIn(host,x,y){
+  if(_asleep||!host||host.disabled) return;
+  var r=host.getBoundingClientRect(); if(!r.width||!r.height) return;
+  if(getComputedStyle(host).position==='static') host.style.position='relative';
+  var clip=host.querySelector('.rip-clip');
+  if(!clip||clip.parentNode!==host){ clip=document.createElement('span'); clip.className='rip-clip'; host.appendChild(clip); }
+  var lx=x-r.left, ly=y-r.top;
+  var far=Math.max(Math.hypot(lx,ly),Math.hypot(r.width-lx,ly),
+                   Math.hypot(lx,r.height-ly),Math.hypot(r.width-lx,r.height-ly));
+  var d=document.createElement('span'); d.className='rip';
+  d.style.width=d.style.height=(far*2)+'px';
+  d.style.left=lx+'px'; d.style.top=ly+'px';
+  d.style.marginLeft=d.style.marginTop=(-far)+'px';
+  clip.appendChild(d);
+  setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },900); }
 document.addEventListener('pointerdown',function(e){
   if(e.pointerType==='mouse'&&e.button!==0) return;
-  rippleAt(e.clientX,e.clientY); },{passive:true});
+  var host=e.target&&e.target.closest&&e.target.closest(RIPPLE_SEL);
+  if(host) rippleIn(host,e.clientX,e.clientY); },{passive:true});
 function bindDoseGestures(){
   var el=document.getElementById('doseIn'); if(!el||el._bound) return;
   el._bound=true; el.onclick=null;
