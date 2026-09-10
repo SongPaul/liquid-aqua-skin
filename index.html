@@ -2306,8 +2306,11 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
                             {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
                             {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
-    else { tags([{v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR},
+    else { var wN=chart.weight.length;
+           tags([{v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR},
                  {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                 // the scale ticks on its own, so the weight reads from its own end
+                 {v:wN?chart.weight[wN-1]:null,mx:settings.doseOut*1.2,c:SERIES.weight,u:U_G},
                  {v:hasTempAxis?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket,u:U_TEMP},
                  {v:hasTempAxis?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix,u:U_TEMP}]); }
   }
