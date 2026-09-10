@@ -343,7 +343,10 @@ body.cam-on .bean-chips{display:none}
 body.brewing .car-nav,body.brewing #navCards,body.brewing .cur-fav{display:none}
 body.brewing .carousel{height:210px}
 body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
-.cc-head.loaded::before{content:'';flex:none;width:9px;height:9px;border-radius:100px;background:var(--green);margin-right:9px;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+/* the space is always there; only the dot inside it comes and goes, so the
+   name never slides when the loaded profile is browsed past */
+.cc-head::before{content:'';flex:none;width:9px;height:9px;border-radius:100px;background:var(--green);margin-right:9px;box-shadow:0 0 0 3px rgba(16,185,129,.2);opacity:0;transition:opacity .2s}
+.cc-head.loaded::before{opacity:1}
 .cc-name{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--ink);text-align:left;line-height:1.2;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-meta{font-size:11px;color:var(--ink-mute);font-weight:500;text-align:center;margin-top:2px}
 .cc-hint{margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-mute)}
@@ -673,19 +676,19 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .mb-actions{display:flex;gap:10px;justify-content:center}
 /* the ripple lives in the control it was pressed on, clipped to its shape */
 .rip-clip{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:6}
-.rip{position:absolute;border-radius:50%;pointer-events:none;transform-origin:50% 50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.92) 0 8%,rgba(198,240,255,.62) 20%,rgba(56,168,222,.34) 44%,rgba(12,74,110,.16) 68%,rgba(56,168,222,0) 100%);will-change:transform,opacity;animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) forwards}
+.rip{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;--rip-to:1;border-radius:50%;pointer-events:none;transform-origin:50% 50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.92) 0 8%,rgba(198,240,255,.62) 20%,rgba(56,168,222,.34) 44%,rgba(12,74,110,.16) 68%,rgba(56,168,222,0) 100%);will-change:transform,opacity;animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) forwards}
 .rip::after{content:'';position:absolute;inset:6%;border-radius:50%;border:2px solid rgba(255,255,255,.5);animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) .13s forwards}
 .rip::before{content:'';position:absolute;left:16%;top:12%;width:34%;height:26%;border-radius:50%;background:radial-gradient(ellipse at 40% 40%,rgba(255,255,255,.9),rgba(255,255,255,.25) 55%,rgba(255,255,255,0) 100%);animation:ripGlint .8s ease-out forwards}
 body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7) 0 9%,rgba(167,139,250,.5) 24%,rgba(99,102,241,.3) 48%,rgba(56,168,222,.12) 72%,rgba(56,168,222,0) 100%)}
 /* the two axes fight each other on the way out, which is what makes a drop
    read as liquid rather than as a circle getting bigger */
 @keyframes ripSwell{
-  0%{transform:scale(.06) scaleX(1.14) scaleY(.74);opacity:.95}
-  22%{transform:scale(.38) scaleX(.90) scaleY(1.14);opacity:.8}
-  45%{transform:scale(.6) scaleX(1.10) scaleY(.9);opacity:.6}
-  68%{transform:scale(.79) scaleX(.95) scaleY(1.06);opacity:.38}
-  86%{transform:scale(.92) scaleX(1.03) scaleY(.98);opacity:.18}
-  100%{transform:scale(1) scaleX(1) scaleY(1);opacity:0}}
+  0%{transform:scale(calc(var(--rip-to) * .06)) scaleX(1.14) scaleY(.74);opacity:.95}
+  22%{transform:scale(calc(var(--rip-to) * .38)) scaleX(.90) scaleY(1.14);opacity:.8}
+  45%{transform:scale(calc(var(--rip-to) * .6)) scaleX(1.10) scaleY(.9);opacity:.6}
+  68%{transform:scale(calc(var(--rip-to) * .79)) scaleX(.95) scaleY(1.06);opacity:.38}
+  86%{transform:scale(calc(var(--rip-to) * .92)) scaleX(1.03) scaleY(.98);opacity:.18}
+  100%{transform:scale(var(--rip-to)) scaleX(1) scaleY(1);opacity:0}}
 /* light moving on a curved surface */
 @keyframes ripGlint{
   0%{transform:translate(-14%,-16%) scale(.7);opacity:.75}
@@ -2476,10 +2479,12 @@ function rippleIn(host,x,y){
   var lx=x-r.left, ly=y-r.top;
   var far=Math.max(Math.hypot(lx,ly),Math.hypot(r.width-lx,ly),
                    Math.hypot(lx,r.height-ly),Math.hypot(r.width-lx,r.height-ly));
+  // one small raster, scaled to cover: the paint is constant and the growth is
+  // a transform, which costs nothing per frame
+  var base=96;
   var d=document.createElement('span'); d.className='rip';
-  d.style.width=d.style.height=(far*2)+'px';
   d.style.left=lx+'px'; d.style.top=ly+'px';
-  d.style.marginLeft=d.style.marginTop=(-far)+'px';
+  d.style.setProperty('--rip-to',(far*2/base).toFixed(3));
   clip.appendChild(d);
   setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },900); }
 document.addEventListener('pointerdown',function(e){
