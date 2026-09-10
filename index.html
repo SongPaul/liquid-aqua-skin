@@ -388,6 +388,9 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .nav-card.loaded span,.album.loaded .al-name{position:relative;z-index:3}
 .al-shine{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s}
 .album.loaded .al-shine{opacity:1}
+body.no-fx .al-shine{display:none}
+body.no-fx .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.9)}
+body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 
 
 .nav-card span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -670,9 +673,9 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .mb-actions{display:flex;gap:10px;justify-content:center}
 /* the ripple lives in the control it was pressed on, clipped to its shape */
 .rip-clip{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:6}
-.rip{position:absolute;border-radius:50%;pointer-events:none;transform-origin:50% 50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.9) 0 9%,rgba(198,240,255,.6) 22%,rgba(56,168,222,.32) 46%,rgba(56,168,222,.12) 70%,rgba(56,168,222,0) 100%);box-shadow:inset 0 -8px 16px rgba(255,255,255,.4),inset 0 8px 16px rgba(12,74,110,.22),0 0 16px rgba(56,168,222,.3);animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) forwards}
+.rip{position:absolute;border-radius:50%;pointer-events:none;transform-origin:50% 50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.92) 0 8%,rgba(198,240,255,.62) 20%,rgba(56,168,222,.34) 44%,rgba(12,74,110,.16) 68%,rgba(56,168,222,0) 100%);will-change:transform,opacity;animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) forwards}
 .rip::after{content:'';position:absolute;inset:6%;border-radius:50%;border:2px solid rgba(255,255,255,.5);animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) .13s forwards}
-.rip::before{content:'';position:absolute;left:16%;top:12%;width:34%;height:26%;border-radius:50%;background:radial-gradient(ellipse at 40% 40%,rgba(255,255,255,.9),rgba(255,255,255,.25) 55%,rgba(255,255,255,0) 100%);filter:blur(1px);animation:ripGlint .8s ease-out forwards}
+.rip::before{content:'';position:absolute;left:16%;top:12%;width:34%;height:26%;border-radius:50%;background:radial-gradient(ellipse at 40% 40%,rgba(255,255,255,.9),rgba(255,255,255,.25) 55%,rgba(255,255,255,0) 100%);animation:ripGlint .8s ease-out forwards}
 body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7) 0 9%,rgba(167,139,250,.5) 24%,rgba(99,102,241,.3) 48%,rgba(56,168,222,.12) 72%,rgba(56,168,222,0) 100%)}
 /* the two axes fight each other on the way out, which is what makes a drop
    read as liquid rather than as a circle getting bigger */
@@ -1552,6 +1555,7 @@ var I18N={
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
     camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are. Scan the code it puts there with a phone: it can send its own camera, or the address of an IP-camera app on it.',
     camUrlName:'Stream address', camUrlDesc:'For the IP-camera app way: the MJPEG address of a camera on this network, usually ending in /video. A phone sending its own camera does not use this.',
+    fx:'Screen effects', fxDesc:'The ripple under a touch, the light across the loaded profile, and the blur behind the glass. Turn it off if the screen stutters.',
     camRotate:'Turn the picture', camRotateDesc:'For a phone lying on its side or clipped upside down.',
     camFit:'Fill the pane', camFitDesc:'Crop to the edges instead of leaving bars.',
     camZoom:'Enlarge', camZoomDesc:'Crops in on the middle of the picture.',
@@ -1673,6 +1677,7 @@ var I18N={
     dose:'도징', yield:'추출량', ratio:'비율', time:'시간', peak:'최고', volume:'용량',
     camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다. 거기 뜨는 QR을 폰으로 스캔하면 폰 카메라를 보내거나 IP 카메라 앱 주소를 넣을 수 있습니다.',
     camUrlName:'스트리밍 주소', camUrlDesc:'IP 카메라 앱 방식용 주소입니다. 같은 네트워크의 MJPEG 주소로, 보통 /video 로 끝납니다. 폰 카메라를 직접 보내는 경우에는 쓰지 않습니다.',
+    fx:'화면 효과', fxDesc:'터치할 때 퍼지는 물결, 로드된 프로파일 위를 지나가는 빛, 유리 뒤의 블러. 화면이 끊기면 끄세요.',
     camRotate:'화면 회전', camRotateDesc:'폰을 누이거나 거꾸로 물렸을 때.',
     camFit:'여백 없이 채우기', camFitDesc:'상하 좌우 여백 대신 가장자리를 잘라 채웁니다.',
     camZoom:'확대', camZoomDesc:'화면 가운데를 당겨 보여줍니다.',
@@ -2463,7 +2468,7 @@ var RIPPLE_SEL='button,.nav-card,.album,.tap,.aux-chip,.kp-key,.m-btn,.ms-btn,.t
 // One swell per press, sized from where the finger landed to the furthest corner
 // of the control, so it covers that control exactly once and stops.
 function rippleIn(host,x,y){
-  if(_asleep||!host||host.disabled) return;
+  if(_asleep||!prefs.fx||!host||host.disabled) return;
   var r=host.getBoundingClientRect(); if(!r.width||!r.height) return;
   if(getComputedStyle(host).position==='static') host.style.position='relative';
   var clip=host.querySelector('.rip-clip');
@@ -2760,7 +2765,7 @@ function hydrateFromStore(){
     if(all.gbrands&&typeof all.gbrands==='object'){ grinderBrands=all.gbrands; lsSet('aurora_gbrands',grinderBrands); }
     else if(Object.keys(grinderBrands).length) storePut('gbrands',grinderBrands);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
-      updateBeanInfo(); applyCam(); if(carItems.length) buildCarousel(); }
+      updateBeanInfo(); applyCam(); applyFx(); if(carItems.length) buildCarousel(); }
   }); }
 function applyPrefsObject(p){
   if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye;
@@ -2783,6 +2788,7 @@ function applyPrefsObject(p){
   if(p.camFit==='contain'||p.camFit==='cover') prefs.camFit=p.camFit;
   if(typeof p.camZoom==='number'&&p.camZoom>=1&&p.camZoom<=3) prefs.camZoom=p.camZoom;
   if(typeof p.camMirror==='boolean') prefs.camMirror=p.camMirror;
+  if(typeof p.fx==='boolean') prefs.fx=p.fx;
 }
 
 // ── Grinder identity ────────────────────────────────────────────────
@@ -2890,7 +2896,9 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'',
   // an MJPEG endpoint on the LAN -- an IP-camera app on a phone, say
   cam:false, camUrl:'',
   // how the picture is laid in the pane, whatever it came from
-  camRotate:0, camFit:'contain', camZoom:1, camMirror:false };
+  camRotate:0, camFit:'contain', camZoom:1, camMirror:false,
+  // the touch ripple and the light on the loaded cover
+  fx:true };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
 function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
@@ -2945,6 +2953,8 @@ function savePrefs(){ lsSet('aurora_prefs',prefs);
 function migratePrefs(){ _prefsBase={}; savePrefs(); }
 function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
+function applyFx(){ document.body.classList.toggle('no-fx',!prefs.fx); }
+function setFx(on){ prefs.fx=!!on; savePrefs(); applyFx(); }
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
 function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
 
@@ -3014,6 +3024,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
       var cz=Math.round((prefs.camZoom||1)*100);
       h+=row('camZoom','camZoomDesc','<div class="opt-ctrl"><input type="range" class="slider" min="100" max="300" step="5" value="'+cz+'" oninput="setCamZoom(this.value/100,true)" onchange="setCamZoom(this.value/100,false)"><span class="opt-val" id="camZoomVal">'+cz+'%</span></div>');
       h+=row('camMirror','camMirrorDesc',sw('setCamMirror',!!prefs.camMirror,'setCamMirror(this.checked)')); }
+    h+=row('fx','fxDesc',sw('setFx',!!prefs.fx,'setFx(this.checked)'));
     h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
     var sb=prefs.sleepBrightness||20;
     h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
@@ -8435,7 +8446,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
   if(/[?&]camsetup=1/.test(window.location.search)){ bootCamSetup(); return; }
   bindDoseGestures();
-  fitStage(); loadFavs(); loadPrefs(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
