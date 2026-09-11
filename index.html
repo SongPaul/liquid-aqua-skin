@@ -432,34 +432,38 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .recipe-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:flex-end;align-items:center;min-height:0}
 .recipe-title:empty,.recipe-title:has(.rc-live:empty){margin:0}
 .recipe-title .bean-link{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer}
-.dose-row{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start;gap:8px}
-.dose-block{text-align:center;min-width:0}
-.dose-adj{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
-.dose-num{font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
-.dose-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:1px;min-height:18px;display:flex;align-items:center;justify-content:center;gap:8px}
-.dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:10px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:2px 6px;border:1px solid var(--edge);background:var(--field);transition:background .15s,border-color .15s,transform .1s}
+.recipe-grid{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;gap:8px}
+.rg-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+/* the right column stacks from the top so its second row is the left's
+   second row: the ratio and the grind setting read as one line */
+.rg-right{justify-content:flex-start}
+.dose-block{text-align:center;min-width:0;flex:none}
+.dose-adj{display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0}
+.dose-num{font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
+.dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:0;min-height:14px;display:flex;align-items:center;justify-content:center;gap:8px}
+.dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:10px;min-height:36px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:2px 6px;border:1px solid var(--edge);background:var(--field);transition:background .15s,border-color .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
 .dose-num.tap:hover,.rv.tap:hover{background:var(--glass-hi)}
 .dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
 .ms-btn.sm{width:36px;height:36px;font-size:16px;border-radius:11px}
-.rv{font-size:24px;font-weight:800;color:var(--accent2);flex:1;min-width:0}
+.rv{font-size:20px;font-weight:800;color:var(--accent2);flex:1;min-width:0}
 .rl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase}
 .mini-steppers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .mini-step{display:flex;align-items:center;justify-content:space-between;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:5px 7px}
 .mini-step .l{font-size:11px;font-weight:700;color:var(--ink-mute);padding-left:3px}
 .mini-step .c{display:flex;align-items:center;gap:5px}
-.ms-btn{width:40px;height:40px;flex:none;border-radius:12px;border:1px solid rgba(99,102,241,.26);background:rgba(99,102,241,.09);color:var(--accent);font-size:18px;font-weight:700;line-height:1;cursor:pointer;-webkit-appearance:none;transition:background .15s,border-color .15s,transform .1s}
+.ms-btn{width:34px;height:34px;flex:none;border-radius:12px;border:1px solid rgba(99,102,241,.26);background:rgba(99,102,241,.09);color:var(--accent);font-size:18px;font-weight:700;line-height:1;cursor:pointer;-webkit-appearance:none;transition:background .15s,border-color .15s,transform .1s}
 .ms-btn:hover{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.42)}
 .ms-btn:active{transform:scale(.92);background:rgba(99,102,241,.24)}
 .ms-val{min-width:36px;text-align:center;font-size:13px;font-weight:700}
 
-.bean-info{padding:6px 16px;flex:1;min-height:88px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
-.lastshot-card{padding:6px 16px 8px;flex:none;min-height:0}
+.bean-info{padding:5px 14px;flex:1;min-height:72px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.lastshot-card{padding:5px 14px 7px;flex:none;min-height:0}
 .bean-info::-webkit-scrollbar{width:5px}
 .bean-info::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-.bean-row{display:flex;align-items:center;gap:10px;flex:none}
-.bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.bean-row{display:flex;align-items:center;gap:9px;flex:none;min-height:38px}
+.bean-ico{width:30px;height:30px;border-radius:10px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .rc-live{font-size:11px;font-weight:800;color:var(--accent);text-transform:none;letter-spacing:0}
 .live-grid{display:grid;gap:6px}
 .live-cell{text-align:center;min-width:0}
@@ -470,15 +474,14 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .live-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);margin-top:2px}
 .live-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
 .live-kind{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:var(--ink)}
-.mid-row{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid var(--glass-line)}
-.grind-label{display:flex;align-items:center;justify-content:center;gap:5px;overflow:hidden;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);width:100%;min-height:26px;margin-top:2px;background:none;border:none;padding:0 8px;border-radius:9px;cursor:pointer;font-family:var(--font);transition:background .15s}
+.grind-label{display:flex;align-items:center;justify-content:center;gap:5px;overflow:hidden;white-space:nowrap;font-size:10px;font-weight:700;color:var(--ink-soft);width:100%;min-height:18px;margin-top:0;background:none;border:none;padding:0 8px;border-radius:9px;cursor:pointer;font-family:var(--font);transition:background .15s}
 .grind-label #grindModel{overflow:hidden;text-overflow:ellipsis}
 .grind-label:hover{background:var(--glass-hi)}
 .grind-label span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .grind-label .gr-ico{font-size:15px}
 .grind-label #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.grind-val{min-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:20px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
+.grind-val{min-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:18px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
 .recipe .grind-val{flex:1;min-width:0;font-size:24px}
 .grind-val:hover{background:var(--glass-hi)}
 .bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;flex:none}
@@ -487,7 +490,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .last-shot{flex-shrink:0}
-.ls-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ls-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
 .ls-acts{display:flex;align-items:center;flex-shrink:0}
 .ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;text-transform:none;letter-spacing:0}
 .ls-profile:empty{display:none}
@@ -1137,12 +1140,19 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <div class="recipe glass">
         <div class="recipe-title"><span class="rc-live" id="recipeLiveTag"></span></div>
         <div id="recipeNormal">
-        <div class="dose-row">
+        <div class="recipe-grid">
+        <div class="rg-col">
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
               <div class="dose-num tap" id="doseIn"><span class="dose-ico" id="doseIco" hidden>⚖</span><span id="doseInVal">18.0</span><span class="du">g</span></div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
             <div class="dose-lbl" data-i18n="doseG">Dose</div>
+          </div>
+          <div class="dose-block">
+            <div class="dose-adj"><button class="ms-btn" onclick="adjustRatio(-0.1)">−</button>
+              <div class="rv tap" onclick="openKeypad('ratio')">1:<span id="ratioTag">2.0</span></div>
+              <button class="ms-btn" onclick="adjustRatio(0.1)">+</button></div>
+            <div class="dose-lbl" data-i18n="ratio">Ratio</div>
           </div>
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
@@ -1151,12 +1161,12 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
             <div class="dose-lbl" data-i18n="yieldG">Yield g</div>
           </div>
         </div>
-        <div class="mid-row">
+        <div class="rg-col rg-right">
           <div class="dose-block">
-            <div class="dose-adj"><button class="ms-btn" onclick="adjustRatio(-0.1)">−</button>
-              <div class="rv tap" onclick="openKeypad('ratio')">1:<span id="ratioTag">2.0</span></div>
-              <button class="ms-btn" onclick="adjustRatio(0.1)">+</button></div>
-            <div class="dose-lbl" data-i18n="ratio">Ratio</div>
+            <div class="dose-adj"><button class="ms-btn" onclick="adjustTemp(-0.5)">−</button>
+              <div class="rv tap" id="brewTempVal" onclick="openKeypad('brewTemp')">—</div>
+              <button class="ms-btn" onclick="adjustTemp(0.5)">+</button></div>
+            <div class="dose-lbl" data-i18n="brewTemp">Brew temp</div>
           </div>
           <div class="dose-block" id="grindRow" style="display:none">
             <div class="dose-adj"><button class="ms-btn" onclick="adjustGrind(-1)">−</button>
@@ -1164,6 +1174,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
               <button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
             <button class="grind-label" id="grindModelBtn" onclick="openGrinderPage()"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></button>
           </div>
+        </div>
         </div>
         </div>
         <div id="recipeLive" style="display:none"></div>
@@ -1509,7 +1520,7 @@ var I18N={
     doseNoScale:'The scale has not sent a reading',
     doseHoldHint:'Tap to type it, hold to take it off the scale',
     tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
-    profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio',
+    profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio', brewTemp:'Brew temp', noProfile:'No profile loaded',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight', target:'Target',
     lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
@@ -1593,7 +1604,7 @@ var I18N={
     guideWhichDesc:'Chosen in the shot log, on the shot itself.',
     guideUse:'Use as guideline', guideUsing:'Guideline \u2713',
     guideSet:'Guideline set from this shot', backToLive:'Back to live',
-    kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpGrind:'Grind Setting', kpSet:'Set',
+    kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpTemp:'Brew temperature', kpGrind:'Grind Setting', kpSet:'Set',
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
@@ -1642,7 +1653,7 @@ var I18N={
     doseNoScale:'저울이 값을 보내지 않습니다',
     doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
     tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
-    profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율',
+    profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'무게', target:'목표',
     lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
@@ -1726,7 +1737,7 @@ var I18N={
     guideWhichDesc:'추출로그에서 해당 샷을 열어 지정합니다.',
     guideUse:'가이드로 사용', guideUsing:'가이드 사용 중 ✓',
     guideSet:'이 샷을 가이드로 지정했습니다', backToLive:'실시간으로',
-    kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpGrind:'분쇄도', kpSet:'설정',
+    kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpTemp:'추출 온도', kpGrind:'분쇄도', kpSet:'설정',
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
@@ -2875,9 +2886,32 @@ function adjust(key,delta){ settings[key]=parseFloat((settings[key]+delta).toFix
 // Adjust the ratio directly -> recompute yield from current dose.
 function adjustRatio(delta){ var r=settings.doseIn>0?(settings.doseOut/settings.doseIn):2; r=Math.max(1,Math.min(4,parseFloat((r+delta).toFixed(2))));
   settings.doseOut=parseFloat((settings.doseIn*r).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); syncRecipe(); pushRecipe(); }
+// A DE1 profile has no single brew temperature: every step carries its own.
+// The card shows the first step's, and a change shifts them all by the same
+// amount, so a profile that ramps its temperature keeps its ramp. What is
+// edited here is the workflow's copy -- what the next shot runs -- and not the
+// saved profile, which the profile editor owns.
+function brewSteps(){ return (curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[]; }
+function brewTempC(){ var st=brewSteps(); return (st.length&&st[0].temperature!=null)?st[0].temperature:null; }
+function setBrewTempC(v){
+  var st=brewSteps(), cur=brewTempC(); if(cur==null) return;
+  v=Math.max(80,Math.min(100,Math.round(v*2)/2));
+  var d=Math.round((v-cur)*10)/10; if(!d) return;
+  st.forEach(function(x){ if(x.temperature!=null) x.temperature=Math.round((x.temperature+d)*10)/10; });
+  syncRecipe(); pushProfileTemp(); }
+function adjustTemp(d){ var cur=brewTempC();
+  if(cur==null){ toast(t('noProfile'),'err'); return; }
+  setBrewTempC(cur+d); }
+var _tempPushT=null;
+function pushProfileTemp(){ clearTimeout(_tempPushT); _tempPushT=setTimeout(function(){
+  if(!curProfileObj||!curProfileObj.profile) return;
+  api('PUT','/api/v1/workflow',{profile:curProfileObj.profile})
+    .catch(function(){ toast('Temp error','err'); }); },600); }
 function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){ api('PUT','/api/v1/workflow',{context:{targetDoseWeight:settings.doseIn,targetYield:settings.doseOut}}).catch(function(){}); },600); }
 function syncRecipe(){
   document.getElementById('doseInVal').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOutVal').textContent=settings.doseOut.toFixed(1);
+  var bt=document.getElementById('brewTempVal'), bc=brewTempC();
+  if(bt) bt.textContent=(bc==null)?'—':(convTemp(bc).toFixed(1)+tempUnitLabel());
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
   document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
   var md=document.getElementById('monDose');
@@ -3047,11 +3081,14 @@ function grinderAiFill(){
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
-var KP_CFG={ doseIn:{title:'kpDose',unit:'g',min:5,max:30}, doseOut:{title:'kpYield',unit:'g',min:10,max:80}, ratio:{title:'kpRatio',unit:'',min:1,max:4} };
-function openKeypad(field){ var c=KP_CFG[field]; if(!c) return; KP.field=field; KP.unit=c.unit; KP.fresh=true;
-  var cur=field==='ratio'?(settings.doseIn>0?(settings.doseOut/settings.doseIn):2):settings[field];
+var KP_CFG={ doseIn:{title:'kpDose',unit:'g',min:5,max:30}, doseOut:{title:'kpYield',unit:'g',min:10,max:80}, ratio:{title:'kpRatio',unit:'',min:1,max:4}, brewTemp:{title:'kpTemp',unit:'',min:80,max:100} };
+function openKeypad(field){ var c=KP_CFG[field]; if(!c) return;
+  if(field==='brewTemp'&&brewTempC()==null){ toast(t('noProfile'),'err'); return; }
+  KP.field=field; KP.unit=(field==='brewTemp')?tempUnitLabel():c.unit; KP.fresh=true;
+  var cur=field==='ratio'?(settings.doseIn>0?(settings.doseOut/settings.doseIn):2)
+    :field==='brewTemp'?convTemp(brewTempC()):settings[field];
   KP.str=String(parseFloat(cur.toFixed(field==='doseIn'?1:field==='ratio'?2:1)));
-  document.getElementById('kpTitle').textContent=t(c.title); document.getElementById('kpUnit').textContent=c.unit;
+  document.getElementById('kpTitle').textContent=t(c.title); document.getElementById('kpUnit').textContent=KP.unit;
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 function kpRender(){ document.getElementById('kpValue').textContent=KP.str.length?KP.str:'0'; }
 
@@ -3065,6 +3102,8 @@ function kpPress(k){
   kpRender(); }
 function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'keypadOverlay'); return; }
   if(KP.field==='grind'){ setGrind(String(Math.max(0,parseFloat(v.toFixed(2))))); closeModal(null,'keypadOverlay'); return; }
+  // the card is in the display unit; a profile is always Celsius
+  if(KP.field==='brewTemp'){ setBrewTempC(unconvTemp(v)); closeModal(null,'keypadOverlay'); return; }
   var c=KP_CFG[KP.field];
   v=Math.max(c.min,Math.min(c.max,v));
   if(KP.field==='ratio'){ settings.doseOut=parseFloat((settings.doseIn*v).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); }
@@ -3111,6 +3150,7 @@ function tankMl(mm){ return tankTableMl(mm); }
 // Unit conversion helpers. Machine/scale data is always metric (°C, g);
 // these convert only for display.
 function convTemp(c){ return prefs.tempUnit==='F'?(c*9/5+32):c; }
+function unconvTemp(v){ return prefs.tempUnit==='F'?((v-32)*5/9):v; }
 function tempUnitLabel(){ return prefs.tempUnit==='F'?'°F':'°C'; }
 function convWeight(g){ return prefs.weightUnit==='oz'?(g*0.03527396):g; }
 function weightUnitLabel(){ return prefs.weightUnit==='oz'?'oz':'g'; }
@@ -4115,6 +4155,7 @@ function selectProfile(p,keepGuideSrc){
   // press just asked for, so it steps aside
   if(!keepGuideSrc&&chartReviewing&&guideFollowsProfile()) exitReview();
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
+  syncRecipe();
   api('PUT','/api/v1/workflow',{profile:p.profile}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast('Profile error','err'); }); }
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
@@ -8664,7 +8705,9 @@ function loadWorkflow(){
   if(w.rinseData){ if(w.rinseData.targetTemperature) settings.flushTemp=w.rinseData.targetTemperature; if(w.rinseData.duration) settings.flushDur=w.rinseData.duration; if(w.rinseData.flow) settings.flushFlow=w.rinseData.flow; }
   if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.duration) settings.waterDur=w.hotWaterData.duration; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; }
   if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
-    var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; }); if(match) curProfileObj=match; if(carItems.length) buildCarousel(); guideProfileChanged(); }
+    var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; });
+    // the workflow's copy is the one that brews, temperature shifts and all
+    if(match){ match.profile=w.profile; curProfileObj=match; } if(carItems.length) buildCarousel(); guideProfileChanged(); }
   syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow'); });
 }
 function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
