@@ -508,6 +508,10 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .bean-chip.multi{cursor:pointer;transition:background .15s,border-color .15s}
+.modal.bl-modal{width:360px}
+.bl-list{display:flex;flex-direction:column;gap:6px;padding-bottom:4px}
+.bl-item{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--ink);padding:9px 12px;border-radius:11px;background:var(--field);border:1px solid var(--edge)}
+.bl-item .i{font-size:11px;font-weight:800;color:var(--ink-mute);min-width:14px;text-align:right}
 .bean-chip.multi:hover{border-color:var(--edge)}
 .bean-chip .n{margin-left:5px;padding:0 5px;border-radius:100px;background:var(--field);color:var(--accent);font-size:10px;font-weight:800}
 .last-shot{flex-shrink:0}
@@ -1284,6 +1288,13 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 </div>
 
 <!-- ── Same bean again: batch or new bean ──────────────────────── -->
+<div class="overlay" id="beanListOverlay" onclick="closeModal(event,'beanListOverlay')">
+  <div class="modal bl-modal">
+    <div class="modal-head"><div class="modal-title" id="blTitle">—</div><button class="modal-close" onclick="closeModal(null,'beanListOverlay')">×</button></div>
+    <div class="modal-body"><div class="bl-list" id="blList"></div></div>
+  </div>
+</div>
+
 <div class="overlay" id="dupOverlay">
   <div class="modal dup-modal">
     <div class="modal-head"><div class="modal-title" data-i18n="dupTitle">Bean already exists</div></div>
@@ -7840,14 +7851,24 @@ function chipList(box,k,v){
   var items=beanList(v); if(!items.length) return;
   var c=document.createElement('span'); c.className='bean-chip';
   if(items.length<2){ c.innerHTML='<span class="k">'+escapeHtml(k)+'</span>'+escapeHtml(items[0]); box.appendChild(c); return; }
-  var full=items.join(', ');
-  c.className='bean-chip multi'; c.title=k+': '+full; c.setAttribute('role','button'); c.tabIndex=0;
-  function render(){ c.innerHTML='<span class="k">'+escapeHtml(k)+'</span>'
-    +escapeHtml(c._open?full:items[0])
-    +'<span class="n">'+(c._open?'−':('+'+(items.length-1)))+'</span>'; }
-  c.onclick=function(){ c._open=!c._open; render(); };
-  c.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); c.onclick(); } };
-  render(); box.appendChild(c); }
+  c.className='bean-chip multi'; c.title=k+': '+items.join(', ');
+  c.setAttribute('role','button'); c.tabIndex=0;
+  c.innerHTML='<span class="k">'+escapeHtml(k)+'</span>'+escapeHtml(items[0])
+    +'<span class="n">+'+(items.length-1)+'</span>';
+  function show(){ openBeanList(k,items); }
+  c.onclick=show;
+  c.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); show(); } };
+  box.appendChild(c); }
+// The card has one line of room for a value; a blend has as many as it has
+// components. The chip says how many there are and the list opens over the
+// page, so the card never has to grow to hold one.
+function openBeanList(title,items){
+  var h=document.getElementById('blTitle'), box=document.getElementById('blList');
+  if(!h||!box) return;
+  h.textContent=title+' · '+items.length;
+  box.innerHTML=items.map(function(x,i){
+    return '<div class="bl-item"><span class="i">'+(i+1)+'</span>'+escapeHtml(x)+'</div>'; }).join('');
+  document.getElementById('beanListOverlay').classList.add('show'); }
 function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRoaster;
   var bean=currentBean(), batch=(bean&&beanBatches[bean.id])||null;
   var nameEl=document.getElementById('beanName'), subEl=document.getElementById('beanSub');
