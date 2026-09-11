@@ -538,7 +538,10 @@ body.page-swap .editpage{transition:none}
 .ep-title{font-size:20px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .ep-close{min-height:44px;padding:10px 18px;border-radius:100px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
 .ep-close:hover{transform:translateY(-2px)}
-.ep-body{flex:1;display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
+/* 336px is where the beverage-type filters stop needing two rows; 360 clears
+   that with room for a longer translation, and halves how many profile names
+   are cut off -- 63% of them at 300, 29% here -- for 60px the editor spares */
+.ep-body{flex:1;display:grid;grid-template-columns:360px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
 .ep-col{display:flex;flex-direction:column;gap:10px;min-height:0}
 .ep-list{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:0}
 /* The search and the filters used to ride the list on a sticky position, so
