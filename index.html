@@ -122,7 +122,7 @@ header>*{position:relative;z-index:1}
 .brand h1{font-size:19px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand span{font-size:11px;color:var(--ink-mute);font-weight:600}
 /* Tablet battery pill in the header brand row. */
-.batt{display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 5px;border-radius:100px;background:var(--glass-hi);border:1px solid var(--glass-line)}
+.batt{display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 5px;border-radius:100px;background:var(--glass-hi);border:1px solid var(--edge)}
 .batt .batt-pct{font-size:11px;font-weight:800;color:var(--ink);letter-spacing:0}
 .batt.low .batt-pct{color:var(--red)}
 .batt-ico{width:20px;height:11px;border:1.5px solid var(--ink-mute);border-radius:3px;position:relative;display:inline-block;box-sizing:border-box}
@@ -310,7 +310,7 @@ body.night .gauge.z1{--zc:#fbbf24} body.night .gauge.z2{--zc:#34d399} body.night
 .carousel-card{padding:10px 16px 8px;flex-shrink:0;display:flex;flex-direction:column}
 .cc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .cc-actions{display:flex;align-items:center;gap:2px}
-.cur-fav{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;color:var(--ink-mute);background:none;border:none;cursor:pointer;-webkit-appearance:none;border-radius:11px;transition:color .15s,background .15s}
+.cur-fav{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;color:var(--ink-mute);background:var(--field);border:1px solid var(--edge);cursor:pointer;-webkit-appearance:none;border-radius:11px;transition:color .15s,background .15s}
 .cur-fav:hover{background:var(--glass-hi)}
 .cur-fav.on{color:var(--amber)}
 .cur-tag{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase}
@@ -363,7 +363,7 @@ body.cam-on .bean-chips{display:none}
 .album .al-group{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.72);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
 .album .al-nametext{font-size:12px;font-weight:800;color:#fff;line-height:1.15;text-shadow:0 1px 2px rgba(0,0,0,.35);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .album.center .al-nametext{font-size:13px}
-.car-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--glass-line);background:rgba(255,255,255,.9);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:transform .15s;-webkit-appearance:none}
+.car-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--edge);background:rgba(255,255,255,.9);color:var(--ink);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;transition:transform .15s;-webkit-appearance:none}
 .car-nav:hover{background:#fff;transform:translateY(-50%) scale(1.1)} .car-nav:active{transform:translateY(-50%) scale(.92)}
 .car-nav.prev{left:0} .car-nav.next{right:0}
 /* mid shot the strip has nothing to offer, so it gets out of the way and
@@ -505,7 +505,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;flex:none}
 .bean-chips::-webkit-scrollbar{display:none}
 .bean-chips:empty{display:none}
-.bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:3px 9px}
+.bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--glass-hi);border:1px solid var(--edge);border-radius:100px;padding:3px 9px}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .bean-chip.multi{cursor:pointer;transition:background .15s,border-color .15s}
 .modal.bl-modal{width:360px}
@@ -536,20 +536,31 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 body.page-swap .editpage{transition:none}
 .ep-head{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--glass-line);background:rgba(255,255,255,.6)}
 .ep-title{font-size:20px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.ep-close{min-height:44px;padding:10px 18px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
+.ep-close{min-height:44px;padding:10px 18px;border-radius:100px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
 .ep-close:hover{transform:translateY(-2px)}
 .ep-body{flex:1;display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
-.ep-list{padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
-.ep-toolbar{position:sticky;top:0;z-index:2;display:flex;flex-direction:column;gap:8px;padding:2px 2px 8px;background:var(--sheet)}
+.ep-col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.ep-list{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:0}
+/* The search and the filters used to ride the list on a sticky position, so
+   what was scrolling passed underneath them. They are their own panel now. */
+.ep-toolbar{flex:none;display:flex;flex-direction:column;gap:8px;padding:10px}
 .ep-search{width:100%;min-height:44px;padding:9px 12px;border-radius:11px;border:1px solid var(--edge);background:var(--sheet);font-family:var(--font);font-size:13px;color:var(--ink);-webkit-appearance:none}
 .ep-search:focus{outline:none;border-color:var(--accent)}
 /* the box stays put while the list scrolls under it */
 #bgList .ep-search,#slList .ep-search{position:sticky;top:0;z-index:2}
 .ep-kinds{display:flex;gap:4px;flex-wrap:wrap}
-.ep-kind{flex:0 1 auto;min-width:0;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ep-kind{flex:0 1 auto;min-width:0;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ep-kind.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ep-tags{display:flex;flex-wrap:wrap;gap:4px}
-.ep-tag{min-height:36px;padding:0 13px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
+/* eleven tags wrap to four rows and the panel was taking more of the column
+   than the list it filters; two rows show, the rest scroll */
+#epTools .ep-tags{max-height:80px;overflow-y:auto;scrollbar-width:thin}
+.ep-tagfold{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+.ep-tagfold .tf-name{text-transform:uppercase;letter-spacing:.04em}
+.ep-tagfold .tf-n{color:var(--ink-mute);opacity:.7}
+.ep-tagfold .tf-on{padding:1px 8px;border-radius:100px;background:var(--accent);color:#fff}
+.ep-tagfold .tf-caret{margin-left:auto;font-size:10px}
+.ep-tag{min-height:36px;padding:0 13px;border-radius:100px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
 .ep-tag span{opacity:.55;margin-left:2px}
 .ep-tag.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ep-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
@@ -559,14 +570,14 @@ body.page-swap .editpage{transition:none}
 .ep-airow{display:flex;gap:5px}
 .ep-aibtn{flex:1;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.1);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
 .ep-aibtn[disabled]{opacity:.55;cursor:default}
-.ep-aibtn.ghost{flex:0 0 auto;background:#fff;color:var(--ink-mute);border-color:var(--glass-line)}
+.ep-aibtn.ghost{flex:0 0 auto;background:#fff;color:var(--ink-mute);border-color:var(--edge)}
 body.night .ep-aibtn.ghost{background:rgba(255,255,255,.07);color:var(--ink)}
-.eye-btn{background:none;border:none;font-size:17px;line-height:1;cursor:pointer;opacity:.35;padding:0;width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}
+.eye-btn{background:var(--field);border:1px solid var(--edge);border-radius:10px;font-size:17px;line-height:1;cursor:pointer;opacity:.55;padding:0;width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}
 .eye-btn:hover,.eye-btn.on{opacity:1}
 .ep-roastrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 10px}
 .ep-colorrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 8px}
 .ep-batchrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-2px 0 10px}
-.ep-batch{padding:4px 10px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
+.ep-batch{padding:4px 10px;border-radius:100px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
 .ep-batch.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ep-batch.add{border-style:dashed}
 .ep-batch.del{color:var(--red);border-color:rgba(239,68,68,.35);padding:4px 9px}
@@ -597,12 +608,17 @@ body.night .ep-dot{border-color:#1a1526}
 .g-ai-hint{font-size:12px;color:var(--ink-mute)}
 .rec-why{flex:1;font-size:11px;color:var(--ink-mute);line-height:1.45;padding:7px 8px}
 .ep-roastlab{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-right:4px}
-.ep-roast{min-height:36px;padding:0 14px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
+.ep-roast{min-height:36px;padding:0 14px;border-radius:100px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
 .ep-roast.on{background:#f97316;border-color:#f97316;color:#fff}
 .ep-roast.clear{color:var(--red);border-color:rgba(239,68,68,.35)}
 body.night .ep-roast{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
-body.night .ep-toolbar{background:var(--sheet)}
 body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
+/* the night rules above are written for the resting state and outrank the
+   selected one, which left a chosen filter looking exactly like an unchosen
+   one and the primary action looking like Cancel */
+body.night .ep-kind.on,body.night .ep-tag.on{background:var(--accent);border-color:var(--accent);color:#fff}
+body.night .ep-roast.on{background:#f97316;border-color:#f97316;color:#fff}
+body.night .m-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent3));border-color:transparent}
 .ep-list::-webkit-scrollbar{width:6px}.ep-list::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .ep-group-head{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:6px 4px 2px;position:sticky;top:0;background:var(--sheet);z-index:1}
 .ep-group-head:first-child{padding-top:0}
@@ -615,7 +631,7 @@ body.night .ep-search,body.night .ep-kind,body.night .ep-tag{background:rgba(255
 .ep-item .nm{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ep-item .mt{font-size:11px;color:var(--ink-mute);margin-top:1px}
 .ep-item .favmark{margin-left:auto;font-size:14px;color:var(--amber)}
-.ep-item .fav-btn{margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:11px;border:1px solid var(--glass-line);background:#fff;color:var(--ink-mute);font-size:15px;line-height:1;cursor:pointer;transition:all .15s;-webkit-appearance:none;display:flex;align-items:center;justify-content:center}
+.ep-item .fav-btn{margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:11px;border:1px solid var(--edge);background:#fff;color:var(--ink-mute);font-size:15px;line-height:1;cursor:pointer;transition:all .15s;-webkit-appearance:none;display:flex;align-items:center;justify-content:center}
 .ep-item .fav-btn:hover{border-color:var(--amber);color:var(--amber)}
 .ep-item .fav-btn.on{color:var(--amber);border-color:var(--amber);background:rgba(245,158,11,.1)}
 .bg-tabs{display:flex;gap:6px;margin-bottom:10px;position:sticky;top:0;background:var(--sheet);padding:2px 0 6px;z-index:1}
@@ -818,7 +834,7 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 body.night .mon-cell,body.night .mon-recipe,body.night .mon-chart-card{background:rgba(255,255,255,.06)}
 body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .chart-canvas-wrap{cursor:pointer}
-.sl-cmp{width:40px;height:40px;flex-shrink:0;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:15px;font-weight:800;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.sl-cmp{width:40px;height:40px;flex-shrink:0;border-radius:10px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:15px;font-weight:800;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;transition:all .15s}
 .sl-cmp:hover{border-color:var(--accent);color:var(--accent)}
 .sl-cmp.on{color:#fff;border-color:transparent}
 .cmp-keys{display:flex;flex-wrap:wrap;gap:8px 14px;margin:-4px 0 12px}
@@ -845,11 +861,11 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ai-sug-w{font-size:12px;color:var(--ink-mute);line-height:1.5;margin-top:3px}
 /* step carousel in editor */
 .ep-stepnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.ep-stepnav .nav{width:40px;height:40px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-size:16px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
+.ep-stepnav .nav{width:40px;height:40px;border-radius:12px;border:1px solid var(--edge);background:#fff;font-size:16px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
 .ep-stepnav .nav:hover{background:#f0eeff}
 .ep-steptabs{flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px}
 .ep-steptabs::-webkit-scrollbar{height:0}
-.ep-steptab{flex-shrink:0;min-height:40px;padding:0 14px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;white-space:nowrap}
+.ep-steptab{flex-shrink:0;min-height:40px;padding:0 14px;border-radius:100px;border:1px solid var(--edge);background:#fff;font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;white-space:nowrap}
 .ep-steptab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none}
 .ep-steptab.flow.active{background:linear-gradient(135deg,var(--steam),#0ea5e9)}
 .ep-step-editor{background:#fff;border:1px solid var(--glass-line);border-radius:14px;padding:16px 18px;border-left:4px solid var(--accent)}
@@ -867,7 +883,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .overlay.show .modal{transform:translateY(0) scale(1)}
 .modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 12px;position:sticky;top:0;background:#fbfaff;z-index:2}
 .modal-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
-.modal-close{width:46px;height:46px;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-size:17px;cursor:pointer;-webkit-appearance:none}
+.modal-close{width:46px;height:46px;border-radius:10px;border:1px solid var(--edge);background:#fff;font-size:17px;cursor:pointer;-webkit-appearance:none}
 .modal-body{padding:0 20px 18px}
 .preset-bar{display:flex;align-items:center;gap:10px;padding:6px 0 12px;border-bottom:1px solid rgba(139,92,246,.1);margin-bottom:6px}
 .preset-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
@@ -887,7 +903,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .slider::-webkit-slider-thumb{-webkit-appearance:none;margin-top:-9px;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.4)}
 .opt-val{min-width:54px;text-align:right;font-size:16px;font-weight:800;color:var(--accent)}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-.m-btn{min-height:46px;padding:11px 20px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
+.m-btn{min-height:46px;padding:11px 20px;border-radius:12px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
 .m-btn:hover{transform:translateY(-2px)}
 .m-btn.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3))}
 .m-btn.danger{border:none;color:#fff;background:var(--red)}
@@ -911,7 +927,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .kp-display #kpValue{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--accent);min-height:44px}
 .kp-display .kp-unit{font-size:16px;font-weight:700;color:var(--ink-mute)}
 .kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.kp-key{height:56px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:22px;font-weight:700;color:var(--ink);cursor:pointer;-webkit-appearance:none;transition:all .12s}
+.kp-key{height:56px;border-radius:12px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:22px;font-weight:700;color:var(--ink);cursor:pointer;-webkit-appearance:none;transition:all .12s}
 .kp-key:hover{background:var(--glass-hi)} .kp-key:active{transform:scale(.94)}
 .kp-key.kp-del{color:var(--red);font-size:19px}
 
@@ -1327,7 +1343,10 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <button class="ep-close" onclick="closeEditPage()">✕ <span data-i18n="close">Close</span></button>
   </div>
   <div class="ep-body">
-    <div class="ep-list glass" id="epList"></div>
+    <div class="ep-col">
+      <div class="ep-toolbar glass" id="epTools"></div>
+      <div class="ep-list glass" id="epList"></div>
+    </div>
     <div class="ep-editor glass">
       <div class="ep-editor-inner" id="epEditor">
         <div class="ep-placeholder">← Select a profile to edit</div>
@@ -1650,7 +1669,7 @@ var I18N={
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     lockedBrewing:'The profile cannot be changed while a shot is running.',
     brewingNow:'Brewing — this profile is locked',
-    searchProfiles:'Search profiles…', searchBeans:'Search beans…', searchGrinders:'Search grinders…', searchShots:'Search shots…', noMatches:'Nothing matches', kindEspresso:'Espresso', kindBrew:'Brew · tea', kindOther:'Clean · manual', kindAll:'All',
+    tagsLabel:'Tags', searchProfiles:'Search profiles…', searchBeans:'Search beans…', searchGrinders:'Search grinders…', searchShots:'Search shots…', noMatches:'Nothing matches', kindEspresso:'Espresso', kindBrew:'Brew · tea', kindOther:'Clean · manual', kindAll:'All',
     favorites:'Favorites', recentlyUsed:'Recently used', noMatches:'Nothing matches',
     tagPressure:'pressure', tagFlow:'flow', tagMixed:'mixed', tagLowPressure:'low pressure',
     tagBloom:'bloom', tagDecline:'declining', tagCool:'cool', tagHot:'hot',
@@ -1784,7 +1803,7 @@ var I18N={
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
     brewingNow:'추출 중 — 프로파일 잠김',
-    searchProfiles:'프로파일 검색…', searchBeans:'원두 검색…', searchGrinders:'그라인더 검색…', searchShots:'샷 검색…', noMatches:'일치하는 항목 없음', kindEspresso:'에스프레소', kindBrew:'브루·티', kindOther:'청소·수동', kindAll:'전체',
+    tagsLabel:'태그', searchProfiles:'프로파일 검색…', searchBeans:'원두 검색…', searchGrinders:'그라인더 검색…', searchShots:'샷 검색…', noMatches:'일치하는 항목 없음', kindEspresso:'에스프레소', kindBrew:'브루·티', kindOther:'청소·수동', kindAll:'전체',
     favorites:'즐겨찾기', recentlyUsed:'최근 사용', noMatches:'일치하는 프로파일 없음',
     tagPressure:'압력제어', tagFlow:'유량제어', tagMixed:'혼합', tagLowPressure:'저압',
     tagBloom:'블루밍', tagDecline:'디클라인', tagCool:'저온', tagHot:'고온',
@@ -4443,10 +4462,11 @@ function clearAiTags(){
     .then(function(){ renderEpList(); renderEpEditor(); toast(t('aiCleared'),'ok'); }); }
 function allTagsOf(p){ return profileRoast(p).concat(profileAiExtras(p)).concat(profileTags((p&&p.profile)||{})); }
 function epSetKind(k){ epKind=k; epTag=''; renderEpList(); }
+var epTagsOpen=false;
 function epSetTag(t){ epTag=(epTag===t)?'':t; renderEpList(); }
 // epQuery is what was typed; the needle is what is matched against.
 function epNeedle(){ return epQuery.trim().toLowerCase(); }
-function epSetQuery(v){ epQuery=String(v||''); renderEpList(); }
+function epSetQuery(v){ epQuery=String(v||''); renderEpItems(); }
 function epMatches(p){
   var pr=p.profile||{};
   var hid=(p.visibility==='hidden');
@@ -4460,10 +4480,11 @@ function epMatches(p){
       +' '+allTagsOf(p).map(function(k){ return t(k); }).join(' ').toLowerCase();
     if(hay.indexOf(needle)<0) return false; }
   return true; }
-function renderEpList(){ var list=document.getElementById('epList'); list.innerHTML=''; epItemEls={}; ensureCurveObserver();
-  var shown=allProfiles.filter(epMatches);
-  // toolbar: search, beverage type, and the tags present in what is left
-  var bar=document.createElement('div'); bar.className='ep-toolbar';
+// The search box filters the list and nothing else, so it is drawn once and
+// left alone: rebuilding it on every keystroke took the caret with it.
+function renderEpList(){ renderEpTools(); renderEpItems(); }
+function renderEpTools(){
+  var bar=document.getElementById('epTools'); if(!bar) return; bar.innerHTML='';
   var kinds=[['espresso','kindEspresso'],['brew','kindBrew'],['other','kindOther'],['all','kindAll'],['hidden','kindHidden']];
   bar.innerHTML='<input class="ep-search" id="epSearch" placeholder="'+escapeAttr(t('searchProfiles'))+'" value="'+escapeAttr(epQuery)+'" oninput="epSetQuery(this.value)">'
     +'<div class="ep-kinds">'+kinds.map(function(k){
@@ -4478,11 +4499,23 @@ function renderEpList(){ var list=document.getElementById('epList'); list.innerH
   var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
   var counts={}; pool.forEach(function(p){ allTagsOf(p).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
   var avail=TAG_KEYS.filter(function(k){ return counts[k]; });
-  if(avail.length){ var tw=document.createElement('div'); tw.className='ep-tags';
-    tw.innerHTML=avail.map(function(k){
-      return '<button class="ep-tag'+(epTag===k?' on':'')+'" onclick="epSetTag(\''+k+'\')">'+escapeHtml(t(k))+' <span>'+counts[k]+'</span></button>'; }).join('');
-    bar.appendChild(tw); }
-  list.appendChild(bar);
+  if(avail.length){
+    // eleven tags are four rows of chrome above the list they filter, and
+    // most of the time none of them is in use; folded, the row still says
+    // which one is on
+    var head=document.createElement('button'); head.className='ep-tagfold'+(epTagsOpen?' open':'');
+    head.onclick=function(){ epTagsOpen=!epTagsOpen; renderEpTools(); };
+    head.innerHTML='<span class="tf-name">'+escapeHtml(t('tagsLabel'))+'</span>'
+      +(epTag?'<span class="tf-on">'+escapeHtml(t(epTag))+'</span>':'<span class="tf-n">'+avail.length+'</span>')
+      +'<span class="tf-caret">'+(epTagsOpen?'▴':'▾')+'</span>';
+    bar.appendChild(head);
+    if(epTagsOpen){ var tw=document.createElement('div'); tw.className='ep-tags';
+      tw.innerHTML=avail.map(function(k){
+        return '<button class="ep-tag'+(epTag===k?' on':'')+'" onclick="epSetTag(\''+k+'\')">'+escapeHtml(t(k))+' <span>'+counts[k]+'</span></button>'; }).join('');
+      bar.appendChild(tw); } } }
+function renderEpItems(){ var list=document.getElementById('epList'); if(!list) return;
+  list.innerHTML=''; epItemEls={}; ensureCurveObserver();
+  var shown=allProfiles.filter(epMatches);
   if(!shown.length){ var none=document.createElement('div'); none.className='ep-placeholder'; none.style.marginTop='24px'; none.textContent=t('noMatches'); list.appendChild(none); return; }
 
   var favList=(epKind==='hidden')?[]:shown.filter(function(p){ return favIds[p.id]; });
