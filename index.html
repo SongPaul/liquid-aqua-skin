@@ -220,7 +220,7 @@ header>*{position:relative;z-index:1}
 .live>.gauges{grid-area:recipe}
 .live-main{min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .live>.gauges{min-width:0;min-height:100px;padding:0 0 0 18px;border-left:1px solid var(--edge);align-self:stretch;margin-top:0}
-.right .recipe{padding:6px 16px 8px;flex:none}
+.right .recipe{padding:6px 12px 12px;flex:none}
 .live-top{align-self:stretch;display:flex;flex-direction:column;align-items:stretch;gap:0;margin-bottom:0}
 .lt-ico{font-size:17px;line-height:1;opacity:.7;flex-shrink:0}
 .lt-val{display:flex;align-items:baseline;gap:7px;flex:0 0 auto}
@@ -427,21 +427,39 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .nav-card .nc-txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* Recipe / ratio */
+/* The chips align their contents on a baseline so a number and its unit sit
+   on one line. Baseline puts that line at the top of the box, so the chip is
+   centred by symmetric padding instead -- align-items:center would break the
+   number and unit apart. */
 .recipe{flex-shrink:0}
 .right .recipe .recipe-title{margin-bottom:6px}
 .recipe-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:flex-end;align-items:center;min-height:0}
 .recipe-title:empty,.recipe-title:has(.rc-live:empty){margin:0}
 .recipe-title .bean-link{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer}
-.recipe-grid{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;gap:8px}
-.rg-col{display:flex;flex-direction:column;gap:6px;min-width:0}
-/* the right column stacks from the top so its second row is the left's
-   second row: the ratio and the grind setting read as one line */
-.rg-right{justify-content:flex-start}
+.recipe-grid{display:grid;grid-template-columns:1fr auto;align-items:stretch}
+.rg-main{display:grid;grid-template-columns:1fr 1fr;gap:20px 16px;min-width:0}
+/* Temperature is not a fifth number in the grid: it is the one setting with a
+   natural picture, so it stands past a rule as a thermometer you can drag. */
+.temp-col{display:flex;align-items:stretch;gap:6px;margin-left:14px;padding-left:14px;border-left:1px solid rgba(99,102,241,.13)}
+.th-gauge{width:18px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.th-unit{font-size:10px;font-weight:800;color:var(--accent);opacity:.6;line-height:14px;text-transform:uppercase;flex:none}
+.thermo{width:18px;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;cursor:ns-resize;touch-action:none;user-select:none}
+.th-tube{position:relative;flex:1;width:11px;min-height:24px;border-radius:7px;background:var(--field);border:1px solid var(--edge);overflow:hidden}
+.th-fill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(180deg,#f08a3c,#d6402b);transition:height .12s}
+.th-bulb{width:18px;height:18px;border-radius:50%;background:#d6402b;border:1px solid var(--edge);margin-top:-6px;flex:none}
+.thermo.drag .th-fill{transition:none}
+.th-ctrl{width:52px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
+/* the reading here is the same chip as the four beside it -- same height, same type, same corner -- only narrower, and the degree sign stands in for the unit the thermometer already names */
+.th-val{font-size:20px;font-weight:800;color:var(--accent2);line-height:1;white-space:nowrap}
+.th-val.tap{cursor:pointer;border-radius:11px;min-height:40px;width:52px;display:flex;align-items:center;justify-content:center;padding:5px 4px;border:1px solid var(--edge);background:var(--field);transition:background .15s,border-color .15s,transform .1s}
+.th-val.tap:hover{background:var(--glass-hi)}
+.th-val.tap:active{transform:scale(.95);border-color:var(--accent)}
 .dose-block{text-align:center;min-width:0;flex:none}
-.dose-adj{display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0}
+.dose-adj{display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0}
 .dose-num{font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
-.dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:0;min-height:14px;display:flex;align-items:center;justify-content:center;gap:8px}
-.dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:10px;min-height:36px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:2px 6px;border:1px solid var(--edge);background:var(--field);transition:background .15s,border-color .15s,transform .1s}
+.dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:3px;min-height:14px;line-height:14px;display:flex;align-items:center;justify-content:center;gap:5px}
+.dose-lbl .lu{font-weight:800;color:var(--accent);opacity:.6}
+.dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid var(--edge);background:var(--field);transition:background .15s,border-color .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
 .dose-num.tap:hover,.rv.tap:hover{background:var(--glass-hi)}
@@ -453,12 +471,12 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .mini-step{display:flex;align-items:center;justify-content:space-between;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:5px 7px}
 .mini-step .l{font-size:11px;font-weight:700;color:var(--ink-mute);padding-left:3px}
 .mini-step .c{display:flex;align-items:center;gap:5px}
-.ms-btn{width:34px;height:34px;flex:none;border-radius:12px;border:1px solid rgba(99,102,241,.26);background:rgba(99,102,241,.09);color:var(--accent);font-size:18px;font-weight:700;line-height:1;cursor:pointer;-webkit-appearance:none;transition:background .15s,border-color .15s,transform .1s}
+.ms-btn{width:36px;height:36px;flex:none;border-radius:12px;border:1px solid rgba(99,102,241,.26);background:rgba(99,102,241,.09);color:var(--accent);font-size:18px;font-weight:700;line-height:1;cursor:pointer;-webkit-appearance:none;transition:background .15s,border-color .15s,transform .1s}
 .ms-btn:hover{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.42)}
 .ms-btn:active{transform:scale(.92);background:rgba(99,102,241,.24)}
 .ms-val{min-width:36px;text-align:center;font-size:13px;font-weight:700}
 
-.bean-info{padding:5px 14px;flex:1;min-height:72px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.bean-info{padding:5px 14px;flex:1;min-height:60px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
 .lastshot-card{padding:5px 14px 7px;flex:none;min-height:0}
 .bean-info::-webkit-scrollbar{width:5px}
 .bean-info::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
@@ -474,15 +492,15 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .live-lbl{font-size:11px;font-weight:700;color:var(--ink-mute);margin-top:2px}
 .live-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
 .live-kind{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:var(--ink)}
-.grind-label{display:flex;align-items:center;justify-content:center;gap:5px;overflow:hidden;white-space:nowrap;font-size:10px;font-weight:700;color:var(--ink-soft);width:100%;min-height:18px;margin-top:0;background:none;border:none;padding:0 8px;border-radius:9px;cursor:pointer;font-family:var(--font);transition:background .15s}
+.grind-label{display:flex;align-items:center;justify-content:center;gap:5px;overflow:hidden;white-space:nowrap;font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;line-height:14px;width:100%;min-height:14px;margin-top:0;background:none;border:none;padding:0 8px;border-radius:9px;cursor:pointer;font-family:var(--font);transition:background .15s}
 .grind-label #grindModel{overflow:hidden;text-overflow:ellipsis}
 .grind-label:hover{background:var(--glass-hi)}
 .grind-label span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grind-label .gr-ico{font-size:15px}
+.grind-label .gr-ico{font-size:11px;line-height:1}
 .grind-label #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .grind-val{min-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:18px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
-.recipe .grind-val{flex:1;min-width:0;font-size:24px}
+.recipe .grind-val{flex:1;min-width:0;font-size:20px}
 .grind-val:hover{background:var(--glass-hi)}
 .bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;flex:none}
 .bean-chips::-webkit-scrollbar{display:none}
@@ -1141,12 +1159,12 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <div class="recipe-title"><span class="rc-live" id="recipeLiveTag"></span></div>
         <div id="recipeNormal">
         <div class="recipe-grid">
-        <div class="rg-col">
+        <div class="rg-main">
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
-              <div class="dose-num tap" id="doseIn"><span class="dose-ico" id="doseIco" hidden>⚖</span><span id="doseInVal">18.0</span><span class="du">g</span></div>
+              <div class="dose-num tap" id="doseIn"><span id="doseInVal">18.0</span></div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
-            <div class="dose-lbl" data-i18n="doseG">Dose</div>
+            <div class="dose-lbl"><span class="dose-ico" id="doseIco" hidden>⚖</span><span data-i18n="doseG">Dose</span><span class="lu" id="doseInUnit">g</span></div>
           </div>
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjustRatio(-0.1)">−</button>
@@ -1156,23 +1174,29 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
           </div>
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
-              <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')"><span id="doseOutVal">36.0</span><span class="du">g</span></div>
+              <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')"><span id="doseOutVal">36.0</span></div>
               <button class="ms-btn" onclick="adjust('doseOut',0.5)">+</button></div>
-            <div class="dose-lbl" data-i18n="yieldG">Yield g</div>
-          </div>
-        </div>
-        <div class="rg-col rg-right">
-          <div class="dose-block">
-            <div class="dose-adj"><button class="ms-btn" onclick="adjustTemp(-0.5)">−</button>
-              <div class="rv tap" id="brewTempVal" onclick="openKeypad('brewTemp')">—</div>
-              <button class="ms-btn" onclick="adjustTemp(0.5)">+</button></div>
-            <div class="dose-lbl" data-i18n="brewTemp">Brew temp</div>
+            <div class="dose-lbl"><span data-i18n="yieldG">Yield</span><span class="lu" id="doseOutUnit">g</span></div>
           </div>
           <div class="dose-block" id="grindRow" style="display:none">
             <div class="dose-adj"><button class="ms-btn" onclick="adjustGrind(-1)">−</button>
               <span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span>
               <button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
             <button class="grind-label" id="grindModelBtn" onclick="openGrinderPage()"><span class="gr-ico">⚙️</span><span id="grindModel">Grinder</span></button>
+          </div>
+        </div>
+        <div class="temp-col">
+          <div class="th-gauge">
+            <div class="th-unit" id="brewTempUnit">°C</div>
+            <div class="thermo" id="thermo" title="Brew temperature" role="slider" aria-valuemin="80" aria-valuemax="100">
+              <div class="th-tube"><div class="th-fill" id="thFill"></div></div>
+              <div class="th-bulb"></div>
+            </div>
+          </div>
+          <div class="th-ctrl">
+            <button class="ms-btn" onclick="adjustTemp(0.5)">+</button>
+            <div class="th-val tap" id="brewTempVal" onclick="openKeypad('brewTemp')">—</div>
+            <button class="ms-btn" onclick="adjustTemp(-0.5)">−</button>
           </div>
         </div>
         </div>
@@ -2899,6 +2923,31 @@ function setBrewTempC(v){
   var d=Math.round((v-cur)*10)/10; if(!d) return;
   st.forEach(function(x){ if(x.temperature!=null) x.temperature=Math.round((x.temperature+d)*10)/10; });
   syncRecipe(); pushProfileTemp(); }
+var TH_MIN=80, TH_MAX=100;
+function syncThermo(){
+  var bt=document.getElementById('brewTempVal'), fill=document.getElementById('thFill'), bc=brewTempC();
+  if(bt) bt.textContent=(bc==null)?'—':convTemp(bc).toFixed(1);
+  var tu=document.getElementById('brewTempUnit'); if(tu) tu.textContent=tempUnitLabel();
+  if(fill) fill.style.height=(bc==null?0:Math.max(0,Math.min(1,(bc-TH_MIN)/(TH_MAX-TH_MIN)))*100).toFixed(1)+'%';
+  var th=document.getElementById('thermo');
+  if(th&&bc!=null) th.setAttribute('aria-valuenow',bc.toFixed(1)); }
+// Dragging the tube reads the whole range in one gesture; the write behind it
+// is the same debounced one the buttons use, so a drag is one request.
+function thermoFromY(y){
+  var tube=document.querySelector('#thermo .th-tube'); if(!tube) return;
+  var r=tube.getBoundingClientRect(); if(!r.height) return;
+  var f=1-(y-r.top)/r.height;
+  setBrewTempC(TH_MIN+Math.max(0,Math.min(1,f))*(TH_MAX-TH_MIN)); }
+function thermoInit(){
+  var th=document.getElementById('thermo'); if(!th) return;
+  var down=false;
+  th.addEventListener('pointerdown',function(e){
+    if(brewTempC()==null){ toast(t('noProfile'),'err'); return; }
+    down=true; th.classList.add('drag'); th.setPointerCapture(e.pointerId);
+    thermoFromY(e.clientY); e.preventDefault(); });
+  th.addEventListener('pointermove',function(e){ if(down) thermoFromY(e.clientY); });
+  ['pointerup','pointercancel'].forEach(function(ev){
+    th.addEventListener(ev,function(){ down=false; th.classList.remove('drag'); }); }); }
 function adjustTemp(d){ var cur=brewTempC();
   if(cur==null){ toast(t('noProfile'),'err'); return; }
   setBrewTempC(cur+d); }
@@ -2910,8 +2959,8 @@ function pushProfileTemp(){ clearTimeout(_tempPushT); _tempPushT=setTimeout(func
 function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){ api('PUT','/api/v1/workflow',{context:{targetDoseWeight:settings.doseIn,targetYield:settings.doseOut}}).catch(function(){}); },600); }
 function syncRecipe(){
   document.getElementById('doseInVal').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOutVal').textContent=settings.doseOut.toFixed(1);
-  var bt=document.getElementById('brewTempVal'), bc=brewTempC();
-  if(bt) bt.textContent=(bc==null)?'—':(convTemp(bc).toFixed(1)+tempUnitLabel());
+  ['doseInUnit','doseOutUnit'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent='g'; });
+  syncThermo();
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
   document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
   var md=document.getElementById('monDose');
@@ -8850,7 +8899,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
   if(/[?&]camsetup=1/.test(window.location.search)){ bootCamSetup(); return; }
-  bindDoseGestures();
+  bindDoseGestures(); thermoInit();
   fitStage(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
