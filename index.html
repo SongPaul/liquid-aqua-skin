@@ -586,6 +586,7 @@ body.night .ep-dot{border-color:#1a1526}
 .rec-btn{width:100%;border-color:var(--accent);color:var(--accent);font-weight:800}
 .rec-box:not(:empty){margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .rec-head{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
+.rec-nokey{cursor:pointer}
 .rec-wait{font-size:12px;color:var(--ink-mute);padding:10px 2px}
 .g-ai{display:flex;align-items:center;gap:10px;margin:-2px 0 12px;flex-wrap:wrap}
 .g-ai .ep-aibtn{flex:0 0 auto;width:auto}
@@ -5175,7 +5176,10 @@ function renderProfileList(){
   if((recBusy||usageBusy)&&!have){ box.style.display='';
     box.innerHTML='<div class="rec-wait">'+escapeHtml(t(recBusy?'recWorking':'usageWorking'))+'</div>'; return; }
   var rows=buildProfileRows();
-  if(!rows.length){ box.style.display='none'; box.innerHTML=''; return; }
+  if(!rows.length){
+    if(!recBusy&&!usageBusy&&!(prefs.geminiKey||'').trim()){ box.style.display='';
+      box.innerHTML='<div class="rec-wait rec-nokey" onclick="openSettingsPage();spSelect(\'ai\')">'+escapeHtml(t('aiNeedKey'))+' ↗</div>'; return; }
+    box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='';
   var canUse=(recPfx==='bg');
   box.innerHTML='<div class="rec-head">'+escapeHtml(t('profHead'))+'</div>'
@@ -5398,8 +5402,9 @@ function geminiJsonCall(key,parts,temperature,search){
     return attempt(model,2);
   }); }
 function analyzeBeanImages(){ if(!aiImages.length) return;
-  var key=(prefs.geminiKey||'').trim(); if(!key){ toast('Set a Gemini API key in Settings','err'); openSettingsPage(); spSelect('ai'); return; }
-  var statusEl=document.getElementById('aiStatus'); statusEl.textContent='Analyzing… ✨'; var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
+  var key=(prefs.geminiKey||'').trim();
+  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
+  var statusEl=document.getElementById('aiStatus'); statusEl.textContent=t('mbAnalyzing'); var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
   geminiAnalyze(key,aiImages)
     .then(function(data){ data=cleanBeanText(data); function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
       put('bgRoaster',data.roaster); put('bgName',data.name); put('bgCountry',data.country); put('bgRegion',data.region);
