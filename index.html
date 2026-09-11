@@ -1556,7 +1556,7 @@ var I18N={
     settings:'Settings', nightMode:'Night mode', nightModeDesc:'Dark theme for low-light environments.',
     autoNight:'Auto night mode', autoDyeName:'Auto-open shot log', autoDyeDesc:'Show the Log Your Espresso form as soon as a shot ends.',
     gatewayName:'Gateway', gatewayDesc:'Open the Decaid gateway web interface in a new tab.', open:'Open ↗',
-    geminiName:'Gemini API key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
+    geminiName:'Gemini API key', geminiPh:'Paste your Gemini API key — reads bean labels, stored on this device only', geminiGet:'Get a key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
     plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
     catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
     vizTitle:'Import from Visualizer', vizGo:'Import', vizBusy:'Fetching…',
@@ -1689,7 +1689,7 @@ var I18N={
     settings:'설정', nightMode:'나이트 모드', nightModeDesc:'저조도 환경용 다크 테마.',
     autoNight:'자동 나이트 모드', autoDyeName:'샷 기록 자동 열기', autoDyeDesc:'샷이 끝나면 기록 폼을 자동으로 표시.',
     gatewayName:'게이트웨이', gatewayDesc:'Decaid 게이트웨이 웹 화면을 새 탭에서 열기.', open:'열기 ↗',
-    geminiName:'Gemini API 키', language:'언어', tempUnit:'온도', weightUnit:'무게',
+    geminiName:'Gemini API 키', geminiPh:'Gemini API 키 붙여넣기 — 원두 라벨 읽기에 사용, 이 기기에만 저장', geminiGet:'키 발급받기', language:'언어', tempUnit:'온도', weightUnit:'무게',
     plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
     catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
     vizTitle:'Visualizer에서 가져오기', vizGo:'가져오기', vizBusy:'불러오는 중…',
@@ -3334,7 +3334,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div id="appBox"><div class="ls-empty">'+t('loading')+'</div></div>';
   } else if(spCat==='ai'){
     h+='<div class="sp-cat-title">'+t('catAI')+'</div>';
-    h+='<div class="set-row" style="display:block"><div class="set-info" style="margin-bottom:8px"><div class="set-name">'+t('geminiName')+'</div><div class="set-desc">'+t('geminiDesc')+' <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">Get a key ↗</a></div></div><div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="AIza…" value="'+escapeAttr(prefs.geminiKey||'')+'" oninput="saveGeminiKey(this.value)"></div></div>';
+    h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="'+escapeAttr(t('geminiPh'))+'" value="'+escapeAttr(prefs.geminiKey||'')+'" oninput="saveGeminiKey(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">'+t('geminiGet')+' ↗</a></div></div>';
   } else if(spCat==='plugins'){
     h+='<div class="sp-cat-title">'+t('plugins')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('pluginsDesc')+'</div>';
