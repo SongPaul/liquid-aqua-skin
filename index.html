@@ -46,12 +46,12 @@ body.night .ep-group-head{background:linear-gradient(135deg,#14111f,#1a1526);col
 body.night .ep-group-head.fav{background:linear-gradient(135deg,#241a12,#26141a);color:var(--amber)}
 body.night .bg-tabs{background:var(--sheet)}
 /* pill / button surfaces */
-body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .tare-btn,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
+body.night .ep-item,body.night .kp-key,body.night .m-btn,body.night .conn-toggle,body.night .icon-btn,body.night .ep-close,body.night .modal-close,body.night .bg-tab,body.night .browse-tab,body.night .ep-pump-toggle button,body.night .ep-steptab,body.night .ep-stepnav .nav,body.night .preset-chip,body.night .ms-btn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ep-aibtn{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .ms-btn:hover{background:rgba(139,92,246,.28)}
 body.night .bg-tab2.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
 body.night .bh-filter{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
-body.night .car-nav,body.night .fav-btn,body.night .aux-chip,body.night .bh-cell,body.night .bg-tab2,body.night .prow{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
+body.night .car-nav,body.night .fav-btn,body.night .bh-cell,body.night .bg-tab2,body.night .prow{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.1)}
 body.night .kp-key{color:var(--ink)}
 body.night .car-nav:hover,body.night .ep-stepnav .nav:hover{background:rgba(255,255,255,.14)}
 /* editor panels */
@@ -111,7 +111,6 @@ body.asleep-settled .wave-path,body.asleep-settled .wave-path2{animation-play-st
 
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
-.water-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:var(--r-md)}
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill svg{position:absolute;top:-16px;left:0;width:100%;height:18px;display:block}
 .water-fill svg.bubbles{position:absolute;top:auto;bottom:0;left:0;width:100%;height:100%;pointer-events:none}
@@ -149,18 +148,28 @@ header>*{position:relative;z-index:1}
 .water-nums .pct{font-size:20px;font-weight:800;color:var(--accent)}
 .water-nums .lbl{font-size:11px;font-weight:600;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
 .water-warn{color:var(--red);font-weight:700;font-size:11px;margin-left:6px}
-.temps-bar{position:relative;overflow:hidden;flex-shrink:0;height:70px}
-.temps-bar .water-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:var(--r-md)}
-.temps-bar .tb-content{position:relative;z-index:1;height:100%;display:flex;align-items:center;justify-content:space-around;gap:10px;padding:0 16px}
-.htemp{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:help;position:relative}
-.htemp .ht-ico{font-size:16px}
-.htemp .ht-v{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
-.htemp .ht-l{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em}
-.htemp.tank .water-warn{position:absolute;top:-6px;right:-14px;color:var(--red);font-size:12px}
+/* The tank is a tank: it stands at the left of the live card and fills from
+   the bottom, which reads as a level instead of as a bar chart lying down. */
+.htemp{display:flex;align-items:baseline;gap:5px;cursor:help;position:relative;white-space:nowrap}
+.htemp .ht-ico{font-size:14px}
+.htemp .ht-v{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.htemp .ht-l{font-size:9px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em}
+.htemp.tank .ht-v{color:var(--steam)}
+.tank-card.dry .htemp .ht-v,.tank-card.dry .htemp .ht-l{color:var(--red)}
+.water-warn{margin-left:2px;color:var(--red);font-size:11px}
 
-.hdr-actions{display:flex;align-items:center;gap:9px}
-.act-btn{position:relative;display:flex;align-items:center;gap:7px;min-height:48px;padding:9px 15px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);-webkit-appearance:none;user-select:none}
+.hdr-actions{display:flex;align-items:stretch;gap:9px}
+.act-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:9px 15px;border-radius:14px;border:1px solid var(--edge);background:var(--field);box-shadow:0 1px 2px rgba(80,70,160,.05);color:var(--ink-soft);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);-webkit-appearance:none;user-select:none}
 .act-btn .ico{font-size:15px}
+/* the preset and its numbers ride under the name of the button that runs
+   it, which is where you look before pressing it anyway */
+.act-btn .ab-txt{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.act-btn .ab-head{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.act-btn .ab-name{font-size:13px;font-weight:700;line-height:1.1}
+.act-btn .ab-preset{font-size:11px;font-weight:700;line-height:1.1;color:var(--ink-mute)}
+.act-btn.active .ab-preset{color:rgba(255,255,255,.9)}
+.act-btn .ab-sum{font-size:10px;font-weight:700;line-height:1.1;color:var(--ink-mute);white-space:nowrap}
+.act-btn.active .ab-sum{color:rgba(255,255,255,.82)}
 /* Press feedback only (no hover lift) — touch friendly */
 .act-btn:active:not(:disabled){transform:scale(.94);filter:brightness(.96)}
 .act-btn:disabled{opacity:.4;cursor:not-allowed}
@@ -172,7 +181,7 @@ header>*{position:relative;z-index:1}
 .act-btn .gear-hint{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ink-mute);white-space:nowrap;opacity:0;transition:opacity .2s}
 .act-btn:hover .gear-hint{opacity:1}
 
-.conn-toggle{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;border:1px solid var(--glass-line);background:var(--glass-hi);cursor:pointer;transition:all .25s;-webkit-appearance:none;font-family:var(--font)}
+.conn-toggle{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;border:1px solid var(--edge);background:var(--field);cursor:pointer;transition:all .25s;-webkit-appearance:none;font-family:var(--font)}
 .conn-toggle:active{transform:scale(.96)}
 .conn-toggle.ing{border-color:var(--amber)}
 .conn-rows{display:flex;flex-direction:column;gap:4px}
@@ -184,7 +193,8 @@ header>*{position:relative;z-index:1}
 .conn-toggle.ing .conn-line .status-dot{background:var(--amber);animation:blink .8s infinite}
 @keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.hdr-group{display:flex;align-items:center;gap:9px}
+.hdr-group{display:flex;align-items:stretch;gap:9px}
+.hdr-aux{display:flex;align-items:stretch;gap:7px;padding:0 9px;border-left:1px solid var(--edge);border-right:1px solid var(--edge)}
 /* active (running) action buttons: filled + pulsing.
    Force white text/icon with a shadow for contrast against the bright fill,
    overriding the steam/flush accent-color rules above. */
@@ -199,62 +209,75 @@ header>*{position:relative;z-index:1}
 
 /* ── Center column ───────────────────────────────────────────────── */
 .center{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;min-height:0}
-.live{padding:14px 20px;flex-shrink:0;display:grid;grid-template-columns:1fr 424px;grid-template-areas:'aux aux' 'main recipe';gap:12px 16px;align-items:stretch}
-.live>.aux-row{grid-area:aux}
+/* the tank keeps the card it always had -- water filling the whole panel
+   with the readings floating on it -- only stood on end beside the rest */
+.live-row{display:grid;grid-template-columns:1fr 3fr;gap:10px;flex-shrink:0}
+.tank-card{position:relative;overflow:hidden;min-width:0}
+.tank-card .water-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:var(--r-md)}
+.tank-card .tank-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:10px 16px}
+.live{padding:11px 20px;min-width:0;display:grid;grid-template-columns:1fr 384px;grid-template-areas:'main recipe';grid-template-rows:1fr;gap:12px 16px;align-items:stretch}
 .live-main{grid-area:main}
 .live>.gauges{grid-area:recipe}
-.live-main{min-width:0;display:flex;flex-direction:column}
-.live>.gauges{min-width:0;padding:0 0 0 18px;border-left:1px solid var(--glass-line);align-self:center}
+.live-main{min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.live>.gauges{min-width:0;min-height:100px;padding:0 0 0 18px;border-left:1px solid var(--edge);align-self:stretch;margin-top:0}
 .right .recipe{padding:6px 16px 8px;flex:none}
-.live-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-.live-label{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase;margin-bottom:4px}
-.weight-row{display:flex;align-items:center;gap:12px}
-.weight-num{font-size:60px;font-weight:800;line-height:.85;letter-spacing:-.04em;background:linear-gradient(135deg,var(--ink),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.live-top{align-self:stretch;display:flex;flex-direction:column;align-items:stretch;gap:0;margin-bottom:0}
+.lt-ico{font-size:17px;line-height:1;opacity:.7;flex-shrink:0}
+.lt-val{display:flex;align-items:baseline;gap:7px;flex:0 0 auto}
+.weight-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:6px 11px 8px;border-radius:16px;cursor:pointer;background:var(--field);border:1px solid var(--edge);transition:transform .12s,background .15s,border-color .15s}
+.weight-row:hover{background:rgba(99,102,241,.09)}
+.weight-row:active{transform:scale(.96);background:rgba(99,102,241,.16);border-color:var(--accent)}
+.weight-row.off{cursor:default;background:none;border-color:transparent}
+.weight-row.off:active{transform:none;background:none}
+.weight-num{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.04em;background:linear-gradient(135deg,var(--ink),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .weight-num.zero{-webkit-text-fill-color:var(--ink-mute)}
-.weight-unit{font-size:20px;font-weight:700;color:var(--ink-mute)}
-.tare-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;min-height:44px;padding:8px 16px;border-radius:100px;border:1.5px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
-.tare-btn:hover:not(:disabled){background:var(--accent);color:#fff;transform:translateY(-2px)}
-.tare-btn:disabled{opacity:.35;cursor:not-allowed}
-.timer-big{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+.weight-num.long{font-size:28px}
+.weight-num.xlong{font-size:23px}
+.weight-num.xxlong{font-size:21px}
+.weight-unit{font-size:14px;font-weight:700;color:var(--ink-mute)}
+.timer-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-top:7px;padding:8px 12px 0;border-top:1px solid var(--edge)}
+.timer-big{font-size:32px;font-weight:800;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
 .timer-big.run{color:var(--hot)}
 
 .gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0;margin-top:14px;flex:1;align-items:stretch}
-.gauge{background:var(--glass-hi);border-radius:var(--r-sm);padding:6px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid var(--glass-line)}
-.gauge-arc{position:relative;width:100%;max-width:128px}
-.gauge-arc svg{display:block;width:100%;height:auto}
-/* Every band is the same path normalised to a length of 100, so a zone is just a
-   dash of (end-start) offset to its start -- no arc maths at run time. */
-.ga-zone{fill:none;stroke-width:10;stroke-linecap:butt}
-.ga-zone.z1{stroke:rgba(148,163,184,.30)}
-.ga-zone.z2{stroke:rgba(245,158,11,.42)}
-.ga-zone.z3{stroke:rgba(16,185,129,.52)}
-.ga-zone.z4{stroke:rgba(244,63,94,.48)}
-.ga-mark{stroke-width:3.4;stroke-linecap:round;transform-box:view-box;transform-origin:58.5px 59.5px;transition:transform .3s cubic-bezier(.4,0,.2,1)}
-.ga-mark.pressure{stroke:var(--accent)}
-.ga-mark.flow{stroke:var(--steam)}
-.ga-min,.ga-max,.ga-tick{position:absolute;font-size:11px;font-weight:700;color:var(--ink-mute);line-height:1}
-.ga-min,.ga-max{bottom:0}
-.ga-min{left:12%} .ga-max{right:12%}
-/* The three inner marks sit on the sweep at a quarter, a half and three
-   quarters, just inside the band. Their places never change, so they are
-   plain percentages of the arc box rather than trigonometry at run time. */
-.ga-tick{transform:translate(-50%,-50%);white-space:nowrap}
-.ga-t1{left:24%;top:44.1%}
-.ga-t2{left:50%;top:25%}
-.ga-t3{left:76%;top:44.1%}
-body.night .ga-zone.z1{stroke:rgba(255,255,255,.16)}
-.gauge-read{position:absolute;left:8%;right:8%;bottom:3px;display:flex;flex-direction:column;align-items:center;pointer-events:none}
-.gauge-name{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.gauge-val{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1.15;white-space:nowrap}
-.gauge-val .u{font-size:11px;color:var(--ink-mute);font-weight:600}
+.gauge{position:relative;overflow:hidden;border-radius:var(--r-sm);padding:6px 8px 15px;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center}
+/* The two readings are drawn as what they are: pressure squeezes a puck in a
+   basket, flow falls out of it. The scene sits in the top half of the box and
+   the reading keeps the bottom, so the number is never drawn over. */
+.gs{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.gs-liq{fill:var(--steam);opacity:.3;transition:fill .8s ease}
+.fan-sp{stroke:var(--ink-mute);opacity:.3;stroke-width:2.4;stroke-linecap:round}
+.fan-sp.lit{stroke:var(--accent);opacity:.9;stroke-width:3}
+.fan-b1,.fan-b2,.fan-b3{fill:none;stroke-width:3.4;stroke-linecap:butt}
+.fan-b1{stroke:var(--ink-mute);opacity:.4}
+.fan-b2{stroke:#059669;opacity:.9}
+.fan-b3{stroke:#e11d48;opacity:.85}
+body.night .fan-b1{opacity:.3}
+body.night .fan-b2{stroke:#34d399}
+body.night .fan-b3{stroke:#fb7185}
+.fan-end{fill:var(--ink-mute);font-size:9px;font-weight:700}
+.fan-stem{stroke:var(--accent);stroke-width:3.4;stroke-linecap:round}
+.fan-knob{fill:var(--sheet);stroke:var(--accent);stroke-width:2.6}
+.gauge.dial{padding:2px 2px 7px;justify-content:flex-end}
+.gauge.dial .gauge-val{font-size:38px;line-height:1;text-align:center}
+.gauge.dial .gauge-val .u{display:block;font-size:13px;line-height:1.1;margin-top:1px}
+.mon-gauge.dial .gauge-val{font-size:56px}
+.mon-gauge.dial .gauge-val .u{font-size:20px;margin-top:2px}
+.gauge-read{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;pointer-events:none;max-width:100%}
+.gauge-val{font-size:60px;font-weight:800;letter-spacing:-.04em;line-height:.85;white-space:nowrap}
+.gauge-val .u{font-size:20px;color:var(--ink-mute);font-weight:700;letter-spacing:0}
+.gauge.m-pressure{--mc:#8b5a2b} .gauge.m-flow{--mc:#2f9fd6}
+body.night .gauge.m-pressure{--mc:#c9955f} body.night .gauge.m-flow{--mc:#5cc4f0}
 .gauge-val.pressure{color:var(--accent)} .gauge-val.flow{color:var(--steam)}
-.gauge-name.gz1{color:var(--ink-mute)}
-.gauge-name.gz2{color:#d97706}
-.gauge-name.gz3{color:#059669}
-.gauge-name.gz4{color:#e11d48}
-body.night .gauge-name.gz2{color:#fbbf24}
-body.night .gauge-name.gz3{color:#34d399}
-body.night .gauge-name.gz4{color:#fb7185}
+.gauge.m-pressure .gauge-val,.gauge.m-flow .gauge-val{color:var(--mc)}
+.gauge.m-pressure .fan-sp.lit,.gauge.m-flow .fan-sp.lit,
+.gauge.m-pressure .fan-stem,.gauge.m-flow .fan-stem,
+.gauge.m-pressure .fan-knob,.gauge.m-flow .fan-knob{stroke:var(--mc)}
+/* under, on target, over -- said in colour instead of a word under the
+   reading, which is a line of text the gauge can carry itself */
+.gauge.z1{--zc:#d97706} .gauge.z2{--zc:#059669} .gauge.z3{--zc:#e11d48}
+body.night .gauge.z1{--zc:#fbbf24} body.night .gauge.z2{--zc:#34d399} body.night .gauge.z3{--zc:#fb7185}
+.gauge.m-pressure.z2 .gauge-val,.gauge.m-flow.z2 .gauge-val{color:var(--zc)}
 
 .temps{display:flex;gap:10px}
 .temp-pill{flex:1;background:var(--glass-hi);border-radius:var(--r-sm);padding:11px 13px;border:1px solid var(--glass-line);display:flex;align-items:center;gap:9px;cursor:help}
@@ -432,14 +455,6 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bean-info::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .bean-row{display:flex;align-items:center;gap:10px;flex:none}
 .bean-ico{width:36px;height:36px;border-radius:11px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-.aux-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-bottom:12px;border-bottom:1px solid var(--glass-line)}
-.aux-chip{display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:4px 12px;border-radius:12px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);cursor:pointer;-webkit-appearance:none;text-align:center;min-width:0;transition:all .15s}
-.aux-chip:hover{border-color:var(--accent)}
-.aux-chip.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.16)}
-.ax-ico{flex:none;font-size:17px;line-height:1}
-.ax-txt{min-width:0;display:flex;flex-direction:column;gap:1px}
-.ax-name{font-size:12px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ax-val{font-size:11px;font-weight:700;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-live{font-size:11px;font-weight:800;color:var(--accent);text-transform:none;letter-spacing:0}
 .live-grid{display:grid;gap:6px}
 .live-cell{text-align:center;min-width:0}
@@ -755,11 +770,10 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .mon-big{font-size:58px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin-top:2px}
 .mon-u{font-size:20px;font-weight:700;color:var(--ink-mute);margin-left:3px}
 .mon-gauges{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0}
-.mon-gauge{padding:10px 8px;flex:1;justify-content:center;min-height:0}
-.mon-gauge .gauge-arc{max-width:318px}
-.mon-gauge .gauge-val{font-size:44px}
-.mon-gauge .gauge-name{font-size:15px}
-.mon-gauge .ga-min,.mon-gauge .ga-max,.mon-gauge .ga-tick{font-size:13px}
+.mon-gauge{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:10px 8px;flex:1;justify-content:center;min-height:0}
+
+.mon-gauge .gauge-val{font-size:80px}
+.mon-gauge .gauge-val .u{font-size:26px}
 .mon-recipe{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px}
 .mon-recipe-row{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:700;color:var(--ink-mute);margin-top:4px}
 .mon-recipe-row b{font-size:30px;font-weight:800;color:var(--ink)}
@@ -854,7 +868,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .m-btn:disabled:hover{transform:none}
 
 /* Header icon button (settings gear) */
-.icon-btn{width:44px;height:44px;border-radius:100px;border:1px solid var(--glass-line);background:var(--glass-hi);color:var(--ink-soft);font-size:18px;cursor:pointer;-webkit-appearance:none;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.icon-btn{width:44px;align-self:center;height:44px;border-radius:14px;border:1px solid var(--edge);background:var(--field);color:var(--ink-soft);font-size:18px;cursor:pointer;-webkit-appearance:none;transition:all .2s;display:flex;align-items:center;justify-content:center}
 .icon-btn:active{background:#fff;transform:scale(.92)}
 
 /* Numeric keypad */
@@ -902,8 +916,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .set-name{font-size:14px;font-weight:800;color:var(--ink)}
 .set-desc{font-size:11px;color:var(--ink-mute);margin-top:2px;line-height:1.3}
 .mon-stop.close{background:var(--glass-hi);border:1px solid var(--glass-line);color:var(--ink-soft)}
-.htemp.tank.dry{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.45)}
-.htemp.tank.dry .ht-v,.htemp.tank.dry .ht-l{color:var(--red)}
 .fw-prog{margin-top:14px}
 .fw-prog-label{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
 .fw-prog-label.err{color:#ef4444}
@@ -985,18 +997,32 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
         <span class="ico" id="shotIco">▶</span><span id="shotLbl" data-i18n="start">Start</span>
       </button>
+      <div class="hdr-aux">
       <button class="act-btn steam" id="btnSteam" disabled>
-        <span class="cfg-dot"></span><span class="ico">♨️</span><span data-i18n="steam">Steam</span>
+        <span class="cfg-dot"></span>
+        <span class="ab-txt">
+          <span class="ab-head"><span class="ico">♨️</span><span class="ab-name" data-i18n="steam">Steam</span><span class="ab-preset" id="auxPresetSteam">—</span></span>
+          <span class="ab-sum" id="auxSumSteam">—</span>
+        </span>
         <span class="gear-hint" id="steamHint"></span>
       </button>
       <button class="act-btn flush" id="btnFlush" disabled>
-        <span class="cfg-dot"></span><span class="ico">🚿</span><span data-i18n="flush">Flush</span>
+        <span class="cfg-dot"></span>
+        <span class="ab-txt">
+          <span class="ab-head"><span class="ico">🚿</span><span class="ab-name" data-i18n="flush">Flush</span><span class="ab-preset" id="auxPresetFlush">—</span></span>
+          <span class="ab-sum" id="auxSumFlush">—</span>
+        </span>
         <span class="gear-hint" id="flushHint"></span>
       </button>
       <button class="act-btn water" id="btnWater" disabled>
-        <span class="cfg-dot"></span><span class="ico">💧</span><span data-i18n="water">Water</span>
+        <span class="cfg-dot"></span>
+        <span class="ab-txt">
+          <span class="ab-head"><span class="ico">💧</span><span class="ab-name" data-i18n="water">Water</span><span class="ab-preset" id="auxPresetWater">—</span></span>
+          <span class="ab-sum" id="auxSumWater">—</span>
+        </span>
         <span class="gear-hint" id="waterHint"></span>
       </button>
+      </div>
       <button class="act-btn sleep" id="btnSleep" onclick="doSleep()" disabled>
         <span class="ico">🌙</span><span data-i18n="sleep">Sleep</span>
       </button>
@@ -1006,7 +1032,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
   <!-- ── Center ────────────────────────────────────────────────── -->
   <div class="center">
-    <div class="temps-bar glass">
+    <div class="live-row">
+    <div class="tank-card glass" id="tankCard" title="Water tank level">
       <div class="water-bg">
         <div class="water-fill" id="waterFill" style="height:0%">
           <svg viewBox="0 0 1280 18" preserveAspectRatio="none">
@@ -1015,72 +1042,39 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
           </svg>
         </div>
       </div>
-      <div class="tb-content">
+      <div class="tank-content">
         <div class="htemp" title="Group head temperature"><span class="ht-ico">🔥</span><span class="ht-v"><span id="groupTemp">—</span>°</span><span class="ht-l" data-i18n="group">Group</span></div>
         <div class="htemp" title="Mix (blended water) temperature"><span class="ht-ico">💧</span><span class="ht-v"><span id="mixTemp">—</span>°</span><span class="ht-l" data-i18n="mix">Mix</span></div>
         <div class="htemp" title="Steam boiler temperature"><span class="ht-ico">♨️</span><span class="ht-v"><span id="steamTempDisp">—</span>°</span><span class="ht-l" data-i18n="steam">Steam</span></div>
-        <div class="htemp tank" title="Water tank level"><span class="ht-ico">💧</span><span class="ht-v"><span id="waterPct">—</span>%</span><span class="ht-l" id="tankLbl" data-i18n="tank">Tank</span><span class="water-warn" id="waterWarn" style="display:none">⚠</span></div>
+        <div class="htemp tank"><span class="ht-ico">💧</span><span class="ht-v"><span id="waterPct">—</span>%</span><span class="ht-l" id="tankLbl" data-i18n="tank">Tank</span><span class="water-warn" id="waterWarn" style="display:none">⚠</span></div>
       </div>
     </div>
     <div class="live glass">
-      <div class="aux-row" id="auxRow">
-        <button class="aux-chip" id="auxChipSteam" onclick="openSteamModal()"><span class="ax-ico">♨️</span>
-          <span class="ax-txt"><span class="ax-name" id="auxNameSteam">Steam</span><span class="ax-val" id="auxValSteam">—</span></span></button>
-        <button class="aux-chip" id="auxChipFlush" onclick="openFlushModal()"><span class="ax-ico">🚿</span>
-          <span class="ax-txt"><span class="ax-name" id="auxNameFlush">Flush</span><span class="ax-val" id="auxValFlush">—</span></span></button>
-        <button class="aux-chip" id="auxChipWater" onclick="openWaterModal()"><span class="ax-ico">💧</span>
-          <span class="ax-txt"><span class="ax-name" id="auxNameWater">Water</span><span class="ax-val" id="auxValWater">—</span></span></button>
-      </div>
       <div class="live-main">
       <div class="live-top">
-        <div>
-          <div class="live-label" data-i18n="liveWeight">Live Weight</div>
-          <div class="weight-row">
-            <span class="weight-num zero" id="weightNum">0.0</span><span class="weight-unit">g</span>
-            <button class="tare-btn" id="btnTare" onclick="doTare()" disabled>⊘ <span data-i18n="tare">Tare</span></button>
-          </div>
+        <div class="weight-row tap" id="weightTap" onclick="doTare()" role="button" tabindex="0">
+          <span class="lt-ico">⚖️</span>
+          <span class="lt-val"><span class="weight-num zero" id="weightNum">0.0</span><span class="weight-unit">g</span></span>
         </div>
-        <div><div class="live-label" style="text-align:right" data-i18n="timer">Timer</div><div class="timer-big" id="timerBig">0:00</div></div>
+        <div class="timer-row">
+          <span class="lt-ico">⏱️</span>
+          <span class="lt-val"><span class="timer-big" id="timerBig">0:00</span></span>
+        </div>
       </div>
 
       </div>
       <div class="gauges">
         <div class="gauge">
-          <div class="gauge-arc">
-            <svg viewBox="0 0 117 66" aria-hidden="true">
-              <path class="ga-zone z1" id="pressureZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <path class="ga-zone z2" id="pressureZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <path class="ga-zone z3" id="pressureZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <path class="ga-zone z4" id="pressureZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <line class="ga-mark pressure" id="pressureMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
-            </svg>
-            <span class="ga-min">0</span><span class="ga-max" id="pressureMax">12</span>
-            <span class="ga-tick ga-t1" id="pressureT1"></span><span class="ga-tick ga-t2" id="pressureT2"></span><span class="ga-tick ga-t3" id="pressureT3"></span>
-            <div class="gauge-read">
-              <span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span>
-              <span class="gauge-name" id="gauge1Name">Pressure</span>
-            </div>
-          </div>
+          <svg class="gs" id="pressureScene" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="gauge-read"><span class="gauge-val pressure" id="pressureVal">0.0<span class="u"> bar</span></span></div>
         </div>
         <div class="gauge">
-          <div class="gauge-arc">
-            <svg viewBox="0 0 117 66" aria-hidden="true">
-              <path class="ga-zone z1" id="flowZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <path class="ga-zone z2" id="flowZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <path class="ga-zone z3" id="flowZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <path class="ga-zone z4" id="flowZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-              <line class="ga-mark flow" id="flowMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
-            </svg>
-            <span class="ga-min">0</span><span class="ga-max" id="flowMax">12</span>
-            <span class="ga-tick ga-t1" id="flowT1"></span><span class="ga-tick ga-t2" id="flowT2"></span><span class="ga-tick ga-t3" id="flowT3"></span>
-            <div class="gauge-read">
-              <span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span>
-              <span class="gauge-name" id="gauge2Name">Flow</span>
-            </div>
-          </div>
+          <svg class="gs" id="flowScene" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="gauge-read"><span class="gauge-val flow" id="flowVal">0.0<span class="u"> ml/s</span></span></div>
         </div>
       </div>
 
+    </div>
     </div>
 
     <div class="chart-card glass">
@@ -1177,7 +1171,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <div class="ls-head">
           <div class="ls-profile" id="lsProfile"></div>
           <span class="ls-acts">
-            <button class="cur-browse" onclick="viewLastShotGraph()"><span data-i18n="viewGraph">View Graph</span> ↗</button>
+            <button class="cur-browse" onclick="viewLastShotGraph()"><span id="lsGraphLbl">View Graph</span> <span id="lsGraphIco">↗</span></button>
             <button class="cur-browse" onclick="openShotLog()"><span data-i18n="shotLog">Shot Log</span> ▤</button>
           </span></div>
         <div class="ls-stats" id="lsStats"><div class="ls-empty" data-i18n="noShots">No shots recorded yet</div></div>
@@ -1218,38 +1212,12 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       </div>
       <div class="mon-gauges">
         <div class="gauge mon-gauge">
-          <div class="gauge-arc">
-            <svg viewBox="0 0 117 66" aria-hidden="true">
-            <path class="ga-zone z1" id="monPressureZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <path class="ga-zone z2" id="monPressureZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <path class="ga-zone z3" id="monPressureZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <path class="ga-zone z4" id="monPressureZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <line class="ga-mark pressure" id="monPressureMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
-            </svg>
-            <span class="ga-min">0</span><span class="ga-max" id="monPressureMax">12</span>
-            <span class="ga-tick ga-t1" id="monPressureT1"></span><span class="ga-tick ga-t2" id="monPressureT2"></span><span class="ga-tick ga-t3" id="monPressureT3"></span>
-            <div class="gauge-read">
-              <span class="gauge-val pressure" id="monPressureVal">0.0<span class="u"> bar</span></span>
-              <span class="gauge-name" id="monGauge1Name">—</span>
-            </div>
-          </div>
+          <svg class="gs" id="monPressureScene" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="gauge-read"><span class="gauge-val pressure" id="monPressureVal">0.0<span class="u"> bar</span></span></div>
         </div>
         <div class="gauge mon-gauge">
-          <div class="gauge-arc">
-            <svg viewBox="0 0 117 66" aria-hidden="true">
-            <path class="ga-zone z1" id="monFlowZ1" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <path class="ga-zone z2" id="monFlowZ2" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <path class="ga-zone z3" id="monFlowZ3" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <path class="ga-zone z4" id="monFlowZ4" pathLength="100" d="M7.5 59.5 A51 51 0 0 1 109.5 59.5"></path>
-            <line class="ga-mark flow" id="monFlowMark" x1="58.5" y1="3" x2="58.5" y2="14"></line>
-            </svg>
-            <span class="ga-min">0</span><span class="ga-max" id="monFlowMax">12</span>
-            <span class="ga-tick ga-t1" id="monFlowT1"></span><span class="ga-tick ga-t2" id="monFlowT2"></span><span class="ga-tick ga-t3" id="monFlowT3"></span>
-            <div class="gauge-read">
-              <span class="gauge-val flow" id="monFlowVal">0.0<span class="u"> bar</span></span>
-              <span class="gauge-name" id="monGauge2Name">—</span>
-            </div>
-          </div>
+          <svg class="gs" id="monFlowScene" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="gauge-read"><span class="gauge-val flow" id="monFlowVal">0.0<span class="u"> bar</span></span></div>
         </div>
       </div>
       <div class="mon-recipe">
@@ -1528,7 +1496,7 @@ var I18N={
     doseFromScaleOk:'Dose taken from the scale',
     doseNoScale:'The scale has not sent a reading',
     doseHoldHint:'Tap to type it, hold to take it off the scale',
-    liveWeight:'Live Weight', tare:'Tare', timer:'Timer', pressure:'Pressure', flow:'Flow',
+    tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight', target:'Target',
@@ -1606,12 +1574,13 @@ var I18N={
     csNoSecure:'This browser gives no camera to a plain http:// page. In Chrome open chrome://flags/#unsafely-treat-insecure-origin-as-secure, add the address below, set it to Enabled and restart Chrome, then come back here. Or use way 2, which needs no browser setting:',
     camError:'The stream could not be reached',
     guideLine:'Extraction guideline', guideLineDesc:'Draw what the shot should look like under the live graph.',
-    guideOff:'Off', guideProfile:'The loaded profile', guideShot:'A previous shot',
+    guideAuto:'It follows whatever you picked last: load a profile and the guideline is that profile; set a shot from the log and it is that shot.',
+    guideNowProfile:'Following the loaded profile', guideNowShot:'Following {n}', guideNowNone:'Nothing picked yet',
+    guideBackToProfile:'Guideline back to the loaded profile',
     guideNominal:'The profile guideline is drawn on the step times the profile names. Real steps leave early on their exit conditions and the shot stops on weight, so the shape lines up but the clock runs long. Use a previous shot to have the timing match too.',
-    guideWhich:'Which shot', guideWhichDesc:'Chosen in the shot log, on the shot itself.',
-    guideNoPick:'None chosen', guideGoPick:'Open the shot log',
+    guideWhichDesc:'Chosen in the shot log, on the shot itself.',
     guideUse:'Use as guideline', guideUsing:'Guideline \u2713',
-    guideSet:'Guideline set from this shot', guideCleared:'Guideline off',
+    guideSet:'Guideline set from this shot', backToLive:'Back to live',
     kpDose:'Dose (g)', kpYield:'Yield (g)', kpRatio:'Ratio (1:x)', kpGrind:'Grind Setting', kpSet:'Set',
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
@@ -1630,7 +1599,6 @@ var I18N={
     aiClassify:'✨ Classify with AI', aiClassifyingShort:'Classifying…', aiClear:'Clear AI',
     aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
-    zFar:'Well under', zUnder:'Under', zOk:'On profile', zOver:'Over',
     monAuto:'Full-screen monitor', monAutoDesc:'Open the monitor by itself when a shot, steam, flush or hot water starts. Tap the graph to open it at any time.',
     stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
     flushGraph:'Flush Graph',
@@ -1661,7 +1629,7 @@ var I18N={
     doseFromScaleOk:'저울값을 도징으로 넣었습니다',
     doseNoScale:'저울이 값을 보내지 않습니다',
     doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
-    liveWeight:'실시간 무게', tare:'영점', timer:'타이머', pressure:'압력', flow:'유량',
+    tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'무게', target:'목표',
@@ -1739,12 +1707,13 @@ var I18N={
     csNoSecure:'브라우저가 http:// 페이지에는 카메라를 주지 않습니다. 크롬에서 chrome://flags/#unsafely-treat-insecure-origin-as-secure 를 열어 아래 주소를 등록하고 Enabled로 바꾼 뒤 크롬을 재시작하고 다시 오세요. 브라우저 설정 없이 쓰려면 아래 2번 방법을 쓰시면 됩니다:',
     camError:'스트림에 연결하지 못했습니다',
     guideLine:'추출 가이드라인', guideLineDesc:'실시간 그래프 아래에 목표 모양을 깔아둡니다.',
-    guideOff:'끔', guideProfile:'프로파일 기본', guideShot:'이전 추출로그',
+    guideAuto:'마지막으로 고른 것을 따릅니다. 프로파일을 불러오면 그 프로파일이, 추출로그에서 샷을 지정하면 그 샷이 가이드가 됩니다.',
+    guideNowProfile:'불러온 프로파일을 따르는 중', guideNowShot:'{n} 을(를) 따르는 중', guideNowNone:'아직 지정 안 됨',
+    guideBackToProfile:'가이드를 다시 프로파일로',
     guideNominal:'프로파일 가이드는 프로파일에 적힌 단계별 시간으로 그립니다. 실제 단계는 exit 조건으로 먼저 빠져나가고 추출도 종료 무게에서 끝나므로, 모양은 맞지만 시간은 길게 잡힙니다. 시간까지 맞추려면 이전 추출로그를 쓰세요.',
-    guideWhich:'사용할 샷', guideWhichDesc:'추출로그에서 해당 샷을 열어 지정합니다.',
-    guideNoPick:'지정 안 됨', guideGoPick:'추출로그 열기',
+    guideWhichDesc:'추출로그에서 해당 샷을 열어 지정합니다.',
     guideUse:'가이드로 사용', guideUsing:'가이드 사용 중 ✓',
-    guideSet:'이 샷을 가이드로 지정했습니다', guideCleared:'가이드라인 끔',
+    guideSet:'이 샷을 가이드로 지정했습니다', backToLive:'실시간으로',
     kpDose:'도징 (g)', kpYield:'추출량 (g)', kpRatio:'비율 (1:x)', kpGrind:'분쇄도', kpSet:'설정',
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
@@ -1763,7 +1732,6 @@ var I18N={
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
     aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
-    zFar:'크게 미달', zUnder:'미달', zOk:'적정', zOver:'초과',
     monAuto:'전체화면 모니터', monAutoDesc:'추출·스팀·플러시·온수가 시작되면 모니터를 자동으로 엽니다. 그래프를 누르면 언제든 열 수 있습니다.',
     stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
     flushGraph:'플러시 그래프',
@@ -1795,6 +1763,10 @@ function t(k){ var d=I18N[_lang]||I18N.en; return (d[k]!=null?d[k]:(I18N.en[k]!=
 function applyI18n(){ _lang=resolveLang(prefs.lang||'auto'); document.documentElement.lang=_lang;
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.setAttribute('placeholder',t(el.getAttribute('data-i18n-ph'))); });
+  // the reading doubles as the tare control, so its name lives in the tooltip
+  var wt=document.getElementById('weightTap');
+  if(wt){ wt.title=t('tare'); wt.setAttribute('aria-label',t('tare')); }
+  if(typeof syncReviewControls==='function') syncReviewControls();
 }
 
 // ── Fit 1280x800 ────────────────────────────────────────────────────
@@ -1813,7 +1785,7 @@ var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='htt
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
   connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
-  flushRunning:false, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
+  flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[],
   groupTemp:[], mixTemp:[], targetGroup:[], targetMix:[], targetFlow:[], targetPressure:[],
@@ -1907,10 +1879,13 @@ function parkSockets(on){
       if(_wsOpen[name]) _wsOpen[name](); } }); }
 function initWebSockets(){
   openWs('machine','/ws/v1/machine/snapshot',function(s){
+    // The socket can deliver a burst of frames at once. Spacing samples by
+    // the machine's own timestamp keeps the trace evenly paced when it does.
+    state.snapTime=Date.parse(s.timestamp)||Date.now();
     state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.targetGroupTemp=(s.targetGroupTemperature!=null?s.targetGroupTemperature:state.targetGroupTemp); state.targetMixTemp=(s.targetMixTemperature!=null?s.targetMixTemperature:state.targetMixTemp); state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame); state.targetFlow=(s.targetFlow!=null?s.targetFlow:state.targetFlow); state.targetPressure=(s.targetPressure!=null?s.targetPressure:state.targetPressure);
     var ms=s.state||{state:'idle',substate:'idle'}; var prev=state.machine.state; state.machine=ms; onMachineState(ms,prev); updateMachineUI(); });
   openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); updateConnUI(state.connected?'on':'off'); return; }
-    if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); chart.wt.push(Date.now()); if(chart.weight.length>chart.max){ chart.weight.shift(); chart.wt.shift(); } } } });
+    if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); chart.wt.push(Date.parse(m.timestamp)||Date.now()); if(chart.weight.length>chart.max){ chart.weight.shift(); chart.wt.shift(); } } } });
   openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
   openWs('devices','/ws/v1/devices',function(m){
     var phase=m.connectionStatus&&m.connectionStatus.phase;
@@ -1996,13 +1971,17 @@ function onMachineState(ms,prev){
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
   var flushing=(ms.state==='flush');
-  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; _chartLegendMode=null; _guideKey=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[]; }
+  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
   // espresso state ends (after pouringDone returns to idle).
   if(extracting&&!state.shotRunning){ startTimer(); resetChart('espresso'); }
   if(!inEspresso&&state.shotActive){ stopTimer(); setTimeout(afterShot,1500); }
-  state.shotRunning=extracting;
+  // The machine drops back through preparingForShot for a frame or two as a
+  // profile steps from one frame to the next. That is not the shot ending, and
+  // treating it as one restarted the timer and wiped the graph mid pour. Once
+  // extraction has begun the shot runs until the espresso state itself ends.
+  state.shotRunning=extracting||(state.shotRunning&&inEspresso);
   state.shotActive=inEspresso;
   // Steam session lifecycle (records flow/pressure/steam temp; no DYE)
   if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
@@ -2020,11 +1999,11 @@ function onMachineState(ms,prev){
   syncAuxPanel();
   monitorOnState(ms.state,prev||'');
 
-  if(extracting){ chart.t.push(Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetGroup.push(state.targetGroupTemp||0); chart.targetMix.push(state.targetMixTemp||0); chart.targetFlow.push(state.targetFlow||0); chart.targetPressure.push(state.targetPressure||0);
+  if(extracting){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetGroup.push(state.targetGroupTemp||0); chart.targetMix.push(state.targetMixTemp||0); chart.targetFlow.push(state.targetFlow||0); chart.targetPressure.push(state.targetPressure||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); ['targetGroup','targetMix','targetFlow','targetPressure'].forEach(function(k){ if(chart[k].length>chart.max) chart[k].shift(); }); drawChart(); }
-  else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.t.push(Date.now()); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
+  else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
-  else if(watering||flushing){ chart.t.push(Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
+  else if(watering||flushing){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); drawChart(); }
 }
 function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } loadLastShot(); }).catch(function(){}); }
@@ -2048,42 +2027,155 @@ function profileTargets(prof,kind){
 function gaugeBand(kind){
   var v=profileTargets(curProfileObj&&curProfileObj.profile,kind);
   return v.length?[Math.min.apply(null,v),Math.max.apply(null,v)]:null; }
-function gaugeSeg(id,a,b){ var el=document.getElementById(id); if(!el) return;
-  var len=Math.max(0,b-a);
-  el.style.strokeDasharray=len+' 100'; el.style.strokeDashoffset=-a;
-  el.style.opacity=len>0.4?'':'0'; }
-function setGaugeZones(pfx,kind,scale){
+// \u2500\u2500 Gauge scenes \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// The scene lives in the top half of the 117x66 box; the reading keeps the
+// bottom, so the number is never drawn over. The moving parts are SMIL inside
+// the svg, which is what the sleep path freezes -- a CSS animation would keep
+// running behind the lock screen and would show up in document.getAnimations().
+// Each reading gets a glyph on its own line, the size of the number beside it:
+// pressure squeezes a puck in a basket, flow drips out of one. The moving parts
+// are SMIL inside the svg, which is what the sleep path freezes -- a CSS
+// animation would keep running behind the lock screen and would show up in
+// document.getAnimations(), which the idle-screen rule is measured with.
+// Rebuilding on every frame would restart them, so motion is stepped: a level
+// owns its timings and only a change of level rebuilds. The steps are wide
+// because the reading wobbles.
+function gsLevel(viz,v){
+  if(viz==='pressure') return v<0.3?0:Math.min(4,Math.ceil(v/3));
+  if(viz==='flow')     return v<0.15?0:Math.min(5,Math.ceil(v/1.6));
+  return v<60?0:Math.min(4,Math.ceil((v-60)/12)); }
+// The surface is one crest repeated across three tile widths, so translating it
+// by one width is seamless. AMP is where the crest sits inside its own group;
+// the group is then dropped to put that line at the reading's level.
+var GS_AMP=2.4, GS_BOX=60;
+function gsCrest(a){
+  return 'M-100 '+a+' Q-75 '+(a-a)+' -50 '+a+' T0 '+a+' T50 '+a+' T100 '+a+' T150 '+a+' T200 '+a+' V200 H-100 Z'; }
+// A half-circle of spokes: the ones the reading has passed are lit, the rest
+// stay grey. The band the profile works in is marked on the inner arc, the ends
+// are labelled, and a knob rides the reading -- so the face carries the target
+// as well as the value, which the old arc did and the liquid did not.
+var FAN_CX=100, FAN_CY=104, FAN_RO=81, FAN_RI=67, FAN_BAND=87, FAN_KNOB=94, FAN_LBL=58, FAN_N=42;
+var FAN_TICKS=[0,0.25,0.5,0.75,1];
+function fanPt(r,t){ var a=Math.PI*t;
+  return [(FAN_CX-r*Math.cos(a)).toFixed(2),(FAN_CY-r*Math.sin(a)).toFixed(2)]; }
+function fanArc(r,t0,t1){
+  var p0=fanPt(r,t0), p1=fanPt(r,t1);
+  return 'M'+p0[0]+' '+p0[1]+' A'+r+' '+r+' 0 0 1 '+p1[0]+' '+p1[1]; }
+function fanWedge(t){
+  if(t<=0.001) return 'M0 0Z';
+  var p0=fanPt(110,0), p1=fanPt(110,t);
+  return 'M'+FAN_CX+' '+FAN_CY+' L'+p0[0]+' '+p0[1]+' A110 110 0 0 1 '+p1[0]+' '+p1[1]+' Z'; }
+function fanSpokes(cls){
+  var h='',i,t,p0,p1;
+  for(i=0;i<=FAN_N;i++){ t=i/FAN_N; p0=fanPt(FAN_RI,t); p1=fanPt(FAN_RO,t);
+    h+='<line class="'+cls+'" x1="'+p0[0]+'" y1="'+p0[1]+'" x2="'+p1[0]+'" y2="'+p1[1]+'"/>'; }
+  return h; }
+function gsFan(pfx,kind,scale){
+  var cid='fanc_'+pfx;
+  var h='<defs><clipPath id="'+cid+'"><path id="'+cid+'_p" d="M0 0Z"/></clipPath></defs>';
+  h+='<g class="fan-off">'+fanSpokes('fan-sp')+'</g>';
+  h+='<g class="fan-on" clip-path="url(#'+cid+')">'+fanSpokes('fan-sp lit')+'</g>';
   var band=kind?gaugeBand(kind):null;
-  if(!band){ gaugeSeg(pfx+'Z1',0,100); gaugeSeg(pfx+'Z2',0,0); gaugeSeg(pfx+'Z3',0,0); gaugeSeg(pfx+'Z4',0,0); return; }
-  var pct=function(v){ return Math.max(0,Math.min(v/scale,1))*100; };
-  var lo=pct(band[0]), hi=pct(band[1]);
-  // 1 far short, 2 short, 3 on profile, 4 over.
-  gaugeSeg(pfx+'Z1',0,lo/2); gaugeSeg(pfx+'Z2',lo/2,lo); gaugeSeg(pfx+'Z3',lo,hi); gaugeSeg(pfx+'Z4',hi,100); }
-function setGaugeTicks(pfx,scale){
-  for(var i=1;i<=3;i++){ var el=document.getElementById(pfx+'T'+i);
-    if(el) el.textContent=gaugeScaleLabel(scale*i/4); } }
-function gaugeScaleLabel(v){ return (Math.round(v)===v)?String(v):v.toFixed(1); }
-var GA_ZONE_KEYS=['zFar','zUnder','zOk','zOver'];
-// Which band the needle is standing in, or -1 when this reading has no bands
+  if(band&&scale>0){
+    var lo=Math.max(0,Math.min(band[0]/scale,1)), hi=Math.max(0,Math.min(band[1]/scale,1));
+    if(lo>0.004)   h+='<path class="fan-b1" d="'+fanArc(FAN_BAND,0,lo)+'"/>';
+    if(hi-lo>0.004)h+='<path class="fan-b2" d="'+fanArc(FAN_BAND,lo,hi)+'"/>';
+    if(1-hi>0.004) h+='<path class="fan-b3" d="'+fanArc(FAN_BAND,hi,1)+'"/>';
+  }
+  h+=fanLabels(scale);
+  var kn='<g class="fan-kn">'
+    +'<line class="fan-stem" x1="0" y1="'+(-FAN_RI)+'" x2="0" y2="'+(-FAN_RO-3)+'"/>'
+    +'<circle class="fan-knob" cx="0" cy="'+(-FAN_KNOB)+'" r="4.4"/>';
+  return h+kn+'</g>'; }
+function fanLabels(scale){
+  var h='',i,t,pt;
+  for(i=0;i<FAN_TICKS.length;i++){ t=FAN_TICKS[i]; pt=fanPt(FAN_LBL,t);
+    h+='<text class="fan-end" x="'+pt[0]+'" y="'+pt[1]+'" text-anchor="middle" dominant-baseline="middle">'
+      +gsScaleLabel(scale*t)+'</text>'; }
+  return h; }
+function gsScaleLabel(v){ return (Math.round(v)===v)?String(v):String(Math.round(v*10)/10); }
+function gsFace(viz){ return viz==='pressure'||viz==='flow'; }
+function gsBody(pfx,viz,lvl,col,kind,scale){
+  if(gsFace(viz)) return gsFan(pfx,kind,scale);
+  var fill=(viz==='temp')?(' fill="'+col+'"'):'';
+  if(!lvl) return '<path class="gs-liq" d="'+gsCrest(GS_AMP)+'"'+fill+'/>';
+  // flow runs: the crest travels, and the faster the flow the faster it goes
+  var tdur=(3.4-lvl*0.55).toFixed(2);
+  return '<g><path class="gs-liq" d="'+gsCrest(GS_AMP)+'"'+fill+'/>'
+    +'<animateTransform attributeName="transform" type="translate" values="0 0;100 0" dur="'+tdur+'s" repeatCount="indefinite"/></g>'; }
+// A step of level rebuilds the surface, which restarts its animation. Sitting
+// exactly on a boundary while the reading wobbles would do that several times a
+// second, so a step only counts once the value is clear of the boundary.
+function gsMargin(viz){ return viz==='pressure'?0.4:viz==='flow'?0.22:1.5; }
+function gsLevelOf(pfx,viz,v){
+  var lvl=gsLevel(viz,v), prev=_gsLvl[pfx];
+  if(prev!=null&&Math.abs(lvl-prev)===1
+     &&gsLevel(viz,v+(lvl>prev?-1:1)*gsMargin(viz))===prev) lvl=prev;
+  _gsLvl[pfx]=lvl; return lvl; }
+// The socket delivers a few frames a second. A CSS transition between them is
+// restarted before it has finished -- and a rebuilt surface drops it entirely --
+// so a fast fall reads as steps. Each report instead opens a segment that is
+// walked at a steady rate over however long the last gap was, so a sustained
+// fall runs at one speed rather than lurching once per report. Measured on a
+// 9 bar fall reported at 4.4/s: the largest move between frames is 0.8% of the
+// tile against 1.7% for an exponential follow, and the speed varies half as much.
+var _gsCache={}, _gsLvl={}, _gsSeg={}, _gsRAF=null;
+function gsPlace(pfx,v){
+  var sv=document.getElementById(pfx+'Scene'); if(!sv) return;
+  var g=_gsSeg[pfx];
+  if(g&&gsFace(g.viz)){
+    var wedge=document.getElementById('fanc_'+pfx+'_p'), kn=sv.querySelector('.fan-kn');
+    if(wedge) wedge.setAttribute('d',fanWedge(v));
+    if(kn) kn.setAttribute('transform','translate('+FAN_CX+','+FAN_CY+') rotate('+(-90+180*v).toFixed(2)+')');
+    return; }
+  var body=sv.firstChild; if(!body||!body.style) return;
+  body.style.transform='translateY('+((1-v)*GS_BOX-GS_AMP).toFixed(2)+'px)'; }
+function gsTick(){
+  _gsRAF=null; if(_asleep) return;
+  var now=Date.now(), busy=false;
+  for(var pfx in _gsSeg){ var g=_gsSeg[pfx];
+    if(g.at===g.to) continue;
+    var pr=g.dur>0?Math.min(1,(now-g.t0)/g.dur):1;
+    g.at=pr>=1?g.to:(g.from+(g.to-g.from)*pr);
+    gsPlace(pfx,g.at); if(pr<1) busy=true; }
+  if(busy) _gsRAF=requestAnimationFrame(gsTick); }
+function setGaugeScene(pfx,viz,raw,frac,scale,kind){
+  var sv=document.getElementById(pfx+'Scene'); if(!sv) return;
+  var lvl=prefs.fx?gsLevelOf(pfx,viz,raw):0;
+  var col=viz==='temp'?('rgba('+tempColor(raw).join(',')+',.30)'):'';
+  var dial=gsFace(viz);
+  var band=dial&&kind?(gaugeBand(kind)||[]).join(','):'';
+  var key=viz+'|'+(dial?0:lvl)+'|'+col+'|'+band+'|'+scale, rebuilt=false;
+  if(_gsCache[pfx]!==key){ _gsCache[pfx]=key; rebuilt=true;
+    sv.setAttribute('viewBox',dial?'0 4 200 112':'0 0 100 60');
+    sv.setAttribute('preserveAspectRatio',dial?'xMidYMax meet':'none');
+    var tile=sv.parentElement;
+    if(tile){ tile.classList.toggle('dial',dial);
+      tile.classList.toggle('m-pressure',viz==='pressure');
+      tile.classList.toggle('m-flow',viz==='flow'); }
+    sv.innerHTML='<g class="gs-body">'+gsBody(pfx,viz,lvl,col,kind,scale)+'</g>'; }
+  var to=Math.max(0,Math.min(frac,1)), now=Date.now(), g=_gsSeg[pfx];
+  if(!g||g.viz!==viz||!prefs.fx){ _gsSeg[pfx]=g={at:to,to:to,from:to,t0:now,dur:0,last:now,viz:viz}; gsPlace(pfx,to); return; }
+  if(to!==g.to){
+    // the gap between the last two reports is the best guess at the next one
+    var ivl=Math.max(80,Math.min(600,now-g.last));
+    g.from=g.at; g.to=to; g.t0=now; g.dur=ivl; }
+  g.last=now;
+  if(rebuilt) gsPlace(pfx,g.at);
+  if(g.at!==g.to) { if(_gsRAF==null&&!_asleep) _gsRAF=requestAnimationFrame(gsTick); } }
+// Under the band, in it, or over it -- or -1 when this reading has no band
 // (steam, hot water, or no profile loaded).
 function gaugeZoneIndex(kind,scale,frac){
   var band=kind?gaugeBand(kind):null; if(!band) return -1;
-  var lo=band[0]/scale, hi=band[1]/scale;
-  if(frac<lo/2) return 0;
-  if(frac<lo) return 1;
-  if(frac<=hi) return 2;
-  return 3; }
-function setGauge(nameEl,pfx,label,value,unit,frac,scale,kind){
-  var f0=Math.max(0,Math.min(frac,1)), zi=gaugeZoneIndex(kind,scale,f0), nm=document.getElementById(nameEl);
-  // The unit beside the reading already says which gauge this is, so the label
-  // is better spent on what the needle is telling you.
-  nm.textContent=(zi>=0)?t(GA_ZONE_KEYS[zi]):label;
-  nm.className='gauge-name'+(zi>=0?(' gz'+(zi+1)):'');
+  if(frac<band[0]/scale) return 0;
+  if(frac<=band[1]/scale) return 1;
+  return 2; }
+function setGauge(pfx,value,unit,frac,scale,kind,viz,raw){
+  var f0=Math.max(0,Math.min(frac,1)), zi=gaugeZoneIndex(kind,scale,f0);
   document.getElementById(pfx+'Val').innerHTML=value+'<span class="u"> '+unit+'</span>';
-  document.getElementById(pfx+'Max').textContent=gaugeScaleLabel(scale);
-  setGaugeTicks(pfx,scale);
-  document.getElementById(pfx+'Mark').style.transform='rotate('+((f0-0.5)*180)+'deg)';
-  setGaugeZones(pfx,kind,scale); }
+  var sv=document.getElementById(pfx+'Scene'), tile=sv&&sv.parentElement;
+  if(tile){ tile.classList.toggle('z1',zi===0); tile.classList.toggle('z2',zi===1); tile.classList.toggle('z3',zi===2); }
+  setGaugeScene(pfx,viz,raw,f0,scale,kind); }
 function updateMachineUI(){
   // Asleep: the whole app is hidden under the opaque lock screen. Skip the per-tick
   // DOM writes (temps, gauges, water gradient) so the tablet isn't repainting for
@@ -2092,8 +2184,8 @@ function updateMachineUI(){
   document.getElementById('groupTemp').textContent=convTemp(state.groupTemp).toFixed(prefs.tempUnit==='F'?0:1);
   document.getElementById('mixTemp').textContent=convTemp(state.mixTemp).toFixed(prefs.tempUnit==='F'?0:1);
   document.getElementById('steamTempDisp').textContent=convTemp(state.steamTemp).toFixed(0);
-  applyGauges('gauge1Name','pressure','gauge2Name','flow');
-  if(_monOpen) applyGauges('monGauge1Name','monPressure','monGauge2Name','monFlow');
+  applyGauges('pressure','flow');
+  if(_monOpen) applyGauges('monPressure','monFlow');
   updateWaterVisual();
   updateShotBtn();
 }
@@ -2105,21 +2197,26 @@ function gaugeSpecs(){
   if(st==='steam'){
     // steam reports no live flow -- fall back to the configured steam flow setting
     var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0);
-    return [{label:t('pressure'),value:state.pressure.toFixed(1),unit:'bar',frac:state.pressure/12,scale:12,kind:'pressure'},
-            {label:t('steam')+' '+t('flow'),value:sflow.toFixed(1),unit:'ml/s',frac:sflow/2.5,scale:2.5,kind:null}]; }
+    return [{label:t('pressure'),value:state.pressure.toFixed(1),unit:'bar',frac:state.pressure/12,scale:12,kind:'pressure',viz:'pressure',raw:state.pressure},
+            {label:t('steam')+' '+t('flow'),value:sflow.toFixed(1),unit:'ml/s',frac:sflow/2.5,scale:2.5,kind:null,viz:'flow',raw:sflow}]; }
   if(st==='hotWater')
-    return [{label:t('water')+' °',value:convTemp(state.mixTemp).toFixed(0),unit:tempUnitLabel(),frac:state.mixTemp/100,scale:convTemp(100),kind:null},
-            {label:t('flow'),value:state.flow.toFixed(1),unit:'ml/s',frac:state.flow/10,scale:10,kind:null}];
-  return [{label:t('pressure'),value:state.pressure.toFixed(1),unit:'bar',frac:state.pressure/12,scale:12,kind:'pressure'},
-          {label:t('flow'),value:state.flow.toFixed(1),unit:'ml/s',frac:state.flow/8,scale:8,kind:'flow'}]; }
-function applyGauges(nameA,pfxA,nameB,pfxB){
+    return [{label:t('water')+' °',value:convTemp(state.mixTemp).toFixed(0),unit:tempUnitLabel(),frac:state.mixTemp/100,scale:convTemp(100),kind:null,viz:'temp',raw:state.mixTemp},
+            {label:t('flow'),value:state.flow.toFixed(1),unit:'ml/s',frac:state.flow/12,scale:12,kind:null,viz:'flow',raw:state.flow}];
+  return [{label:t('pressure'),value:state.pressure.toFixed(1),unit:'bar',frac:state.pressure/12,scale:12,kind:'pressure',viz:'pressure',raw:state.pressure},
+          {label:t('flow'),value:state.flow.toFixed(1),unit:'ml/s',frac:state.flow/12,scale:12,kind:'flow',viz:'flow',raw:state.flow}]; }
+function applyGauges(pfxA,pfxB){
   var g=gaugeSpecs();
-  setGauge(nameA,pfxA,g[0].label,g[0].value,g[0].unit,g[0].frac,g[0].scale,g[0].kind);
-  setGauge(nameB,pfxB,g[1].label,g[1].value,g[1].unit,g[1].frac,g[1].scale,g[1].kind); }
+  setGauge(pfxA,g[0].value,g[0].unit,g[0].frac,g[0].scale,g[0].kind,g[0].viz,g[0].raw);
+  setGauge(pfxB,g[1].value,g[1].unit,g[1].frac,g[1].scale,g[1].kind,g[1].viz,g[1].raw); }
+// the chip has one width, so the digits step down to stay inside it
+function weightFit(txt){
+  var n=txt.length;
+  return n>=7?' xxlong':(n>=6?' xlong':(n>=5?' long':'')); }
 function updateScaleUI(){ if(_asleep) return; var el=document.getElementById('weightNum'); var uEl=document.querySelector('.weight-unit'); if(uEl) uEl.textContent=weightUnitLabel();
   if(!state.scaleConnected||state.scaleWeight===null){ el.textContent=convWeight(0).toFixed(1); el.className='weight-num zero';
     syncDoseTake(); return; }
-  el.textContent=convWeight(state.scaleWeight).toFixed(1); el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':'');
+  var txt=convWeight(state.scaleWeight).toFixed(1);
+  el.textContent=txt; el.className='weight-num'+(Math.abs(state.scaleWeight)<0.3?' zero':'')+weightFit(txt);
   syncDoseTake();
   if(_monOpen) syncMonitorLive(); }
 // Temperature -> RGB for the tank fill/waves. Blue holds to 80C, then the ramp
@@ -2202,8 +2299,8 @@ function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.wate
   var c=[Math.round(_dispColor[0]),Math.round(_dispColor[1]),Math.round(_dispColor[2])];
   var fill=document.getElementById('waterFill'); if(!fill) return;
   fill.style.background='linear-gradient(180deg,rgba('+c[0]+','+c[1]+','+c[2]+',.30),rgba('+c[0]+','+c[1]+','+c[2]+',.48))';
-  var wp=document.querySelector('.temps-bar .wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
-  var wp2=document.querySelector('.temps-bar .wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
+  var wp=fill.querySelector('.wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
+  var wp2=fill.querySelector('.wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
   var want=(t >= (_bubblesOn?TANK_BUBBLE_OFF:TANK_BUBBLE_ON));
   setTankBubbles(want, want?bubbleLevel(t):-1);
 }
@@ -2212,7 +2309,7 @@ function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.cu
   // level-vs-threshold comparison is a warning, not a verdict: the DE1 decides
   // when it stops, and a skin that guesses ends up disagreeing with the machine.
   var dry=(state.machine.state==='needsWater');
-  var chip=document.querySelector('.htemp.tank'), lbl=document.getElementById('tankLbl');
+  var chip=document.getElementById('tankCard'), lbl=document.getElementById('tankLbl');
   if(chip) chip.classList.toggle('dry',dry);
   if(lbl) lbl.textContent=dry?t('needsWater'):t('tank');
   // Refill kit ON = plumbed supply, tank is effectively always full.
@@ -2231,7 +2328,8 @@ function updateShotBtn(){ var st=state.machine.state;
   if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent=t('stop'); } else { btn.className='act-btn start'; ico.textContent='▶'; lbl.textContent=t('start'); }
   var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),water=document.getElementById('btnWater'),sleep=document.getElementById('btnSleep');
   steam.disabled=!state.connected; flush.disabled=!state.connected; water.disabled=!state.connected; sleep.disabled=!state.connected;
-  document.getElementById('btnTare').disabled=!state.scaleConnected;
+  var wt=document.getElementById('weightTap');
+  if(wt) wt.classList.toggle('off',!state.scaleConnected);
   syncDoseTake();
   // reflect running state with an 'active' color (only meaningful when GHC-less / actions)
   steam.classList.toggle('active', st==='steam');
@@ -2270,6 +2368,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   // extraction graph keeps its whole height for pressure, flow and weight.
   var hasTempAxis=!_monOpen;
   // title + legend reflect the current mode (only rewritten when the mode changes)
+  syncReviewControls();
   if(_chartLegendMode!==chart.mode){ _chartLegendMode=chart.mode;
     var titleEl=document.getElementById(_monOpen?'monChartTitle':'chartTitle');
     var legEl=document.getElementById(_monOpen?'monChartLegend':'chartLegend');
@@ -2293,16 +2392,16 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   var padL=34, padR=hasTempAxis?34:8, padT=18, padB=22; // steam/water add a right gutter for the temp axis
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
   var PMAX=12;
-  var FMAX=isSteam?2.5:(isWater?10:8); // flow axis max (ml/s): steam is a small range, water/espresso larger
+  var FMAX=isSteam?2.5:12; // flow shares the pressure axis, so the printed 0..12 reads for both
   var TMAX=isSteam?165:100; // temperature axis max (°C): steam ~165, espresso/water ~100
   var N=chart.pressure.length;
   var steps=(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[];
   // With a guideline the axis spans the guide's own duration, so the guide holds
   // still and the live trace advances along it. Without one it spans whatever
   // has been recorded, as before.
-  var guide=(isEsp&&!chartReviewing)?currentGuide():null;
+  var guide=isEsp?currentGuide():null;
   // a profile guideline is re-timed against the steps the machine has run
-  if(guide&&prefs.guide==='profile') guide=retimeGuide(guide);
+  if(guide&&guideFollowsProfile()) guide=retimeGuide(guide);
   // The machine's socket does not tick at a fixed rate, so a sample is placed
   // by the clock it arrived on -- the same clock the timer reads -- not by its
   // index. Counting samples as tenths of a second ran the trace slow whenever
@@ -2310,12 +2409,12 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   var T0=chart.t.length?chart.t[0]:0;
   var ELAPSED=(chart.t.length===N&&N>1)?(chart.t[N-1]-T0)/1000:0;
   var timed=ELAPSED>0.05;
-  var SPAN=guide?Math.max(guide.total,timed?ELAPSED:N/10):(timed?ELAPSED:0);
-  function pxAt(ms){ return X0+Math.min(((ms-T0)/1000)/SPAN,1)*PW; }
+  var SPAN=axisSpan(guide?Math.max(guide.total,timed?ELAPSED:N/10):(timed?ELAPSED:0),!chartReviewing);
+  function pxAt(ms){ return X0+Math.max(0,Math.min(((ms-T0)/1000)/SPAN,1))*PW; }
   function px(i){ if(timed) return pxAt(chart.t[i]);
     if(guide) return X0+Math.min((i/10)/SPAN,1)*PW;
     return X0+(N<2?0:(i/(N-1))*PW); }
-  function pxT(t){ return X0+Math.min(t/SPAN,1)*PW; }
+  function pxT(t){ return X0+Math.max(0,Math.min(t/SPAN,1))*PW; }
   function py(v,mx){ return Y0+PH-Math.min(v/mx,1)*(PH-6)-3; }
   // Weight comes off the scale's socket, which does not tick with the
   // machine's. Both cover the same window, so a series of a different
@@ -2380,18 +2479,24 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   }
 
   // X labels (time seconds)
-  var totalSec=guide?Math.max(1,SPAN):Math.max(1,timed?ELAPSED:N/10);
+  var totalSec=Math.max(1,SPAN);
   ctx.fillStyle='#6b6890'; ctx.font='600 11px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
   for(var j=0;j<=4;j++){ var xx=X0+(j/4)*PW; ctx.fillText(((j/4)*totalSec).toFixed(0)+'s', xx, Y0+PH+5); }
 
   // Solid: what the machine did. Dashed and darker: what it was asked for.
+  // Zero is the machine saying this quantity is not the one being controlled
+  // right now -- a flow step publishes no pressure goal and the other way
+  // round. Drawing that as a goal of zero sends the line diving to the axis at
+  // every step that changes control; the line breaks there instead.
   function goal(d,c,mx){ if(!d||d.length<2) return;
-    // a profile that controls flow leaves the pressure goal at zero the whole
-    // way, and a flat line along the axis is noise, not information
     var any=false; for(var g=0;g<d.length;g++){ if(d[g]>0){ any=true; break; } }
     if(!any) return;
     ctx.save(); ctx.setLineDash(GOAL_DASH); ctx.beginPath();
-    for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(pxOf(d,i),py(d[i],mx)); else ctx.lineTo(pxOf(d,i),py(d[i],mx)); }
+    var pen=false;
+    for(var i=0;i<d.length;i++){
+      if(!(d[i]>0)){ pen=false; continue; }
+      var x=pxOf(d,i), y=py(d[i],mx);
+      if(pen) ctx.lineTo(x,y); else { ctx.moveTo(x,y); pen=true; } }
     ctx.strokeStyle=c; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
   function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(pxOf(d,i),py(d[i],mx));else ctx.lineTo(pxOf(d,i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   if(isSteam){
@@ -2501,7 +2606,7 @@ function apiErrorText(e){ if(e&&e.name==='AbortError') return t('mbTimeout')+' (
   var m=(e&&e.message)||'error'; return /^HTTP /.test(m)?m:m+' ('+GATEWAY.http+')'; }
 
 // ── Actions ─────────────────────────────────────────────────────────
-function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];chart.t=[];chart.wt=[];drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
+function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];chart.t=[];chart.wt=[];_axisSpan=0;drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
 // A tap on the dose takes the scale when there is one reading to take, and
 // opens the keypad when there is not, so a dose can always be typed.
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
@@ -2514,7 +2619,7 @@ function syncDoseTake(){ var i=document.getElementById('doseIco'); if(!i) return
 function doseHold(){ if(scaleHasReading()) doseFromScale(); else toast(t('doseNoScale'),'err'); }
 // Anything that can be pressed. A ripple on something that does nothing when
 // touched would be a lie about what just happened.
-var RIPPLE_SEL='button,.nav-card,.album,.tap,.aux-chip,.kp-key,.m-btn,.ms-btn,.tare-btn,'
+var RIPPLE_SEL='button,.nav-card,.album,.tap,.kp-key,.m-btn,.ms-btn,'
   +'.act-btn,.cur-browse,.cur-fav,.grind-val,.dose-take,.switch,.bean-edit,.preset-chip';
 // One swell per press, sized from where the finger landed to the furthest corner
 // of the control, so it covers that control exactly once and stops.
@@ -2546,7 +2651,9 @@ function bindDoseGestures(){
 function doseFromScale(){ var w=state.scaleWeight;
   if(!state.scaleConnected||w===null){ toast(t('doseNoScale'),'err'); return; }
   settings.doseIn=parseFloat(w.toFixed(1)); syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
-function doTare(){ api('PUT','/api/v1/scale/tare').then(function(){toast('Tared','ok');}).catch(function(e){toast(e.message,'err');}); }
+function doTare(){
+  if(!state.scaleConnected){ toast(t('doseNoScale'),'err'); return; }
+  api('PUT','/api/v1/scale/tare').then(function(){toast(t('tared'),'ok');}).catch(function(e){toast(e.message,'err');}); }
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
 var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
@@ -2678,10 +2785,15 @@ var AUX_KINDS={
             {k:'waterFlow',step:0.5,min:1,max:10,dec:1,unit:'flowShort'}]}
 };
 function auxNum(f){ var v=settings[f.k]; return f.dec?(+v).toFixed(f.dec):String(Math.round(v)); }
-function auxSummary(kind){
-  if(kind==='steam') return settings.steamTemp+'° · '+settings.steamDur+'s · '+(+settings.steamFlow).toFixed(1)+' ml/s';
-  if(kind==='flush') return settings.flushTemp+'° · '+settings.flushDur+'s · '+(+settings.flushFlow).toFixed(1)+' ml/s';
-  return settings.waterTemp+'° · '+(settings.waterVol>0?settings.waterVol+'ml · ':'')+settings.waterDur+'s · '+(+settings.waterFlow).toFixed(1)+' ml/s'; }
+function auxSummary(kind){ return auxHeat(kind)+' · '+auxPour(kind); }
+function auxHeat(kind){
+  if(kind==='steam') return settings.steamTemp+'° · '+settings.steamDur+'s';
+  if(kind==='flush') return settings.flushTemp+'° · '+settings.flushDur+'s';
+  return settings.waterTemp+'° · '+settings.waterDur+'s'; }
+function auxPour(kind){
+  if(kind==='steam') return (+settings.steamFlow).toFixed(1)+' ml/s';
+  if(kind==='flush') return (+settings.flushFlow).toFixed(1)+' ml/s';
+  return (settings.waterVol>0?settings.waterVol+'ml · ':'')+(+settings.waterFlow).toFixed(1)+' ml/s'; }
 function auxClose(a,b,tol){ return Math.abs((+a)-(+b))<=(tol||0.01); }
 function auxLabel(kind){
   var list=presets[kind]||[];
@@ -2694,12 +2806,10 @@ function auxLabel(kind){
 function syncAux(){
   ['steam','flush','water'].forEach(function(kind){
     var cap=kind.charAt(0).toUpperCase()+kind.slice(1);
-    var nm=document.getElementById('auxName'+cap), vl=document.getElementById('auxVal'+cap);
-    if(nm) nm.textContent=auxLabel(kind);
-    if(vl) vl.textContent=auxSummary(kind);
-    if(_monOpen) syncMonitorHead();
-    var chip=document.getElementById('auxChip'+cap);
-    if(chip) chip.classList.toggle('on',state.machine.state===AUX_KINDS[kind].state); });
+    var pr=document.getElementById('auxPreset'+cap), el=document.getElementById('auxSum'+cap);
+    if(pr) pr.textContent=auxLabel(kind);
+    if(el) el.textContent=auxSummary(kind);
+    if(_monOpen) syncMonitorHead(); });
   if(_auxLiveKind){ var def=AUX_KINDS[_auxLiveKind];
     def.fields.forEach(function(f){ var el=document.getElementById('live_'+f.k); if(el) el.textContent=auxNum(f); }); } }
 // The workflow endpoint does not debounce, so the trailing edge is ours to keep.
@@ -2833,7 +2943,10 @@ function applyPrefsObject(p){
   if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto;
   if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim;
   if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness;
-  if(p.guide==='off'||p.guide==='profile'||p.guide==='shot') prefs.guide=p.guide;
+  // the setting used to name the source; now it only says on or off
+  if(p.guide==='off'||p.guide==='on') prefs.guide=p.guide;
+  else if(p.guide==='profile'||p.guide==='shot'){ prefs.guide='on'; prefs.guideSrc=p.guide; }
+  if(p.guideSrc==='profile'||p.guideSrc==='shot') prefs.guideSrc=p.guideSrc;
   if(typeof p.guideShot==='string') prefs.guideShot=p.guideShot;
   if(typeof p.cam==='boolean') prefs.cam=p.cam;
   if(typeof p.camUrl==='string') prefs.camUrl=p.camUrl;
@@ -2944,8 +3057,9 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
 
 // ── Preferences & settings ──────────────────────────────────────────
 var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:true, sleepDim:true, sleepBrightness:20,
-  // 'off' | 'profile' | 'shot'; guideShot names the recorded shot when 'shot'
-  guide:'off', guideShot:'',
+  // 'on' | 'off'. guideSrc is not chosen in settings: loading a profile makes
+  // it 'profile', picking a shot in the log makes it 'shot'.
+  guide:'off', guideSrc:'profile', guideShot:'',
   // an MJPEG endpoint on the LAN -- an IP-camera app on a phone, say
   cam:false, camUrl:'',
   // how the picture is laid in the pane, whatever it came from
@@ -3006,7 +3120,7 @@ function savePrefs(){ lsSet('aurora_prefs',prefs);
 function migratePrefs(){ _prefsBase={}; savePrefs(); }
 function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
-function applyFx(){ document.body.classList.toggle('no-fx',!prefs.fx); }
+function applyFx(){ document.body.classList.toggle('no-fx',!prefs.fx); _gsCache={}; if(!_asleep) updateMachineUI(); }
 function setFx(on){ prefs.fx=!!on; savePrefs(); applyFx(); }
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
 function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
@@ -3054,16 +3168,15 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('wakeLock','wakeLockDesc',sw('setWake',!!gwSettings.keepAwake,'setKeepAwake(this.checked)'));
     h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
     h+=row('monAuto','monAutoDesc',sw('setMonAuto',!!prefs.monAuto,'setMonAuto(this.checked)'));
-    var gm=prefs.guide||'off';
-    h+=row('guideLine','guideLineDesc','<select class="set-select" onchange="setGuideMode(this.value)">'
-      +opt('off',t('guideOff'),gm)+opt('profile',t('guideProfile'),gm)+opt('shot',t('guideShot'),gm)+'</select>');
-    if(gm==='profile') h+='<div class="set-desc" style="margin:-6px 0 14px">'+escapeHtml(t('guideNominal'))+'</div>';
-    if(gm==='shot'){
-      // the shot itself is chosen in the shot log, where its curves are
+    h+=row('guideLine','guideLineDesc',sw('setGuide',guideOn(),'setGuideOn(this.checked)'));
+    if(guideOn()){
+      // the source is never chosen here -- it is whatever was picked last
       var gn=guideShotName();
-      h+=row('guideWhich','guideWhichDesc','<div class="opt-ctrl"><span class="opt-val">'
-        +escapeHtml(gn||t('guideNoPick'))+'</span>'
-        +'<button class="m-btn" onclick="closeSettingsPage();openShotLog()">'+escapeHtml(t('guideGoPick'))+'</button></div>'); }
+      var now=guideFollowsShot()?(gn?t('guideNowShot').replace('{n}',gn):t('guideNowNone')):t('guideNowProfile');
+      h+='<div class="set-desc" style="margin:-6px 0 4px">'+escapeHtml(t('guideAuto'))+'</div>';
+      h+='<div class="set-desc" style="margin:0 0 4px;color:var(--accent);font-weight:700">'+escapeHtml(now)+'</div>';
+      if(guideFollowsProfile()) h+='<div class="set-desc" style="margin:0 0 14px">'+escapeHtml(t('guideNominal'))+'</div>';
+      else h+='<div class="set-desc" style="margin:0 0 14px">'+escapeHtml(t('guideWhichDesc'))+'</div>'; }
     h+=row('camStream','camStreamDesc',sw('setCam',!!prefs.cam,'setCamOn(this.checked)'));
     if(prefs.cam){
       h+='<div class="set-row" style="display:block"><div class="set-info" style="margin-bottom:8px">'
@@ -3654,10 +3767,19 @@ function setCamUrl(v){ prefs.camUrl=(v||'').trim(); clearTimeout(setCamUrl._t);
 // loaded profile's own shape or a shot pulled before. Cached, because it is
 // rebuilt on every frame otherwise and neither source changes mid shot.
 var _guide=null, _guideKey=null;
+function guideOn(){ return prefs.guide==='on'; }
+// Under review the guide comes from the shot on screen, not from the machine
+// -- unless a shot from the log was picked as the guide, which is a
+// deliberate shot-against-shot comparison and stays.
+function guideReviewProfile(){ return (chartReviewing&&!guideFollowsShot())?reviewProfile:null; }
+function guideFollowsShot(){ return guideOn()&&prefs.guideSrc==='shot'&&!!prefs.guideShot; }
+function guideFollowsProfile(){ return guideOn()&&!guideFollowsShot(); }
 function guideKey(){
-  if(prefs.guide==='profile') return 'p:'+(curProfileObj&&curProfileObj.id||'');
-  if(prefs.guide==='shot') return 's:'+(prefs.guideShot||'');
-  return null; }
+  if(!guideOn()) return null;
+  if(guideFollowsShot()) return 's:'+prefs.guideShot;
+  var rp=guideReviewProfile();
+  if(rp) return 'r:'+(rp.title||'');
+  return 'p:'+(curProfileObj&&curProfileObj.id||''); }
 // How long the machine has spent in each step so far, and which one it is in.
 // Each sample is worth the gap to the one after it, so a step's time is real
 // time; the socket's rate is not fixed and counting samples would run short.
@@ -3677,16 +3799,24 @@ function retimeGuide(g){
   var nomEnd=[],nomStart=[],i,prev=0;
   g.pts.forEach(function(p){ nomEnd[p.step]=Math.max(nomEnd[p.step]||0,p.t); });
   for(i=0;i<nomEnd.length;i++){ if(nomEnd[i]===undefined) nomEnd[i]=prev; nomStart[i]=prev; prev=nomEnd[i]; }
+  // A shot on screen is over: its last step took exactly as long as it took
+  // and the steps it never reached are not part of the picture. Live, the step
+  // in progress is held open at least its nominal length and the ones ahead
+  // keep the profile's timing, because they are still to come.
+  var done=chartReviewing;
   function realOf(st){ var nom=nomEnd[st]-nomStart[st], spent=run.spent[st]||0;
     if(st<run.current) return spent;
-    if(st===run.current) return Math.max(spent,nom);
-    return nom; }
+    if(st===run.current) return done?spent:Math.max(spent,nom);
+    return done?0:nom; }
   var realStart=[],acc=0;
   for(i=0;i<nomEnd.length;i++){ realStart[i]=acc; acc+=realOf(i); }
-  var pts=g.pts.map(function(p){
+  var pts=[];
+  g.pts.forEach(function(p){
+    if(done&&p.step>run.current) return;
     var nom=nomEnd[p.step]-nomStart[p.step];
     var f=nom>0?((p.t-nomStart[p.step])/nom):1;
-    return {t:realStart[p.step]+f*realOf(p.step),p:p.p,f:p.f,temp:p.temp,step:p.step}; });
+    pts.push({t:realStart[p.step]+f*realOf(p.step),p:p.p,f:p.f,temp:p.temp,step:p.step}); });
+  if(pts.length<2) return g;
   return {pts:pts,total:pts[pts.length-1].t,hasTemp:g.hasTemp}; }
 function guideHasTemp(pts){ for(var i=0;i<pts.length;i++){ if(pts[i].temp>0) return true; } return false; }
 function guideFromShot(s){
@@ -3708,8 +3838,8 @@ function currentGuide(){
   if(!key){ _guide=null; _guideKey=null; return null; }
   if(key===_guideKey) return _guide;
   _guideKey=key; _guide=null;
-  if(prefs.guide==='profile'){
-    var pr=curProfileObj&&curProfileObj.profile;
+  if(!guideFollowsShot()){
+    var pr=guideReviewProfile()||(curProfileObj&&curProfileObj.profile);
     if(pr){ var sim=simulateProfile(pr);
       if(sim.pts.length>1&&sim.total>0){ sim.hasTemp=guideHasTemp(sim.pts); _guide=sim; } }
     return _guide; }
@@ -3720,23 +3850,26 @@ function currentGuide(){
     if(sh&&sh.measurements){ slFull[sh.id]=sh; if(_guideKey==='s:'+prefs.guideShot){ _guide=guideFromShot(sh); drawChart(); } }
   }).catch(function(){});
   return null; }
-function setGuideMode(v){ prefs.guide=v; savePrefs(); _guideKey=null;
-  if(v==='shot'&&prefs.guideShot) loadGuideProfile(prefs.guideShot);
+function setGuideOn(on){ prefs.guide=on?'on':'off'; savePrefs(); _guideKey=null; _guide=null; _axisSpan=0;
   renderSpContent(); drawChart(); }
-function setGuideShot(v){ prefs.guideShot=v; savePrefs(); _guideKey=null;
-  if(v&&prefs.guide==='shot') loadGuideProfile(v);
+function setGuideShot(v){ prefs.guideShot=v; prefs.guideSrc='shot'; savePrefs(); _guideKey=null; _axisSpan=0;
+  if(v&&guideOn()) loadGuideProfile(v);
   drawChart(); }
 function guideShotName(){ var id=prefs.guideShot; if(!id) return null;
   var s=slFull[id]||(shotList||[]).filter(function(x){ return x.id===id; })[0];
   if(!s) return null;
   return splitTitle(((s.workflow&&s.workflow.profile)||{}).title||'Shot').name+' \u00b7 '+fmtShotDate(s); }
-function isGuideShot(id){ return prefs.guide==='shot'&&prefs.guideShot===id; }
+function isGuideShot(id){ return guideFollowsShot()&&prefs.guideShot===id; }
+// Picking a shot here is what switches the guideline over to it; picking the
+// same one again hands it back to the loaded profile. On and off is the
+// setting's job, so neither turns the guideline off.
 function useShotAsGuide(id){
-  if(isGuideShot(id)){ prefs.guide='off'; }
-  else { prefs.guide='shot'; prefs.guideShot=id; }
-  savePrefs(); _guideKey=null; _guide=null;
-  toast(t(prefs.guide==='shot'?'guideSet':'guideCleared'),'ok');
-  if(prefs.guide==='shot') loadGuideProfile(id);
+  var back=isGuideShot(id);
+  if(back){ prefs.guideSrc='profile'; }
+  else { prefs.guide='on'; prefs.guideSrc='shot'; prefs.guideShot=id; }
+  savePrefs(); _guideKey=null; _guide=null; _axisSpan=0;
+  toast(t(back?'guideBackToProfile':'guideSet'),'ok');
+  if(!back) loadGuideProfile(id);
   if(slSel&&slSel.id===id) renderShotDetail(slSel);
   drawChart(); }
 // The guideline is a shape to chase; chasing it with another profile loaded is
@@ -3748,7 +3881,7 @@ function loadGuideProfile(id){
   if(curProfileObj&&curProfileObj.profile&&curProfileObj.profile.title===pr.title) return;
   if(brewLocked()) return;
   var match=(allProfiles||[]).filter(function(p){ return p.profile&&p.profile.title===pr.title; })[0];
-  if(match){ selectProfile(match); return; }
+  if(match){ selectProfile(match,true); return; }
   curProfileObj={id:'guide',profile:pr,isDefault:false};
   api('PUT','/api/v1/workflow',{profile:pr})
     .then(function(){ toast('\u25b6 '+pr.title,'ok'); refreshCarouselMark(); })
@@ -3957,17 +4090,30 @@ function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
 // A profile write reaches the machine, and the machine is running frames from
 // the profile it holds. Changing it now changes the shot in progress.
 function brewLocked(){ return state.machine.state==='espresso'; }
-function selectProfile(p){
+function selectProfile(p,keepGuideSrc){
   if(brewLocked()){ toast(t('lockedBrewing'),'err'); return; }
+  // loading a profile by hand is the other half of the rule: the guideline
+  // follows it from here, unless the load came from picking a guide shot.
+  if(!keepGuideSrc&&prefs.guideSrc!=='profile'){ prefs.guideSrc='profile'; savePrefs(); _guideKey=null; _axisSpan=0; }
+  // and a recorded shot on the graph would be covering the guideline that
+  // press just asked for, so it steps aside
+  if(!keepGuideSrc&&chartReviewing&&guideFollowsProfile()) exitReview();
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
   api('PUT','/api/v1/workflow',{profile:p.profile}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast('Profile error','err'); }); }
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
 function refreshCarouselMark(){
-  if(curProfileObj&&!carItems.some(function(x){ return x.id===curProfileObj.id; })){ buildCarousel(); return; }
+  if(curProfileObj&&!carItems.some(function(x){ return x.id===curProfileObj.id; })){ buildCarousel(); guideProfileChanged(); return; }
   var i=curProfileObj?carItems.findIndex(function(x){ return x.id===curProfileObj.id; }):-1;
   if(i>=0) carIndex=i;
-  renderCarousel(); }
+  renderCarousel(); guideProfileChanged(); }
+// In profile mode the guideline is a simulation of whatever is loaded, and it
+// is rebuilt on the next draw. Nothing redraws the graph while the machine is
+// idle, so loading a profile has to ask for it or the guide stays on the one
+// before until the next shot starts.
+function guideProfileChanged(){ if(!guideFollowsProfile()) return;
+  // a different profile is a different axis, and the held one only grows
+  _axisSpan=0; drawChart(); }
 function updateCurProfile(){ renderCarousel(); }
 
 // ── Profile Editor full page ────────────────────────────────────────
@@ -7628,7 +7774,7 @@ function loadLastShot(){
 // A Visualizer shot carries its log, its profile and its metadata together. The
 // profile is saved to the library; the log is only drawn -- the gateway has no
 // way to store a shot it did not pull, so offering to save one would be a lie.
-var VIZ_API='https://visualizer.coffee/api', VIZ_PLUGIN='visualizer.reaplugin';
+var VIZ_API='https://visualizer.coffee/api', VIZ_PLUGIN='visualizer.reaplugin', _vizProfile=null;
 var VIZ_UUID=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 function openVizImport(){ vizSay(''); var el=document.getElementById('vizCode'); if(el) el.value='';
   document.getElementById('vizOverlay').classList.add('show');
@@ -7647,6 +7793,7 @@ function vizShowShot(v){
   var n=Math.min(tf.length,(d.espresso_pressure||[]).length);
   if(n<2) throw new Error(t('vizNoData'));
   chart.mode='espresso'; chartReviewing=true; chartReviewLabel=t('vizGraph'); _chartLegendMode=null;
+  reviewProfile=v._profile||null; _guideKey=null;
   chart.pressure=vizNums(d.espresso_pressure,n); chart.flow=vizNums(d.espresso_flow,n);
   chart.targetPressure=vizGoal(d.espresso_pressure_goal,n); chart.targetFlow=vizGoal(d.espresso_flow_goal,n);
   chart.groupTemp=vizNums(d.espresso_temperature_basket,n); chart.mixTemp=vizNums(d.espresso_temperature_mix,n);
@@ -7656,15 +7803,16 @@ function vizShowShot(v){
   chart.weight=hasW?w:[]; chart.frame=[]; chart.t=[]; chart.wt=[];
   for(var i=0;i<n;i++){ var ms=Math.round((parseFloat(tf[i])||0)*1000);
     chart.t.push(ms); if(hasW) chart.wt.push(ms); }
-  drawChart();
+  syncReviewControls(); drawChart();
   return (v.profile_title||'')+(v.user_name?' · '+v.user_name:''); }
 function vizSaveProfile(shotId){
   return vizGet('/shots/'+encodeURIComponent(shotId)+'/profile?format=json').then(function(pr){
     return api('POST','/api/v1/profiles',{profile:pr,metadata:{comment:'imported from visualizer: '+shotId}})
-      .then(function(){ return (pr&&pr.title)||''; }); }); }
+      .then(function(){ _vizProfile=pr; return (pr&&pr.title)||''; }); }); }
 function vizImport(){
   var raw=((document.getElementById('vizCode')||{}).value||'').trim();
   if(!raw){ vizSay(t('vizNeedCode'),true); return; }
+  _vizProfile=null;
   var m=raw.match(VIZ_UUID);
   vizBusy(true); vizSay(t('vizBusy'));
   // A shot id or link is public and needs nothing from the gateway; a share
@@ -7677,6 +7825,7 @@ function vizImport(){
     if(r.profileTitle) toast(t('vizProfileSaved').replace('{n}',r.profileTitle),'ok');
     loadProfiles().then(function(){ renderEpList(); }).catch(function(){});
     return vizGet('/shots/'+encodeURIComponent(r.shotId)).then(function(v){
+      v._profile=_vizProfile;
       var label=vizShowShot(v);
       closeModal(null,'vizOverlay');
       toast(t('vizShown').replace('{n}',label||r.profileTitle||r.shotId),'ok'); }); })
@@ -7687,14 +7836,37 @@ function vizImport(){
   .then(function(){ vizBusy(false); }); }
 
 // Load the last shot's recorded measurements into the main Extraction Graph.
-var chartReviewing=false, chartReviewLabel=null;
-function viewLastShotGraph(){ if(!lastShotSummary){ toast('No shots recorded yet','err'); return; }
+var chartReviewing=false, chartReviewLabel=null, reviewProfile=null;
+// The card's button is the way in and the way back out, so it has to read
+// as whichever the next press will do.
+function syncReviewControls(){
+  var lbl=document.getElementById('lsGraphLbl'), ico=document.getElementById('lsGraphIco');
+  if(lbl) lbl.textContent=t(chartReviewing?'backToLive':'viewGraph');
+  if(ico) ico.textContent=chartReviewing?'\u21a9':'\u2197'; }
+// Two things made the live trace stutter. Without a guide the axis was
+// whatever had been recorded, so at the start of a shot every sample doubled
+// it and the whole plot rescaled under the trace; and retimeGuide stretches
+// the guide as the machine overruns a step, so even with one the span crept up
+// on every frame. The axis now starts at a window worth looking at and only
+// ever grows, which leaves the first seconds completely still and the rest a
+// slow stretch rather than a series of jumps. Review keeps the shot's own
+// length -- nothing is arriving, so there is nothing to hold still for.
+var AXIS_MIN=10, _axisSpan=0;
+function axisSpan(want,live){
+  if(!live) return Math.max(want,0.001);
+  _axisSpan=Math.max(_axisSpan,AXIS_MIN,want);
+  return _axisSpan; }
+function viewLastShotGraph(){
+  // the same press that opened a review closes it
+  if(chartReviewing){ exitReview(); return; }
+  if(!lastShotSummary){ toast('No shots recorded yet','err'); return; }
   if(state.shotRunning||state.steamRunning||state.waterRunning){ toast('Busy — finish current action first','err'); return; }
   api('GET','/api/v1/shots/'+lastShotSummary.id).then(function(s){ if(!s){ toast('Shot not found','err'); return; }
     var m=s.measurements||[]; if(m.length<2){ toast('No measurement data for this shot','err'); return; }
     chart.mode='espresso'; chartReviewing=true; chartReviewLabel=null;
+    reviewProfile=(s.workflow&&s.workflow.profile)||null; _guideKey=null;
     chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
-    chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];
+    chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0;
     m.forEach(function(pt,i){ var mac=pt.machine||{}; var sc=pt.scale||{};
       chart.pressure.push(mac.pressure||0); chart.flow.push(mac.flow||0);
       chart.frame.push(mac.profileFrame||0); chart.groupTemp.push(mac.groupTemperature||0); chart.mixTemp.push(mac.mixTemperature||0);
@@ -7702,15 +7874,15 @@ function viewLastShotGraph(){ if(!lastShotSummary){ toast('No shots recorded yet
       chart.targetFlow.push(mac.targetFlow||0); chart.targetPressure.push(mac.targetPressure||0);
       var ts=Date.parse(mac.timestamp)||0; chart.t.push(ts);
       if(sc.weight!=null){ chart.weight.push(sc.weight); chart.wt.push(ts); } });
-    _chartLegendMode=null; drawChart();
+    _chartLegendMode=null; syncReviewControls(); drawChart();
     var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot');
     toast('Showing last shot: '+st.name,'ok');
   }).catch(function(){ toast('Failed to load shot','err'); }); }
 // Leave last-shot review and return the graph to live extraction data.
-function exitReview(){ if(!chartReviewing) return; chartReviewing=false; chartReviewLabel=null; chart.mode='espresso';
+function exitReview(){ if(!chartReviewing) return; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _guideKey=null; chart.mode='espresso';
   chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
-  chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];
-  _chartLegendMode=null; drawChart(); }
+  chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0;
+  _chartLegendMode=null; syncReviewControls(); drawChart(); }
 // Resolve the workflow's current grinder entity (for step size / preset positions).
 function currentGrinder(){ if(!context.grinderId) return null; return grinders.find(function(x){ return x.id===context.grinderId; })||null; }
 function updateGrindRow(){ var row=document.getElementById('grindRow'); if(!row) return;
@@ -7923,12 +8095,12 @@ function drawMonTempChart(){
   var N=chart.pressure.length;
   // the extraction chart above spans the guideline when there is one, so this
   // one has to as well or the two disagree about where a second is
-  var guide=(!isSteam&&!isWater&&!chartReviewing)?currentGuide():null;
+  var guide=(!isSteam&&!isWater)?currentGuide():null;
   var T0=chart.t.length?chart.t[0]:0;
   var ELAPSED=(chart.t.length===N&&N>1)?(chart.t[N-1]-T0)/1000:0;
   var timed=ELAPSED>0.05;
-  var SPAN=guide?Math.max(guide.total,timed?ELAPSED:N/10):(timed?ELAPSED:0);
-  function px(i){ if(timed) return X0+Math.min(((chart.t[i]-T0)/1000)/SPAN,1)*PW;
+  var SPAN=axisSpan(guide?Math.max(guide.total,timed?ELAPSED:N/10):(timed?ELAPSED:0),!chartReviewing);
+  function px(i){ if(timed) return X0+Math.max(0,Math.min(((chart.t[i]-T0)/1000)/SPAN,1))*PW;
     if(guide) return X0+Math.min((i/10)/SPAN,1)*PW;
     return X0+(N<2?0:(i/(N-1))*PW); }
   function py(v){ return Y0+PH-Math.min(Math.max((v-TMIN)/(TMAX-TMIN),0),1)*(PH-4)-2; }
@@ -8028,7 +8200,7 @@ function drawShotMeasurements(canvas,s,temps){
   var night=document.body.classList.contains('night');
   var padL=30, padR=temps?10:30, padT=10, padB=14;
   var PW=W-padL-padR, PH=H-padT-padB, X0=padL, Y0=padT;
-  var PMAX=12, FMAX=8;
+  var PMAX=12, FMAX=12;
   // the espresso band is narrow, so the temperature axis starts high
   var TMIN=60, TMAX=100;
   var wMax=0; m.forEach(function(pt){ var w=pt.scale&&pt.scale.weight; if(w>wMax) wMax=w; });
@@ -8428,7 +8600,7 @@ function openMonitor(auto){
   // and the mode-keyed legend both have to be re-derived
   _chartDims.w=0; _chartDims.h=0; _chartLegendMode=null; _tempDims.w=0; _tempDims.h=0; _tempBgKey=null;
   syncMonitorHead(); syncMonitorLive(); syncRecipe();
-  applyGauges('monGauge1Name','monPressure','monGauge2Name','monFlow');
+  applyGauges('monPressure','monFlow');
   tick(); drawChart(); }
 function closeMonitor(){
   if(!_monOpen) return;
@@ -8475,7 +8647,7 @@ function loadWorkflow(){
   if(w.rinseData){ if(w.rinseData.targetTemperature) settings.flushTemp=w.rinseData.targetTemperature; if(w.rinseData.duration) settings.flushDur=w.rinseData.duration; if(w.rinseData.flow) settings.flushFlow=w.rinseData.flow; }
   if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.duration) settings.waterDur=w.hotWaterData.duration; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; }
   if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
-    var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; }); if(match) curProfileObj=match; if(carItems.length) buildCarousel(); }
+    var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; }); if(match) curProfileObj=match; if(carItems.length) buildCarousel(); guideProfileChanged(); }
   syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow'); });
 }
 function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
