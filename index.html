@@ -1196,7 +1196,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <div class="temp-col">
           <div class="th-gauge">
             <div class="th-unit" id="brewTempUnit">°C</div>
-            <div class="thermo" id="thermo" title="Brew temperature" role="slider" aria-valuemin="80" aria-valuemax="100">
+            <div class="thermo" id="thermo" title="Brew temperature" role="slider">
               <div class="th-tube"><div class="th-fill" id="thFill"></div></div>
               <div class="th-bulb"></div>
             </div>
@@ -1560,6 +1560,7 @@ var I18N={
     doseHoldHint:'Tap to type it, hold to take it off the scale',
     tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio', brewTemp:'Brew temp', noProfile:'No profile loaded',
+    tempFlattened:'This profile set a temperature per step — all steps now share this one',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight', target:'Target',
     lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
@@ -1693,6 +1694,7 @@ var I18N={
     doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
     tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
+    tempFlattened:'스텝별 온도 프로파일입니다 — 모든 스텝이 이 온도로 통일됩니다',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'무게', target:'목표',
     lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
@@ -2934,35 +2936,62 @@ function brewSteps(){ return (curProfileObj&&curProfileObj.profile&&curProfileOb
 function brewTempC(){ var st=brewSteps(); return (st.length&&st[0].temperature!=null)?st[0].temperature:null; }
 function setBrewTempC(v){
   var st=brewSteps(), cur=brewTempC(); if(cur==null) return;
-  v=Math.max(80,Math.min(100,Math.round(v*2)/2));
-  var d=Math.round((v-cur)*10)/10; if(!d) return;
-  st.forEach(function(x){ if(x.temperature!=null) x.temperature=Math.round((x.temperature+d)*10)/10; });
+  v=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round(v*2)/2));
+  var was=brewTempMixed();
+  if(v===cur&&!was) return;
+  st.forEach(function(x){ if(x.temperature!=null) x.temperature=v; });
+  if(was) toast(t('tempFlattened'),'err');
   syncRecipe(); pushProfileTemp(); }
-var TH_MIN=80, TH_MAX=100;
+// A profile may set a different temperature for every step. The control shows
+// the first, and setting it puts every step at that one value: one number on
+// the card can only mean one temperature, and shifting the steps to keep their
+// differences moves ones nobody was looking at.
+function brewTempMixed(){ var f=null, mixed=false;
+  brewSteps().forEach(function(x){ if(x.temperature==null) return;
+    if(f===null) f=x.temperature; else if(x.temperature!==f) mixed=true; });
+  return mixed; }
+// Espresso lives between 80 and 100, and that is the band the tube shows. It
+// is not a limit though: of the profiles that ship here, a fifth hold a step
+// outside it -- tea at 105, a cold brew at 20 -- and clamping to the band
+// would shift every step of such a profile the moment its temperature was
+// touched. So the band stretches to whatever the profile actually holds, and
+// the only hard stops are the ones a DE1 itself has.
+var TH_LO=80, TH_HI=100, TH_ABS_MIN=0, TH_ABS_MAX=110;
+function thRange(){
+  var v=brewTempC(), lo=TH_LO, hi=TH_HI;
+  if(v!=null){ if(v<lo) lo=Math.max(TH_ABS_MIN,Math.floor(v/5)*5);
+               if(v>hi) hi=Math.min(TH_ABS_MAX,Math.ceil(v/5)*5); }
+  return [lo,hi]; }
 function syncThermo(){
   var bt=document.getElementById('brewTempVal'), fill=document.getElementById('thFill'), bc=brewTempC();
   if(bt) bt.textContent=(bc==null)?'—':convTemp(bc).toFixed(1);
   var tu=document.getElementById('brewTempUnit'); if(tu) tu.textContent=tempUnitLabel();
-  if(fill) fill.style.height=(bc==null?0:Math.max(0,Math.min(1,(bc-TH_MIN)/(TH_MAX-TH_MIN)))*100).toFixed(1)+'%';
+  var r=thRange();
+  if(fill) fill.style.height=(bc==null?0:Math.max(0,Math.min(1,(bc-r[0])/(r[1]-r[0])))*100).toFixed(1)+'%';
   var th=document.getElementById('thermo');
-  if(th&&bc!=null) th.setAttribute('aria-valuenow',bc.toFixed(1)); }
+  if(th){ th.setAttribute('aria-valuemin',r[0]); th.setAttribute('aria-valuemax',r[1]);
+    if(bc!=null) th.setAttribute('aria-valuenow',bc.toFixed(1)); } }
 // Dragging the tube reads the whole range in one gesture; the write behind it
 // is the same debounced one the buttons use, so a drag is one request.
+var _thBand=null;
 function thermoFromY(y){
   var tube=document.querySelector('#thermo .th-tube'); if(!tube) return;
   var r=tube.getBoundingClientRect(); if(!r.height) return;
-  var f=1-(y-r.top)/r.height;
-  setBrewTempC(TH_MIN+Math.max(0,Math.min(1,f))*(TH_MAX-TH_MIN)); }
+  // the band is held for the length of a gesture: it stretches to hold a
+  // profile sitting outside espresso range, and recomputing it mid-drag would
+  // move the scale under the finger
+  var f=1-(y-r.top)/r.height, b=_thBand||thRange();
+  setBrewTempC(b[0]+Math.max(0,Math.min(1,f))*(b[1]-b[0])); }
 function thermoInit(){
   var th=document.getElementById('thermo'); if(!th) return;
   var down=false;
   th.addEventListener('pointerdown',function(e){
     if(brewTempC()==null){ toast(t('noProfile'),'err'); return; }
-    down=true; th.classList.add('drag'); th.setPointerCapture(e.pointerId);
+    down=true; _thBand=thRange(); th.classList.add('drag'); th.setPointerCapture(e.pointerId);
     thermoFromY(e.clientY); e.preventDefault(); });
   th.addEventListener('pointermove',function(e){ if(down) thermoFromY(e.clientY); });
   ['pointerup','pointercancel'].forEach(function(ev){
-    th.addEventListener(ev,function(){ down=false; th.classList.remove('drag'); }); }); }
+    th.addEventListener(ev,function(){ down=false; _thBand=null; th.classList.remove('drag'); }); }); }
 function adjustTemp(d){ var cur=brewTempC();
   if(cur==null){ toast(t('noProfile'),'err'); return; }
   setBrewTempC(cur+d); }
@@ -3145,7 +3174,7 @@ function grinderAiFill(){
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
-var KP_CFG={ doseIn:{title:'kpDose',unit:'g',min:5,max:30}, doseOut:{title:'kpYield',unit:'g',min:10,max:80}, ratio:{title:'kpRatio',unit:'',min:1,max:4}, brewTemp:{title:'kpTemp',unit:'',min:80,max:100} };
+var KP_CFG={ doseIn:{title:'kpDose',unit:'g',min:5,max:30}, doseOut:{title:'kpYield',unit:'g',min:10,max:80}, ratio:{title:'kpRatio',unit:'',min:1,max:4}, brewTemp:{title:'kpTemp',unit:'',min:TH_ABS_MIN,max:TH_ABS_MAX} };
 function openKeypad(field){ var c=KP_CFG[field]; if(!c) return;
   if(field==='brewTemp'&&brewTempC()==null){ toast(t('noProfile'),'err'); return; }
   KP.field=field; KP.unit=(field==='brewTemp')?tempUnitLabel():c.unit; KP.fresh=true;
