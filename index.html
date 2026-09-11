@@ -2975,13 +2975,14 @@ function brewTempMixed(){ var f=null, mixed=false;
   brewSteps().forEach(function(x){ if(x.temperature==null) return;
     if(f===null) f=x.temperature; else if(x.temperature!==f) mixed=true; });
   return mixed; }
-// Espresso lives between 80 and 100, and that is the band the tube shows. It
-// is not a limit though: of the profiles that ship here, a fifth hold a step
-// outside it -- tea at 105, a cold brew at 20 -- and clamping to the band
-// would shift every step of such a profile the moment its temperature was
-// touched. So the band stretches to whatever the profile actually holds, and
-// the only hard stops are the ones a DE1 itself has.
-var TH_LO=80, TH_HI=100, TH_ABS_MIN=0, TH_ABS_MAX=110;
+// The tube reads 40 to 100, which covers everything the machine is asked to
+// brew rather than espresso alone -- a fifth of the profiles that ship here
+// hold a step outside the espresso band, tea at 105 and a cold brew at 20. It
+// is not a limit either: the band stretches to whatever the loaded profile
+// actually holds, and the only hard stops are the ones a DE1 itself has. The
+// cost is resolution -- sixty degrees down the same tube -- so the steppers
+// and the keypad remain the way to land on a half degree.
+var TH_LO=40, TH_HI=100, TH_ABS_MIN=0, TH_ABS_MAX=110;
 function thRange(){
   var v=brewTempC(), lo=TH_LO, hi=TH_HI;
   if(v!=null){ if(v<lo) lo=Math.max(TH_ABS_MIN,Math.floor(v/5)*5);

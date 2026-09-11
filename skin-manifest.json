@@ -2,5 +2,5 @@
   "id": "liquid-aqua",
   "name": "Liquid Aqua",
   "description": "A bright liquid-glass espresso UI with a live water-tank header, album carousel profiles, profile-banded pressure and flow dials, a full-screen action monitor with split extraction and temperature graphs, recipe keypad, grinder settings, a shot log with multi-shot comparison and AI reading, a full settings page (display, machine, firmware, water & flow calibration, refill kit, plugins), and a low-power sleep screen.",
-  "version": "1.35.0"
+  "version": "1.35.1"
 }
