@@ -2156,7 +2156,8 @@ function onMachineState(ms,prev){
   else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
   else if(watering||flushing){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
-    if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); drawChart(); }
+    chart.targetMix.push(state.targetMixTemp||0);
+    if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); if(chart.targetMix.length>chart.max)chart.targetMix.shift(); drawChart(); }
 }
 function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } loadLastShot(); }).catch(function(){}); }
 
@@ -2561,7 +2562,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
         +lt('weight',SERIES.weight,t('legWeight'))+lt('wflow',SERIES.wflow,t('legWeightFlow'))
         +(hasTempAxis?li(SERIES.basket,t('tempBasket'))+li(SERIES.mix,t('tempMix')):'');
     var tHtml=isSteam?li(SERIES.steam,t('steam')+' °')
-      :isWater?li(SERIES.water,t('water')+' °')
+      :isWater?li(SERIES.water,t('water')+' °')+lg(SERIES.mixGoal,t('mixGoal'))
       :li(SERIES.basket,t('tempBasket'))+lg(SERIES.basketGoal,t('basketGoal'))
        +li(SERIES.mix,t('tempMix'))+lg(SERIES.mixGoal,t('mixGoal'));
     ['monTempLegend','tempLegend'].forEach(function(id){
@@ -8738,7 +8739,8 @@ function drawTempChart(){
       if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
     ctx.strokeStyle=SERIES.basket; ctx.stroke(); ctx.globalAlpha=1; ctx.restore(); }
   if(isSteam) tline(chart.steamTemp,SERIES.steam);
-  else if(isWater) tline(chart.waterTemp,SERIES.water);
+  else if(isWater){ tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
+    tline(chart.waterTemp,SERIES.water); }
   else { tline(chart.targetGroup,SERIES.basketGoal,GOAL_DASH); tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
          tline(chart.groupTemp,SERIES.basket); tline(chart.mixTemp,SERIES.mix); }
   // the same readouts the extraction chart carries, for the lines that live here
@@ -8746,7 +8748,7 @@ function drawTempChart(){
   if(N>=1 && running){
     var last=function(d){ return (d&&d.length)?d[d.length-1]:null; };
     var rows=isSteam?[{v:last(chart.steamTemp),c:SERIES.steam}]
-      :isWater?[{v:last(chart.waterTemp),c:SERIES.water}]
+      :isWater?[{v:last(chart.waterTemp),c:SERIES.water},{v:last(chart.targetMix),c:SERIES.mixGoal}]
       :[{v:last(chart.groupTemp),c:SERIES.basket},{v:last(chart.mixTemp),c:SERIES.mix}];
     drawReadouts(ctx, rows.map(function(r){
       return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,u:U_TEMP,y:py(r.v)}; }), px(N-1), Y0, Y0+PH); }
