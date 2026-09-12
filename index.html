@@ -302,6 +302,11 @@ body.night .gauge.z1{--zc:#fbbf24} body.night .gauge.z2{--zc:#34d399} body.night
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ink-soft)}
 .legend-dot{width:9px;height:9px;border-radius:3px}
 .legend-dash{width:14px;height:3px;border-radius:2px}
+.legend-item.tog{cursor:pointer;-webkit-user-select:none;user-select:none;padding:3px 7px;margin:-3px -1px;border-radius:9px;border:1px solid transparent;transition:background .15s,border-color .15s,opacity .15s}
+.legend-item.tog:hover{background:var(--ctl-face);border-color:var(--ctl-edge)}
+.legend-item.tog:active{transform:scale(.96)}
+.legend-item.tog:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.legend-item.off{opacity:.5}
 .chart-canvas-wrap{flex:1;min-height:0;position:relative}
 .chart-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 
@@ -1408,6 +1413,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <div class="opt-row"><div class="opt-label">Volume<span class="hint">target milliliters</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterVol" min="0" max="500" step="5" oninput="optChange('waterVol',this.value)"><span class="opt-val"><span id="waterVolV">200</span>ml</span></div></div>
     <div class="opt-row"><div class="opt-label">Duration<span class="hint">max seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterDur" min="0" max="120" step="1" oninput="optChange('waterDur',this.value)"><span class="opt-val"><span id="waterDurV">30</span>s</span></div></div>
     <div class="opt-row"><div class="opt-label">Flow<span class="hint">flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterFlow" min="1" max="10" step="0.5" oninput="optChange('waterFlow',this.value)"><span class="opt-val"><span id="waterFlowV">10.0</span></span></div></div>
+    <div class="set-warn" id="waterTempWarn" hidden style="margin:2px 0 10px"></div>
     <div class="opt-row" id="waterStopRow"><div class="opt-label"><span data-i18n="stopAtWeight">Stop at weight</span><span class="hint" id="waterStopHint"></span></div><div class="opt-ctrl"><label class="switch"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></div></div>
     <div class="modal-actions" id="waterActions"><button class="m-btn" onclick="closeModal(null,'waterOverlay')">Close</button><button class="m-btn primary" onclick="saveWater()">Save Options</button></div>
   </div></div>
@@ -1690,6 +1696,8 @@ var I18N={
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     lockedBrewing:'The profile cannot be changed while a shot is running.',
     brewingNow:'Brewing — this profile is locked',
+    waterTempDrift:'The machine is holding {a}\u00b0C for hot water, not {b}\u00b0C. It will be corrected when you start it.', waterTempFixed:'Hot water was {a}\u00b0C on the machine \u2014 set back to {b}\u00b0C',
+    legWeight:'Weight', legWeightFlow:'Weight flow',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
     catMaint:'Maintenance', maintDesc:'The machine runs these itself. It has to be awake and idle to start one, and each says where it has got to.', maint_cleaning:'Clean the group', maint_cleaning_d:'A backflush cycle with a blind basket and cleaning tablet fitted.', maint_descaling:'Descale', maint_descaling_d:'Runs descaling solution through the group and the steam boiler. Follow the machine\u2019s instructions.', maint_airPurge:'Air purge', maint_airPurge_d:'Clears water from the lines, for transport or storage.', maintGo:'Start', maintStop:'Stop', maintDone:'Finished', maintBusy:'The machine is busy', maintStart:'Starting', maintFill:'Filling', maintSoak:'Soaking', maintFlush:'Flushing', maintDescale:'Descaling', maintSteam:'Steam boiler', maintPurge:'Purging',
@@ -1828,6 +1836,8 @@ var I18N={
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
     brewingNow:'추출 중 — 프로파일 잠김',
+    waterTempDrift:'머신은 온수 온도로 {b}\u00b0C가 아니라 {a}\u00b0C를 들고 있습니다. 시작할 때 바로잡습니다.', waterTempFixed:'머신의 온수 온도가 {a}\u00b0C였습니다 \u2014 {b}\u00b0C로 되돌렸습니다',
+    legWeight:'누적 추출량', legWeightFlow:'초당 추출량',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
     catMaint:'관리', maintDesc:'머신이 직접 수행합니다. 깨어 있고 대기 상태여야 시작할 수 있으며, 각각 진행 단계를 보여줍니다.', maint_cleaning:'그룹헤드 청소', maint_cleaning_d:'블라인드 바스켓과 세정제를 끼우고 역세척을 돌립니다.', maint_descaling:'디스케일링', maint_descaling_d:'스케일 제거 용액을 그룹과 스팀 보일러에 통과시킵니다. 머신 안내를 따르세요.', maint_airPurge:'에어 퍼지', maint_airPurge_d:'배관의 물을 빼냅니다. 운송·보관 전에 씁니다.', maintGo:'시작', maintStop:'중지', maintDone:'완료', maintBusy:'머신이 사용 중입니다', maintStart:'시작', maintFill:'물 채움', maintSoak:'불림', maintFlush:'헹굼', maintDescale:'스케일 제거 중', maintSteam:'스팀 보일러', maintPurge:'배출 중',
@@ -1899,7 +1909,7 @@ var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:
   connected:false, scaleWeight:null, scaleConnected:false, dosingWeight:null, dosingConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
   flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
-var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[],
+var chart={ pressure:[], flow:[], weight:[], wflow:[], frame:[], steamTemp:[], waterTemp:[],
   groupTemp:[], mixTemp:[], targetGroup:[], targetMix:[], targetFlow:[], targetPressure:[],
   t:[], wt:[], mode:'espresso', max:600 };
 // The shot chart people read elsewhere uses one convention: a solid line for
@@ -1907,7 +1917,7 @@ var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[
 // to do. Matching it means a graph from this skin reads the same as any other.
 var SERIES={ pressure:'#1fbfa8', pressureGoal:'#0e7c6b',
              flow:'#38a8de',     flowGoal:'#1d5b87',
-             weight:'#9a7b0a',
+             weight:'#9a7b0a',   wflow:'#6d28d9',
              basket:'#f08a3c',   basketGoal:'#e87ba0',
              mix:'#d6402b',      mixGoal:'#9c4a9c',
              // steam and hot-water temperature read in the same red the
@@ -1919,7 +1929,7 @@ var GOAL_DASH=[5,4];
 var GUIDE={ day:'#5b5bd6', night:'#c4b5fd' };
 // A number on its own does not say what it is. The chart is metric: the
 // display unit preference converts what the panels show, not the graph.
-var U_BAR=' bar', U_FLOW=' ml/s', U_TEMP='\u00b0C', U_G=' g';
+var U_BAR=' bar', U_FLOW=' ml/s', U_TEMP='\u00b0C', U_G=' g', U_GS=' g/s';
 var allProfiles=[], favIds={}, browseTab='fav', editing=null, curProfileObj=null;
 var beans=[], grinders=[], context={};
 
@@ -1992,7 +2002,7 @@ function openWs(name,path,onMsg,opts){ var url=GATEWAY.ws+path;
 // Sleep keeps only the machine snapshot, which is how a machine woken at the
 // group head is noticed. Water levels are not on the lock screen and cost a
 // packet a second; the other three send nothing and only hold connections open.
-var SLEEP_PARK=['water','scale','dosing','devices','display','update'];
+var SLEEP_PARK=['water','scale','dosing','devices','display','update','shot'];
 function parkSockets(on){
   SLEEP_PARK.forEach(function(name){
     if(on){ _wsParked[name]=true;
@@ -2007,13 +2017,24 @@ function initWebSockets(){
     state.pressure=s.pressure||0; state.flow=s.flow||0; state.mixTemp=s.mixTemperature||0; state.groupTemp=s.groupTemperature||0; state.steamTemp=s.steamTemperature||0; state.targetGroupTemp=(s.targetGroupTemperature!=null?s.targetGroupTemperature:state.targetGroupTemp); state.targetMixTemp=(s.targetMixTemperature!=null?s.targetMixTemperature:state.targetMixTemp); state.profileFrame=(s.profileFrame!=null?s.profileFrame:state.profileFrame); state.targetFlow=(s.targetFlow!=null?s.targetFlow:state.targetFlow); state.targetPressure=(s.targetPressure!=null?s.targetPressure:state.targetPressure);
     var ms=s.state||{state:'idle',substate:'idle'}; var prev=state.machine.state; state.machine=ms; onMachineState(ms,prev); updateMachineUI(); });
   openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); updateConnUI(state.connected?'on':'off'); syncWaterStop(); return; }
-    if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); chart.wt.push(Date.parse(m.timestamp)||Date.now()); if(chart.weight.length>chart.max){ chart.weight.shift(); chart.wt.shift(); } } } });
+    if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI();
+      if(state.shotRunning){ var wts=Date.parse(m.timestamp)||Date.now();
+        chart.weight.push(m.weight); chart.wt.push(wts);
+        chart.wflow.push(m.weightFlow!=null?m.weightFlow:deriveWeightFlow(m.weight,wts));
+        if(chart.weight.length>chart.max){ chart.weight.shift(); chart.wflow.shift(); chart.wt.shift(); } } } });
   // The dosing scale is optional: gateways without one -- and gateways that predate the endpoint -- never report it connected, and every dosing affordance stays hidden.
   openWs('dosing','/ws/v1/scale/dosing/snapshot',function(m){
     if(m.status){ state.dosingConnected=(m.status==='connected');
       if(!state.dosingConnected) state.dosingWeight=null;
       syncDoseTake(); syncRecipe(); return; }
     if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); } },{optional:true});
+  // What the machine holds for steam and hot water, which is not the same
+  // thing as what the workflow says it was told. The two can part -- a
+  // reconnect where the startup defaults were skipped leaves the machine on
+  // its own value and nothing ever writes it again, because the workflow
+  // only pushes on a change and its value never changed.
+  openWs('shot','/ws/v1/machine/shotSettings',function(m){
+    if(m&&m.targetHotWaterTemp!==undefined){ machineShot=m; syncWaterStop(); assertHotWaterTemp(false); } });
   openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
   openWs('devices','/ws/v1/devices',function(m){
     var phase=m.connectionStatus&&m.connectionStatus.phase;
@@ -2077,7 +2098,8 @@ function bindActionLongPress(btn, tapFn, holdFn){
 // tap toggles: if machine already in that state, stop (go idle); else start.
 function doSteamAction(){ if(state.machine.state==='steam') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Steam stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/steam').then(function(){toast('Steam started','ok');}).catch(function(){toast('Steam failed','err');}); }
 function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Flush stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/flush').then(function(){toast('Flush started','ok');}).catch(function(){toast('Flush failed','err');}); }
-function doWaterAction(){ if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Water stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast('Hot water started','ok');}).catch(function(){toast('Water failed','err');}); }
+function doWaterAction(){ if(state.machine.state!=='hotWater') assertHotWaterTemp(true);
+  if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Water stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast('Hot water started','ok');}).catch(function(){toast('Water failed','err');}); }
 
 // ── Machine state ───────────────────────────────────────────────────
 function onMachineState(ms,prev){
@@ -2101,7 +2123,7 @@ function onMachineState(ms,prev){
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
   var flushing=(ms.state==='flush');
-  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; }
+  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
   // espresso state ends (after pouringDone returns to idle).
@@ -2490,6 +2512,15 @@ function drawChart(){ if(_asleep||(_pageOpen&&!_monOpen)||_chartRAF) return;
   _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow();
     drawTempChart(); }); }
 var _chartDims={w:0,h:0}; var _chartLegendMode=null; var _chartBg=null, _chartBgKey=null;
+function vis(k){ return !(prefs.chartHide&&prefs.chartHide[k]); }
+function toggleSerie(k){
+  if(!prefs.chartHide) prefs.chartHide={};
+  if(prefs.chartHide[k]) delete prefs.chartHide[k]; else prefs.chartHide[k]=true;
+  savePrefs(); _chartLegendMode=null;
+  // A tap has to show its own result. Ordinary redraws are coalesced onto an
+  // animation frame, and a frame already pending swallows the request -- fine
+  // for a stream of samples, wrong for a press, so this one draws now.
+  if(!_asleep&&(!_pageOpen||_monOpen)) _drawChartNow(); else drawChart(); }
 function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
   if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
@@ -2507,15 +2538,27 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     var legEl=document.getElementById(_monOpen?'monChartLegend':'chartLegend');
     if(titleEl) titleEl.textContent=isSteam?t('steamGraph'):(isFlush?t('flushGraph'):(isWater?t('hotWaterGraph'):(chartReviewing?((chartReviewLabel||t('lastShotGraph'))+' ↩'):t('extractionGraph'))));
     function li(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+label+'</span>'; }
+    // A legend entry that is also the switch for its own line. Off is shown by
+    // hollowing the dot rather than greying it, so which line it stands for is
+    // still readable when it is not being drawn.
+    function lt(k,color,label){ var off=!vis(k);
+      return '<span class="legend-item tog'+(off?' off':'')+'" role="button" tabindex="0" aria-pressed="'+(!off)+'"'
+        +' onclick="toggleSerie(\''+k+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleSerie(\''+k+'\');}">'
+        +'<span class="legend-dot" style="'+(off?'box-shadow:inset 0 0 0 2px '+color:'background:'+color)+'"></span>'+label+'</span>'; }
+    function ltg(k,color,label){ var off=!vis(k);
+      return '<span class="legend-item tog'+(off?' off':'')+'" role="button" tabindex="0" aria-pressed="'+(!off)+'"'
+        +' onclick="toggleSerie(\''+k+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleSerie(\''+k+'\');}">'
+        +'<span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)'
+        +(off?';opacity:.45':'')+'"></span>'+label+'</span>'; }
     // a goal is drawn dashed, so it is shown dashed
     function lg(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+label+'</span>'; }
     if(legEl) legEl.innerHTML=isSteam
       ? (hasTempAxis?li(SERIES.steam,t('steam')+' °'):'')+li(SERIES.flow,t('flow'))+li(SERIES.pressure,t('pressure'))
       : isWater
       ? (hasTempAxis?li(SERIES.water,t('water')+' °'):'')+li(SERIES.flow,t('flow'))
-      : li(SERIES.pressure,t('pressure'))+lg(SERIES.pressureGoal,t('pressureGoal'))
-        +li(SERIES.flow,t('flow'))+lg(SERIES.flowGoal,t('flowGoal'))
-        +li(SERIES.weight,t('weight'))
+      : lt('pressure',SERIES.pressure,t('pressure'))+ltg('pressureGoal',SERIES.pressureGoal,t('pressureGoal'))
+        +lt('flow',SERIES.flow,t('flow'))+ltg('flowGoal',SERIES.flowGoal,t('flowGoal'))
+        +lt('weight',SERIES.weight,t('legWeight'))+lt('wflow',SERIES.wflow,t('legWeightFlow'))
         +(hasTempAxis?li(SERIES.basket,t('tempBasket'))+li(SERIES.mix,t('tempMix')):'');
     var tHtml=isSteam?li(SERIES.steam,t('steam')+' °')
       :isWater?li(SERIES.water,t('water')+' °')
@@ -2553,7 +2596,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   // Weight comes off the scale's socket, which does not tick with the
   // machine's. Both cover the same window, so a series of a different
   // length is placed by its fraction of it rather than by its index.
-  function pxOf(d,i){ var ts=(d===chart.weight)?chart.wt:chart.t;
+  function pxOf(d,i){ var ts=(d===chart.weight||d===chart.wflow)?chart.wt:chart.t;
     if(timed&&ts.length===d.length&&d.length>1) return pxAt(ts[i]);
     return (d.length===N||d.length<2||N<2)
     ? px(i) : px((i/(d.length-1))*(N-1)); }
@@ -2642,16 +2685,26 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     line(chart.flow,SERIES.flow,FMAX,null);                        // water flow
   } else if(!hasTempAxis){
     drawGuide();
-    goal(chart.targetPressure,SERIES.pressureGoal,PMAX); goal(chart.targetFlow,SERIES.flowGoal,FMAX);
-    line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)'); line(chart.flow,SERIES.flow,FMAX,null); line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
+    if(vis('pressureGoal')) goal(chart.targetPressure,SERIES.pressureGoal,PMAX);
+    if(vis('flowGoal')) goal(chart.targetFlow,SERIES.flowGoal,FMAX);
+    if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)');
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);
+    // the cumulative line is the default, so it is laid over the rate
+    if(vis('wflow')) line(chart.wflow,SERIES.wflow,FMAX,null);
+    if(vis('weight')) line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
   } else {
     // target temperature (dashed) on the right (°C) axis
     // group/mix temperature on the right (°C) axis, drawn under the pressure/flow lines
     drawGuide();
     goal(chart.targetGroup,SERIES.basketGoal,TMAX); goal(chart.targetMix,SERIES.mixGoal,TMAX);
     line(chart.groupTemp,SERIES.basket,TMAX,null); line(chart.mixTemp,SERIES.mix,TMAX,null);
-    goal(chart.targetPressure,SERIES.pressureGoal,PMAX); goal(chart.targetFlow,SERIES.flowGoal,FMAX);
-    line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)'); line(chart.flow,SERIES.flow,FMAX,null); line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
+    if(vis('pressureGoal')) goal(chart.targetPressure,SERIES.pressureGoal,PMAX);
+    if(vis('flowGoal')) goal(chart.targetFlow,SERIES.flowGoal,FMAX);
+    if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)');
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);
+    // the cumulative line is the default, so it is laid over the rate
+    if(vis('wflow')) line(chart.wflow,SERIES.wflow,FMAX,null);
+    if(vis('weight')) line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
   }
 
   // live readouts at the leading edge
@@ -2671,11 +2724,12 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
                        {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
     else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
                             {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
-    else { var wN=chart.weight.length;
-           tags([{v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR},
-                 {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
+    else { var wN=chart.weight.length, fN=chart.wflow.length;
+           tags([{v:vis('pressure')?chart.pressure[N-1]:null,mx:PMAX,c:SERIES.pressure,u:U_BAR},
+                 {v:vis('flow')?chart.flow[N-1]:null,mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                 {v:(vis('wflow')&&fN)?chart.wflow[fN-1]:null,mx:FMAX,c:SERIES.wflow,u:U_GS},
                  // the scale ticks on its own, so the weight reads from its own end
-                 {v:wN?chart.weight[wN-1]:null,mx:settings.doseOut*1.2,c:SERIES.weight,u:U_G},
+                 {v:(vis('weight')&&wN)?chart.weight[wN-1]:null,mx:settings.doseOut*1.2,c:SERIES.weight,u:U_G},
                  {v:hasTempAxis?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket,u:U_TEMP},
                  {v:hasTempAxis?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix,u:U_TEMP}]); }
   }
@@ -2738,7 +2792,17 @@ function apiErrorText(e){ if(e&&e.name==='AbortError') return t('mbTimeout')+' (
   var m=(e&&e.message)||'error'; return /^HTTP /.test(m)?m:m+' ('+GATEWAY.http+')'; }
 
 // ── Actions ─────────────────────────────────────────────────────────
-function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { chart.pressure=[];chart.flow=[];chart.weight=[];chart.t=[];chart.wt=[];_axisSpan=0;drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
+// The gateway smooths the scale's rate itself and sends it as weightFlow. One
+// that does not leaves only the raw difference between two samples, which is far
+// too noisy to draw, so it is smoothed here the same way rather than not shown.
+var _wfLast=null, _wfEma=0;
+function deriveWeightFlow(w,ts){
+  if(_wfLast&&ts>_wfLast.ts){ var dt=(ts-_wfLast.ts)/1000;
+    if(dt>0.02) _wfEma+=0.3*(((w-_wfLast.w)/dt)-_wfEma); }
+  _wfLast={w:w,ts:ts};
+  return _wfEma>0?_wfEma:0; }
+function resetWeightFlow(){ _wfLast=null; _wfEma=0; }
+function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.t=[];chart.wt=[];_axisSpan=0;drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
 // A tap on the dose takes the scale when there is one reading to take, and
 // opens the keypad when there is not, so a dose can always be typed.
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
@@ -2885,8 +2949,41 @@ function syncWaterStop(){
   sw.checked=usable&&on;
   sw.disabled=!usable;
   hint.textContent=full?t('stopNeedsTracking'):(!state.scaleConnected?t('stopNeedsScale'):t('stopAtWeightHint'));
+  var warn=document.getElementById('waterTempWarn');
+  if(warn){ var d=waterTempDrifted();
+    warn.hidden=!d;
+    if(d) warn.textContent=t('waterTempDrift').replace('{a}',machineWaterTemp()).replace('{b}',Math.round(settings.waterTemp)); }
   var row=document.getElementById('waterStopRow');
   if(row) row.style.opacity=usable?'':'0.5'; }
+// The machine's own shot settings, as last reported.
+var machineShot=null, _hwAssertAt=0, _hwAssertWas=null, _wfLoaded=false;
+var HW_ASSERT_COOLDOWN=30000;
+function machineWaterTemp(){ return machineShot?machineShot.targetHotWaterTemp:null; }
+function waterTempDrifted(){ var m=machineWaterTemp(); return (m!=null&&m!==Math.round(settings.waterTemp)); }
+// Put the chosen temperature back on the machine. The workflow will not do it --
+// it writes only when the value changes, and a value that was never delivered
+// never changes again -- so this writes the shot settings directly, echoing the
+// machine's own frame with the one field corrected.
+// Rate limited, because a machine that will not take the value would otherwise
+// be written to on every frame; `force` is the press of the hot water button,
+// which is a person asking and waits for nothing.
+function assertHotWaterTemp(force){
+  // Before the workflow has been read, settings.waterTemp is this skin's own
+  // default and not the user's -- correcting the machine to it would be the
+  // very fault this exists to repair.
+  if(!machineShot||!_wfLoaded) return false;
+  if(!waterTempDrifted()){ _hwAssertWas=null; return false; }
+  var now=Date.now();
+  if(!force&&now-_hwAssertAt<HW_ASSERT_COOLDOWN) return false;
+  _hwAssertAt=now;
+  var want=Math.round(settings.waterTemp), had=machineWaterTemp();
+  var body={}; for(var k in machineShot) body[k]=machineShot[k];
+  body.targetHotWaterTemp=want;
+  api('POST','/api/v1/machine/shotSettings',body)
+    .then(function(){ if(_hwAssertWas!==had){ _hwAssertWas=had;
+        toast(t('waterTempFixed').replace('{a}',had).replace('{b}',want),'ok'); } })
+    .catch(function(){ toast(t('saveFailed'),'err'); });
+  return true; }
 function setStopHotWaterAtWeight(on){
   gwSettings.stopHotWaterAtWeight=on;
   api('POST','/api/v1/settings',{stopHotWaterAtWeight:on})
@@ -3028,14 +3125,44 @@ function adjustRatio(delta){ var r=settings.doseIn>0?(settings.doseOut/settings.
 // edited here is the workflow's copy -- what the next shot runs -- and not the
 // saved profile, which the profile editor owns.
 function brewSteps(){ return (curProfileObj&&curProfileObj.profile&&curProfileObj.profile.steps)||[]; }
-function brewTempC(){ var st=brewSteps(); return (st.length&&st[0].temperature!=null)?st[0].temperature:null; }
+// The recipe's temperature is the user's choice for a profile, not a property
+// of the profile. Writing it into the steps rewrote the carousel's own record
+// -- curProfileObj is that object, not a copy -- and the number was lost the
+// moment another profile was loaded, because the stored profile still held its
+// original. It is kept here instead, keyed by profile, and folded onto a copy
+// on the way to the machine. The profile itself is never touched.
+function profileKey(){
+  if(!curProfileObj) return null;
+  var id=curProfileObj.id;
+  if(id&&id!=='current'&&id!=='guide') return id;
+  var t=curProfileObj.profile&&curProfileObj.profile.title;
+  return t?('t:'+t):null; }
+function brewTempSaved(k){
+  k=k||profileKey();
+  return (k&&prefs.brewTemp&&prefs.brewTemp[k]!=null)?prefs.brewTemp[k]:null; }
+// A copy with every step at one temperature. Steps that carry no temperature of
+// their own keep not having one.
+function withBrewTemp(pr,v){
+  if(v==null||!pr||!pr.steps) return pr;
+  var c={}; for(var k in pr) c[k]=pr[k];
+  c.steps=pr.steps.map(function(st){
+    if(st.temperature==null) return st;
+    var d={}; for(var j in st) d[j]=st[j]; d.temperature=v; return d; });
+  return c; }
+function brewProfileForMachine(pr,k){ return withBrewTemp(pr||(curProfileObj&&curProfileObj.profile),brewTempSaved(k)); }
+function brewTempC(){ var o=brewTempSaved(); if(o!=null) return o;
+  var st=brewSteps(); return (st.length&&st[0].temperature!=null)?st[0].temperature:null; }
 function setBrewTempC(v){
-  var st=brewSteps(), cur=brewTempC(); if(cur==null) return;
+  var cur=brewTempC(); if(cur==null) return;
+  var k=profileKey(); if(!k) return;
   v=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round(v*2)/2));
-  var was=brewTempMixed();
-  if(v===cur&&!was) return;
-  st.forEach(function(x){ if(x.temperature!=null) x.temperature=v; });
-  if(was) toast(t('tempFlattened'),'err');
+  var was=brewTempMixed(), firstTime=(brewTempSaved(k)==null);
+  if(v===cur&&!firstTime) return;
+  if(!prefs.brewTemp) prefs.brewTemp={};
+  prefs.brewTemp[k]=v; savePrefs();
+  // said once, when the profile's own steps are about to stop being honoured,
+  // rather than on every press from then on
+  if(was&&firstTime) toast(t('tempFlattened'),'err');
   syncRecipe(); pushProfileTemp(); }
 // A profile may set a different temperature for every step. The control shows
 // the first, and setting it puts every step at that one value: one number on
@@ -3094,7 +3221,7 @@ function adjustTemp(d){ var cur=brewTempC();
 var _tempPushT=null;
 function pushProfileTemp(){ clearTimeout(_tempPushT); _tempPushT=setTimeout(function(){
   if(!curProfileObj||!curProfileObj.profile) return;
-  api('PUT','/api/v1/workflow',{profile:curProfileObj.profile})
+  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine()})
     .catch(function(){ toast('Temp error','err'); }); },600); }
 function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){ api('PUT','/api/v1/workflow',{context:{targetDoseWeight:settings.doseIn,targetYield:settings.doseOut}}).catch(function(){}); },600); }
 function syncRecipe(){
@@ -3174,6 +3301,8 @@ function hydrateFromStore(){
       updateBeanInfo(); applyCam(); applyFx(); if(carItems.length) buildCarousel(); }
   }); }
 function applyPrefsObject(p){
+  if(p.chartHide&&typeof p.chartHide==='object') prefs.chartHide=p.chartHide;
+  if(p.brewTemp&&typeof p.brewTemp==='object') prefs.brewTemp=p.brewTemp;
   if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye;
   if(typeof p.night==='boolean') prefs.night=p.night;
   if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto;
@@ -3313,7 +3442,13 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'',
   // how the picture is laid in the pane, whatever it came from
   camRotate:0, camFit:'contain', camZoom:1, camMirror:false,
   // the touch ripple and the light on the loaded cover
-  fx:true };
+  fx:true,
+  // the temperature chosen for each profile, by profile id
+  brewTemp:{},
+  // Series hidden from the extraction graph, by legend key. Weight flow
+  // starts hidden: the cumulative weight is what the recipe is about, and
+  // two scale lines at once is a choice rather than a default.
+  chartHide:{wflow:true} };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
 function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
@@ -4516,7 +4651,7 @@ function selectProfile(p,keepGuideSrc){
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
   syncRecipe();
   if(chartBackToEspresso()) drawChart();
-  api('PUT','/api/v1/workflow',{profile:p.profile}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast('Profile error','err'); }); }
+  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast('Profile error','err'); }); }
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
 function refreshCarouselMark(){
@@ -8273,7 +8408,8 @@ function vizShowShot(v){
   chart.targetGroup=vizGoal(d.espresso_temperature_goal,n); chart.targetMix=[];
   var w=vizNums(d.espresso_weight,n), hasW=w.some(function(x){ return x>0; });
   // state_change is a marker column, not a step index, so there are no bands
-  chart.weight=hasW?w:[]; chart.frame=[]; chart.t=[]; chart.wt=[];
+  chart.weight=hasW?w:[]; chart.wflow=hasW?vizNums(d.espresso_flow_weight,n):[];
+  chart.frame=[]; chart.t=[]; chart.wt=[];
   for(var i=0;i<n;i++){ var ms=Math.round((parseFloat(tf[i])||0)*1000);
     chart.t.push(ms); if(hasW) chart.wt.push(ms); }
   syncReviewControls(); drawChart();
@@ -8338,7 +8474,7 @@ function viewLastShotGraph(){
     var m=s.measurements||[]; if(m.length<2){ toast('No measurement data for this shot','err'); return; }
     chart.mode='espresso'; chartReviewing=true; chartReviewLabel=null;
     reviewProfile=(s.workflow&&s.workflow.profile)||null; _guideKey=null;
-    chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
+    chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
     chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0;
     m.forEach(function(pt,i){ var mac=pt.machine||{}; var sc=pt.scale||{};
       chart.pressure.push(mac.pressure||0); chart.flow.push(mac.flow||0);
@@ -8346,14 +8482,15 @@ function viewLastShotGraph(){
       chart.targetGroup.push(mac.targetGroupTemperature||0); chart.targetMix.push(mac.targetMixTemperature||0);
       chart.targetFlow.push(mac.targetFlow||0); chart.targetPressure.push(mac.targetPressure||0);
       var ts=Date.parse(mac.timestamp)||0; chart.t.push(ts);
-      if(sc.weight!=null){ chart.weight.push(sc.weight); chart.wt.push(ts); } });
+      if(sc.weight!=null){ chart.weight.push(sc.weight); chart.wt.push(ts);
+        chart.wflow.push(sc.weightFlow!=null?sc.weightFlow:0); } });
     _chartLegendMode=null; syncReviewControls(); drawChart();
     var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot');
     toast('Showing last shot: '+st.name,'ok');
   }).catch(function(){ toast('Failed to load shot','err'); }); }
 // Leave last-shot review and return the graph to live extraction data.
 function exitReview(){ if(!chartReviewing) return; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _guideKey=null; chart.mode='espresso';
-  chart.pressure=[];chart.flow=[];chart.weight=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
+  chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
   chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0;
   _chartLegendMode=null; syncReviewControls(); drawChart(); }
 // Resolve the workflow's current grinder entity (for step size / preset positions).
@@ -9088,7 +9225,7 @@ function closeMonitor(){
   _tempDims.w=0; _tempDims.h=0; _tempBgKey=null;
   drawChart(); }
 function clearChartSeries(){
-  chart.pressure=[]; chart.flow=[]; chart.weight=[]; chart.frame=[];
+  chart.pressure=[]; chart.flow=[]; chart.weight=[]; chart.wflow=[]; chart.frame=[];
   chart.steamTemp=[]; chart.waterTemp=[]; chart.groupTemp=[]; chart.mixTemp=[];
   chart.targetGroup=[]; chart.targetMix=[]; chart.targetFlow=[]; chart.targetPressure=[]; }
 function toggleMonitor(){ if(_monOpen) closeMonitor(); else openMonitor(false); }
@@ -9123,9 +9260,21 @@ function loadWorkflow(){
   if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
     var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; });
     // the workflow's copy is the one that brews, temperature shifts and all
-    if(match){ match.profile=w.profile; curProfileObj=match; } if(carItems.length) buildCarousel(); guideProfileChanged(); }
+    if(match){ match.profile=w.profile; curProfileObj=match; } if(carItems.length) buildCarousel(); guideProfileChanged();
+    restoreBrewTemp(w.profile); }
+  // the hot water temperature is only known once this has arrived
+  _wfLoaded=true; assertHotWaterTemp(false);
   syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow'); });
 }
+// The saved temperature is only real once the machine has it. A workflow that
+// came back holding the profile's own value -- a restart, another skin, a
+// profile re-seeded by an update -- is put back to the chosen one, once.
+function restoreBrewTemp(wp){
+  var want=brewTempSaved(); if(want==null||!wp||!wp.steps) return;
+  var has=null;
+  for(var i=0;i<wp.steps.length;i++){ if(wp.steps[i].temperature!=null){ has=wp.steps[i].temperature; break; } }
+  if(has===want) return;
+  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(wp)}).catch(function(){}); }
 function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
 
 // Initial device state via REST (WS may not push a snapshot immediately on connect)
