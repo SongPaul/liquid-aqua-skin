@@ -2119,7 +2119,13 @@ function onMachineState(ms,prev){
   // left the machine and moving again after the last of it has. The run timer
   // still covers the whole state -- it is the pour that is being graphed, not
   // the time the button was held.
-  var pouringNow=(sub==='pouring'||sub==='preinfusion');
+  //
+  // Only where the machine actually breaks the action into phases. Not every
+  // one is reported that way -- a flush can run from start to finish with the
+  // substate never leaving idle -- and gating on a phase that never arrives
+  // would draw nothing at all, which is worse than drawing the brackets.
+  var phased=(sub==='preparingForShot'||sub==='preinfusion'||sub==='pouring'||sub==='pouringDone');
+  var pouringNow=(!phased)||(sub==='pouring'||sub==='preinfusion');
   function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
@@ -2150,7 +2156,11 @@ function onMachineState(ms,prev){
 
   if(extracting){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetGroup.push(state.targetGroupTemp||0); chart.targetMix.push(state.targetMixTemp||0); chart.targetFlow.push(state.targetFlow||0); chart.targetPressure.push(state.targetPressure||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); ['targetGroup','targetMix','targetFlow','targetPressure'].forEach(function(k){ if(chart[k].length>chart.max) chart[k].shift(); }); drawChart(); }
-  else if(steaming&&pouringNow){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
+  // The steam line is what the machine reports, not what it was set to. It used
+  // to fall back to the configured flow whenever the reading sat near zero,
+  // which draws a setting in the shape of a measurement -- the same fault as
+  // showing a temperature the machine is not holding.
+  else if(steaming&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.steamTemp.push(state.steamTemp);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
   else if((watering||flushing)&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
     chart.targetMix.push(state.targetMixTemp||0);
@@ -2551,7 +2561,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     // a goal is drawn dashed, so it is shown dashed
     function lg(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+label+'</span>'; }
     if(legEl) legEl.innerHTML=isSteam
-      ? (hasTempAxis?li(SERIES.steam,t('steam')+' °'):'')+li(SERIES.flow,t('flow'))+li(SERIES.pressure,t('pressure'))
+      ? (hasTempAxis?li(SERIES.steam,t('steam')+' °'):'')+li(SERIES.flow,t('flow'))
       : isWater
       ? (hasTempAxis?li(SERIES.water,t('water')+' °'):'')+li(SERIES.flow,t('flow'))
       : lt('pressure',SERIES.pressure,t('pressure'))+ltg('pressureGoal',SERIES.pressureGoal,t('pressureGoal'))
@@ -2677,7 +2687,6 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   if(isSteam){
     if(hasTempAxis) line(chart.steamTemp,SERIES.steam,TMAX,'rgba(214,64,43,.15)'); // steam temp (right axis scale)
     line(chart.flow,SERIES.flow,FMAX,null);                        // steam flow (small-range scale)
-    line(chart.pressure,SERIES.pressure,PMAX,null);                // steam pressure
   } else if(isWater){
     if(hasTempAxis) line(chart.waterTemp,SERIES.water,TMAX,'rgba(214,64,43,.15)');  // water temp (right axis scale)
     line(chart.flow,SERIES.flow,FMAX,null);                        // water flow
@@ -2718,8 +2727,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
       drawReadouts(ctx, items.map(function(it){
         return (it.v==null||isNaN(it.v))?null:{v:it.v,c:it.c,u:it.u,y:py(it.v,it.mx)}; }), lx, Y0, Y0+PH); }
     if(isSteam){ tags([{v:hasTempAxis?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam,u:U_TEMP},
-                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
-                       {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
+                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
     else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
                             {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
     else { var wN=chart.weight.length, fN=chart.wflow.length;
