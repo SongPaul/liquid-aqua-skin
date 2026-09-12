@@ -1606,7 +1606,7 @@ var I18N={
     tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio', brewTemp:'Brew temp', noProfile:'No profile loaded',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
-    weight:'Weight', target:'Target',
+    weight:'Weight (total)', target:'Target',
     lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
     currentlyLoaded:'● Currently loaded', loadedIs:'● Loaded: {n} · tap center to change', tapCenter:'Tap center card to load', noBean:'No bean selected', tapEdit:'Tap edit to add beans & grinder', noGrinder:'No grinder', grind:'Grind',
     settings:'Settings', nightMode:'Night mode', nightModeDesc:'Dark theme for low-light environments.',
@@ -1694,7 +1694,7 @@ var I18N={
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     lockedBrewing:'The profile cannot be changed while a shot is running.',
     brewingNow:'Brewing — this profile is locked',
-    legWeight:'Weight', legWeightFlow:'Weight flow',
+    legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
     catMaint:'Maintenance', maintDesc:'The machine runs these itself. It has to be awake and idle to start one, and each says where it has got to.', maint_cleaning:'Clean the group', maint_cleaning_d:'A backflush cycle with a blind basket and cleaning tablet fitted.', maint_descaling:'Descale', maint_descaling_d:'Runs descaling solution through the group and the steam boiler. Follow the machine\u2019s instructions.', maint_airPurge:'Air purge', maint_airPurge_d:'Clears water from the lines, for transport or storage.', maintGo:'Start', maintStop:'Stop', maintDone:'Finished', maintBusy:'The machine is busy', maintStart:'Starting', maintFill:'Filling', maintSoak:'Soaking', maintFlush:'Flushing', maintDescale:'Descaling', maintSteam:'Steam boiler', maintPurge:'Purging',
@@ -1744,7 +1744,7 @@ var I18N={
     tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
-    weight:'무게', target:'목표',
+    weight:'누적 추출량', target:'목표',
     lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
     currentlyLoaded:'● 현재 로드됨', loadedIs:'● 현재: {n} · 가운데 카드를 눌러 변경', tapCenter:'가운데 카드를 눌러 로드', noBean:'선택된 원두 없음', tapEdit:'편집을 눌러 원두·그라인더 추가', noGrinder:'그라인더 없음', grind:'분쇄도',
     settings:'설정', nightMode:'나이트 모드', nightModeDesc:'저조도 환경용 다크 테마.',
@@ -1832,7 +1832,7 @@ var I18N={
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
     brewingNow:'추출 중 — 프로파일 잠김',
-    legWeight:'누적 추출량', legWeightFlow:'초당 추출량',
+    legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
     catMaint:'관리', maintDesc:'머신이 직접 수행합니다. 깨어 있고 대기 상태여야 시작할 수 있으며, 각각 진행 단계를 보여줍니다.', maint_cleaning:'그룹헤드 청소', maint_cleaning_d:'블라인드 바스켓과 세정제를 끼우고 역세척을 돌립니다.', maint_descaling:'디스케일링', maint_descaling_d:'스케일 제거 용액을 그룹과 스팀 보일러에 통과시킵니다. 머신 안내를 따르세요.', maint_airPurge:'에어 퍼지', maint_airPurge_d:'배관의 물을 빼냅니다. 운송·보관 전에 씁니다.', maintGo:'시작', maintStop:'중지', maintDone:'완료', maintBusy:'머신이 사용 중입니다', maintStart:'시작', maintFill:'물 채움', maintSoak:'불림', maintFlush:'헹굼', maintDescale:'스케일 제거 중', maintSteam:'스팀 보일러', maintPurge:'배출 중',
@@ -1912,7 +1912,7 @@ var chart={ pressure:[], flow:[], weight:[], wflow:[], frame:[], steamTemp:[], w
 // to do. Matching it means a graph from this skin reads the same as any other.
 var SERIES={ pressure:'#1fbfa8', pressureGoal:'#0e7c6b',
              flow:'#38a8de',     flowGoal:'#1d5b87',
-             weight:'#9a7b0a',   wflow:'#6d28d9',
+             weight:'#6d28d9',   wflow:'#8b5e34',
              basket:'#f08a3c',   basketGoal:'#e87ba0',
              mix:'#d6402b',      mixGoal:'#9c4a9c',
              // steam and hot-water temperature read in the same red the
@@ -8868,7 +8868,7 @@ function drawShotMeasurements(canvas,s,temps){
       ctx.fillText(secs.toFixed(1)+'s', gx+(ctx.textAlign==='right'?-4:4), Y0+1);
       ctx.restore(); }
     drawReadouts(ctx, defs.map(function(d){
-      var v=d.w?(pt.scale?pt.scale.weight:null):mac(d.f)(pt);
+      var v=d.w?(pt.scale?pt.scale.weight:null):d.wf?(pt.scale?pt.scale.weightFlow:null):mac(d.f)(pt);
       if(v==null||isNaN(v)) return null;
       if(d.f&&d.f.indexOf('target')===0&&!(v>0)) return null;   // no goal, nothing to say
       return {v:v,c:d.c,u:d.u,y:d.s(v)}; }), gx, Y0, Y0+PH, X0); }
@@ -8884,14 +8884,18 @@ function drawShotMeasurements(canvas,s,temps){
 
   line(mac('targetPressure'),P,SERIES.pressureGoal,GOAL_DASH);
   line(mac('targetFlow'),F,SERIES.flowGoal,GOAL_DASH);
+  line(function(pt){ return (pt.scale&&pt.scale.weightFlow!=null)?pt.scale.weightFlow:null; },
+       F,SERIES.wflow);
   if(WMAX) line(function(pt){ return pt.scale?pt.scale.weight:null; },
                 function(v){ return py(v,WMAX); },SERIES.weight);
   line(mac('flow'),F,SERIES.flow);
   line(mac('pressure'),P,SERIES.pressure);
   var rows=[{f:'pressure',c:SERIES.pressure,s:P,u:U_BAR},{f:'targetPressure',c:SERIES.pressureGoal,s:P,u:U_BAR},
             {f:'flow',c:SERIES.flow,s:F,u:U_FLOW},{f:'targetFlow',c:SERIES.flowGoal,s:F,u:U_FLOW}];
+  if(hasWeightFlow(m)) rows.push({wf:true,c:SERIES.wflow,s:F,u:U_GS});
   if(WMAX) rows.push({w:true,c:SERIES.weight,s:function(v){ return py(v,WMAX); },u:U_G});
   scrub(rows); }
+function hasWeightFlow(m){ return m.some(function(pt){ return pt.scale&&pt.scale.weightFlow>0; }); }
 
 // One legend per chart, under the chart it describes, in the shared colours --
 // a dot for something measured and a dash for the goal behind it.
@@ -8907,7 +8911,8 @@ function shotLegend(s,temps){
   return '<div class="chart-legend sl-legend">'
     +legendDot(SERIES.pressure,t('pressure'))+(has('targetPressure')?legendDash(SERIES.pressureGoal,t('pressureGoal')):'')
     +legendDot(SERIES.flow,t('flow'))+(has('targetFlow')?legendDash(SERIES.flowGoal,t('flowGoal')):'')
-    +(hasWeight?legendDot(SERIES.weight,t('weight')):'')+'</div>'; }
+    +(hasWeight?legendDot(SERIES.weight,t('legWeight')):'')
+    +(hasWeightFlow(m)?legendDot(SERIES.wflow,t('wflow')):'')+'</div>'; }
 
 // -- Comparing shots ------------------------------------------------
 // A shot only means something next to another one, so any row can be added to a
@@ -8940,6 +8945,7 @@ var CMP_SERIES=[
   ['pressure', function(pt){ var o=pt.machine||{}; return o.pressure!=null?o.pressure:null; }, 12, []],
   ['flow',     function(pt){ var o=pt.machine||{}; return o.flow!=null?o.flow:null; }, 8, [5,3]],
   ['weight',   function(pt){ return (pt.scale&&pt.scale.weight!=null)?pt.scale.weight:null; }, 0, [1.5,2.5]],
+  ['wflow',    function(pt){ return (pt.scale&&pt.scale.weightFlow!=null)?pt.scale.weightFlow:null; }, 8, [4,2]],
   ['group',    function(pt){ var o=pt.machine||{}; return o.groupTemperature!=null?o.groupTemperature:null; }, 100, [8,4]]
 ];
 function cmpSeriesDef(){ for(var i=0;i<CMP_SERIES.length;i++) if(CMP_SERIES[i][0]===slSeries) return CMP_SERIES[i];
