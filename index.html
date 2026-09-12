@@ -1999,7 +1999,7 @@ function openWs(name,path,onMsg,opts){ var url=GATEWAY.ws+path;
 // Sleep keeps only the machine snapshot, which is how a machine woken at the
 // group head is noticed. Water levels are not on the lock screen and cost a
 // packet a second; the other three send nothing and only hold connections open.
-var SLEEP_PARK=['water','scale','dosing','devices','display','update'];
+var SLEEP_PARK=['water','scale','dosing','devices','display','update','shot'];
 function parkSockets(on){
   SLEEP_PARK.forEach(function(name){
     if(on){ _wsParked[name]=true;
@@ -2025,6 +2025,11 @@ function initWebSockets(){
       if(!state.dosingConnected) state.dosingWeight=null;
       syncDoseTake(); syncRecipe(); return; }
     if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); } },{optional:true});
+  // The shot settings the machine holds. Needed because the endpoint that
+  // writes them takes the whole frame, so changing one field means handing
+  // back the other seven exactly as reported.
+  openWs('shot','/ws/v1/machine/shotSettings',function(m){
+    if(m&&m.groupTemp!==undefined){ machineShot=m; restoreGroupTempIfLeft(); } });
   openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
   openWs('devices','/ws/v1/devices',function(m){
     var phase=m.connectionStatus&&m.connectionStatus.phase;
@@ -2088,7 +2093,8 @@ function bindActionLongPress(btn, tapFn, holdFn){
 // tap toggles: if machine already in that state, stop (go idle); else start.
 function doSteamAction(){ if(state.machine.state==='steam') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Steam stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/steam').then(function(){toast('Steam started','ok');}).catch(function(){toast('Steam failed','err');}); }
 function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Flush stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/flush').then(function(){toast('Flush started','ok');}).catch(function(){toast('Flush failed','err');}); }
-function doWaterAction(){ if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Water stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast('Hot water started','ok');}).catch(function(){toast('Water failed','err');}); }
+function doWaterAction(){ if(state.machine.state!=='hotWater') enterWaterGroupTemp();
+  if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Water stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast('Hot water started','ok');}).catch(function(){toast('Water failed','err');}); }
 
 // ── Machine state ───────────────────────────────────────────────────
 function onMachineState(ms,prev){
@@ -2143,8 +2149,8 @@ function onMachineState(ms,prev){
   if(!steaming&&state.steamRunning){ stopTimer(); drawChart(); }
   state.steamRunning=steaming;
   // Hot water session lifecycle (records flow/pressure/water temp; no DYE)
-  if(watering&&!state.waterRunning){ startTimer(); resetChart('water'); }
-  if(!watering&&state.waterRunning){ stopTimer(); drawChart(); }
+  if(watering&&!state.waterRunning){ startTimer(); resetChart('water'); enterWaterGroupTemp(); }
+  if(!watering&&state.waterRunning){ stopTimer(); drawChart(); leaveWaterGroupTemp(); }
   state.waterRunning=watering;
   // Flush records the same three series as hot water; without this the monitor
   // would open on a flush and show an empty graph.
@@ -2960,6 +2966,44 @@ function syncWaterStop(){
   var row=document.getElementById('waterStopRow');
   if(row) row.style.opacity=usable?'':'0.5'; }
 // The machine's own shot settings, as last reported.
+// Hot water is drawn through the group, and the machine holds the group at
+// TargetGroupTemp. Nothing writes that field -- every shot-settings write in the
+// gateway hands back whatever the machine reported -- so the group stays at
+// whatever it was, and water drawn through it arrives at that temperature
+// rather than the one hot water was set to. The temperature asked for is the
+// temperature that should come out, so the group is put to it for the pour and
+// returned to the recipe's afterwards.
+var machineShot=null;
+function machineGroupTemp(){ return machineShot?machineShot.groupTemp:null; }
+// one field changed, the rest of the frame returned untouched
+function writeGroupTemp(target){
+  if(!machineShot||target==null||isNaN(target)) return false;
+  var cur=machineGroupTemp();
+  if(cur!=null&&Math.abs(cur-target)<0.05) return false;
+  var body={}; for(var k in machineShot) body[k]=machineShot[k];
+  body.groupTemp=target;
+  api('POST','/api/v1/machine/shotSettings',body).catch(function(){});
+  return true; }
+function enterWaterGroupTemp(){
+  if(!machineShot) return;
+  if(writeGroupTemp(Math.round(settings.waterTemp))){
+    prefs.groupHeldForWater=true; savePrefs(); } }
+// Back to the recipe's temperature rather than to a remembered one: a value
+// read back from the machine can be the one we just wrote, and a restore that
+// depends on remembering fails exactly when it matters -- the skin reloaded
+// while the water was running.
+function leaveWaterGroupTemp(){
+  if(!prefs.groupHeldForWater) return;
+  var back=brewTempC();
+  if(back==null) return;
+  writeGroupTemp(back);
+  prefs.groupHeldForWater=false; savePrefs(); }
+// The group left low by a reload mid-pour is put back as soon as there is a
+// frame to write and a recipe to write from.
+function restoreGroupTempIfLeft(){
+  if(!prefs.groupHeldForWater) return;
+  if(state.machine.state==='hotWater') return;
+  leaveWaterGroupTemp(); }
 function setStopHotWaterAtWeight(on){
   gwSettings.stopHotWaterAtWeight=on;
   api('POST','/api/v1/settings',{stopHotWaterAtWeight:on})
@@ -3279,6 +3323,7 @@ function hydrateFromStore(){
 function applyPrefsObject(p){
   if(p.chartHide&&typeof p.chartHide==='object') prefs.chartHide=p.chartHide;
   if(p.brewTemp&&typeof p.brewTemp==='object') prefs.brewTemp=p.brewTemp;
+  if(typeof p.groupHeldForWater==='boolean') prefs.groupHeldForWater=p.groupHeldForWater;
   if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye;
   if(typeof p.night==='boolean') prefs.night=p.night;
   if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto;
@@ -3421,6 +3466,9 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'',
   fx:true,
   // the temperature chosen for each profile, by profile id
   brewTemp:{},
+  // set while the group is held at the hot water temperature, so a reload
+  // in the middle of a pour still knows to put it back
+  groupHeldForWater:false,
   // Series hidden from the extraction graph, by legend key. Weight flow
   // starts hidden: the cumulative weight is what the recipe is about, and
   // two scale lines at once is a choice rather than a default.
