@@ -307,6 +307,11 @@ body.night .gauge.z1{--zc:#fbbf24} body.night .gauge.z2{--zc:#34d399} body.night
 .legend-item.tog:active{transform:scale(.96)}
 .legend-item.tog:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .legend-item.off{opacity:.5}
+.optset{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;flex:none}
+.optchip{font-family:var(--font);font-size:11px;font-weight:700;padding:5px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--edge);background:transparent;color:var(--ink-mute);cursor:pointer;-webkit-user-select:none;user-select:none;transition:background .15s,color .15s,border-color .15s}
+.optchip.on{background:var(--ctl-face);border-color:var(--ctl-edge);color:var(--accent)}
+.optchip:active{transform:scale(.96)}
+.optchip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .chart-canvas-wrap{flex:1;min-height:0;position:relative}
 .chart-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 
@@ -1712,7 +1717,8 @@ var I18N={
     aiClassify:'✨ Classify with AI', aiClassifyingShort:'Classifying…', aiClear:'Clear AI',
     aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
-    monAuto:'Full-screen monitor', monAutoDesc:'Open the monitor by itself when a shot, steam, flush or hot water starts. Tap the graph to open it at any time.',
+    actEspresso:'Espresso', actWater:'Hot water',
+    monAuto:'Full-screen monitor', monAutoDesc:'Which actions open the monitor by themselves. Tap the graph to open it at any time.',
     stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
     flushGraph:'Flush Graph',
     rating:'Rating', cmpAll:'All', cmpAdd:'Add to comparison', cmpMax:'Compare up to {n} shots', cmpHead:'Comparing shots', cmpSub:'{n} shots overlaid', cmpClear:'Clear',
@@ -1851,7 +1857,8 @@ var I18N={
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
     aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
-    monAuto:'전체화면 모니터', monAutoDesc:'추출·스팀·플러시·온수가 시작되면 모니터를 자동으로 엽니다. 그래프를 누르면 언제든 열 수 있습니다.',
+    actEspresso:'추출', actWater:'온수',
+    monAuto:'전체화면 모니터', monAutoDesc:'어떤 동작에서 모니터를 자동으로 열지 선택합니다. 그래프를 누르면 언제든 열 수 있습니다.',
     stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
     flushGraph:'플러시 그래프',
     rating:'평점', cmpAll:'전체', cmpAdd:'비교에 추가', cmpMax:'최대 {n}개까지 비교할 수 있습니다', cmpHead:'추출 비교', cmpSub:'{n}개 겹쳐보기', cmpClear:'해제',
@@ -3311,7 +3318,10 @@ function applyPrefsObject(p){
   if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit;
   if(p.weightUnit==='g'||p.weightUnit==='oz') prefs.weightUnit=p.weightUnit;
   if(typeof p.refillKitFull==='boolean') prefs.refillKitFull=p.refillKitFull;
-  if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto;
+  // it used to be one switch for all four actions; on becomes the new default
+  // rather than all of them, off stays off
+  if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto?{espresso:true}:{};
+  else if(p.monAuto&&typeof p.monAuto==='object') prefs.monAuto=p.monAuto;
   if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim;
   if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness;
   // the setting used to name the source; now it only says on or off
@@ -3432,7 +3442,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:true, sleepDim:true, sleepBrightness:20,
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:false, monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
   // 'on' | 'off'. guideSrc is not chosen in settings: loading a profile makes
   // it 'profile', picking a shot in the log makes it 'shot'.
   guide:'off', guideSrc:'profile', guideShot:'',
@@ -3674,7 +3684,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('brightness','brightnessDesc','<div class="opt-ctrl"><input type="range" class="slider" min="0" max="100" step="1" value="'+br+'"'+(brSupported?'':' disabled')+' oninput="setBrightness(this.value,true)" onchange="setBrightness(this.value,false)"><span class="opt-val" id="brVal">'+br+'</span></div>');
     h+=row('wakeLock','wakeLockDesc',sw('setWake',!!gwSettings.keepAwake,'setKeepAwake(this.checked)'));
     h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
-    h+=row('monAuto','monAutoDesc',sw('setMonAuto',!!prefs.monAuto,'setMonAuto(this.checked)'));
+    h+='<div class="set-row"><div class="set-info" style="max-width:46%"><div class="set-name">'+t('monAuto')+'</div>'+'<div class="set-desc">'+t('monAutoDesc')+'</div></div>'+monAutoChips()+'</div>';
     h+=row('guideLine','guideLineDesc',sw('setGuide',guideOn(),'setGuideOn(this.checked)'));
     if(guideOn()){
       // the source is never chosen here -- it is whatever was picked last
@@ -3804,7 +3814,19 @@ function setScalePowerMode(v){ gwSettings.scalePowerMode=v;
     .catch(function(){ toast(t('saveFailed'),'err'); renderSpContent(); }); }
 function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast('Save failed','err'); }); }
 function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
-function setMonAuto(on){ prefs.monAuto=!!on; savePrefs(); }
+// The monitor covers the screen, and steam or a flush is over before it is
+// worth reading; a shot is the one worth watching from the first drop. So the
+// actions that open it are picked rather than all or none.
+var MON_AUTO_ACTS=[['espresso','actEspresso'],['steam','steam'],['flush','flush'],['hotWater','actWater']];
+function monAutoOn(k){ return !!(prefs.monAuto&&prefs.monAuto[k]); }
+function toggleMonAuto(k){
+  if(!prefs.monAuto||typeof prefs.monAuto!=='object') prefs.monAuto={};
+  if(prefs.monAuto[k]) delete prefs.monAuto[k]; else prefs.monAuto[k]=true;
+  savePrefs(); renderSpContent(); }
+function monAutoChips(){
+  return '<div class="optset">'+MON_AUTO_ACTS.map(function(a){ var on=monAutoOn(a[0]);
+    return '<button class="optchip'+(on?' on':'')+'" role="switch" aria-checked="'+on+'"'
+      +' onclick="toggleMonAuto(\''+a[0]+'\')">'+escapeHtml(t(a[1]))+'</button>'; }).join('')+'</div>'; }
 function setSleepBright(v,live){ document.getElementById('sbVal').textContent=v; if(live) return; prefs.sleepBrightness=parseInt(v,10); savePrefs(); }
 function setRefillLevel(v){ state.water.refill=parseInt(v,10); api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)}).then(function(){ toast('Refill level saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setRefillKit(v){ var n=parseInt(v,10); de1Advanced.refillKitSetting=n;
@@ -9262,7 +9284,7 @@ function monStop(){
 // and the page goes when it is closed.
 function monitorOnState(st,prev){
   var now=!!MON_STATES[st], was=!!MON_STATES[prev];
-  if(now&&!was&&prefs.monAuto&&!_monOpen&&!_asleep) openMonitor(true);
+  if(now&&!was&&monAutoOn(st)&&!_monOpen&&!_asleep) openMonitor(true);
   if(_monOpen) syncMonitorHead(); }
 // GHC presence arrives after the machine connects, so a monitor already open has
 // to be told.
