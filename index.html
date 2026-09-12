@@ -1605,7 +1605,6 @@ var I18N={
     doseHoldHint:'Tap to type it, hold to take it off the scale',
     tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', ratio:'Ratio', brewTemp:'Brew temp', noProfile:'No profile loaded',
-    tempFlattened:'This profile set a temperature per step — all steps now share this one',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight', target:'Target',
     lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
@@ -1744,7 +1743,6 @@ var I18N={
     doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
     tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', ratio:'비율', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
-    tempFlattened:'스텝별 온도 프로파일입니다 — 모든 스텝이 이 온도로 통일됩니다',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'무게', target:'목표',
     lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
@@ -3116,38 +3114,47 @@ function profileKey(){
 function brewTempSaved(k){
   k=k||profileKey();
   return (k&&prefs.brewTemp&&prefs.brewTemp[k]!=null)?prefs.brewTemp[k]:null; }
-// A copy with every step at one temperature. Steps that carry no temperature of
-// their own keep not having one.
+// The number on the card is the temperature the coffee is brewed at, which is
+// the highest a profile asks for; a step below it is a cooler start on the way
+// there. So the card reads that one, and moving it carries the whole profile
+// with it rather than levelling it.
+//
+// Levelling it had a consequence nobody had looked for. The machine idles at
+// the temperature its profile starts at, so a profile that opened cool kept the
+// machine cool until a shot was called for -- and flattening every step to one
+// number took that away, leaving the machine held at brewing temperature all
+// day. Hot water is drawn through that, and arrived at the profile's
+// temperature however low it had been set to.
+function profileTopTemp(pr){
+  var st=(pr&&pr.steps)||[], top=null;
+  st.forEach(function(x){ if(x.temperature==null) return;
+    if(top===null||x.temperature>top) top=x.temperature; });
+  return top; }
+// A copy shifted so its highest step reads the wanted temperature. Every step
+// keeps its distance from that one. Steps with no temperature of their own keep
+// not having one.
 function withBrewTemp(pr,v){
   if(v==null||!pr||!pr.steps) return pr;
+  var top=profileTopTemp(pr); if(top===null) return pr;
+  var d=v-top; if(d===0) return pr;
   var c={}; for(var k in pr) c[k]=pr[k];
   c.steps=pr.steps.map(function(st){
     if(st.temperature==null) return st;
-    var d={}; for(var j in st) d[j]=st[j]; d.temperature=v; return d; });
+    var e={}; for(var j in st) e[j]=st[j];
+    e.temperature=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round((st.temperature+d)*2)/2));
+    return e; });
   return c; }
 function brewProfileForMachine(pr,k){ return withBrewTemp(pr||(curProfileObj&&curProfileObj.profile),brewTempSaved(k)); }
 function brewTempC(){ var o=brewTempSaved(); if(o!=null) return o;
-  var st=brewSteps(); return (st.length&&st[0].temperature!=null)?st[0].temperature:null; }
+  return profileTopTemp(curProfileObj&&curProfileObj.profile); }
 function setBrewTempC(v){
   var cur=brewTempC(); if(cur==null) return;
   var k=profileKey(); if(!k) return;
   v=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round(v*2)/2));
-  var was=brewTempMixed(), firstTime=(brewTempSaved(k)==null);
-  if(v===cur&&!firstTime) return;
+  if(v===cur&&brewTempSaved(k)!=null) return;
   if(!prefs.brewTemp) prefs.brewTemp={};
   prefs.brewTemp[k]=v; savePrefs();
-  // said once, when the profile's own steps are about to stop being honoured,
-  // rather than on every press from then on
-  if(was&&firstTime) toast(t('tempFlattened'),'err');
   syncRecipe(); pushProfileTemp(); }
-// A profile may set a different temperature for every step. The control shows
-// the first, and setting it puts every step at that one value: one number on
-// the card can only mean one temperature, and shifting the steps to keep their
-// differences moves ones nobody was looking at.
-function brewTempMixed(){ var f=null, mixed=false;
-  brewSteps().forEach(function(x){ if(x.temperature==null) return;
-    if(f===null) f=x.temperature; else if(x.temperature!==f) mixed=true; });
-  return mixed; }
 // The tube reads 40 to 100, which covers everything the machine is asked to
 // brew rather than espresso alone -- a fifth of the profiles that ship here
 // hold a step outside the espresso band, tea at 105 and a cold brew at 20. It
@@ -9246,8 +9253,7 @@ function loadWorkflow(){
 // profile re-seeded by an update -- is put back to the chosen one, once.
 function restoreBrewTemp(wp){
   var want=brewTempSaved(); if(want==null||!wp||!wp.steps) return;
-  var has=null;
-  for(var i=0;i<wp.steps.length;i++){ if(wp.steps[i].temperature!=null){ has=wp.steps[i].temperature; break; } }
+  var has=profileTopTemp(wp);
   if(has===want) return;
   api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(wp)}).catch(function(){}); }
 function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
