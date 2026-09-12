@@ -462,6 +462,8 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-num{font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
 .dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:3px;min-height:14px;line-height:14px;display:flex;align-items:center;justify-content:center;gap:5px}
 .dose-lbl .lu{font-weight:800;color:var(--accent);opacity:.6}
+/* Only drawn while a dosing scale is reporting. Press it to take the reading into the dose, which is the same thing holding the dose does. */
+.dose-live{font-size:10px;font-weight:800;line-height:14px;color:var(--accent2);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:0 6px;cursor:pointer;white-space:nowrap}
 .dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid var(--ctl-edge);background:var(--ctl-face);transition:background .15s,border-color .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
@@ -1194,7 +1196,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
               <div class="dose-num tap" id="doseIn"><span id="doseInVal">18.0</span></div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
-            <div class="dose-lbl"><span class="dose-ico" id="doseIco" hidden>⚖</span><span data-i18n="doseG">Dose</span><span class="lu" id="doseInUnit">g</span></div>
+            <div class="dose-lbl"><span class="dose-ico" id="doseIco" hidden>⚖</span><span data-i18n="doseG">Dose</span><span class="lu" id="doseInUnit">g</span><span class="dose-live" id="doseLive" hidden onclick="doseFromScale()" title="">—</span></div>
           </div>
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjustRatio(-0.1)">−</button>
@@ -1873,7 +1875,7 @@ window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requ
 var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='http://'+h+':8080'; return {http:b,ws:b.replace('http','ws')}; })();
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
-  connected:false, scaleWeight:null, scaleConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
+  connected:false, scaleWeight:null, scaleConnected:false, dosingWeight:null, dosingConnected:false, shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
   flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], frame:[], steamTemp:[], waterTemp:[],
@@ -1947,21 +1949,29 @@ function syncWakeLock(){
   if(want===_wakeHeld) return; _wakeHeld=want;
   try{ ws.send(JSON.stringify({command:want?'requestWakeLock':'releaseWakeLock'})); }catch(_){ _wakeHeld=null; } }
 var _wsOpen={}, _wsParked={};
-function openWs(name,path,onMsg){ var url=GATEWAY.ws+path;
+// opts.optional marks an endpoint a gateway may simply not have. A socket
+// that has never once opened stops trying after a few attempts rather than
+// knocking every two seconds for the life of the app; one that opened and
+// then dropped keeps reconnecting like any other.
+function openWs(name,path,onMsg,opts){ var url=GATEWAY.ws+path;
+  var optional=!!(opts&&opts.optional), everOpened=false, misses=0;
   function connect(){ if(_wsParked[name]) return;
     if(sockets[name]&&sockets[name].readyState<=1) return; var ws=new WebSocket(url); sockets[name]=ws;
-    ws.onopen=function(){ if(name==='display'){ _wakeHeld=null; syncWakeLock(); } };
+    ws.onopen=function(){ everOpened=true; misses=0;
+      if(name==='display'){ _wakeHeld=null; syncWakeLock(); } };
     ws.onmessage=function(e){ try{ onMsg(JSON.parse(e.data)); }catch(_){} };
     // The reconnect is what keeps a dropped socket alive, so parking has to be
     // checked here too or a socket closed for sleep would come straight back.
-    ws.onclose=function(){ if(!_wsParked[name]) setTimeout(connect,2000); };
+    ws.onclose=function(){ if(_wsParked[name]) return;
+      if(optional&&!everOpened&&++misses>=3) return;
+      setTimeout(connect,2000); };
     ws.onerror=function(){ ws.close(); }; }
   _wsOpen[name]=connect;
   connect(); }
 // Sleep keeps only the machine snapshot, which is how a machine woken at the
 // group head is noticed. Water levels are not on the lock screen and cost a
 // packet a second; the other three send nothing and only hold connections open.
-var SLEEP_PARK=['water','scale','devices','display','update'];
+var SLEEP_PARK=['water','scale','dosing','devices','display','update'];
 function parkSockets(on){
   SLEEP_PARK.forEach(function(name){
     if(on){ _wsParked[name]=true;
@@ -1977,6 +1987,12 @@ function initWebSockets(){
     var ms=s.state||{state:'idle',substate:'idle'}; var prev=state.machine.state; state.machine=ms; onMachineState(ms,prev); updateMachineUI(); });
   openWs('scale','/ws/v1/scale/snapshot',function(m){ if(m.status){ state.scaleConnected=(m.status==='connected'); updateScaleUI(); updateConnUI(state.connected?'on':'off'); return; }
     if(m.weight!==undefined){ state.scaleWeight=m.weight; updateScaleUI(); if(state.shotRunning){ chart.weight.push(m.weight); chart.wt.push(Date.parse(m.timestamp)||Date.now()); if(chart.weight.length>chart.max){ chart.weight.shift(); chart.wt.shift(); } } } });
+  // The dosing scale is optional: gateways without one -- and gateways that predate the endpoint -- never report it connected, and every dosing affordance stays hidden.
+  openWs('dosing','/ws/v1/scale/dosing/snapshot',function(m){
+    if(m.status){ state.dosingConnected=(m.status==='connected');
+      if(!state.dosingConnected) state.dosingWeight=null;
+      syncDoseTake(); syncRecipe(); return; }
+    if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); } },{optional:true});
   openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
   openWs('devices','/ws/v1/devices',function(m){
     var phase=m.connectionStatus&&m.connectionStatus.phase;
@@ -2704,9 +2720,10 @@ function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/m
 // opens the keypad when there is not, so a dose can always be typed.
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
 function syncDoseTake(){ var i=document.getElementById('doseIco'); if(!i) return;
-  i.hidden=!scaleHasReading();
+  var live=doseSourceWeight()!==null;
+  i.hidden=!live;
   var el=document.getElementById('doseIn');
-  if(el) el.title=scaleHasReading()?t('doseHoldHint'):''; }
+  if(el) el.title=live?t('doseHoldHint'):''; }
 // tap types it, hold takes it off the scale -- the same two gestures the steam,
 // flush and water buttons use
 function doseHold(){ if(scaleHasReading()) doseFromScale(); else toast(t('doseNoScale'),'err'); }
@@ -2741,8 +2758,13 @@ function bindDoseGestures(){
   var el=document.getElementById('doseIn'); if(!el||el._bound) return;
   el._bound=true; el.onclick=null;
   bindActionLongPress(el, function(){ openKeypad('doseIn'); }, doseHold); }
-function doseFromScale(){ var w=state.scaleWeight;
-  if(!state.scaleConnected||w===null){ toast(t('doseNoScale'),'err'); return; }
+// A dose is weighed on the dosing scale when there is one, and on the brewing scale when there is not -- which is what the skin did before a second scale was possible.
+function dosingHasReading(){ return !!state.dosingConnected&&state.dosingWeight!==null; }
+function doseSourceWeight(){
+  if(dosingHasReading()) return state.dosingWeight;
+  return (state.scaleConnected&&state.scaleWeight!==null)?state.scaleWeight:null; }
+function doseFromScale(){ var w=doseSourceWeight();
+  if(w===null){ toast(t('doseNoScale'),'err'); return; }
   settings.doseIn=parseFloat(w.toFixed(1)); syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
 function doTare(){
   if(!state.scaleConnected){ toast(t('doseNoScale'),'err'); return; }
@@ -3030,6 +3052,10 @@ function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){
 function syncRecipe(){
   document.getElementById('doseInVal').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOutVal').textContent=settings.doseOut.toFixed(1);
   ['doseInUnit','doseOutUnit'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent='g'; });
+  var dl=document.getElementById('doseLive');
+  if(dl){ var on=dosingHasReading();
+    dl.hidden=!on;
+    if(on) dl.textContent=convWeight(state.dosingWeight).toFixed(1)+weightUnitLabel(); }
   syncThermo();
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
   document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
