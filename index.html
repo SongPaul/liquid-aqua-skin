@@ -3130,16 +3130,30 @@ function profileTopTemp(pr){
   st.forEach(function(x){ if(x.temperature==null) return;
     if(top===null||x.temperature>top) top=x.temperature; });
   return top; }
-// A copy shifted so its highest step reads the wanted temperature. Every step
-// keeps its distance from that one. Steps with no temperature of their own keep
-// not having one.
+// A copy shifted so its highest step reads the wanted temperature, with one
+// step left alone: the first one the profile gives a temperature to.
+//
+// The machine idles at the temperature its profile starts at. So whatever the
+// card did to that first step, it did to the machine's standby -- put the card
+// at 95 and the machine sat at 95 all day, put it at 40 and the machine tried
+// to cool to 40. Hot water is drawn through whatever the machine is sitting at,
+// which is how a control for espresso came to decide what temperature the water
+// came out at.
+//
+// The first step is the profile author's, then, and stays theirs. The card
+// moves the rest. A profile with only one temperature of its own is the
+// exception -- there is nothing else to move, so it moves.
 function withBrewTemp(pr,v){
   if(v==null||!pr||!pr.steps) return pr;
   var top=profileTopTemp(pr); if(top===null) return pr;
   var d=v-top; if(d===0) return pr;
+  var withTemp=0;
+  pr.steps.forEach(function(st){ if(st.temperature!=null) withTemp++; });
+  var holdFirst=(withTemp>1), seen=false;
   var c={}; for(var k in pr) c[k]=pr[k];
   c.steps=pr.steps.map(function(st){
     if(st.temperature==null) return st;
+    if(holdFirst&&!seen){ seen=true; return st; }
     var e={}; for(var j in st) e[j]=st[j];
     e.temperature=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round((st.temperature+d)*2)/2));
     return e; });
