@@ -2561,7 +2561,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     // a goal is drawn dashed, so it is shown dashed
     function lg(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+label+'</span>'; }
     if(legEl) legEl.innerHTML=isSteam
-      ? (hasTempAxis?li(SERIES.steam,t('steam')+' °'):'')+li(SERIES.flow,t('flow'))
+      ? (hasTempAxis?li(SERIES.steam,t('steam')+' °'):'')+li(SERIES.flow,t('flow'))+li(SERIES.pressure,t('pressure'))
       : isWater
       ? (hasTempAxis?li(SERIES.water,t('water')+' °'):'')+li(SERIES.flow,t('flow'))
       : lt('pressure',SERIES.pressure,t('pressure'))+ltg('pressureGoal',SERIES.pressureGoal,t('pressureGoal'))
@@ -2687,6 +2687,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   if(isSteam){
     if(hasTempAxis) line(chart.steamTemp,SERIES.steam,TMAX,'rgba(214,64,43,.15)'); // steam temp (right axis scale)
     line(chart.flow,SERIES.flow,FMAX,null);                        // steam flow (small-range scale)
+    line(chart.pressure,SERIES.pressure,PMAX,null);                // steam pressure
   } else if(isWater){
     if(hasTempAxis) line(chart.waterTemp,SERIES.water,TMAX,'rgba(214,64,43,.15)');  // water temp (right axis scale)
     line(chart.flow,SERIES.flow,FMAX,null);                        // water flow
@@ -2727,7 +2728,8 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
       drawReadouts(ctx, items.map(function(it){
         return (it.v==null||isNaN(it.v))?null:{v:it.v,c:it.c,u:it.u,y:py(it.v,it.mx)}; }), lx, Y0, Y0+PH); }
     if(isSteam){ tags([{v:hasTempAxis?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam,u:U_TEMP},
-                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
+                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                       {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
     else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
                             {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
     else { var wN=chart.weight.length, fN=chart.wflow.length;
