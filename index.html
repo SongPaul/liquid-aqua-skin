@@ -1694,6 +1694,7 @@ var I18N={
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     lockedBrewing:'The profile cannot be changed while a shot is running.',
     brewingNow:'Brewing — this profile is locked',
+    exitDash:'Decaid dashboard', exitDashDesc:'The app’s own settings and skin picker. This leaves the skin; it does not close Decaid.', exitDashBtn:'Go to dashboard', exitDashFailed:'Could not leave the skin',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
@@ -1832,6 +1833,7 @@ var I18N={
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
     brewingNow:'추출 중 — 프로파일 잠김',
+    exitDash:'Decaid 대시보드', exitDashDesc:'앱 자체 설정과 스킨 선택 화면입니다. 스킨을 벗어날 뿐, Decaid를 종료하지는 않습니다.', exitDashBtn:'대시보드로', exitDashFailed:'스킨을 벗어나지 못했습니다',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
@@ -3660,6 +3662,11 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('nightMode','nightModeDesc',sw('setNight',(prefs.nightAuto?isNightTime():prefs.night),'toggleNight(this.checked)',prefs.nightAuto));
     h+=row('autoNight',null,sw('setNightAuto',prefs.nightAuto,'toggleNightAuto(this.checked)'));
     h+=row('autoDyeName','autoDyeDesc',sw('setAutoDye',prefs.autoDye,'toggleAutoDye(this.checked)'));
+    // Only inside the app: the host injects decentApp and the button is the
+    // one navigation out of a skin it allows. Served from anywhere else there
+    // is nothing to go back to, so nothing is offered.
+    if(canExitToDashboard())
+      h+=row('exitDash','exitDashDesc','<button class="m-btn tinted" onclick="exitToDashboard()">'+escapeHtml(t('exitDashBtn'))+'</button>');
   } else if(spCat==='display'){
     h+='<div class="sp-cat-title">'+t('catDisplay')+'</div>';
     var br=(displayState.brightness!=null?displayState.brightness:100);
@@ -3777,6 +3784,15 @@ function setAutoUpdateCheck(on){ gwSettings.automaticUpdateCheck=on;
   api('POST','/api/v1/settings',{automaticUpdateCheck:on})
     .then(function(){ toast(t('saved'),'ok'); })
     .catch(function(){ toast(t('saveFailed'),'err'); }); }
+// Leaving a skin is the host's to do, and it gives exactly one way to ask:
+// window.decentApp.exitToDashboard, injected into the page it serves. There is
+// no way to close the app itself from here and this is not that -- it puts the
+// dashboard on screen, where the app's own settings and skin picker live.
+function canExitToDashboard(){
+  try{ return !!(window.decentApp&&typeof window.decentApp.exitToDashboard==='function'); }catch(_){ return false; } }
+function exitToDashboard(){
+  if(!canExitToDashboard()) return;
+  try{ window.decentApp.exitToDashboard(); }catch(_){ toast(t('exitDashFailed'),'err'); } }
 function setKeepAwake(on){ gwSettings.keepAwake=on; syncWakeLock(); api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
 function setBlockOnNoScale(on){ gwSettings.blockOnNoScale=on;
   api('POST','/api/v1/settings',{blockOnNoScale:on})
