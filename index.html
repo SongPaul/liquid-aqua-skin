@@ -2112,6 +2112,14 @@ function onMachineState(ms,prev){
   var steaming=(ms.state==='steam');
   var watering=(ms.state==='hotWater');
   var flushing=(ms.state==='flush');
+  // The machine brackets an actual pour with a heat-up before it and a purge
+  // after, and both are still inside the steam/hotWater/flush state. Espresso
+  // has always charted only what it pours; these three charted the brackets
+  // too, which draws a temperature climbing to its target before any water has
+  // left the machine and moving again after the last of it has. The run timer
+  // still covers the whole state -- it is the pour that is being graphed, not
+  // the time the button was held.
+  var pouringNow=(sub==='pouring'||sub==='preinfusion');
   function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
@@ -2142,9 +2150,9 @@ function onMachineState(ms,prev){
 
   if(extracting){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetGroup.push(state.targetGroupTemp||0); chart.targetMix.push(state.targetMixTemp||0); chart.targetFlow.push(state.targetFlow||0); chart.targetPressure.push(state.targetPressure||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); ['targetGroup','targetMix','targetFlow','targetPressure'].forEach(function(k){ if(chart[k].length>chart.max) chart[k].shift(); }); drawChart(); }
-  else if(steaming){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
+  else if(steaming&&pouringNow){ var sflow=state.flow>0.05?state.flow:(settings.steamFlow||0); chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(sflow); chart.steamTemp.push(state.steamTemp);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
-  else if(watering||flushing){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
+  else if((watering||flushing)&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
     chart.targetMix.push(state.targetMixTemp||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); if(chart.targetMix.length>chart.max)chart.targetMix.shift(); drawChart(); }
 }
