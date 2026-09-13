@@ -801,10 +801,10 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .sl-detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
 .sl-dt-title{font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
 .sl-dt-sub{font-size:12px;color:var(--ink-mute);margin-top:3px}
-.sl-canvas-wrap{position:relative;height:230px;background:var(--sheet);border:1px solid var(--edge);border-radius:14px;overflow:hidden;margin-bottom:8px}
+.sl-canvas-wrap{position:relative;height:265px;background:var(--sheet);border:1px solid var(--edge);border-radius:14px;overflow:hidden;margin-bottom:8px}
 /* the temperatures sit in a narrow band and lose all detail when they share
    an axis with pressure, so they get their own strip, as in the monitor */
-.sl-temp-wrap{position:relative;height:120px;background:var(--sheet);border:1px solid var(--edge);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.sl-temp-wrap{position:relative;height:138px;background:var(--sheet);border:1px solid var(--edge);border-radius:14px;overflow:hidden;margin-bottom:14px}
 .sl-temp-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
 .sl-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
 .sl-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -3318,6 +3318,7 @@ function hydrateFromStore(){
   }); }
 function applyPrefsObject(p){
   if(p.chartHide&&typeof p.chartHide==='object') prefs.chartHide=p.chartHide;
+  if(p.slHide&&typeof p.slHide==='object') prefs.slHide=p.slHide;
   if(p.brewTemp&&typeof p.brewTemp==='object') prefs.brewTemp=p.brewTemp;
   if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye;
   if(typeof p.night==='boolean') prefs.night=p.night;
@@ -3467,7 +3468,9 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'',
   // Series hidden from the extraction graph, by legend key. Weight flow
   // starts hidden: the cumulative weight is what the recipe is about, and
   // two scale lines at once is a choice rather than a default.
-  chartHide:{wflow:true} };
+  chartHide:{wflow:true},
+  // the same, for the graph under a recorded shot; nothing hidden to begin with
+  slHide:{} };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
 function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
@@ -8950,26 +8953,33 @@ function drawShotMeasurements(canvas,s,temps){
       return {v:v,c:d.c,u:d.u,y:d.s(v)}; }), gx, Y0, Y0+PH, X0); }
 
   if(temps){
-    line(mac('targetGroupTemperature'),pyT,SERIES.basketGoal,GOAL_DASH);
-    line(mac('targetMixTemperature'),pyT,SERIES.mixGoal,GOAL_DASH);
-    line(mac('groupTemperature'),pyT,SERIES.basket);
-    line(mac('mixTemperature'),pyT,SERIES.mix);
-    scrub([{f:'groupTemperature',c:SERIES.basket,s:pyT,u:U_TEMP},{f:'targetGroupTemperature',c:SERIES.basketGoal,s:pyT,u:U_TEMP},
-           {f:'mixTemperature',c:SERIES.mix,s:pyT,u:U_TEMP},{f:'targetMixTemperature',c:SERIES.mixGoal,s:pyT,u:U_TEMP}]);
+    if(slVis('basketGoal')) line(mac('targetGroupTemperature'),pyT,SERIES.basketGoal,GOAL_DASH);
+    if(slVis('mixGoal')) line(mac('targetMixTemperature'),pyT,SERIES.mixGoal,GOAL_DASH);
+    if(slVis('basket')) line(mac('groupTemperature'),pyT,SERIES.basket);
+    if(slVis('mix')) line(mac('mixTemperature'),pyT,SERIES.mix);
+    var trows=[];
+    if(slVis('basket')) trows.push({f:'groupTemperature',c:SERIES.basket,s:pyT,u:U_TEMP});
+    if(slVis('basketGoal')) trows.push({f:'targetGroupTemperature',c:SERIES.basketGoal,s:pyT,u:U_TEMP});
+    if(slVis('mix')) trows.push({f:'mixTemperature',c:SERIES.mix,s:pyT,u:U_TEMP});
+    if(slVis('mixGoal')) trows.push({f:'targetMixTemperature',c:SERIES.mixGoal,s:pyT,u:U_TEMP});
+    scrub(trows);
     return; }
 
-  line(mac('targetPressure'),P,SERIES.pressureGoal,GOAL_DASH);
-  line(mac('targetFlow'),F,SERIES.flowGoal,GOAL_DASH);
-  line(function(pt){ return (pt.scale&&pt.scale.weightFlow!=null)?pt.scale.weightFlow:null; },
+  if(slVis('pressureGoal')) line(mac('targetPressure'),P,SERIES.pressureGoal,GOAL_DASH);
+  if(slVis('flowGoal')) line(mac('targetFlow'),F,SERIES.flowGoal,GOAL_DASH);
+  if(slVis('wflow')) line(function(pt){ return (pt.scale&&pt.scale.weightFlow!=null)?pt.scale.weightFlow:null; },
        F,SERIES.wflow);
-  if(WMAX) line(function(pt){ return pt.scale?pt.scale.weight:null; },
+  if(WMAX&&slVis('weight')) line(function(pt){ return pt.scale?pt.scale.weight:null; },
                 function(v){ return py(v,WMAX); },SERIES.weight);
-  line(mac('flow'),F,SERIES.flow);
-  line(mac('pressure'),P,SERIES.pressure);
-  var rows=[{f:'pressure',c:SERIES.pressure,s:P,u:U_BAR},{f:'targetPressure',c:SERIES.pressureGoal,s:P,u:U_BAR},
-            {f:'flow',c:SERIES.flow,s:F,u:U_FLOW},{f:'targetFlow',c:SERIES.flowGoal,s:F,u:U_FLOW}];
-  if(hasWeightFlow(m)) rows.push({wf:true,c:SERIES.wflow,s:F,u:U_GS});
-  if(WMAX) rows.push({w:true,c:SERIES.weight,s:function(v){ return py(v,WMAX); },u:U_G});
+  if(slVis('flow')) line(mac('flow'),F,SERIES.flow);
+  if(slVis('pressure')) line(mac('pressure'),P,SERIES.pressure);
+  var rows=[];
+  if(slVis('pressure')) rows.push({f:'pressure',c:SERIES.pressure,s:P,u:U_BAR});
+  if(slVis('pressureGoal')) rows.push({f:'targetPressure',c:SERIES.pressureGoal,s:P,u:U_BAR});
+  if(slVis('flow')) rows.push({f:'flow',c:SERIES.flow,s:F,u:U_FLOW});
+  if(slVis('flowGoal')) rows.push({f:'targetFlow',c:SERIES.flowGoal,s:F,u:U_FLOW});
+  if(hasWeightFlow(m)&&slVis('wflow')) rows.push({wf:true,c:SERIES.wflow,s:F,u:U_GS});
+  if(WMAX&&slVis('weight')) rows.push({w:true,c:SERIES.weight,s:function(v){ return py(v,WMAX); },u:U_G});
   scrub(rows); }
 function hasWeightFlow(m){ return m.some(function(pt){ return pt.scale&&pt.scale.weightFlow>0; }); }
 
@@ -8977,18 +8987,45 @@ function hasWeightFlow(m){ return m.some(function(pt){ return pt.scale&&pt.scale
 // a dot for something measured and a dash for the goal behind it.
 function legendDot(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+escapeHtml(label)+'</span>'; }
 function legendDash(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+escapeHtml(label)+'</span>'; }
+// A recorded shot has more lines on it than a live one and they cross more, so
+// the legend under it puts each away the way the live graph's does. Kept apart
+// from that one: hiding the rate while a shot pours says nothing about wanting
+// it gone from the record afterwards, and the record is where it was asked for.
+function slVis(k){ return !(prefs.slHide&&prefs.slHide[k]); }
+function slToggleSerie(k){
+  if(!prefs.slHide) prefs.slHide={};
+  if(prefs.slHide[k]) delete prefs.slHide[k]; else prefs.slHide[k]=true;
+  savePrefs();
+  renderSlLegends(); redrawShotCharts(); }
+// The legends are rebuilt in place rather than the whole pane: redrawing that
+// would lose the scrub the press may have been aiming next to.
+function renderSlLegends(){
+  var s=slSel&&slFull[slSel.id]; if(!s) return;
+  var host=document.getElementById('slDetail'); if(!host) return;
+  var legs=host.querySelectorAll('.sl-legend');
+  if(legs[0]) legs[0].outerHTML=shotLegend(s,false);
+  var legs2=host.querySelectorAll('.sl-legend');
+  if(legs2[1]) legs2[1].outerHTML=shotLegend(s,true); }
+function legendTog(k,color,label,dash){
+  var off=!slVis(k);
+  var mark=dash
+    ? '<span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)'+(off?';opacity:.45':'')+'"></span>'
+    : '<span class="legend-dot" style="'+(off?'box-shadow:inset 0 0 0 2px '+color:'background:'+color)+'"></span>';
+  return '<span class="legend-item tog'+(off?' off':'')+'" role="button" tabindex="0" aria-pressed="'+(!off)+'"'
+    +' onclick="slToggleSerie(\''+k+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();slToggleSerie(\''+k+'\');}">'
+    +mark+escapeHtml(label)+'</span>'; }
 function shotLegend(s,temps){
   var m=s.measurements||[];
   var has=function(f){ return m.some(function(pt){ var o=pt.machine||{}; return o[f]!=null&&o[f]>0; }); };
   if(temps) return '<div class="chart-legend sl-legend">'
-    +legendDot(SERIES.basket,t('tempBasket'))+(has('targetGroupTemperature')?legendDash(SERIES.basketGoal,t('basketGoal')):'')
-    +legendDot(SERIES.mix,t('tempMix'))+(has('targetMixTemperature')?legendDash(SERIES.mixGoal,t('mixGoal')):'')+'</div>';
+    +legendTog('basket',SERIES.basket,t('tempBasket'))+(has('targetGroupTemperature')?legendTog('basketGoal',SERIES.basketGoal,t('basketGoal'),1):'')
+    +legendTog('mix',SERIES.mix,t('tempMix'))+(has('targetMixTemperature')?legendTog('mixGoal',SERIES.mixGoal,t('mixGoal'),1):'')+'</div>';
   var hasWeight=m.some(function(pt){ return pt.scale&&pt.scale.weight!=null; });
   return '<div class="chart-legend sl-legend">'
-    +legendDot(SERIES.pressure,t('pressure'))+(has('targetPressure')?legendDash(SERIES.pressureGoal,t('pressureGoal')):'')
-    +legendDot(SERIES.flow,t('flow'))+(has('targetFlow')?legendDash(SERIES.flowGoal,t('flowGoal')):'')
-    +(hasWeight?legendDot(SERIES.weight,t('legWeight')):'')
-    +(hasWeightFlow(m)?legendDot(SERIES.wflow,t('wflow')):'')+'</div>'; }
+    +legendTog('pressure',SERIES.pressure,t('pressure'))+(has('targetPressure')?legendTog('pressureGoal',SERIES.pressureGoal,t('pressureGoal'),1):'')
+    +legendTog('flow',SERIES.flow,t('flow'))+(has('targetFlow')?legendTog('flowGoal',SERIES.flowGoal,t('flowGoal'),1):'')
+    +(hasWeight?legendTog('weight',SERIES.weight,t('legWeight')):'')
+    +(hasWeightFlow(m)?legendTog('wflow',SERIES.wflow,t('wflow')):'')+'</div>'; }
 
 // -- Comparing shots ------------------------------------------------
 // A shot only means something next to another one, so any row can be added to a
