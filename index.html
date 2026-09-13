@@ -588,10 +588,16 @@ body.page-swap .editpage{transition:none}
 .ep-airow{display:flex;gap:5px}
 .ep-aibtn{flex:1;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.1);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
 .ep-aibtn[disabled]{opacity:.55;cursor:default}
-.ai-spin{display:inline-block;width:12px;height:12px;margin-right:7px;vertical-align:-2px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:aispin .7s linear infinite}
-@keyframes aispin{to{transform:rotate(360deg)}}
-[aria-busy="true"]{opacity:1}
-@media (prefers-reduced-motion:reduce){.ai-spin{animation-duration:2.4s}}
+/* The loaded profile's bloom, in the accent rather than the green: green here
+   already means "this is the one on the machine", and a button thinking is not
+   that. Breathing rather than steady, so it reads as work in progress. */
+@keyframes aiglow{0%,100%{box-shadow:0 0 0 2px rgba(99,102,241,.30),0 0 12px rgba(99,102,241,.32)}
+  50%{box-shadow:0 0 0 3px rgba(99,102,241,.55),0 0 24px rgba(99,102,241,.62)}}
+.m-btn[aria-busy="true"],.ep-aibtn[aria-busy="true"]{animation:aiglow 1.5s ease-in-out infinite}
+/* Still lit where motion is unwelcome: the glow is the message, the breathing
+   is only how it carries. */
+@media (prefers-reduced-motion:reduce){.m-btn[aria-busy="true"],.ep-aibtn[aria-busy="true"]{
+  animation:none;box-shadow:0 0 0 3px rgba(99,102,241,.45),0 0 18px rgba(99,102,241,.5)}}
 .ep-aibtn.ghost{flex:0 0 auto;background:var(--ctl-face);color:var(--ink-mute);border-color:var(--ctl-edge)}
 body.night .ep-aibtn.ghost{background:rgba(255,255,255,.07);color:var(--ink)}
 .eye-btn{background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:10px;font-size:17px;line-height:1;cursor:pointer;opacity:.55;padding:0;width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}
@@ -950,6 +956,8 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .m-btn.stop{border:1.5px solid rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:var(--red)}
 .m-btn.stop:hover:not(:disabled){background:var(--red);color:#fff}
 .m-btn:disabled{opacity:.4;cursor:not-allowed}
+/* Working is not the same as unavailable: it stays lit while it glows. */
+.m-btn[aria-busy="true"],.m-btn:disabled[aria-busy="true"],.ep-aibtn[aria-busy="true"]{opacity:1;cursor:progress}
 .m-btn:disabled:hover{transform:none}
 
 /* Header icon button (settings gear) */
@@ -4947,7 +4955,7 @@ function renderEpTools(){
   var ai=document.createElement('div'); ai.className='ep-airow';
   ai.innerHTML='<button class="ep-aibtn" onclick="openVizImport()">'+escapeHtml('☁ '+t('vizTitle'))+'</button>'
     +'<button class="ep-aibtn" onclick="aiClassifyProfiles()"'+(aiBusyFlag?' disabled aria-busy="true"':'')+'>'
-    +(aiBusyFlag?aiSpin():'')+escapeHtml(aiBusyFlag?t('aiClassifyingShort'):t('aiClassify'))+'</button>'
+    +escapeHtml(aiBusyFlag?t('aiClassifyingShort'):t('aiClassify'))+'</button>'
     +(allProfiles.some(function(p){ return aiTagsOf(p).length; })
       ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '');
   bar.appendChild(ai);
@@ -5403,7 +5411,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="bg-tabs2" id="bgTabs"></div>'
       +'<div class="bg-pane" id="bgPaneProfiles"'+(bgPane==='profiles'?'':' style="display:none"')+'>'
       +'<div class="rec-bar"><button class="m-btn rec-btn" onclick="recommendProfiles(\'bg\')"'+(recBusy?' disabled aria-busy="true"':'')+'>'
-        +(recBusy?aiSpin()+escapeHtml(t('recWorking')):t('recButton'))+'</button></div>'
+        +(recBusy?escapeHtml(t('recWorking')):t('recButton'))+'</button></div>'
       +'<div id="bgRec" class="rec-box"></div>'
       +'</div>'
       +'<div class="bg-pane" id="bgPaneHistory"'+(bgPane==='history'?'':' style="display:none"')+'>'
@@ -5442,7 +5450,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('brand'))+'</label><input id="bgBrand" value="'+escapeAttr(gname.brand)+'" placeholder="Niche"></div>'
         +'<div class="field"><label>'+escapeHtml(t('model'))+'</label><input id="bgModel" value="'+escapeAttr(gname.model)+'" placeholder="Zero"></div></div>'
       +'<div class="g-ai"><button class="ep-aibtn" id="bgAiBtn" onclick="grinderAiFill()"'+(gAiBusy?' disabled aria-busy="true"':'')+'>'
-        +(gAiBusy?aiSpin():'')+escapeHtml(gAiBusy?t('gAiWorking'):('\u2728 '+t('gAiFill')))+'</button>'
+        +escapeHtml(gAiBusy?t('gAiWorking'):('\u2728 '+t('gAiFill')))+'</button>'
         +'<span class="g-ai-hint">'+escapeHtml(t('gAiHint'))+'</span></div>'
       +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('burrs'))+'</label><input id="bgBurrs" value="'+escapeAttr(o.burrs||'')+'"></div><div class="field"><label>'+escapeHtml(t('burrType'))+'</label><input id="bgBurrType" value="'+escapeAttr(o.burrType||'')+'"></div></div>'
       +'<div class="field"><label>'+escapeHtml(t('burrSize'))+'</label><input id="bgBurrSize" type="number" step="0.5" value="'+(o.burrSize!=null?o.burrSize:'')+'"></div>'
@@ -5964,7 +5972,7 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
   var statusEl=document.getElementById('aiStatus'); statusEl.textContent=t('mbAnalyzing');
   var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
   btn.setAttribute('aria-busy','true'); var _btnLabel=btn.innerHTML;
-  btn.innerHTML=aiSpin()+escapeHtml(t('mbAnalyzing'));
+  btn.innerHTML=escapeHtml(t('mbAnalyzing'));
   function _btnDone(){ btn.removeAttribute('aria-busy'); btn.innerHTML=_btnLabel; }
   geminiAnalyze(key,aiImages)
     .then(function(data){ data=cleanBeanText(data); function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
@@ -9049,9 +9057,9 @@ function stopReasonHtml(sh){
   return '<div class="sl-stop '+tone+'">'+escapeHtml(label)+'</div>'; }
 // An AI button goes quiet for as long as the model takes, which on a slow link
 // is long enough to wonder whether the press registered. Disabling it said only
-// that it could not be pressed, not that anything was happening. Each one wears
-// a turning ring for as long as its own work is out.
-function aiSpin(){ return '<span class="ai-spin" aria-hidden="true"></span>'; }
+// that it could not be pressed, not that anything was happening. Each one glows
+// while its own work is out -- the bloom the loaded profile wears, which is
+// already what this interface means by "this one is live".
 function shotLegend(s,temps){
   var m=s.measurements||[];
   var has=function(f){ return m.some(function(pt){ var o=pt.machine||{}; return o[f]!=null&&o[f]>0; }); };
@@ -9269,7 +9277,7 @@ function aiPanelHtml(){
   else if(slAi) body=aiResultHtml(slAi);
   return '<div class="sl-ai" id="slAi"><div class="sl-ai-head"><span>'+escapeHtml(t('aiAnalysis'))+'</span>'
     +'<button class="m-btn" onclick="analyzeShots()"'+(slAiBusy?' disabled aria-busy="true"':'')+'>'
-    +(slAiBusy?aiSpin()+escapeHtml(t('aiReading')):'\u2728 '+escapeHtml(slAi?t('aiAgain'):t('aiRun')))
+    +(slAiBusy?escapeHtml(t('aiReading')):'\u2728 '+escapeHtml(slAi?t('aiAgain'):t('aiRun')))
     +'</button></div>'+body+'</div>'; }
 function aiResultHtml(r){
   return '<div class="ai-verdict">'+escapeHtml(String(r.verdict||''))+'</div>'
