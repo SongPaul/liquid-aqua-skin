@@ -1728,6 +1728,7 @@ var I18N={
     newGrinder:'New Grinder', editGrinder:'Edit Grinder', bgGuideLead:'Pick something on the left to edit it, or add a new one. Nothing here is required \u2014 a name alone is a usable record, and the rest earns its place by being worth looking up later.', bgGuideBean:'A bean', bgGBeanA:'Name & roaster', bgGBeanAd:'All that is needed to log a shot against it.', bgGBeanB:'Roast date', bgGBeanBd:'Drives the days-since-roast the recipe card shows.', bgGBeanC:'Origin & process', bgGBeanCd:'What the profile recommendation reads. Worth filling for beans you will dial in.', bgGuideGrinder:'A grinder', bgGGrA:'Brand & model', bgGGrAd:'Enough to tell two grinders apart in the log.', bgGGrB:'Setting type', bgGGrBd:'A numeric dial with its step size, or named positions like Fine and Medium.', bgGGrC:'Burrs', bgGGrCd:'Recorded with the shot, so a burr change is visible later.', bgGuideFoot:'Closing a form leaves it without saving.',
     noSettings:'No settings', connectToLoad:'Connect to load', noProfilesFound:'No profiles', stepsLabel:'Steps', cancel:'Cancel', saveProfile:'Save Profile', secondsLabel:'Seconds', grindSetting:'Grind Setting', settingType:'Setting type', numericDial:'Numeric dial', namedPresets:'Named presets', presetPositions:'Preset positions (comma separated)', currentSetting:'Current setting', currentSettingDial:'Current setting (dial)', fineStep:'Fine step', coarseStep:'Coarse step', notesLabel:'Notes', noShotsYet:'No shots recorded yet', connectForShots:'Connect to load shots', noShots2:'No shots', notFound:'Not found', tastingLog:'Tasting log', actualDose:'Actual dose (g)', actualYield:'Actual yield (g)', tdsPct:'TDS %', eyPct:'Extraction yield %', enjoyment:'Enjoyment', saveLog:'Save log',
     stop_targetWeight:'Stopped at the target weight.', stop_targetVolume:'Stopped at the profile\u2019s target volume.', stop_profileAdvance:'The profile ran out before the target weight was reached. A step\u2019s own exit ended the shot \u2014 raise it, or give the last step longer, to pour more.', stop_profileSkip:'A step was skipped and the profile ended early.', stop_noScale:'No scale, so the shot could not stop on weight.', stop_stoppingBackstop:'The machine did not stop when asked; the backstop ended it.', stop_error:'The shot ended on an error.', stop_disconnected:'The machine disconnected during the shot.',
+    tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
@@ -1871,6 +1872,7 @@ var I18N={
     newGrinder:'새 그라인더', editGrinder:'그라인더 편집', bgGuideLead:'왼쪽에서 골라 편집하거나 새로 추가하세요. 필수 항목은 없습니다 — 이름만 있어도 기록으로 쓸 수 있고, 나머지는 나중에 찾아볼 가치가 있을 때 채우면 됩니다.', bgGuideBean:'원두', bgGBeanA:'이름·로스터', bgGBeanAd:'샷을 기록하는 데 필요한 전부입니다.', bgGBeanB:'로스팅 날짜', bgGBeanBd:'레시피 카드의 로스팅 경과일을 계산합니다.', bgGBeanC:'원산지·가공', bgGBeanCd:'프로파일 추천이 읽는 값입니다. 다이얼인할 원두라면 채울 만합니다.', bgGuideGrinder:'그라인더', bgGGrA:'브랜드·모델', bgGGrAd:'기록에서 둘을 구별할 만큼이면 충분합니다.', bgGGrB:'눈금 방식', bgGGrBd:'숫자 다이얼과 한 칸 크기, 또는 세밀·중간 같은 이름 단계.', bgGGrC:'버리', bgGGrCd:'샷과 함께 기록되어 버리 교체가 나중에 보입니다.', bgGuideFoot:'닫기를 누르면 저장하지 않고 나갑니다.',
     noSettings:'설정 없음', connectToLoad:'연결해야 불러옵니다', noProfilesFound:'프로파일 없음', stepsLabel:'스텝', cancel:'취소', saveProfile:'프로파일 저장', secondsLabel:'초', grindSetting:'분쇄도 설정', settingType:'눈금 방식', numericDial:'숫자 다이얼', namedPresets:'이름 단계', presetPositions:'단계 이름 (쉼표로 구분)', currentSetting:'현재 눈금', currentSettingDial:'현재 눈금 (다이얼)', fineStep:'세밀 간격', coarseStep:'거친 간격', notesLabel:'메모', noShotsYet:'아직 기록된 샷이 없습니다', connectForShots:'연결해야 샷을 불러옵니다', noShots2:'샷 없음', notFound:'찾을 수 없음', tastingLog:'테이스팅 기록', actualDose:'실제 도징 (g)', actualYield:'실제 추출량 (g)', tdsPct:'TDS %', eyPct:'추출 수율 %', enjoyment:'만족도', saveLog:'기록 저장',
     stop_targetWeight:'목표 무게에 도달해 정지했습니다.', stop_targetVolume:'프로파일의 목표 볼륨에 도달해 정지했습니다.', stop_profileAdvance:'목표 무게에 닿기 전에 프로파일이 먼저 끝났습니다. 스텝의 종료 조건이 샷을 끝낸 것으로, 더 부으려면 그 값을 올리거나 마지막 스텝 시간을 늘리세요.', stop_profileSkip:'스텝이 건너뛰어져 프로파일이 일찍 끝났습니다.', stop_noScale:'저울이 없어 무게로 정지할 수 없었습니다.', stop_stoppingBackstop:'머신이 정지 요청에 응답하지 않아 안전장치가 끝냈습니다.', stop_error:'오류로 샷이 종료됐습니다.', stop_disconnected:'추출 중 머신 연결이 끊겼습니다.',
+    tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
@@ -2124,9 +2126,9 @@ function bindActionLongPress(btn, tapFn, holdFn){
   btn.ontouchstart=function(e){ e.preventDefault(); start(); }; btn.ontouchend=function(e){ e.preventDefault(); end(); };
 }
 // tap toggles: if machine already in that state, stop (go idle); else start.
-function doSteamAction(){ if(state.machine.state==='steam') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Steam stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/steam').then(function(){toast('Steam started','ok');}).catch(function(){toast('Steam failed','err');}); }
-function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Flush stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/flush').then(function(){toast('Flush started','ok');}).catch(function(){toast('Flush failed','err');}); }
-function doWaterAction(){ if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast('Water stopped','ok');}).catch(function(){toast('Stop failed','err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast('Hot water started','ok');}).catch(function(){toast('Water failed','err');}); }
+function doSteamAction(){ if(state.machine.state==='steam') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tSteamStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/steam').then(function(){toast(t('tSteamStarted'),'ok');}).catch(function(){toast(t('tSteamFailed'),'err');}); }
+function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tFlushStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/flush').then(function(){toast(t('tFlushStarted'),'ok');}).catch(function(){toast(t('tFlushFailed'),'err');}); }
+function doWaterAction(){ if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tWaterStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast(t('tWaterStarted'),'ok');}).catch(function(){toast(t('tWaterFailed'),'err');}); }
 
 // ── Machine state ───────────────────────────────────────────────────
 function onMachineState(ms,prev){
@@ -2848,7 +2850,7 @@ function deriveWeightFlow(w,ts){
   _wfLast={w:w,ts:ts};
   return _wfEma>0?_wfEma:0; }
 function resetWeightFlow(){ _wfLast=null; _wfEma=0; }
-function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast('Stop failed','err');}); else { resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.t=[];chart.wt=[];_axisSpan=0;drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast('Start failed','err');}); } }
+function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/machine/state/idle').catch(function(){toast(t('stopFailed'),'err');}); else { resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.t=[];chart.wt=[];_axisSpan=0;drawChart(); api('PUT','/api/v1/machine/state/espresso').catch(function(){toast(t('tStartFailed'),'err');}); } }
 // A tap on the dose takes the scale when there is one reading to take, and
 // opens the keypad when there is not, so a dose can always be typed.
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
@@ -2952,9 +2954,9 @@ function endSleepUI(){ _asleep=false;
   if(_preSleepBrightness!=null){ var b=_preSleepBrightness; _preSleepBrightness=null; api('PUT','/api/v1/display/brightness',{brightness:b}).catch(function(){}); }
   updateMachineUI(); updateWaterUI(); updateScaleUI(); _chartBgKey=null; drawChart(); }
 function enterSleep(){ beginSleepUI();
-  api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast('Sleep failed','err'); }); }
+  api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast(t('tSleepFailed'),'err'); }); }
 function wakeFromSleep(){ endSleepUI();
-  if(state.machine.state==='sleeping') api('PUT','/api/v1/machine/state/idle').catch(function(){ toast('Wake failed','err'); }); }
+  if(state.machine.state==='sleeping') api('PUT','/api/v1/machine/state/idle').catch(function(){ toast(t('tWakeFailed'),'err'); }); }
 // Eight offsets, none of them large enough to notice across a minute, all of them
 // far enough apart that no pixel carries the same glyph for long.
 var LOCK_SHIFTS=[[0,0],[11,-7],[-9,9],[7,11],[-12,-8],[13,5],[-7,-12],[5,-4]];
@@ -2971,7 +2973,7 @@ function updateLockClock(){ var d=new Date();
 // Show/hide the lock without issuing a state change (used when the machine itself reports sleep).
 function enterSleepLocalOnly(){ beginSleepUI(); }
 function wakeLocalOnly(){ endSleepUI(); }
-function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast('Scan failed','err');}); }
+function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast(t('tScanFailed'),'err');}); }
 
 // ── Steam/Flush modals ──────────────────────────────────────────────
 function openSteamModal(){ syncSteamModal(); renderPresets('steam'); document.getElementById('steamOverlay').classList.add('show'); }
@@ -3027,18 +3029,18 @@ function addPreset(kind){ var name=prompt('Preset name?',(kind==='steam'?'Steam 
   if(kind==='steam') presets.steam.push({n:name,temp:+document.getElementById('steamTemp').value,dur:+document.getElementById('steamDur').value,flow:+document.getElementById('steamFlow').value});
   else if(kind==='water') presets.water.push({n:name,temp:+document.getElementById('waterTemp').value,vol:+document.getElementById('waterVol').value,dur:+document.getElementById('waterDur').value,flow:+document.getElementById('waterFlow').value});
   else presets.flush.push({n:name,temp:+document.getElementById('flushTemp').value,dur:+document.getElementById('flushDur').value,flow:+document.getElementById('flushFlow').value});
-  savePresets(); renderPresets(kind); toast('Preset saved','ok'); }
+  savePresets(); renderPresets(kind); toast(t('tPresetSaved'),'ok'); }
 function syncSteamModal(){ set('steamTemp',settings.steamTemp,'steamTempV'); set('steamDur',settings.steamDur,'steamDurV'); set('steamFlow',settings.steamFlow,'steamFlowV',1); }
 function syncWaterModal(){ set('waterTemp',settings.waterTemp,'waterTempV'); set('waterVol',settings.waterVol,'waterVolV'); set('waterDur',settings.waterDur,'waterDurV'); set('waterFlow',settings.waterFlow,'waterFlowV',1); }
 function syncFlushModal(){ set('flushTemp',settings.flushTemp,'flushTempV'); set('flushDur',settings.flushDur,'flushDurV'); set('flushFlow',settings.flushFlow,'flushFlowV',1); }
 function set(id,v,vid,dec){ document.getElementById(id).value=v; document.getElementById(vid).textContent=dec?(+v).toFixed(1):v; }
 function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v; }
 function saveSteam(){ settings.steamTemp=+document.getElementById('steamTemp').value; settings.steamDur=+document.getElementById('steamDur').value; settings.steamFlow=+document.getElementById('steamFlow').value;
-  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast('Steam options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'steamOverlay'); }
+  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast(t('tSteamSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); closeModal(null,'steamOverlay'); }
 function saveFlush(){ settings.flushTemp=+document.getElementById('flushTemp').value; settings.flushDur=+document.getElementById('flushDur').value; settings.flushFlow=+document.getElementById('flushFlow').value;
-  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){ syncAux(); toast('Flush options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'flushOverlay'); }
+  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){ syncAux(); toast(t('tFlushSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); closeModal(null,'flushOverlay'); }
 function saveWater(){ settings.waterTemp=+document.getElementById('waterTemp').value; settings.waterVol=+document.getElementById('waterVol').value; settings.waterDur=+document.getElementById('waterDur').value; settings.waterFlow=+document.getElementById('waterFlow').value;
-  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){ syncAux(); toast('Water options saved','ok');}).catch(function(){toast('Save failed','err');}); closeModal(null,'waterOverlay'); }
+  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){ syncAux(); toast(t('tWaterSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); closeModal(null,'waterOverlay'); }
 
 // Steam, flush and hot water each have their own stored numbers. The recipe card
 // shows what they are set to, and while one of them is running it swaps to
@@ -3259,7 +3261,7 @@ var _tempPushT=null;
 function pushProfileTemp(){ clearTimeout(_tempPushT); _tempPushT=setTimeout(function(){
   if(!curProfileObj||!curProfileObj.profile) return;
   api('PUT','/api/v1/workflow',{profile:brewProfileForMachine()})
-    .catch(function(){ toast('Temp error','err'); }); },600); }
+    .catch(function(){ toast(t('tTempError'),'err'); }); },600); }
 function pushRecipe(){ clearTimeout(adjust._t); adjust._t=setTimeout(function(){ api('PUT','/api/v1/workflow',{context:{targetDoseWeight:settings.doseIn,targetYield:settings.doseOut}}).catch(function(){}); },600); }
 function syncRecipe(){
   document.getElementById('doseInVal').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOutVal').textContent=settings.doseOut.toFixed(1);
@@ -3823,7 +3825,7 @@ function opt(val,label,cur){ return '<option value="'+val+'"'+(cur===val?' selec
 function infoCell(k,v){ return '<div class="sp-info-cell"><div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(String(v))+'</div></div>'; }
 // Display settings
 function setBrightness(v,live){ document.getElementById('brVal').textContent=v; if(live) return; // only push on change (release)
-  api('PUT','/api/v1/display/brightness',{brightness:parseInt(v,10)}).catch(function(){ toast('Brightness failed','err'); }); }
+  api('PUT','/api/v1/display/brightness',{brightness:parseInt(v,10)}).catch(function(){ toast(t('tBrightFailed'),'err'); }); }
 function setAutoUpdateCheck(on){ gwSettings.automaticUpdateCheck=on;
   api('POST','/api/v1/settings',{automaticUpdateCheck:on})
     .then(function(){ toast(t('saved'),'ok'); })
@@ -3837,7 +3839,7 @@ function canExitToDashboard(){
 function exitToDashboard(){
   if(!canExitToDashboard()) return;
   try{ window.decentApp.exitToDashboard(); }catch(_){ toast(t('exitDashFailed'),'err'); } }
-function setKeepAwake(on){ gwSettings.keepAwake=on; syncWakeLock(); api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast('Saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
+function setKeepAwake(on){ gwSettings.keepAwake=on; syncWakeLock(); api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast(t('saved'),'ok'); }).catch(function(){ toast(t('saveFailed'),'err'); }); }
 function setBlockOnNoScale(on){ gwSettings.blockOnNoScale=on;
   api('POST','/api/v1/settings',{blockOnNoScale:on})
     .then(function(){ toast(t('saved'),'ok'); })
@@ -3846,7 +3848,7 @@ function setScalePowerMode(v){ gwSettings.scalePowerMode=v;
   api('POST','/api/v1/settings',{scalePowerMode:v})
     .then(function(){ toast(t('saved'),'ok'); })
     .catch(function(){ toast(t('saveFailed'),'err'); renderSpContent(); }); }
-function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast('Save failed','err'); }); }
+function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast(t('saveFailed'),'err'); }); }
 function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
 // The monitor covers the screen, and steam or a flush is over before it is
 // worth reading; a shot is the one worth watching from the first drop. So the
@@ -3862,7 +3864,14 @@ function monAutoChips(){
     return '<button class="optchip'+(on?' on':'')+'" role="switch" aria-checked="'+on+'"'
       +' onclick="toggleMonAuto(\''+a[0]+'\')">'+escapeHtml(t(a[1]))+'</button>'; }).join('')+'</div>'; }
 function setSleepBright(v,live){ document.getElementById('sbVal').textContent=v; if(live) return; prefs.sleepBrightness=parseInt(v,10); savePrefs(); }
-function setRefillLevel(v){ state.water.refill=parseInt(v,10); api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)}).then(function(){ toast('Refill level saved','ok'); }).catch(function(){ toast('Save failed','err'); }); }
+// The machine acknowledges this write, so a failure here is the machine's and
+// worth repeating rather than swallowing: the refill level is one of the few
+// settings that goes straight to a characteristic, and "save failed" alone
+// leaves nothing to act on.
+function setRefillLevel(v){ state.water.refill=parseInt(v,10);
+  api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)})
+    .then(function(){ toast(t('tRefillSaved'),'ok'); })
+    .catch(function(e){ toast(t('saveFailed')+': '+apiErrorText(e),'err'); }); }
 function setRefillKit(v){ var n=parseInt(v,10); de1Advanced.refillKitSetting=n;
   api('POST','/api/v1/machine/settings/advanced',{refillKitSetting:n})
     .then(function(){ toast(t('saved'),'ok'); })
@@ -3877,7 +3886,7 @@ function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSett
     +'<button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+step+','+digits+')">+</button></div></div>'; }
 function adjustFlowMult(key,delta,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0)+delta; v=Math.max(0,parseFloat(v.toFixed(digits))); gwSettings[key]=v;
   var el=document.getElementById('fm-'+key); if(el) el.textContent=v.toFixed(digits);
-  var body={}; body[key]=v; clearTimeout(adjustFlowMult._t); adjustFlowMult._t=setTimeout(function(){ api('POST','/api/v1/settings',body).catch(function(){ toast('Save failed','err'); }); },500); }
+  var body={}; body[key]=v; clearTimeout(adjustFlowMult._t); adjustFlowMult._t=setTimeout(function(){ api('POST','/api/v1/settings',body).catch(function(){ toast(t('saveFailed'),'err'); }); },500); }
 // ── Firmware ────────────────────────────────────────────────────────
 // Ported from insight/streamline.js so the three skins behave alike: a firmware
 // flash is not something to get subtly different on one of them.
@@ -4144,7 +4153,7 @@ function renderPluginList(){ var box=document.getElementById('pluginList'); if(!
     row.appendChild(info); row.appendChild(actions); box.appendChild(row); }); }
 function togglePlugin(id,on,cb){ api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/'+(on?'enable':'disable'))
     .then(function(){ toast((on?t('enabled'):t('disabled'))+': '+id,'ok'); var p=pluginsCache.find(function(x){return x.id===id;}); if(p) p.loaded=on; })
-    .catch(function(e){ toast('Plugin toggle failed','err'); if(cb) cb.checked=!on; }); }
+    .catch(function(e){ toast(t('tPluginToggleFailed'),'err'); if(cb) cb.checked=!on; }); }
 // Schema-driven plugin settings form (covers Visualizer credentials, etc.)
 var pluginCfgId=null, pluginCfgSchema=null;
 function openPluginCfg(id){ var p=pluginsCache.find(function(x){return x.id===id;}); if(!p) return;
@@ -4177,7 +4186,7 @@ function savePluginCfg(){ if(!pluginCfgId) return; var patch={};
     else { patch[k]=el.value; } });
   var st=document.getElementById('pluginCfgStatus'); st.textContent='Saving…'; document.getElementById('pluginCfgSave').disabled=true;
   api('POST','/api/v1/plugins/'+encodeURIComponent(pluginCfgId)+'/settings',patch)
-    .then(function(){ toast('Plugin settings saved','ok'); closeModal(null,'pluginCfgOverlay'); loadPlugins(); })
+    .then(function(){ toast(t('tPluginSaved'),'ok'); closeModal(null,'pluginCfgOverlay'); loadPlugins(); })
     .catch(function(e){ st.textContent='Failed: '+e.message; })
     .then(function(){ document.getElementById('pluginCfgSave').disabled=false; }); }
 function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
@@ -4504,7 +4513,7 @@ function loadGuideProfile(id){
   curProfileObj={id:'guide',profile:pr,isDefault:false};
   api('PUT','/api/v1/workflow',{profile:pr})
     .then(function(){ toast('\u25b6 '+pr.title,'ok'); refreshCarouselMark(); })
-    .catch(function(){ toast('Profile error','err'); }); }
+    .catch(function(){ toast(t('tProfileError'),'err'); }); }
 
 // ── Profiles ────────────────────────────────────────────────────────
 // Titles use "{group}/{name}" — split into group (optional) + display name.
@@ -4720,7 +4729,7 @@ function selectProfile(p,keepGuideSrc){
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
   syncRecipe();
   if(chartBackToEspresso()) drawChart();
-  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast('Profile error','err'); }); }
+  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast(t('tProfileError'),'err'); }); }
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
 function refreshCarouselMark(){
@@ -5122,7 +5131,7 @@ function epDirty(){ var known=allProfiles.find(function(x){ return x.id===editin
   return !known||JSON.stringify(known.profile)!==JSON.stringify(editing.profile); }
 function saveProfilePage(){ if(!editing) return;
   var req=editing.isDefault?api('POST','/api/v1/profiles',{profile:editing.profile,metadata:{tags:['edited']}}):api('PUT','/api/v1/profiles/'+editing.id,{profile:editing.profile,metadata:editing.metadata||{}});
-  req.then(function(){ toast('Profile saved','ok'); loadProfiles(); renderEpList(); }).catch(function(e){ toast('Save failed: '+e.message,'err'); }); }
+  req.then(function(){ toast(t('tProfileSaved'),'ok'); loadProfiles(); renderEpList(); }).catch(function(e){ toast(t('saveFailed')+': '+e.message,'err'); }); }
 
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
@@ -5844,13 +5853,13 @@ function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm(t('confirm
     .then(function(){ delete beanBatches[o.id]; toast(t('deleted'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); })
     .catch(function(e){ toast(t('deleteFailed')+' '+apiErrorText(e),'err'); }); }
 function useBean(){ var o=bgSel.obj; var b=o.id&&beanBatches[o.id];
-  api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).then(function(){ toast('Bean set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
+  api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).then(function(){ toast(t('tBeanSet'),'ok'); loadWorkflow(); }).catch(function(){ toast(t('tFailed'),'err'); }); }
 
 // ── AI bean-label scanning (Gemini) ─────────────────────────────────
 var aiImages=[]; // {mime, data(base64), url}
 var aiMobile=false;
 function onAiImages(files,mobile){ if(!files) return; if(mobile) aiMobile=true;
-  Array.prototype.forEach.call(files,function(f){ if(!/^image\//.test(f.type)) return; if(aiImages.length>=5){ toast('Up to 5 images','err'); return; }
+  Array.prototype.forEach.call(files,function(f){ if(!/^image\//.test(f.type)) return; if(aiImages.length>=5){ toast(t('tMaxImages'),'err'); return; }
     var rd=new FileReader(); rd.onload=function(){ var s=String(rd.result); var comma=s.indexOf(','); aiImages.push({mime:f.type,data:s.slice(comma+1),url:s}); renderAiThumbs(mobile); }; rd.readAsDataURL(f); });
 }
 function renderAiThumbs(mobile){ var wrap=document.getElementById(mobile?'mbThumbs':'aiThumbs'); if(!wrap) return; wrap.innerHTML='';
@@ -5985,7 +5994,7 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
       statusEl.textContent=t('aiFilled'); toast(t('aiDetected'),'ok');
       recommendProfiles('bg',true);
     })
-    .catch(function(e){ statusEl.textContent='Failed: '+e.message; toast('AI analyze failed','err'); })
+    .catch(function(e){ statusEl.textContent='Failed: '+e.message; toast(t('tAiFailed'),'err'); })
     .then(function(){ _btnDone(); var b=document.getElementById('aiAnalyzeBtn'); if(b) b.disabled=aiImages.length===0; }); }
 
 // ── Phone hand-off via QR ───────────────────────────────────────────
@@ -8380,7 +8389,7 @@ function drawQR(canvas,text,px){
 }
 
 function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
-  if(!o.model){ toast('Model required','err'); return; }
+  if(!o.model){ toast(t('tModelRequired'),'err'); return; }
   // grinderSetting is a per-shot workflow value, not a Grinder entity field — excluded here.
   var body={ model:o.model, burrs:o.burrs||null, burrType:o.burrType||null, burrSize:(o.burrSize!=null?o.burrSize:null), notes:o.notes||null,
     settingType:o.settingType||'numeric' };
@@ -8391,10 +8400,10 @@ function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
   req.then(function(saved){
     var id=o.id||(saved&&saved.id);
     if(id){ if(brand) grinderBrands[id]=brand; else delete grinderBrands[id]; saveGrinderBrands(); }
-    toast('Grinder saved','ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); }).catch(function(){ toast('Save failed','err'); }); }
-function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast('Deleted','ok'); delete grinderBrands[o.id]; saveGrinderBrands(); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast('Delete failed','err'); }); }
+    toast(t('tGrinderSaved'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); }).catch(function(){ toast(t('saveFailed'),'err'); }); }
+function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast(t('deleted'),'ok'); delete grinderBrands[o.id]; saveGrinderBrands(); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast(t('deleteFailed'),'err'); }); }
 function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
-  api('PUT','/api/v1/workflow',{context:ctx}).then(function(){ toast('Grinder set for shot','ok'); loadWorkflow(); }).catch(function(){ toast('Failed','err'); }); }
+  api('PUT','/api/v1/workflow',{context:ctx}).then(function(){ toast(t('tGrinderSet'),'ok'); loadWorkflow(); }).catch(function(){ toast(t('tFailed'),'err'); }); }
 // The workflow context only carries the coffee's name and roaster, so the detail
 // comes from the bean record it points at, and its batch for the roast.
 function currentBean(){ var n=context.coffeeName, r=context.coffeeRoaster; if(!n) return null;
@@ -8570,10 +8579,10 @@ function axisSpan(want,live){
 function viewLastShotGraph(){
   // the same press that opened a review closes it
   if(chartReviewing){ exitReview(); return; }
-  if(!lastShotSummary){ toast('No shots recorded yet','err'); return; }
-  if(state.shotRunning||state.steamRunning||state.waterRunning){ toast('Busy — finish current action first','err'); return; }
-  api('GET','/api/v1/shots/'+lastShotSummary.id).then(function(s){ if(!s){ toast('Shot not found','err'); return; }
-    var m=s.measurements||[]; if(m.length<2){ toast('No measurement data for this shot','err'); return; }
+  if(!lastShotSummary){ toast(t('noShotsYet'),'err'); return; }
+  if(state.shotRunning||state.steamRunning||state.waterRunning){ toast(t('tBusyFirst'),'err'); return; }
+  api('GET','/api/v1/shots/'+lastShotSummary.id).then(function(s){ if(!s){ toast(t('tShotNotFound'),'err'); return; }
+    var m=s.measurements||[]; if(m.length<2){ toast(t('tNoMeasurements'),'err'); return; }
     chart.mode='espresso'; chartReviewing=true; chartReviewLabel=null;
     reviewProfile=(s.workflow&&s.workflow.profile)||null; _guideKey=null;
     chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
@@ -8588,8 +8597,8 @@ function viewLastShotGraph(){
         chart.wflow.push(sc.weightFlow!=null?sc.weightFlow:0); } });
     _chartLegendMode=null; syncReviewControls(); drawChart();
     var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot');
-    toast('Showing last shot: '+st.name,'ok');
-  }).catch(function(){ toast('Failed to load shot','err'); }); }
+    toast(t('tShowingLastShot')+': '+st.name,'ok');
+  }).catch(function(){ toast(t('tShotLoadFailed'),'err'); }); }
 // Leave last-shot review and return the graph to live extraction data.
 function exitReview(){ if(!chartReviewing) return; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _guideKey=null; chart.mode='espresso';
   chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
@@ -8603,7 +8612,7 @@ function updateGrindRow(){ var row=document.getElementById('grindRow'); if(!row)
   document.getElementById('grindVal').textContent=(context.grinderSetting!=null&&context.grinderSetting!=='')?context.grinderSetting:'—'; }
 // Adjust the grind setting from the main screen and persist to the workflow.
 function adjustGrind(dir){ var gr=currentGrinder(); var cur=context.grinderSetting;
-  if(gr&&gr.settingType==='preset'){ var vals=gr.settingValues||[]; if(!vals.length){ toast('No preset positions','err'); return; }
+  if(gr&&gr.settingType==='preset'){ var vals=gr.settingValues||[]; if(!vals.length){ toast(t('tNoPresets'),'err'); return; }
     var i=vals.indexOf(cur); i=(i<0?0:i)+dir; i=Math.max(0,Math.min(vals.length-1,i)); setGrind(vals[i]); }
   else { var step=(gr&&gr.settingSmallStep)?gr.settingSmallStep:0.1; var n=parseFloat(cur); if(isNaN(n)) n=0;
     n=Math.max(0,parseFloat((n+dir*step).toFixed(2))); setGrind(String(n)); } }
@@ -8626,7 +8635,7 @@ function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return
   var tds=parseFloat(document.getElementById('dyeTds').value)||null; var ey=parseFloat(document.getElementById('dyeEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1)); // EY% = TDS*beverage/dose
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey, enjoyment:state.dyeStars||null, espressoNotes:document.getElementById('dyeNotes').value||null };
-  api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast('Shot logged','ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast('Log failed','err'); }); }
+  api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast(t('tShotLogged'),'ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast(t('tLogFailed'),'err'); }); }
 
 // ── Shot Log history page ───────────────────────────────────────────
 var shotList=[], slSel=null, lastShotSummary=null;
@@ -8784,7 +8793,7 @@ function saveShotLog(id){ var dose=parseFloat(document.getElementById('slDose').
         delete slFull[id]; }
       toast(edits?t('shotFixed'):'Shot log saved','ok');
       loadShotList(slSel&&{id:id});
-    }).catch(function(){ toast('Save failed','err'); }); }
+    }).catch(function(){ toast(t('saveFailed'),'err'); }); }
 // Draw a recorded shot onto a canvas: pressure, flow, weight and the group /
 // mix / target temperatures, with the profile frame boundaries behind them.
 // Measurements are nested: m[i].machine.{...}, m[i].scale.{...}, m[i].volume.
@@ -9441,14 +9450,14 @@ function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(funct
 // Initial device state via REST (WS may not push a snapshot immediately on connect)
 function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
   console.log('[Aurora] loadDevices response:', list);
-  if(!Array.isArray(list)){ toast('devices: unexpected response','err'); return; }
+  if(!Array.isArray(list)){ toast(t('tDevicesBadResponse'),'err'); return; }
   var machineConnected=false, scaleConnected=false, machineName=null, scaleName=null;
   list.forEach(function(d){ if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; } if(d.type==='scale'){ if(!scaleName||d.state==='connected') scaleName=d.name; if(d.state==='connected') scaleConnected=true; } });
   state.machineName=machineName; state.scaleName=scaleName;
   state.connected=machineConnected; state.scaleConnected=scaleConnected;
   updateConnUI(state.connected?'on':'off'); updateShotBtn();
   if(state.connected){ loadMachineInfo(); loadWorkflow(); }
-}).catch(function(e){ console.error('[Aurora] loadDevices failed:', e); toast('Gateway not reachable: '+e.message,'err'); }); }
+}).catch(function(e){ console.error('[Aurora] loadDevices failed:', e); toast(t('tGatewayUnreachable')+': '+e.message,'err'); }); }
 
 // ── Toast ────────────────────────────────────────────────────────────
 var toastT=null; function toast(msg,type){ var el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); },2500); }
