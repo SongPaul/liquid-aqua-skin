@@ -5363,7 +5363,15 @@ function bgGuideHtml(){
 // the fields are read when Save is pressed -- so this only has to put the
 // editor back to where it started.
 function bgCloseEditor(){
+  // Everything the form gathered goes with it: the photos handed to the AI, the
+  // recommendations and usage it looked up, the batch being added, the tab it
+  // was left on. Without this the next Add opens carrying the last one's
+  // leavings even though its fields are blank.
   bgSel=null; bgBatchId=null; bgNewBatch=false;
+  aiImages=[]; bgPane='info';
+  recResults=null; recBusy=false; _recFor=null;
+  usageResults=null; usageBusy=false; _usageFor=null; usageStats=null; usageShots=null;
+  histProfile=null;
   renderBgEditor(); renderBgList(); }
 function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML=bgGuideHtml(); return; }
   var o=bgSel.obj; var isNew=!o.id;
