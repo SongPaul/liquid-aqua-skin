@@ -736,7 +736,9 @@ body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,
 .ep-group-head.fav{background:linear-gradient(135deg,#fff6e6,#fff0f0)}
 .ep-editor{overflow-y:auto}
 .ep-editor::-webkit-scrollbar{width:6px}.ep-editor::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-.ep-editor-inner{height:100%;padding:16px 22px;display:grid;grid-template-columns:6fr 4fr;grid-template-rows:auto auto auto minmax(120px,1fr) auto;gap:8px 14px;align-items:start}
+.ep-editor-inner{padding:18px 22px;display:grid;grid-template-columns:1fr 300px;gap:8px 14px;align-items:start}
+/* The profile editor alone is a filled 6:4 column with a scrolling step table; the shot log and the bean editor share the class but not that shape. */
+#epEditor{height:100%;padding:16px 22px;grid-template-columns:6fr 4fr;grid-template-rows:auto auto auto minmax(120px,1fr) auto}
 .ep-meta{grid-column:1/-1;grid-row:1}
 .ep-visual{grid-column:1;grid-row:2}
 .ep-steps-title{grid-column:1;grid-row:3}
