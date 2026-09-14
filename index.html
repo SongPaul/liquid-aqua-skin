@@ -444,7 +444,7 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .album:active{transform:scale(.97)}
 .album.center:active{transform:translateX(0) scale(1.28)}
 .ms-btn:active{transform:scale(.9);background:rgba(99,102,241,.22)}
-.dose-num.tap:active,.rv.tap:active,.recipe .grind-val:active{transform:scale(.95);background:rgba(99,102,241,.14);border-color:var(--accent)}
+.dose-num.tap:active,.rv.tap:active,.recipe .grind-val:active{transform:scale(.95);background:rgba(99,102,241,.16)}
 .cur-fav:active,.cur-browse:active{transform:scale(.9)}
 .nav-card.active{border-color:#fff;box-shadow:0 0 0 2px var(--accent),0 4px 12px rgba(99,102,241,.35)}
 /* the loaded profile is the one that decides what the next shot does, so it is
@@ -502,23 +502,24 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .th-ctrl{width:52px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
 /* the reading here is the same chip as the four beside it -- same height, same type, same corner -- only narrower, and the degree sign stands in for the unit the thermometer already names */
 .th-val{font-size:20px;font-weight:800;color:var(--accent2);line-height:1;white-space:nowrap}
-.th-val.tap{cursor:pointer;border-radius:11px;min-height:40px;width:52px;display:flex;align-items:center;justify-content:center;padding:5px 4px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);transition:background .15s,border-color .15s,transform .1s}
-.th-val.tap:hover{background:var(--glass-hi)}
-.th-val.tap:active{transform:scale(.95);border-color:var(--accent)}
+.th-val.tap{font-size:23px}
+.th-val.tap{cursor:pointer;border-radius:11px;min-height:40px;width:52px;display:flex;align-items:center;justify-content:center;padding:5px 4px;border:1px solid transparent;background-color:transparent;transition:background .15s,transform .1s}
+.th-val.tap:hover{background:rgba(99,102,241,.10)}
+.th-val.tap:active{transform:scale(.95);background:rgba(99,102,241,.16)}
 .dose-block{text-align:center;min-width:0;flex:none}
 .dose-adj{display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0}
-.dose-num{font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
+.dose-num{font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
 .dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:3px;min-height:14px;line-height:14px;display:flex;align-items:center;justify-content:center;gap:5px}
 .dose-lbl .lu{font-weight:800;color:var(--accent);opacity:.6}
 /* Only drawn while a dosing scale is reporting. Press it to take the reading into the dose, which is the same thing holding the dose does. */
 .dose-live{font-size:10px;font-weight:800;line-height:14px;color:var(--accent2);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:0 6px;cursor:pointer;white-space:nowrap}
-.dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);transition:background .15s,border-color .15s,transform .1s}
+.dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid transparent;background-color:transparent;transition:background .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
-.dose-num.tap:hover,.rv.tap:hover{background:var(--glass-hi)}
+.dose-num.tap:hover,.rv.tap:hover,.recipe .grind-val:hover{background:rgba(99,102,241,.10)}
 .dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
 .ms-btn.sm{width:36px;height:36px;font-size:16px;border-radius:11px}
-.rv{font-size:20px;font-weight:800;color:var(--accent2);flex:1;min-width:0}
+.rv{font-size:24px;font-weight:800;color:var(--accent2);flex:1;min-width:0}
 .rl{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase}
 .mini-steppers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .mini-step{display:flex;align-items:center;justify-content:space-between;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:5px 7px}
@@ -556,7 +557,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .grind-label #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .grind-val{min-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:18px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
-.recipe .grind-val{flex:1;min-width:0;font-size:20px}
+.recipe .grind-val{flex:1;min-width:0;font-size:23px}
 .grind-val:hover{background:var(--glass-hi)}
 .bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;flex:none}
 .bean-chips::-webkit-scrollbar{display:none}
