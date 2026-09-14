@@ -995,6 +995,10 @@ body.night .plugin-item{background:rgba(255,255,255,.06)}
 .sp-nav-item:hover{background:var(--ctl-face)}
 .sp-nav-item.active{background:var(--ctl-face);border-color:var(--accent);color:var(--accent)}
 .sp-nav-item .ic{font-size:17px;width:22px;text-align:center}
+.sp-status{margin-left:auto;margin-right:12px;font-size:12px;font-weight:700;padding:7px 12px;border-radius:11px;border:1px solid;max-width:44%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-status.ok{color:#0e7c6b;background:rgba(31,191,168,.12);border-color:rgba(31,191,168,.34)}
+.sp-status.err{color:#b91c1c;background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35)}
+body.night .sp-status.ok{color:#5eead4} body.night .sp-status.err{color:#fca5a5}
 .set-val{font-size:15px;font-weight:800;color:var(--accent)}
 .set-warn{font-size:12px;font-weight:700;color:#b45309;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:12px;padding:10px 12px;margin-bottom:12px}
 body.night .set-warn{color:#fbbf24;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.4)}
@@ -1516,6 +1520,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 <div class="editpage" id="settingsPage">
   <div class="ep-head">
     <div class="ep-title"><span>⚙ </span><span data-i18n="settings">Settings</span></div>
+    <div class="sp-status" id="spStatus" hidden></div>
     <button class="ep-close" onclick="closeSettingsPage()">✕ <span data-i18n="close">Close</span></button>
   </div>
   <div class="ep-body">
@@ -3002,6 +3007,21 @@ function syncWaterStop(){
   var row=document.getElementById('waterStopRow');
   if(row) row.style.opacity=usable?'':'0.5'; }
 // The machine's own shot settings, as last reported.
+// Settings are a page of switches, and a toast for each one stacks notices over
+// the thing being changed. They report here instead: a line in the page's own
+// header, cleared once a save has been seen, kept until the next attempt when
+// one fails -- a failure is worth reading twice.
+var _spMsg=null, _spT=null;
+function paintSpStatus(){
+  var el=document.getElementById('spStatus'); if(!el) return;
+  el.hidden=!_spMsg;
+  if(_spMsg){ el.className='sp-status '+_spMsg.k; el.textContent=_spMsg.t; } }
+function spSetStatus(kind,text){
+  _spMsg=kind?{k:kind,t:text}:null; paintSpStatus();
+  clearTimeout(_spT);
+  if(kind==='ok') _spT=setTimeout(function(){ _spMsg=null; paintSpStatus(); },2400); }
+function spSaved(){ spSetStatus('ok',t('saved')); }
+function spFailed(e){ spSetStatus('err',t('saveFailed')+(e?(': '+apiErrorText(e)):'')); }
 function setStopHotWaterAtWeight(on){
   gwSettings.stopHotWaterAtWeight=on;
   api('POST','/api/v1/settings',{stopHotWaterAtWeight:on})
@@ -3575,6 +3595,7 @@ var SP_CATS=[
 ];
 var spCat='general', gwSettings={}, displayState={}, machineInfo={};
 function openSettingsPage(){ document.getElementById('settingsPage').classList.add('show'); renderSpNav();
+  _spMsg=null; paintSpStatus();
   // preload gateway settings + display + machine info
   api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='display'||spCat==='machine'||spCat==='scale'||spCat==='app') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/display').then(function(d){ displayState=d||{}; if(spCat==='display') renderSpContent(); }).catch(function(){});
@@ -3614,17 +3635,17 @@ function setDe1(key,v){
   var body={}; body[key]=(key==='usb')?v:Number(v);
   de1Settings[key]=body[key];
   api('POST','/api/v1/machine/settings',body)
-    .then(function(){ toast(t('saved'),'ok'); })
-    .catch(function(){ toast(t('saveFailed'),'err'); loadDe1Settings(); }); }
+    .then(function(){ spSaved(); })
+    .catch(function(e){ spFailed(e); loadDe1Settings(); }); }
 function loadPresence(){ api('GET','/api/v1/presence/settings')
   .then(function(x){ presence=x||{}; if(spOpen()&&spCat==='presence') renderSpContent(); }).catch(function(){}); }
 function setPresenceOn(on){ presence.userPresenceEnabled=on;
   api('POST','/api/v1/presence/settings',{userPresenceEnabled:on})
-    .then(function(){ toast(t('saved'),'ok'); }).catch(function(){ toast(t('saveFailed'),'err'); loadPresence(); }); }
+    .then(function(){ spSaved(); }).catch(function(e){ spFailed(e); loadPresence(); }); }
 function setPresenceNum(key,v){ var n=parseInt(v,10); if(isNaN(n)) return; presence[key]=n;
   clearTimeout(setPresenceNum._t); setPresenceNum._t=setTimeout(function(){
     var b={}; b[key]=n; api('POST','/api/v1/presence/settings',b)
-      .catch(function(){ toast(t('saveFailed'),'err'); loadPresence(); }); },500); }
+      .catch(function(e){ spFailed(e); loadPresence(); }); },500); }
 // A number with a slider, reading from and writing to whichever store it belongs to.
 function numRow(key,desc,field,min,max,step,unit,store,setter,dflt){
   store=store||de1Settings; setter=setter||'setDe1';
@@ -3833,8 +3854,8 @@ function setBrightness(v,live){ document.getElementById('brVal').textContent=v; 
   api('PUT','/api/v1/display/brightness',{brightness:parseInt(v,10)}).catch(function(){ toast(t('tBrightFailed'),'err'); }); }
 function setAutoUpdateCheck(on){ gwSettings.automaticUpdateCheck=on;
   api('POST','/api/v1/settings',{automaticUpdateCheck:on})
-    .then(function(){ toast(t('saved'),'ok'); })
-    .catch(function(){ toast(t('saveFailed'),'err'); }); }
+    .then(function(){ spSaved(); })
+    .catch(function(e){ spFailed(e); }); }
 // Leaving a skin is the host's to do, and it gives exactly one way to ask:
 // window.decentApp.exitToDashboard, injected into the page it serves. There is
 // no way to close the app itself from here and this is not that -- it puts the
@@ -3844,16 +3865,16 @@ function canExitToDashboard(){
 function exitToDashboard(){
   if(!canExitToDashboard()) return;
   try{ window.decentApp.exitToDashboard(); }catch(_){ toast(t('exitDashFailed'),'err'); } }
-function setKeepAwake(on){ gwSettings.keepAwake=on; syncWakeLock(); api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ toast(t('saved'),'ok'); }).catch(function(){ toast(t('saveFailed'),'err'); }); }
+function setKeepAwake(on){ gwSettings.keepAwake=on; syncWakeLock(); api('POST','/api/v1/settings',{keepAwake:on}).then(function(){ spSaved(); }).catch(function(e){ spFailed(e); }); }
 function setBlockOnNoScale(on){ gwSettings.blockOnNoScale=on;
   api('POST','/api/v1/settings',{blockOnNoScale:on})
-    .then(function(){ toast(t('saved'),'ok'); })
-    .catch(function(){ toast(t('saveFailed'),'err'); renderSpContent(); }); }
+    .then(function(){ spSaved(); })
+    .catch(function(e){ spFailed(e); renderSpContent(); }); }
 function setScalePowerMode(v){ gwSettings.scalePowerMode=v;
   api('POST','/api/v1/settings',{scalePowerMode:v})
-    .then(function(){ toast(t('saved'),'ok'); })
-    .catch(function(){ toast(t('saveFailed'),'err'); renderSpContent(); }); }
-function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(){ toast(t('saveFailed'),'err'); }); }
+    .then(function(){ spSaved(); })
+    .catch(function(e){ spFailed(e); renderSpContent(); }); }
+function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(e){ spFailed(e); }); }
 function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
 // The monitor covers the screen, and steam or a flush is over before it is
 // worth reading; a shot is the one worth watching from the first drop. So the
@@ -3875,8 +3896,8 @@ function setSleepBright(v,live){ document.getElementById('sbVal').textContent=v;
 // leaves nothing to act on.
 function setRefillLevel(v){ state.water.refill=parseInt(v,10);
   api('POST','/api/v1/machine/waterLevels',{refillLevel:parseInt(v,10)})
-    .then(function(){ toast(t('tRefillSaved'),'ok'); })
-    .catch(function(e){ toast(t('saveFailed')+': '+apiErrorText(e),'err'); }); }
+    .then(function(){ spSaved(); })
+    .catch(function(e){ spFailed(e); }); }
 function refillKitDetected(){
   var e=machineInfo&&machineInfo.extra;
   return (e&&typeof e.refillKit==='boolean')?e.refillKit:null; }
@@ -3895,7 +3916,7 @@ function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSett
     +'<button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+step+','+digits+')">+</button></div></div>'; }
 function adjustFlowMult(key,delta,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0)+delta; v=Math.max(0,parseFloat(v.toFixed(digits))); gwSettings[key]=v;
   var el=document.getElementById('fm-'+key); if(el) el.textContent=v.toFixed(digits);
-  var body={}; body[key]=v; clearTimeout(adjustFlowMult._t); adjustFlowMult._t=setTimeout(function(){ api('POST','/api/v1/settings',body).catch(function(){ toast(t('saveFailed'),'err'); }); },500); }
+  var body={}; body[key]=v; clearTimeout(adjustFlowMult._t); adjustFlowMult._t=setTimeout(function(){ api('POST','/api/v1/settings',body).catch(function(e){ spFailed(e); }); },500); }
 // ── Firmware ────────────────────────────────────────────────────────
 // Ported from insight/streamline.js so the three skins behave alike: a firmware
 // flash is not something to get subtly different on one of them.
