@@ -234,6 +234,8 @@ header>*{position:relative;z-index:1}
 .hdr-group{display:flex;align-items:stretch;gap:9px}
 .hdr-aux{position:relative;display:flex;align-items:stretch;gap:3px;padding:4px;border-radius:21px;background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift)}
 .hdr-aux .act-btn{border-radius:17px;border-color:transparent;background-color:transparent;background-image:none;box-shadow:none;padding:7px 15px}
+.hdr-aux .act-btn.start{color:var(--accent)}
+.hdr-aux .act-btn.start.stop{color:#fff;background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on)}
 .hdr-aux .act-btn.active{border-color:transparent}
 .aux-hint{position:absolute;top:100%;left:0;right:0;text-align:center;font-size:10px;font-weight:700;line-height:10px;letter-spacing:.1px;color:var(--ink-mute);white-space:nowrap;pointer-events:none}
 .aux-hint:empty{display:none}
@@ -1157,10 +1159,10 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       </button></div>
 
     <div class="hdr-group">
-      <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
-        <span class="ico" id="shotIco">▶</span><span id="shotLbl" data-i18n="start">Start</span>
-      </button>
       <div class="hdr-aux">
+      <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
+        <span class="ico" id="shotIco">▶</span><span id="shotLbl" data-i18n="actEspresso">Espresso</span>
+      </button>
       <button class="act-btn steam" id="btnSteam" disabled>
         <span class="ab-txt">
           <span class="ab-head"><span class="ico">♨️</span><span class="ab-name" data-i18n="steam">Steam</span><span class="ab-preset" id="auxPresetSteam">—</span></span>
@@ -1784,7 +1786,7 @@ var I18N={
     stop_targetWeight:'Stopped at the target weight.', stop_targetVolume:'Stopped at the profile\u2019s target volume.', stop_profileAdvance:'The profile ran out before the target weight was reached. A step\u2019s own exit ended the shot \u2014 raise it, or give the last step longer, to pour more.', stop_profileSkip:'A step was skipped and the profile ended early.', stop_noScale:'No scale, so the shot could not stop on weight.', stop_stoppingBackstop:'The machine did not stop when asked; the backstop ended it.', stop_error:'The shot ended on an error.', stop_disconnected:'The machine disconnected during the shot.',
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
-    hintTapHold:'tap = run · hold = options',
+    hintTapHold:'steam · flush · water: hold for options',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
@@ -1930,7 +1932,7 @@ var I18N={
     stop_targetWeight:'목표 무게에 도달해 정지했습니다.', stop_targetVolume:'프로파일의 목표 볼륨에 도달해 정지했습니다.', stop_profileAdvance:'목표 무게에 닿기 전에 프로파일이 먼저 끝났습니다. 스텝의 종료 조건이 샷을 끝낸 것으로, 더 부으려면 그 값을 올리거나 마지막 스텝 시간을 늘리세요.', stop_profileSkip:'스텝이 건너뛰어져 프로파일이 일찍 끝났습니다.', stop_noScale:'저울이 없어 무게로 정지할 수 없었습니다.', stop_stoppingBackstop:'머신이 정지 요청에 응답하지 않아 안전장치가 끝냈습니다.', stop_error:'오류로 샷이 종료됐습니다.', stop_disconnected:'추출 중 머신 연결이 끊겼습니다.',
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
-    hintTapHold:'탭 = 실행 · 길게 = 설정',
+    hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
@@ -1948,7 +1950,7 @@ var I18N={
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
     aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 Gemini API 키를 입력하세요',
-    actEspresso:'추출', actWater:'온수',
+    actEspresso:'에스프레소', actWater:'온수',
     monAuto:'전체화면 모니터', monAutoDesc:'어떤 동작에서 모니터를 자동으로 열지 선택합니다. 그래프를 누르면 언제든 열 수 있습니다.',
     stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
     flushGraph:'플러시 그래프',
@@ -2589,7 +2591,7 @@ function fillHeight(pct){ return (Math.max(0,Math.min(pct,100))*0.9)+'%'; }
 function updateShotBtn(){ var st=state.machine.state;
   var btn=document.getElementById('btnShot'),ico=document.getElementById('shotIco'),lbl=document.getElementById('shotLbl');
   btn.disabled=!state.connected;
-  if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent=t('stop'); } else { btn.className='act-btn start'; ico.textContent='▶'; lbl.textContent=t('start'); }
+  if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent=t('stop'); } else { btn.className='act-btn start'; ico.textContent='▶'; lbl.textContent=t('actEspresso'); }
   var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),water=document.getElementById('btnWater'),sleep=document.getElementById('btnSleep');
   steam.disabled=!state.connected; flush.disabled=!state.connected; water.disabled=!state.connected; sleep.disabled=!state.connected;
   var wt=document.getElementById('weightTap');
