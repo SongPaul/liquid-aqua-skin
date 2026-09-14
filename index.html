@@ -1012,6 +1012,7 @@ body.step-dragging .ep-grid tr.gr{touch-action:none}
    is the colour of the bar the row stands on, and the word is said once. */
 .ep-kindkey{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--ink-mute);margin-left:auto;margin-right:10px}
 .ep-kindkey i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.ep-kindkey b{font-weight:800;color:var(--ink-soft);margin:0 3px 0 2px;letter-spacing:0}
 .ep-kindkey i.p{background:var(--accent)}
 .ep-kindkey i.f{background:var(--steam);margin-left:7px}
 .ep-kindkey .drag{display:inline-flex;align-items:center;gap:4px;margin-left:12px;padding-left:12px;border-left:1px solid var(--ctl-edge);font-weight:700}
@@ -5288,7 +5289,8 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!edi
   wrap.innerHTML=meta
     +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve"></canvas></div>'
     +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span>'
-      +'<span class="ep-kindkey"><i class="p"></i>'+escapeHtml(t('pressure'))+'<i class="f"></i>'+escapeHtml(t('flow'))
+      +'<span class="ep-kindkey"><i class="p"></i><b>P</b>'+escapeHtml(t('pressure'))
+        +'<i class="f"></i><b>F</b>'+escapeHtml(t('flow'))
         +'<span class="drag"><i class="bar"></i>'+escapeHtml(t('dragHint'))+'</span></span>'
       +'<button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
     +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
