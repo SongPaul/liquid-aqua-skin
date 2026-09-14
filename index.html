@@ -700,6 +700,19 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 #bgList .ep-item,#slList .ep-item{content-visibility:auto;contain-intrinsic-size:0 64px}
 .ep-item{background:var(--field);border:1px solid var(--edge);border-radius:12px;padding:7px 10px;cursor:pointer;transition:all .18s;display:flex;gap:10px;align-items:center}
 .ep-item:hover{transform:translateX(3px);box-shadow:var(--shadow)}
+/* A name cut off at the width of a column is a name you cannot read, and
+   these are how a profile is recognised. The curve goes on top, across the
+   card, and the title has the whole width under it to wrap into. */
+.ep-item.ep-card{display:block;flex:0 0 auto;padding:0;overflow:hidden;border-radius:14px}
+.ep-item.ep-card:hover{transform:translateY(-2px)}
+.ep-item.ep-card .thmb{width:100%;height:66px;border-radius:0;background:#f6f6fd}
+body.night .ep-card .thmb{background:rgba(255,255,255,.04)}
+.ep-cbody{padding:8px 11px 10px;min-width:0}
+.ep-card .mt{font-size:10px;font-weight:700;color:var(--ink-mute);margin:0 0 2px;text-transform:uppercase;letter-spacing:.04em}
+.ep-card .nm{font-size:14px;font-weight:800;line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;color:var(--ink)}
+.ep-card .cfoot{display:flex;align-items:flex-end;gap:6px;margin-top:8px}
+.ep-card .cfoot .ep-chips{flex:1;min-width:0}
+.ep-card .fav-btn,.ep-card .eye-btn{margin-left:0;flex-shrink:0;width:32px;height:32px;border-radius:10px}
 .ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.18)}
 .ep-item .thmb{width:44px;height:44px;border-radius:9px;background:#f8f8ff;position:relative;overflow:hidden;flex-shrink:0}
 .ep-item .thmb canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -1865,6 +1878,7 @@ var I18N={
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
+    stepsShort:'steps',
     moveUp:'Move up', moveDown:'Move down', dragHint:'drag to reorder',
     dragStep:'Drag to reorder',
     exitShort:'Exit',
@@ -2018,6 +2032,7 @@ var I18N={
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
+    stepsShort:'스텝',
     moveUp:'위로', moveDown:'아래로', dragHint:'끌어서 순서 변경',
     dragStep:'끌어서 순서 변경',
     exitShort:'넘김',
@@ -5187,22 +5202,27 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     if(!groups[key]){ groups[key]=[]; order.push(key); } groups[key].push({p:p,st:st}); });
   order.sort(function(a,b){ if(a==='Other') return 1; if(b==='Other') return -1; return a.localeCompare(b); });
   function addItem(p,st){ var author=(p.profile&&p.profile.author)||'';
-    var it=document.createElement('div'); it.className='ep-item'+(editing&&editing.id===p.id?' active':'');
+    var it=document.createElement('div'); it.className='ep-item ep-card'+(editing&&editing.id===p.id?' active':'');
     var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
     var pc=colorOf(p); if(pc){ var dot=document.createElement('span'); dot.className='ep-dot'; dot.style.background=gradOf(pc); th.appendChild(dot); }
-    var body=document.createElement('div'); body.style.minWidth='0'; body.style.flex='1';
+    var body=document.createElement('div'); body.className='ep-cbody';
     var aiSet=aiTagsOf(p), guess=isAiRoast(p);
     var tagHtml=allTagsOf(p).map(function(k){ var cls='ep-chip'+(ROAST_KEYS.indexOf(k)>=0?' roast':'');
       if(aiSet.indexOf(k)>=0&&(guess||ROAST_KEYS.indexOf(k)<0)) cls+=' ai';
       return '<span class="'+cls+'">'+escapeHtml(t(k))+'</span>'; }).join('');
-    body.innerHTML='<div class="nm">'+escapeHtml(st.name)+'</div><div class="mt">'+escapeHtml(author)+' · '+((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' steps</div>'
-      +(tagHtml?'<div class="ep-chips">'+tagHtml+'</div>':'');
+    body.innerHTML='<div class="mt">'+escapeHtml(author?author+' \u00b7 ':'')
+      +((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' '+escapeHtml(t('stepsShort'))+'</div>'
+      +'<div class="nm">'+escapeHtml(st.name)+'</div>';
     var fav=document.createElement('button'); fav.className='fav-btn'+(favIds[p.id]?' on':''); fav.textContent=favIds[p.id]?'★':'☆'; fav.title=t('toggleFav');
     fav.onclick=function(e){ e.stopPropagation(); toggleFav(p.id); };
     var hid=(p.visibility==='hidden');
     var eye=document.createElement('button'); eye.className='eye-btn'+(hid?' on':''); eye.textContent=hid?'🙈':'👁'; eye.title=hid?t('showProfile'):t('hideProfile');
     eye.onclick=function(e){ e.stopPropagation(); setProfileHidden(p.id,!hid); };
-    it.appendChild(th); it.appendChild(body); it.appendChild(fav); it.appendChild(eye);
+    var foot=document.createElement('div'); foot.className='cfoot';
+    var chips=document.createElement('div'); chips.className='ep-chips'; chips.innerHTML=tagHtml;
+    foot.appendChild(chips); foot.appendChild(fav); foot.appendChild(eye);
+    body.appendChild(foot);
+    it.appendChild(th); it.appendChild(body);
     it.onclick=function(){ epSelect(p); };
     list.appendChild(it); (epItemEls[p.id]=epItemEls[p.id]||[]).push(it);
     if(epCurveObserver) epCurveObserver.observe(cv); else drawSimCurve(cv,p.profile); }
