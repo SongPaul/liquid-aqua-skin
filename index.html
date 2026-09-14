@@ -720,10 +720,10 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
 .ep-visual{position:sticky;top:0;z-index:3;background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:16px;padding:12px 16px 10px;margin:-4px 0 14px}
 .ep-visual-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:flex;justify-content:space-between}
-.ep-visual canvas{width:100%;height:150px;display:block}
+.ep-visual canvas{width:100%;height:78px;display:block}
 .ep-name-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:18px;font-weight:700;color:var(--ink);-webkit-appearance:none;margin-bottom:12px}
 .ep-notes{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:13px;color:var(--ink-soft);-webkit-appearance:none;resize:vertical;margin-bottom:18px}
-.ep-steps-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.ep-steps-title{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
 .ep-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
 .ep-step{background:var(--field);border:1px solid var(--edge);border-radius:13px;padding:14px 16px;position:relative;border-left:4px solid var(--accent)}
 .ep-step.flow{border-left-color:var(--steam)}
@@ -732,9 +732,9 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-pump-toggle{display:flex;border:1px solid var(--glass-line);border-radius:100px;overflow:hidden}
 .ep-pump-toggle button{min-height:40px;padding:0 16px;border:none;background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
 .ep-pump-toggle button.on{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
-.ep-sliders{display:flex;flex-direction:column;gap:4px}
+.ep-sliders{display:grid;grid-template-columns:1fr 1fr;gap:2px 20px}
 .ep-slider-row{display:flex;align-items:center;gap:10px}
-.ep-slider-row .lbl{font-size:11px;font-weight:700;color:var(--ink-mute);width:80px;flex-shrink:0}
+.ep-slider-row .lbl{font-size:11px;font-weight:700;color:var(--ink-mute);width:64px;flex-shrink:0}
 .ep-slider-row input[type=range]{flex:1;-webkit-appearance:none;height:28px;background:transparent;outline:none;cursor:pointer}
 .ep-slider-row input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:100px;background:rgba(139,92,246,.18)}
 .ep-slider-row input[type=range]::-moz-range-track{height:6px;border-radius:100px;background:rgba(139,92,246,.18)}
@@ -948,17 +948,41 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ai-sug-c{font-size:14px;font-weight:800;color:var(--accent)}
 .ai-sug-w{font-size:12px;color:var(--ink-mute);line-height:1.5;margin-top:3px}
 /* step carousel in editor */
-.ep-stepnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.ep-stepnav .nav{width:40px;height:40px;border-radius:12px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-size:16px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
 .ep-stepnav .nav:hover{background:#f0eeff}
-.ep-steptabs{flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px}
-.ep-steptabs::-webkit-scrollbar{height:0}
-.ep-steptab{flex-shrink:0;min-height:40px;padding:0 14px;border-radius:100px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;white-space:nowrap}
-.ep-steptab.active{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
-.ep-steptab .xdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);margin-left:6px;vertical-align:middle}
-.ep-steptab.active .xdot{background:rgba(255,255,255,.85)}
-.ep-steptab.flow.active{background-color:rgba(14,165,233,.90);background-image:var(--ctl-sheen-on)}
-.ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:16px 18px;border-left:4px solid var(--accent)}
+/* Every step, every number under its column. The row you select is the one
+   the sliders below are holding. */
+.ep-grid-wrap{max-height:196px;overflow-y:auto;margin-bottom:8px}
+.ep-grid-wrap::-webkit-scrollbar{width:6px}
+.ep-grid-wrap::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
+.ep-grid{width:100%;border-collapse:separate;border-spacing:0 5px}
+.ep-grid th{font-size:10px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:0 3px 1px;white-space:nowrap}
+.ep-grid th.l{text-align:left;padding-left:12px}
+.ep-grid td{padding:0;height:38px;background-color:var(--pane-face);background-image:var(--ctl-sheen);box-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(99,102,241,.10);cursor:pointer}
+.ep-grid td:first-child{border-radius:11px 0 0 11px;padding-left:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(99,102,241,.10), inset 1px 0 0 rgba(99,102,241,.10)}
+.ep-grid td:last-child{border-radius:0 11px 11px 0;padding-right:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(99,102,241,.10), inset -1px 0 0 rgba(99,102,241,.10)}
+.ep-grid tr.on td{background-color:rgba(99,102,241,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22)}
+.ep-grid tr.on td:first-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset 3px 0 0 var(--accent)}
+.ep-grid tr.on td:last-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset -1px 0 0 rgba(99,102,241,.22)}
+.ep-grid td.nm{display:flex;align-items:center;gap:6px;height:38px;min-width:150px}
+.ep-grid .ix{font-size:11px;font-weight:800;color:var(--ink-mute);width:14px;text-align:right;flex-shrink:0}
+.ep-grid .gname{flex:1;min-width:0;border:none;background:none;outline:none;font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink);padding:4px 2px;border-radius:7px}
+.ep-grid .gname:focus{background:rgba(99,102,241,.10)}
+.ep-grid .gpill{border:none;border-radius:100px;padding:3px 10px;font-family:var(--font);font-size:10px;font-weight:800;color:#fff;background-color:var(--accent);background-image:var(--ctl-sheen-on);cursor:pointer}
+.ep-grid .gpill.f{background-color:var(--steam)}
+.ep-grid .gv{display:block;text-align:center;font-size:14px;font-weight:800;color:var(--accent);padding:5px 2px;border-radius:8px;white-space:nowrap;transition:background .15s,transform .1s}
+.ep-grid .gv:active{transform:scale(.94);background:rgba(99,102,241,.16)}
+.ep-grid .gv small{font-size:9px;font-weight:700;color:var(--ink-mute);margin-left:1px}
+.ep-grid .gv.none{color:var(--ink-mute);font-weight:700;opacity:.55}
+.ep-grid td.xc{text-align:center;font-size:11px;font-weight:800;white-space:nowrap;padding:0 8px}
+.ep-grid .xon{color:var(--amber)} .ep-grid .xon .d{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);margin-right:4px;vertical-align:middle}
+.ep-grid .xoff{color:var(--ink-mute);opacity:.5;font-weight:700}
+.ep-grid td.ops{white-space:nowrap;text-align:right}
+.ep-grid td.ops button{width:24px;height:24px;margin-left:2px;border:none;border-radius:7px;background:rgba(99,102,241,.10);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:800;cursor:pointer}
+.ep-grid td.ops button:active{transform:scale(.9)}
+.ep-grid td.ops button.del{color:var(--red);background:rgba(239,68,68,.10)}
+.ep-meta-title{font-size:13px;font-weight:700;margin:18px 0 10px}
+body.night .ep-grid .gname{color:var(--ink)}
+.ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:12px 16px 14px;border-left:4px solid var(--accent)}
 .ep-step-editor.flow{border-left-color:var(--steam)}
 .ep-exit{margin-top:14px;padding-top:12px;border-top:1px solid var(--ctl-edge)}
 .ep-exit-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -1802,6 +1826,7 @@ var I18N={
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
+    newStep:'New step', stepCol:'Step', kind:'Type', targetCol:'Target', volShort:'Volume', wtShort:'Weight', profileMeta:'Profile details',
     curveTitle:'Pressure & flow curve', addStep:'Add step', tempShort:'temp',
     tempLabel:'Temp °C', exitTitle:'Exit condition', exitOver:'over', exitUnder:'under', noLimit:'no limit', volLimit:'Volume limit', wtLimit:'Weight limit', exitDesc:'Leave this step the moment the reading crosses the line, even if its time is not up. This is what ends a shot early while every number on screen still looks right.',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
@@ -1950,6 +1975,7 @@ var I18N={
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
+    newStep:'새 스텝', stepCol:'스텝', kind:'유형', targetCol:'목표', volShort:'부피', wtShort:'무게', profileMeta:'프로파일 정보',
     curveTitle:'압력 · 유량 곡선', addStep:'스텝 추가', tempShort:'온도',
     tempLabel:'온도 °C', exitTitle:'조건부 넘김', exitOver:'이상', exitUnder:'이하', noLimit:'제한 없음', volLimit:'부피 제한', wtLimit:'무게 제한', exitDesc:'측정값이 이 선을 넘는 순간, 시간이 남아도 다음 스텝으로 넘어갑니다. 화면의 숫자는 전부 정상인데 샷이 일찍 끝나는 원인이 이것입니다.',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
@@ -5172,13 +5198,14 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!edi
   var pr=editing.profile||{};
   wrap.innerHTML=''
     +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve"></canvas></div>'
+    +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span><button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
+    +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
+    +'<div id="epStepEditor"></div>'
+    +'<div class="ep-meta-title">'+escapeHtml(t('profileMeta'))+'</div>'
     +'<input class="ep-name-input" id="epName" value="'+escapeAttr(pr.title||'')+'">'
     +colorPicker(editing)
     +roastPicker(editing)
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
-    +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span><button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
-    +'<div class="ep-stepnav"><button class="nav" onclick="stepMove(-1)">‹</button><div class="ep-steptabs" id="epStepTabs"></div><button class="nav" onclick="stepMove(1)">›</button></div>'
-    +'<div id="epStepEditor"></div>'
     +'<div class="ep-save-bar"><button class="m-btn" onclick="closeEditPage()">'+t('cancel')+'</button>'
       +'<button class="m-btn" id="epUseBtn" onclick="useEditedProfile()">'+escapeHtml(t('useForShot'))+'</button>'
       +'<button class="m-btn primary" onclick="saveProfilePage()">'+t('saveProfile')+'</button></div>';
@@ -5207,10 +5234,6 @@ function bindStepVals(ed,st){
           renderEpSteps(); drawEditCurve(); } }); }; }); }
 function t18nExit(st){ var x=st.exit; if(!x) return '';
   return t(x.type==='pressure'?'pressure':'flow')+' '+t(x.condition==='over'?'exitOver':'exitUnder')+' '+(x.value||0); }
-function renderStepTabLabels(){
-  var steps=(editing.profile.steps)||[], tabs=document.querySelectorAll('.ep-steptab');
-  steps.forEach(function(st,i){ var tb=tabs[i]; if(!tb) return;
-    tb.innerHTML=escapeHtml((i+1)+'. '+(st.name||'Step'))+(st.exit?'<span class="xdot" title="'+escapeAttr(t18nExit(st))+'"></span>':''); }); }
 // A slider is quick to sweep and hopeless at landing on 92.5, and every other
 // number in this skin is typed. The keypad takes a callback here rather than
 // a settings field, so a step's values reach it the same way the recipe's do.
@@ -5258,24 +5281,104 @@ function bindExitEditor(ed,st){
   var val=ed.querySelector('#epExitVal'); if(val) val.oninput=function(){
     st.exit.value=parseFloat(this.value)||0;
     this.parentElement.querySelector('.val').textContent=st.exit.value.toFixed(1); }; }
-function stepMove(d){ var n=(editing.profile.steps||[]).length; if(!n) return; epStepIdx=(epStepIdx+d+n)%n; renderEpSteps(); drawEditCurve(); }
-function addStep(){ if(!editing.profile.steps) editing.profile.steps=[]; editing.profile.steps.push({name:'New step',pump:'pressure',transition:'smooth',pressure:6,temperature:90,seconds:10}); epStepIdx=editing.profile.steps.length-1; renderEpSteps(); drawEditCurve(); }
-function delStep(){ var s=editing.profile.steps; if(!s||s.length<=1) return; s.splice(epStepIdx,1); if(epStepIdx>=s.length) epStepIdx=s.length-1; renderEpSteps(); drawEditCurve(); }
+function addStep(){ var a=editing.profile.steps; if(!a) a=editing.profile.steps=[];
+  // volume and sensor are required by the profile schema; a step made here
+  // used to go out without them
+  a.push({name:t('newStep'),pump:'pressure',transition:'smooth',pressure:6,temperature:90,
+    seconds:10,volume:0,sensor:(a[0]&&a[0].sensor)||'water'});
+  epStepIdx=a.length-1; renderEpSteps(); drawEditCurve(); }
+// One step at a time meant four tab switches to compare four temperatures,
+// and nowhere to see two of them at once. The profile is a table now: every
+// step on screen, every number under the column it belongs to, and sliders
+// below for whichever row is selected -- sweeping is for finding a value, the
+// keypad for landing on one.
+function stepSel(i){ epStepIdx=i; renderEpSteps(); drawEditCurve(); }
+function stepSwap(i,j){ var a=editing.profile.steps; if(!a||j<0||j>=a.length) return;
+  var t2=a[i]; a[i]=a[j]; a[j]=t2; epStepIdx=j; renderEpSteps(); drawEditCurve(); }
+function stepDup(i){ var a=editing.profile.steps; if(!a) return;
+  a.splice(i+1,0,JSON.parse(JSON.stringify(a[i]))); epStepIdx=i+1; renderEpSteps(); drawEditCurve(); }
+function delStepAt(i){ var a=editing.profile.steps; if(!a||a.length<=1) return;
+  a.splice(i,1); if(epStepIdx>=a.length) epStepIdx=a.length-1; renderEpSteps(); drawEditCurve(); }
+function stepPump(i){ var st=editing.profile.steps[i];
+  st.pump=(st.pump==='pressure')?'flow':'pressure';
+  if(st.pump==='pressure'&&st.pressure===undefined) st.pressure=6;
+  if(st.pump==='flow'&&st.flow===undefined) st.flow=2;
+  renderEpSteps(); drawEditCurve(); }
+var KEY_RANGE={ pressure:{min:0,max:12,dp:1}, flow:{min:0,max:8,dp:1}, temperature:{min:20,max:100,dp:1},
+  seconds:{min:0,max:120,dp:1}, volume:{min:0,max:150,dp:0}, weight:{min:0,max:80,dp:1} };
+var KEY_LABEL={ pressure:'pressure', flow:'flow', temperature:'tempLabel', seconds:'secondsLabel',
+  volume:'volLimit', weight:'wtLimit' };
+function gridNum(v,unit,dp){
+  if(v==null||v===0) return '<span class="gv none">—</span>';
+  return '<span class="gv">'+v.toFixed(dp)+(unit?'<small>'+unit+'</small>':'')+'</span>'; }
+function bindGridNums(tr,i){
+  var steps=editing.profile.steps;
+  tr.querySelectorAll('td[data-k] .gv').forEach(function(v){
+    var td=v.parentElement, k=td.dataset.k, st=steps[i];
+    v.onclick=function(){ epStepIdx=i;
+      var lim=KEY_RANGE[k]||{min:0,max:100,dp:1};
+      openKeypadFor({ title:(st.name||'')+' · '+t(KEY_LABEL[k]||'stepCol'), unit:'',
+        min:lim.min, max:lim.max, dp:lim.dp,
+        value:(k==='weight'?(st.weight||0):(st[k]||0)),
+        onOk:function(nv){ if(k==='weight') st.weight=(nv>0?nv:null); else st[k]=nv;
+          renderEpSteps(); drawEditCurve(); } }); }; }); }
+// Dragging a slider must not rebuild the table under the finger, so the row it
+// belongs to is repainted on its own.
+function renderGridRow(i){
+  var st=editing.profile.steps[i], tr=document.querySelector('.ep-grid tr.gr[data-i="'+i+'"]'); if(!st||!tr) return;
+  var isP=(st.pump==='pressure'), tds=tr.querySelectorAll('td[data-k]');
+  var vals=[isP?(st.pressure||0):(st.flow||0), st.temperature||0, st.seconds||0, st.volume||0, st.weight||0];
+  var units=[isP?'bar':'ml/s','°','','','g'], dps=[1,1,1,0,1];
+  tds.forEach(function(td,n){ td.innerHTML=gridNum(vals[n],units[n],dps[n]); });
+  var xc=tr.querySelector('td.xc');
+  if(xc) xc.innerHTML=st.exit?('<span class="xon"><span class="d"></span>'+escapeHtml(t18nExit(st))+'</span>')
+                             :('<span class="xoff">'+escapeHtml(t('noLimit'))+'</span>');
+  bindGridNums(tr,i); }
+
 function renderEpSteps(){
   var steps=editing.profile.steps||[];
-  // tabs
-  var tabs=document.getElementById('epStepTabs'); tabs.innerHTML='';
-  steps.forEach(function(st,i){ var isP=(st.pump==='pressure'); var t=document.createElement('button'); t.className='ep-steptab'+(isP?'':' flow')+(i===epStepIdx?' active':'');
-    t.innerHTML=escapeHtml((i+1)+'. '+(st.name||'Step'))+(st.exit?'<span class="xdot" title="'+escapeAttr(t18nExit(st))+'"></span>':''); t.onclick=function(){ epStepIdx=i; renderEpSteps(); drawEditCurve(); }; tabs.appendChild(t); });
-  // active step editor
-  var st=steps[epStepIdx]; var ed=document.getElementById('epStepEditor'); if(!st){ ed.innerHTML=''; return; }
-  var isP=(st.pump==='pressure'); var valLabel=isP?t('pressure'):t('flow'); var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
+  if(epStepIdx>=steps.length) epStepIdx=Math.max(0,steps.length-1);
+  var g=document.getElementById('epStepGrid'); if(!g) return;
+  var h='<tr class="gh"><th class="l">'+escapeHtml(t('stepCol'))+'</th><th>'+escapeHtml(t('kind'))+'</th>'
+    +'<th>'+escapeHtml(t('targetCol'))+'</th><th>'+escapeHtml(t('tempShort'))+'</th><th>'+escapeHtml(t('secondsLabel'))+'</th>'
+    +'<th>'+escapeHtml(t('volShort'))+'</th><th>'+escapeHtml(t('wtShort'))+'</th><th>'+escapeHtml(t('exitTitle'))+'</th><th></th></tr>';
+  steps.forEach(function(st,i){
+    var isP=(st.pump==='pressure');
+    h+='<tr class="gr'+(i===epStepIdx?' on':'')+'" data-i="'+i+'">'
+      +'<td class="nm"><span class="ix">'+(i+1)+'</span><input class="gname" value="'+escapeAttr(st.name||'')+'" data-i="'+i+'"></td>'
+      +'<td><button class="gpill'+(isP?'':' f')+'" data-pump="'+i+'">'+escapeHtml(isP?t('pressure'):t('flow'))+'</button></td>'
+      +'<td data-k="'+(isP?'pressure':'flow')+'">'+gridNum(isP?(st.pressure||0):(st.flow||0),isP?'bar':'ml/s',1)+'</td>'
+      +'<td data-k="temperature">'+gridNum(st.temperature||0,'°',1)+'</td>'
+      +'<td data-k="seconds">'+gridNum(st.seconds||0,'',1)+'</td>'
+      +'<td data-k="volume">'+gridNum(st.volume||0,'',0)+'</td>'
+      +'<td data-k="weight">'+gridNum(st.weight||0,'g',1)+'</td>'
+      +'<td class="xc">'+(st.exit
+          ?'<span class="xon"><span class="d"></span>'+escapeHtml(t18nExit(st))+'</span>'
+          :'<span class="xoff">'+escapeHtml(t('noLimit'))+'</span>')+'</td>'
+      +'<td class="ops"><button data-up="'+i+'">↑</button><button data-dn="'+i+'">↓</button>'
+        +'<button data-dup="'+i+'">⧉</button><button class="del" data-del="'+i+'">✕</button></td>'
+      +'</tr>'; });
+  g.innerHTML=h;
+  g.querySelectorAll('tr.gr').forEach(function(tr){
+    var i=+tr.dataset.i;
+    tr.onclick=function(e){ if(e.target.closest('button,input,.gv')) return; stepSel(i); };
+    bindGridNums(tr,i); });
+  g.querySelectorAll('.gname').forEach(function(inp){ var i=+inp.dataset.i;
+    inp.onfocus=function(){ if(epStepIdx!==i) stepSel(i); };
+    inp.oninput=function(){ editing.profile.steps[i].name=this.value; }; });
+  g.querySelectorAll('[data-pump]').forEach(function(b){ b.onclick=function(){ stepPump(+b.dataset.pump); }; });
+  g.querySelectorAll('[data-up]').forEach(function(b){ b.onclick=function(){ var i=+b.dataset.up; stepSwap(i,i-1); }; });
+  g.querySelectorAll('[data-dn]').forEach(function(b){ b.onclick=function(){ var i=+b.dataset.dn; stepSwap(i,i+1); }; });
+  g.querySelectorAll('[data-dup]').forEach(function(b){ b.onclick=function(){ stepDup(+b.dataset.dup); }; });
+  g.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delStepAt(+b.dataset.del); }; });
+
+  var st=steps[epStepIdx]; var ed=document.getElementById('epStepEditor');
+  if(!st){ ed.innerHTML=''; return; }
+  var isP=(st.pump==='pressure'); var valLabel=isP?t('pressure'):t('flow');
+  var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
   ed.className='ep-step-editor'+(isP?'':' flow');
   ed.innerHTML=''
-    +'<div class="ep-step-top"><input value="'+escapeAttr(st.name||'')+'" id="epStName" style="border:none;font-size:16px;font-weight:800;background:none;outline:none;width:60%;min-height:40px;padding:0">'
-    +'<div style="display:flex;gap:8px;align-items:center"><div class="ep-pump-toggle"><button class="'+(isP?'':'on')+'" data-pump="flow">'+t('flow')+'</button><button class="'+(isP?'on':'')+'" data-pump="pressure">'+t('pressure')+'</button></div>'
-    +'<button class="ep-step-add" style="border-color:var(--red);color:var(--red)" onclick="delStep()">✕</button></div></div>'
-    +'<div class="ep-sliders" style="margin-top:12px">'
+    +'<div class="ep-sliders">'
     +'<div class="ep-slider-row"><span class="lbl">'+valLabel+'</span><input type="range" min="0" max="'+valMax+'" step="0.1" value="'+valNow+'" data-k="'+(isP?'pressure':'flow')+'"><span class="val">'+valNow.toFixed(1)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('tempLabel')+'</span><input type="range" min="20" max="100" step="0.5" value="'+(st.temperature||90)+'" data-k="temperature"><span class="val">'+(st.temperature||90).toFixed(1)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('secondsLabel')+'</span><input type="range" min="0" max="120" step="0.5" value="'+(st.seconds||0)+'" data-k="seconds"><span class="val">'+(st.seconds||0).toFixed(1)+'</span></div>'
@@ -5283,17 +5386,18 @@ function renderEpSteps(){
     +'<div class="ep-slider-row"><span class="lbl">'+t('wtLimit')+'</span><input type="range" min="0" max="80" step="0.5" value="'+(st.weight||0)+'" data-k0="weight"><span class="val">'+limTxt(st.weight,1)+'</span></div>'
     +'</div>'
     +exitEditorHtml(st);
-  ed.querySelector('#epStName').oninput=function(){ st.name=this.value; renderStepTabLabels(); };
-  bindStepVals(ed,st);
-  ed.querySelectorAll('input[type=range][data-k]').forEach(function(inp){ inp.oninput=function(){ st[inp.dataset.k]=parseFloat(inp.value)||0; inp.parentElement.querySelector('.val').textContent=(parseFloat(inp.value)||0).toFixed(1); drawEditCurve(); }; });
   bindExitEditor(ed,st);
+  bindStepVals(ed,st);
   ed.querySelectorAll('input[data-k0]').forEach(function(inp){ inp.oninput=function(){
     var v=parseFloat(inp.value)||0, k=inp.dataset.k0;
-    // zero is how a profile says “no limit”, and weight carries it as null
     if(k==='weight') st.weight=(v>0?v:null); else st.volume=v;
-    inp.parentElement.querySelector('.val').textContent=limTxt(v,k==='volume'?0:1); drawEditCurve(); }; });
-  ed.querySelectorAll('.ep-pump-toggle button').forEach(function(b){ if(!b.dataset.pump) return; b.onclick=function(){ st.pump=b.dataset.pump; if(st.pump==='pressure'&&st.pressure===undefined) st.pressure=6; if(st.pump==='flow'&&st.flow===undefined) st.flow=2; renderEpSteps(); drawEditCurve(); }; });
+    inp.parentElement.querySelector('.val').textContent=limTxt(v,k==='volume'?0:1); renderGridRow(epStepIdx); drawEditCurve(); }; });
+  ed.querySelectorAll('input[type=range][data-k]').forEach(function(inp){ inp.oninput=function(){
+    st[inp.dataset.k]=parseFloat(inp.value)||0;
+    inp.parentElement.querySelector('.val').textContent=(parseFloat(inp.value)||0).toFixed(1);
+    renderGridRow(epStepIdx); drawEditCurve(); }; });
 }
+
 // Curve with vertical step boundaries + highlight of the active step.
 function drawEditCurve(){ var canvas=document.getElementById('epCurve'); if(!canvas) return;
   var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||400,height:200}; }
