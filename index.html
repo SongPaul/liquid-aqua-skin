@@ -716,16 +716,17 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-group-head.fav{background:linear-gradient(135deg,#fff6e6,#fff0f0)}
 .ep-editor{overflow-y:auto}
 .ep-editor::-webkit-scrollbar{width:6px}.ep-editor::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-.ep-editor-inner{padding:18px 22px;display:grid;grid-template-columns:1fr 300px;gap:8px 14px;align-items:start}
-.ep-visual{grid-column:1;grid-row:1}
-.ep-steps-title{grid-column:1;grid-row:2}
-.ep-grid-wrap{grid-column:1;grid-row:3}
-.ep-step-editor{grid-column:2;grid-row:1/4;align-self:stretch}
-.ep-meta-title,.ep-name-input,.ep-colorrow,.ep-roastrow,.ep-notes,.ep-save-bar{grid-column:1/-1}
+.ep-editor-inner{padding:16px 22px;display:grid;grid-template-columns:6fr 4fr;gap:8px 14px;align-items:start}
+.ep-meta{grid-column:1/-1;grid-row:1}
+.ep-visual{grid-column:1;grid-row:2}
+.ep-steps-title{grid-column:1;grid-row:3}
+.ep-grid-wrap{grid-column:1;grid-row:4}
+.ep-step-editor{grid-column:2;grid-row:2/5;align-self:stretch}
+.ep-save-bar{grid-column:1/-1;grid-row:5}
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
 .ep-visual{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:16px;padding:12px 16px 10px;margin:0}
 .ep-visual-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:flex;justify-content:space-between}
-.ep-visual canvas{width:100%;height:196px;display:block}
+.ep-visual canvas{width:100%;height:118px;display:block}
 .ep-name-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:18px;font-weight:700;color:var(--ink);-webkit-appearance:none;margin-bottom:12px}
 .ep-notes{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:13px;color:var(--ink-soft);-webkit-appearance:none;resize:vertical;margin-bottom:18px}
 .ep-steps-title{font-size:13px;font-weight:700;margin:2px 0 4px;display:flex;justify-content:space-between;align-items:center}
@@ -745,7 +746,7 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-slider-row input[type=range]::-moz-range-track{height:6px;border-radius:100px;background:rgba(139,92,246,.18)}
 .ep-slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;margin-top:-9px;width:24px;height:24px;border-radius:50%;background-color:var(--ctl-knob);background-image:var(--ctl-sheen);cursor:pointer;box-shadow:var(--ctl-knob-lift)}
 .ep-slider-row .val{font-size:13px;font-weight:800;color:var(--accent);min-width:56px;text-align:right;white-space:nowrap;flex-shrink:0}
-.ep-save-bar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#fbfaff 40%);padding:16px 0 4px;display:flex;justify-content:flex-end;gap:10px}
+.ep-save-bar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#fbfaff 40%);padding:10px 0 2px;display:flex;justify-content:flex-end;gap:10px}
 .ep-section-title{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 
 /* AI bean-label scan */
@@ -968,7 +969,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ep-grid tr.on td{background-color:rgba(99,102,241,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22)}
 .ep-grid tr.on td:first-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset 3px 0 0 var(--accent)}
 .ep-grid tr.on td:last-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset -1px 0 0 rgba(99,102,241,.22)}
-.ep-grid td.nm{display:flex;align-items:center;gap:6px;height:38px;min-width:150px}
+.ep-grid td.nm{display:flex;align-items:center;gap:6px;height:38px;min-width:138px}
 .ep-grid .ix{font-size:11px;font-weight:800;color:var(--ink-mute);width:14px;text-align:right;flex-shrink:0}
 .ep-grid .gname{flex:1;min-width:0;border:none;background:none;outline:none;font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink);padding:4px 2px;border-radius:7px}
 .ep-grid .gname:focus{background:rgba(99,102,241,.10)}
@@ -978,16 +979,24 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ep-grid .gv:active{transform:scale(.94);background:rgba(99,102,241,.16)}
 .ep-grid .gv small{font-size:9px;font-weight:700;color:var(--ink-mute);margin-left:1px}
 .ep-grid .gv.none{color:var(--ink-mute);font-weight:700;opacity:.55}
+.ep-grid tr.gr td{cursor:grab}
+body.step-dragging{cursor:grabbing;user-select:none}
+body.step-dragging .ep-grid tr.gr{touch-action:none}
+.ep-grid tr.drag td{background-color:rgba(99,102,241,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 6px 18px rgba(60,60,130,.22)}
+.ep-grid tr.drag td:first-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 6px 18px rgba(60,60,130,.22), inset 3px 0 0 var(--accent)}
 .ep-grid td.xc{text-align:center;font-size:11px;font-weight:800;white-space:nowrap;padding:0 8px}
 .ep-grid .xon{color:var(--amber)} .ep-grid .xon .d{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);margin-right:4px;vertical-align:middle}
 .ep-grid .xoff{color:var(--ink-mute);opacity:.5;font-weight:700}
-.ep-step-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.ep-step-head .who{font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ep-step-head{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:8px}
 .ep-step-ops{display:flex;gap:3px;flex-shrink:0}
 .ep-step-ops button{width:26px;height:26px;border:none;border-radius:8px;background:rgba(99,102,241,.10);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:800;cursor:pointer}
 .ep-step-ops button:active{transform:scale(.9)}
 .ep-step-ops button.del{color:var(--red);background:rgba(239,68,68,.10)}
-.ep-meta-title{font-size:13px;font-weight:700;margin:18px 0 10px}
+.ep-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;align-items:start;margin-bottom:2px}
+.ep-meta .ep-name-input{grid-column:1;grid-row:1}
+.ep-meta .ep-notes{grid-column:1;grid-row:2}
+.ep-meta .ep-colorrow{grid-column:2;grid-row:1}
+.ep-meta .ep-roastrow{grid-column:2;grid-row:2}
 body.night .ep-grid .gname{color:var(--ink)}
 .ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:12px 14px 14px;border-left:4px solid var(--accent)}
 .ep-step-editor.flow{border-left-color:var(--steam)}
@@ -1000,7 +1009,7 @@ body.night .ep-grid .gname{color:var(--ink)}
 /* the readout is the way in to typing an exact value */
 .ep-slider-row .val.tapval{cursor:pointer;border-radius:9px;padding:3px 7px;margin:-3px -7px;transition:background .15s,transform .1s}
 .ep-slider-row .val.tapval:active{transform:scale(.94);background:rgba(99,102,241,.16)}
-.ep-step-add{min-height:40px;padding:6px 14px;border-radius:100px;border:1px dashed var(--edge);background:transparent;font-size:12px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+.ep-step-add{min-height:32px;padding:4px 14px;border-radius:100px;border:1px dashed var(--edge);background:transparent;font-size:12px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
 
 /* ── Modal ───────────────────────────────────────────────────────── */
 /* Above .editpage (250): a modal is opened BY a page -- the settings page, the
@@ -5203,16 +5212,18 @@ function roastPicker(p){
     +(cur.length&&!isManual?' · '+escapeHtml(isAiRoast(live)?t('fromAi'):t('fromProfile')):'')+'</span>'+btns+clear+'</div>'; }
 function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!editing){ wrap.innerHTML='<div class="ep-placeholder">← Select a profile</div>'; return; }
   var pr=editing.profile||{};
-  wrap.innerHTML=''
-    +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve"></canvas></div>'
-    +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span><button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
-    +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
-    +'<div id="epStepEditor"></div>'
-    +'<div class="ep-meta-title">'+escapeHtml(t('profileMeta'))+'</div>'
+  var meta=''
+    +'<div class="ep-meta">'
     +'<input class="ep-name-input" id="epName" value="'+escapeAttr(pr.title||'')+'">'
     +colorPicker(editing)
     +roastPicker(editing)
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
+    +'</div>';
+  wrap.innerHTML=meta
+    +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve"></canvas></div>'
+    +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span><button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
+    +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
+    +'<div id="epStepEditor"></div>'
     +'<div class="ep-save-bar"><button class="m-btn" onclick="closeEditPage()">'+t('cancel')+'</button>'
       +'<button class="m-btn" id="epUseBtn" onclick="useEditedProfile()">'+escapeHtml(t('useForShot'))+'</button>'
       +'<button class="m-btn primary" onclick="saveProfilePage()">'+t('saveProfile')+'</button></div>';
@@ -5342,6 +5353,44 @@ function renderGridRow(i){
                              :('<span class="xoff">'+escapeHtml(t('noLimit'))+'</span>');
   bindGridNums(tr,i); }
 
+// Holding a row and moving it is how you would reorder anything on a touch
+// screen, and the arrows in the panel only ever moved a step one place at a
+// time. The hold is what separates the gesture from a scroll: a press that
+// travels more than a few pixels before it fires is a scroll and is left
+// alone.
+var SDRAG={i:-1,timer:null,on:false,y0:0};
+function stepDragEnd(){
+  if(SDRAG.timer){ clearTimeout(SDRAG.timer); SDRAG.timer=null; }
+  if(SDRAG.on){ SDRAG.on=false; document.body.classList.remove('step-dragging');
+    var g=document.getElementById('epStepGrid');
+    if(g) g.querySelectorAll('tr.gr').forEach(function(r){ r.classList.remove('drag'); }); }
+  SDRAG.i=-1; }
+function stepDragMark(i){
+  var tr=document.querySelector('.ep-grid tr.gr[data-i="'+i+'"]'); if(tr) tr.classList.add('drag'); }
+function stepDragStart(i){
+  if(!editing||!editing.profile||!editing.profile.steps) return;
+  SDRAG.on=true; SDRAG.i=i; document.body.classList.add('step-dragging');
+  epStepIdx=i; renderEpSteps(); drawEditCurve(); stepDragMark(i);
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(_){} }
+function stepDragOver(y){
+  if(!SDRAG.on) return;
+  var rows=document.querySelectorAll('.ep-grid tr.gr'), to=SDRAG.i;
+  for(var k=0;k<rows.length;k++){ var b=rows[k].getBoundingClientRect();
+    if(y>=b.top&&y<=b.bottom){ to=k; break; } }
+  if(to===SDRAG.i) return;
+  var a=editing.profile.steps, moved=a.splice(SDRAG.i,1)[0];
+  a.splice(to,0,moved); SDRAG.i=to; epStepIdx=to;
+  renderEpSteps(); drawEditCurve(); stepDragMark(to); }
+document.addEventListener('pointermove',function(e){
+  if(SDRAG.timer&&Math.abs(e.clientY-SDRAG.y0)>8){ clearTimeout(SDRAG.timer); SDRAG.timer=null; }
+  if(SDRAG.on){ e.preventDefault(); stepDragOver(e.clientY); } },{passive:false});
+document.addEventListener('pointerup',stepDragEnd);
+document.addEventListener('pointercancel',stepDragEnd);
+function stepDragBind(tr,i){
+  tr.addEventListener('pointerdown',function(e){
+    if(e.target.closest('button,input,.gv')) return;
+    stepDragEnd(); SDRAG.y0=e.clientY;
+    SDRAG.timer=setTimeout(function(){ SDRAG.timer=null; stepDragStart(i); },380); }); }
 function renderEpSteps(){
   var steps=editing.profile.steps||[];
   if(epStepIdx>=steps.length) epStepIdx=Math.max(0,steps.length-1);
@@ -5366,8 +5415,8 @@ function renderEpSteps(){
   g.innerHTML=h;
   g.querySelectorAll('tr.gr').forEach(function(tr){
     var i=+tr.dataset.i;
-    tr.onclick=function(e){ if(e.target.closest('button,input,.gv')) return; stepSel(i); };
-    bindGridNums(tr,i); });
+    tr.onclick=function(e){ if(e.target.closest('button,input,.gv')||SDRAG.on) return; stepSel(i); };
+    stepDragBind(tr,i); bindGridNums(tr,i); });
   g.querySelectorAll('.gname').forEach(function(inp){ var i=+inp.dataset.i;
     inp.onfocus=function(){ if(epStepIdx!==i) stepSel(i); };
     inp.oninput=function(){ editing.profile.steps[i].name=this.value; }; });
@@ -5379,7 +5428,7 @@ function renderEpSteps(){
   var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
   ed.className='ep-step-editor'+(isP?'':' flow');
   ed.innerHTML=''
-    +'<div class="ep-step-head"><span class="who">'+escapeHtml((epStepIdx+1)+'. '+(st.name||'Step'))+'</span>'
+    +'<div class="ep-step-head">'
       +'<span class="ep-step-ops"><button id="opUp">↑</button><button id="opDn">↓</button>'
       +'<button id="opDup">⧉</button><button class="del" id="opDel">✕</button></span></div>'
     +'<div class="ep-sliders">'
