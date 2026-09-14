@@ -3151,14 +3151,14 @@ function bindDoseGestures(){
 // weighed on. Any other scale is held open on request with no meaning attached
 // to it, so which scale is "the dosing scale" is this skin's own choice and is
 // remembered here rather than there.
-// null until asked, then true or false. A gateway that can hold a second scale
-// answers an unknown command on an unknown scale with a JSON error; one that
-// predates the route has nothing there and answers in plain text. Either way an
-// unknown command on an unknown id tares nothing, so the probe is free.
+// null until asked, then true or false. Tare a scale id nothing can answer to:
+// a gateway with the addressed route says so in JSON, one without it has no
+// such route and answers in plain text. The id matches neither a held scale nor
+// the primary one, so no scale is ever tared by asking.
 var _dosingSupport=null;
 function dosingSupported(){ return _dosingSupport===true; }
 function probeDosingSupport(){
-  return fetch(GATEWAY.http+'/api/v1/scales/__probe__/__probe__',{method:'PUT'})
+  return fetch(GATEWAY.http+'/api/v1/scales/__probe__/tare',{method:'PUT'})
     .then(function(r){ return r.text(); })
     .then(function(txt){ var j=null; try{ j=JSON.parse(txt); }catch(_){ }
       return !!(j&&typeof j.error==='string'); })
