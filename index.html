@@ -746,6 +746,40 @@ body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,
 .ep-step-editor{grid-column:2;grid-row:2/5;align-self:stretch;overflow-y:auto}
 .ep-save-bar{grid-column:1/-1;grid-row:5;align-self:end}
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
+/* Taste is the language of the questions; the translation into pressures
+   and seconds happens out of sight. */
+.aip-modal{width:640px}
+.aip-src{font-size:12px;font-weight:800;color:var(--ink-mute);margin-bottom:14px}
+.aip-src i{font-style:normal;opacity:.5;margin:0 4px}
+.aip-sec{margin-bottom:16px}
+.aip-q{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.aip-seg{display:flex;gap:4px;flex-wrap:wrap}
+.aip-seg button{flex:1;min-width:64px;min-height:38px;padding:0 10px;border-radius:10px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none}
+.aip-seg button.on{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
+.aip-pair{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.aip-pair .l{width:52px;flex:none;font-size:11px;font-weight:800;color:var(--ink-mute)}
+.aip-pair .aip-seg{flex:1}
+.aip-facts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:8px}
+.aip-chk{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+.aip-num{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--ink-mute)}
+.aip-num input{width:58px;min-height:34px;padding:0 8px;border-radius:9px;border:1px solid var(--ctl-edge);background-color:var(--field);font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink);text-align:center;-webkit-appearance:none}
+.aip-num i{font-style:normal;font-size:11px;opacity:.7}
+.aip-chips{display:flex;flex-wrap:wrap;gap:5px}
+.aip-chip{min-height:36px;padding:0 13px;border-radius:100px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none}
+.aip-chip.on{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
+.aip-status{margin-right:auto;font-size:12px;font-weight:700;color:var(--ink-mute)}
+.aip-status.err{color:var(--red)} .aip-status.busy{color:var(--accent)}
+.ep-aibtn.aip-open{grid-column:2/-1;grid-row:1;min-height:44px;border-color:var(--accent);background:rgba(99,102,241,.16);font-size:12px;font-weight:800}
+.ep-guide-acts{display:flex;gap:8px;flex-wrap:wrap}
+/* what came back, and how to read the shot it is meant to produce */
+.aip-out{grid-column:1/-1;position:relative;margin:2px 0 0;padding:10px 34px 11px 13px;border-radius:12px;background-color:rgba(99,102,241,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px rgba(99,102,241,.18)}
+.aip-out .t{font-size:12px;font-weight:800;color:var(--accent)}
+.aip-out .w{font-size:12px;font-weight:600;color:var(--ink-soft);line-height:1.5;margin-top:3px}
+.aip-out .a{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:3px}
+.aip-out .a li{position:relative;padding-left:14px;font-size:11px;font-weight:700;color:var(--ink-mute);line-height:1.45}
+.aip-out .a li:before{content:"\2192";position:absolute;left:0;opacity:.6}
+.aip-out .x{position:absolute;top:7px;right:8px;width:22px;height:22px;border:none;border-radius:7px;background:none;color:var(--ink-mute);font-size:11px;cursor:pointer}
+body.night .aip-out{background-color:rgba(99,102,241,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.10)}
 .ep-guide{max-width:520px;margin:40px auto 0;text-align:left}
 .ep-guide-t{font-size:19px;font-weight:800;color:var(--ink);margin-bottom:8px}
 .ep-guide-b{font-size:13px;font-weight:600;color:var(--ink-mute);line-height:1.6}
@@ -1658,6 +1692,15 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 </div>
 
 <!-- ── Numeric keypad ──────────────────────────────────────────── -->
+<div class="overlay" id="aiProfOverlay" onclick="closeModal(event,'aiProfOverlay')">
+  <div class="modal aip-modal"><div class="modal-head"><div class="modal-title" id="aipTitle">AI</div><button class="modal-close" onclick="closeModal(null,'aiProfOverlay')">&times;</button></div>
+  <div class="modal-body" id="aipBody"></div>
+  <div class="modal-actions">
+    <span class="aip-status" id="aipStatus"></span>
+    <button class="m-btn" onclick="closeModal(null,'aiProfOverlay')" data-i18n="cancel">Cancel</button>
+    <button class="m-btn primary" id="aipGo" onclick="aiProfRun()">AI</button></div>
+  </div>
+</div>
 <div class="overlay" id="keypadOverlay" onclick="closeModal(event,'keypadOverlay')">
   <div class="modal keypad-modal"><div class="modal-head"><div class="modal-title" id="kpTitle">Enter value</div><button class="modal-close" onclick="closeModal(null,'keypadOverlay')">×</button></div>
   <div class="modal-body">
@@ -1892,6 +1935,7 @@ var I18N={
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
+    aipOpen:'Draft with AI', aipTitle:'Draft a profile', aipGo:'Draft it', aipWorking:'Thinking…', aipNoBean:'no bean chosen', aipNoGrinder:'no grinder', aipAxisQ:'What do you most want to taste?', aipAxis_acidity:'Clear acidity', aipAxis_sweet:'Sweetness & body', aipAxis_balance:'Balance', aipAxis_experimental:'Experimental', aipToneQ:'Where should it sit?', aipMid:'Either', aipTexture:'Texture', aipTex0:'Clear, tea-like', aipTex2:'Syrupy', aipAcid:'Acidity', aipAcid0:'Rounded', aipAcid2:'Sharp', aipStr:'Strength', aipStr0:'Lighter, longer', aipStr2:'Concentrated', aipFactQ:'Conditions', aipMilk:'Drunk with milk', aipDose:'Dose', aipDays:'Days off roast', aipDaysUnit:'d', aipGrind:'Grinder', aipGrindFixed:'Leave it', aipGrindSome:'A little', aipGrindFree:'Freely', aipAvoidQ:'What went wrong last time?', aipAvoid_sour:'Too sour', aipAvoid_bitter:'Bitter, drying', aipAvoid_thin:'Thin and weak', aipAvoid_channel:'Channelling', aipAvoid_none:'Nothing in particular', aipBaseline:'A baseline shot to read, not a finished recipe',
     newProfile:'New profile', newProfileName:'New profile', guideProfTitle:'Profiles', guideProfBody:'A profile is the shape of a shot: what the machine holds, for how long, and what makes it move on.', guideProf1:'Pick one on the left to see its curve and change it.', guideProf2:'A step ends on whichever comes first — its seconds, its volume, its weight, or a reading crossing a line.', guideProf3:'Press a stretch of the curve to edit the step that drew it.',
     stepsShort:'steps',
     moveUp:'Move up', moveDown:'Move down', dragHint:'drag to reorder',
@@ -2047,6 +2091,7 @@ var I18N={
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
+    aipOpen:'AI로 초안 만들기', aipTitle:'프로파일 초안', aipGo:'만들기', aipWorking:'생각하는 중…', aipNoBean:'원두 미지정', aipNoGrinder:'그라인더 없음', aipAxisQ:'가장 보고 싶은 것 하나를 고르세요', aipAxis_acidity:'산미 선명도', aipAxis_sweet:'단맛 · 바디', aipAxis_balance:'균형', aipAxis_experimental:'실험적', aipToneQ:'결을 잡아주세요', aipMid:'중간', aipTexture:'질감', aipTex0:'투명하게', aipTex2:'시럽처럼', aipAcid:'산미', aipAcid0:'둥글게', aipAcid2:'또렷하게', aipStr:'강도', aipStr0:'연하고 길게', aipStr2:'진하고 짧게', aipFactQ:'조건', aipMilk:'우유에 섞어 마심', aipDose:'도징', aipDays:'로스팅 후', aipDaysUnit:'일', aipGrind:'분쇄도', aipGrindFixed:'그대로', aipGrindSome:'조금', aipGrindFree:'자유롭게', aipAvoidQ:'지난번에 무엇이 아쉬웠나요?', aipAvoid_sour:'신맛이 과함', aipAvoid_bitter:'쓰고 뗫음', aipAvoid_thin:'밍밍하고 힘없음', aipAvoid_channel:'채널링이 잦음', aipAvoid_none:'특별히 없음', aipBaseline:'완성본이 아니라 읽기 위한 기준 샷입니다',
     newProfile:'새 프로파일', newProfileName:'새 프로파일', guideProfTitle:'프로파일', guideProfBody:'프로파일은 샷의 모양입니다 — 머신이 무엇을 얼마동안 유지하고, 언제 다음 단계로 넘어가는지를 정합니다.', guideProf1:'왼쪽에서 하나를 고르면 곱선과 단계가 보이고 바로 고칠 수 있습니다.', guideProf2:'스텝은 시간 · 부피 · 무게 · 조건부 넘김 중 먼저 오는 것으로 끝납니다.', guideProf3:'곱선의 구간을 누르면 그 단계를 바로 편집합니다.',
     stepsShort:'스텝',
     moveUp:'위로', moveDown:'아래로', dragHint:'끌어서 순서 변경',
@@ -5277,6 +5322,164 @@ function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
   // just move the active highlight — no full list rebuild (keeps it fast)
   Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.toggle('active', k===p.id); }); });
   renderEpEditor(); }
+
+// ── AI profile draft ────────────────────────────────────────────────
+// The questions are about taste, not about the machine: a person who can
+// answer "preinfusion, twenty-five seconds" is already writing the profile
+// themselves. One axis carries most of the decision, three bipolar pairs
+// shade it, and the facts -- milk, dose, days off roast, whether the grinder
+// may move -- are asked apart from the preferences because they are not
+// preferences and they are what makes a profile possible or not.
+var AIP={ axis:'balance', texture:1, acidity:1, strength:1,
+  milk:false, dose:'', days:'', grind:'some', avoid:[] };
+var aipBusy=false, aipResult=null;
+var AIP_AXES=['acidity','sweet','balance','experimental'];
+var AIP_AVOID=['sour','bitter','thin','channel'];
+function aipSeg(key,val,opts){
+  var h='<div class="aip-seg" data-k="'+key+'">';
+  opts.forEach(function(o){ h+='<button class="'+(String(val)===String(o[0])?'on':'')+'" data-v="'+o[0]+'">'+escapeHtml(o[1])+'</button>'; });
+  return h+'</div>'; }
+function aiProfOpen(){
+  var b=curBeanForAi(), g=curGrinderForAi();
+  if(AIP.dose==='') AIP.dose=(settings&&settings.doseIn)?String(settings.doseIn):'';
+  if(AIP.days===''&&b&&b.daysOffRoast!=null) AIP.days=String(b.daysOffRoast);
+  document.getElementById('aipTitle').textContent=t('aipTitle');
+  document.getElementById('aipGo').textContent='✨ '+t('aipGo');
+  aipResult=null; renderAipBody(b,g);
+  document.getElementById('aiProfOverlay').classList.add('show'); }
+function renderAipBody(b,g){
+  var el=document.getElementById('aipBody'); if(!el) return;
+  b=b||curBeanForAi(); g=g||curGrinderForAi();
+  var src=(b?escapeHtml([b.roaster,b.name].filter(Boolean).join(' · ')||t('aipNoBean')):escapeHtml(t('aipNoBean')))
+    +' <i>/</i> '+(g?escapeHtml(g.model||''):escapeHtml(t('aipNoGrinder')));
+  el.innerHTML=''
+    +'<div class="aip-src">'+src+'</div>'
+    +'<div class="aip-sec"><div class="aip-q">'+escapeHtml(t('aipAxisQ'))+'</div>'
+      +aipSeg('axis',AIP.axis,AIP_AXES.map(function(k){ return [k,t('aipAxis_'+k)]; }))+'</div>'
+    +'<div class="aip-sec"><div class="aip-q">'+escapeHtml(t('aipToneQ'))+'</div>'
+      +'<div class="aip-pair"><span class="l">'+escapeHtml(t('aipTexture'))+'</span>'
+        +aipSeg('texture',AIP.texture,[[0,t('aipTex0')],[1,t('aipMid')],[2,t('aipTex2')]])+'</div>'
+      +'<div class="aip-pair"><span class="l">'+escapeHtml(t('aipAcid'))+'</span>'
+        +aipSeg('acidity',AIP.acidity,[[0,t('aipAcid0')],[1,t('aipMid')],[2,t('aipAcid2')]])+'</div>'
+      +'<div class="aip-pair"><span class="l">'+escapeHtml(t('aipStr'))+'</span>'
+        +aipSeg('strength',AIP.strength,[[0,t('aipStr0')],[1,t('aipMid')],[2,t('aipStr2')]])+'</div></div>'
+    +'<div class="aip-sec"><div class="aip-q">'+escapeHtml(t('aipFactQ'))+'</div>'
+      +'<div class="aip-facts">'
+        +'<label class="aip-chk"><input type="checkbox" id="aipMilk"'+(AIP.milk?' checked':'')+'>'+escapeHtml(t('aipMilk'))+'</label>'
+        +'<label class="aip-num">'+escapeHtml(t('aipDose'))+'<input id="aipDose" inputmode="decimal" value="'+escapeAttr(AIP.dose)+'"><i>g</i></label>'
+        +'<label class="aip-num">'+escapeHtml(t('aipDays'))+'<input id="aipDays" inputmode="numeric" value="'+escapeAttr(AIP.days)+'"><i>'+escapeHtml(t('aipDaysUnit'))+'</i></label>'
+      +'</div>'
+      +'<div class="aip-pair"><span class="l">'+escapeHtml(t('aipGrind'))+'</span>'
+        +aipSeg('grind',AIP.grind,[['fixed',t('aipGrindFixed')],['some',t('aipGrindSome')],['free',t('aipGrindFree')]])+'</div></div>'
+    +'<div class="aip-sec"><div class="aip-q">'+escapeHtml(t('aipAvoidQ'))+'</div>'
+      +'<div class="aip-chips">'+AIP_AVOID.map(function(k){
+          return '<button class="aip-chip'+(AIP.avoid.indexOf(k)>=0?' on':'')+'" data-a="'+k+'">'+escapeHtml(t('aipAvoid_'+k))+'</button>'; }).join('')
+        +'<button class="aip-chip'+(AIP.avoid.length?'':' on')+'" data-a="none">'+escapeHtml(t('aipAvoid_none'))+'</button></div></div>';
+  el.querySelectorAll('.aip-seg').forEach(function(sg){
+    sg.querySelectorAll('button').forEach(function(bt){ bt.onclick=function(){
+      var k=sg.dataset.k, v=bt.dataset.v;
+      AIP[k]=(k==='axis'||k==='grind')?v:(+v); renderAipBody(); }; }); });
+  el.querySelectorAll('.aip-chip').forEach(function(c){ c.onclick=function(){
+    var k=c.dataset.a;
+    if(k==='none'){ AIP.avoid=[]; }
+    else { var i=AIP.avoid.indexOf(k); if(i>=0) AIP.avoid.splice(i,1); else AIP.avoid.push(k); }
+    renderAipBody(); }; });
+  var m=el.querySelector('#aipMilk'); if(m) m.onchange=function(){ AIP.milk=this.checked; };
+  var d=el.querySelector('#aipDose'); if(d) d.oninput=function(){ AIP.dose=this.value; };
+  var y=el.querySelector('#aipDays'); if(y) y.oninput=function(){ AIP.days=this.value; }; }
+function curBeanForAi(){
+  var id=context&&context.beanBatchId, b=null;
+  if(id) b=beans.find(function(x){ return x.id===id||(x.beanId===id); });
+  if(!b&&context&&context.coffeeName) b={ name:context.coffeeName, roaster:context.coffeeRoaster||'' };
+  if(!b) return null;
+  var keep=['roaster','name','country','region','producer','processing','process','species',
+    'variety','altitude','notes','flavors','roastLevel','roastDate','daysOffRoast'];
+  var out={}; keep.forEach(function(k){ if(b[k]!=null&&b[k]!=='') out[k]=b[k]; });
+  return Object.keys(out).length?out:null; }
+function curGrinderForAi(){
+  return grinderDigest(grinderByName(context&&context.grinderModel),context&&context.grinderSetting); }
+
+function aiProfPrompt(bean,grind,lang){
+  var pick=function(k,a,b2,c){ return [a,b2,c][k]; };
+  var want={
+    primary:AIP.axis,
+    texture:pick(AIP.texture,'as clear and tea-like as espresso gets','no preference','syrupy and dense'),
+    acidity:pick(AIP.acidity,'rounded and soft','no preference','sharp and distinct'),
+    strength:pick(AIP.strength,'lighter and longer','no preference','concentrated and short'),
+    milkDrink:!!AIP.milk,
+    doseG:parseFloat(AIP.dose)||null,
+    daysOffRoast:parseInt(AIP.days,10),
+    grinderFreedom:AIP.grind,
+    avoidLastTime:AIP.avoid };
+  if(isNaN(want.daysOffRoast)) want.daysOffRoast=null;
+  return 'You design espresso profiles for a Decent DE1, which holds a target pressure (0-12 bar) or a'
+    +' target flow (0-8 ml/s) per step, at a target temperature, for a number of seconds, and can leave a'
+    +' step early when pressure or flow crosses a threshold.'
+    +'\n'+'\n'+'Bean: '+JSON.stringify(bean||{})
+    +'\n'+'Grinder: '+JSON.stringify(grind||{})
+    +'\n'+'What the person wants: '+JSON.stringify(want)
+    +'\n'+'\n'+'Treat this as a DIAGNOSTIC BASELINE shot, not a finished recipe: puck resistance cannot be'
+    +' predicted from bean and grinder alone, so design something that will read clearly on the graph and'
+    +' say how to read it. Between three and six steps. Respect grinderFreedom: with "fixed" do not propose'
+    +' anything that needs a grind change; with "free" you may.'
+    +'\n'+'\n'+'Answer with JSON only, no prose, no code fence:'
+    +'\n'+'{"title":string,"why":string,"targetTime":string,"targetWeight":number,"adjust":[string,string],'
+    +'"steps":[{"name":string,"pump":"pressure"|"flow","transition":"fast"|"smooth","pressure":number,'
+    +'"flow":number,"temperature":number,"seconds":number,"volume":number,"weight":number|null,'
+    +'"sensor":"water"|"coffee","exit":{"type":"pressure"|"flow","condition":"over"|"under","value":number}}]}'
+    +'\n'+'"pressure" only when pump is pressure, "flow" only when pump is flow, "exit" only where a step'
+    +' should leave early. "why" is one sentence tying a bean characteristic to a parameter. "adjust" is'
+    +' one or two corrections of the form "if X on the graph, do Y".'
+    +'\n'+'Write title, why and adjust in '+(lang==='ko'?'Korean':'English')+'.'; }
+
+function aipStatus(txt,kind){
+  var el=document.getElementById('aipStatus'); if(!el) return;
+  el.textContent=txt||''; el.className='aip-status'+(kind?' '+kind:''); }
+function aiProfRun(){
+  if(aipBusy) return;
+  var key=(prefs.geminiKey||'').trim();
+  if(!key){ closeModal(null,'aiProfOverlay'); toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
+  if(!editing){ closeModal(null,'aiProfOverlay'); return; }
+  aipBusy=true; aipStatus(t('aipWorking'),'busy');
+  var go=document.getElementById('aipGo'); if(go) go.disabled=true;
+  geminiJson(key,[{text:aiProfPrompt(curBeanForAi(),curGrinderForAi(),_lang)}],0.6)
+    .then(function(res){ applyAiProfile(res); closeModal(null,'aiProfOverlay'); })
+    .catch(function(e){ aipStatus(t('tAiFailed')+': '+apiErrorText(e),'err'); })
+    .then(function(){ aipBusy=false; aipStatus(''); var g=document.getElementById('aipGo'); if(g) g.disabled=false; }); }
+
+function aipNum(v,lo,hi,dflt){ var n=parseFloat(v); if(isNaN(n)) return dflt; return Math.max(lo,Math.min(hi,n)); }
+function applyAiProfile(res){
+  var rows=(res&&res.steps)||[]; if(!Array.isArray(rows)||!rows.length){ toast(t('tAiFailed'),'err'); return; }
+  var steps=rows.slice(0,8).map(function(r,i){
+    var isP=(String(r.pump||'pressure')!=='flow');
+    var st={ name:String(r.name||('Step '+(i+1))).slice(0,40),
+      pump:isP?'pressure':'flow',
+      transition:(String(r.transition)==='fast'?'fast':'smooth'),
+      temperature:aipNum(r.temperature,20,100,92),
+      seconds:aipNum(r.seconds,0,120,10),
+      volume:aipNum(r.volume,0,150,0),
+      sensor:(String(r.sensor)==='coffee'?'coffee':'water') };
+    if(isP) st.pressure=aipNum(r.pressure,0,12,6); else st.flow=aipNum(r.flow,0,8,2);
+    var w=aipNum(r.weight,0,80,0); st.weight=w>0?w:null;
+    var x=r.exit;
+    if(x&&(x.type==='pressure'||x.type==='flow')&&(x.condition==='over'||x.condition==='under'))
+      st.exit={ type:x.type, condition:x.condition, value:aipNum(x.value,0,(x.type==='pressure'?12:8),2) };
+    return st; });
+  editing.profile.steps=steps;
+  if(res.title) editing.profile.title=String(res.title).slice(0,80);
+  var tw=aipNum(res.targetWeight,0,120,0); if(tw>0) editing.profile.target_weight=tw;
+  var why=String(res.why||'').trim();
+  if(why) editing.profile.notes=why;
+  aipResult={ why:why, time:String(res.targetTime||'').trim(),
+    adjust:(Array.isArray(res.adjust)?res.adjust:[]).map(String).filter(Boolean).slice(0,2) };
+  epStepIdx=0; renderEpEditor(); }
+function aipResultHtml(){
+  if(!aipResult) return '';
+  return '<div class="aip-out"><button class="x" onclick="aipResult=null;renderEpEditor()">✕</button>'
+    +'<div class="t">'+escapeHtml(t('aipBaseline'))+(aipResult.time?' · '+escapeHtml(aipResult.time):'')+'</div>'
+    +(aipResult.adjust.length?'<ul class="a">'+aipResult.adjust.map(function(a){
+        return '<li>'+escapeHtml(a)+'</li>'; }).join('')+'</ul>':'')
+    +'</div>'; }
 function epGuideHtml(){
   return '<div class="ep-guide">'
     +'<div class="ep-guide-t">'+escapeHtml(t('guideProfTitle'))+'</div>'
@@ -5284,7 +5487,9 @@ function epGuideHtml(){
     +'<ul class="ep-guide-l"><li>'+escapeHtml(t('guideProf1'))+'</li>'
       +'<li>'+escapeHtml(t('guideProf2'))+'</li>'
       +'<li>'+escapeHtml(t('guideProf3'))+'</li></ul>'
-    +'<button class="m-btn primary" onclick="newProfile()">+ '+escapeHtml(t('newProfile'))+'</button>'
+    +'<div class="ep-guide-acts">'
+      +'<button class="m-btn primary" onclick="newProfile()">+ '+escapeHtml(t('newProfile'))+'</button>'
+      +'<button class="m-btn" onclick="newProfile();aiProfOpen()">\u2728 '+escapeHtml(t('aipOpen'))+'</button></div>'
     +'</div>'; }
 function colorPicker(p){
   var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
@@ -5325,8 +5530,13 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor');
     +'<input class="ep-name-input" id="epName" value="'+escapeAttr(pr.title||'')+'">'
     // the card colour and the roast are kept against a profile the machine
     // knows about, so they wait until this one has been saved
-    +(editing.isNew?'':(colorPicker(editing)+roastPicker(editing)))
+    // a new profile hides the colour and the roast, which leaves the space
+    // this sits in
+    +(editing.isNew
+      ? '<button class="ep-aibtn aip-open" onclick="aiProfOpen()">\u2728 '+escapeHtml(t('aipOpen'))+'</button>'
+      : (colorPicker(editing)+roastPicker(editing)))
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
+    +aipResultHtml()
     +'</div>';
   wrap.innerHTML=meta
     +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve" onclick="epCurveHit(event)"></canvas></div>'
