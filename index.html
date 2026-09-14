@@ -732,7 +732,7 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-visual canvas{width:100%;height:196px;display:block}
 .ep-name-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:18px;font-weight:700;color:var(--ink);-webkit-appearance:none;margin-bottom:12px}
 .ep-notes{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:13px;color:var(--ink-soft);-webkit-appearance:none;resize:vertical;margin-bottom:18px}
-.ep-steps-title{font-size:13px;font-weight:700;margin:0;display:flex;justify-content:space-between;align-items:center}
+.ep-steps-title{font-size:13px;font-weight:700;margin:0;display:flex;gap:8px;align-items:center}
 .ep-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
 .ep-step{background:var(--field);border:1px solid var(--edge);border-radius:13px;padding:14px 16px;position:relative;border-left:4px solid var(--accent)}
 .ep-step.flow{border-left-color:var(--steam)}
@@ -972,12 +972,10 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ep-grid tr.on td{background-color:rgba(99,102,241,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22)}
 .ep-grid tr.on td:first-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset 3px 0 0 var(--accent)}
 .ep-grid tr.on td:last-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset -1px 0 0 rgba(99,102,241,.22)}
-.ep-grid td.nm{display:flex;align-items:center;gap:6px;height:38px;min-width:138px}
+.ep-grid td.nm{display:flex;align-items:center;gap:6px;height:38px;min-width:118px}
 .ep-grid .ix{font-size:11px;font-weight:800;color:var(--ink-mute);width:14px;text-align:right;flex-shrink:0}
-.ep-grid .gname{flex:1;min-width:0;border:none;background:none;outline:none;font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink);padding:4px 2px;border-radius:7px}
+.ep-grid .gname{flex:1 1 60px;width:60px;min-width:0;border:none;background:none;outline:none;font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink);padding:4px 2px;border-radius:7px}
 .ep-grid .gname:focus{background:rgba(99,102,241,.10)}
-.ep-grid .gpill{border:none;border-radius:100px;padding:3px 10px;font-family:var(--font);font-size:10px;font-weight:800;color:#fff;background-color:var(--accent);background-image:var(--ctl-sheen-on);cursor:pointer}
-.ep-grid .gpill.f{background-color:var(--steam)}
 .ep-grid .gv{display:block;text-align:center;font-size:14px;font-weight:800;color:var(--accent);padding:5px 2px;border-radius:8px;white-space:nowrap;transition:background .15s,transform .1s}
 .ep-grid .gv:active{transform:scale(.94);background:rgba(99,102,241,.16)}
 .ep-grid .gv small{font-size:9px;font-weight:700;color:var(--ink-mute);margin-left:1px}
@@ -990,11 +988,24 @@ body.step-dragging .ep-grid tr.gr{touch-action:none}
 .ep-grid td.xc{text-align:center;font-size:11px;font-weight:800;white-space:nowrap;padding:0 8px}
 .ep-grid .xon{color:var(--amber)} .ep-grid .xon .d{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);margin-right:4px;vertical-align:middle}
 .ep-grid .xoff{color:var(--ink-mute);opacity:.5;font-weight:700}
-.ep-step-head{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:8px}
-.ep-step-ops{display:flex;gap:3px;flex-shrink:0}
-.ep-step-ops button{width:26px;height:26px;border:none;border-radius:8px;background:rgba(99,102,241,.10);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:800;cursor:pointer}
-.ep-step-ops button:active{transform:scale(.9)}
-.ep-step-ops button.del{color:var(--red);background:rgba(239,68,68,.10)}
+/* The type was a word repeated down every row saying one of two things. It
+   is the colour of the bar the row stands on, and the word is said once. */
+.ep-kindkey{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:var(--ink-mute);margin-left:auto;margin-right:10px}
+.ep-kindkey i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.ep-kindkey i.p{background:var(--accent)}
+.ep-kindkey i.f{background:var(--steam);margin-left:7px}
+.ep-grid .gkind{width:5px;height:24px;flex:none;border:none;border-radius:3px;padding:0;cursor:pointer;background:var(--accent)}
+.ep-grid tr.f .gkind{background:var(--steam)}
+.ep-grid tr.p .ix{color:var(--accent)}
+.ep-grid tr.f .ix{color:var(--steam)}
+.ep-grid td.ops{white-space:nowrap;text-align:right;padding-right:6px}
+.ep-grid td.ops button{width:22px;height:22px;margin-left:2px;border:none;border-radius:7px;background:rgba(99,102,241,.10);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:800;cursor:pointer}
+.ep-grid td.ops button:active{transform:scale(.9)}
+.ep-grid td.ops button.del{color:var(--red);background:rgba(239,68,68,.10)}
+.ep-step-head .who{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ep-step-head .who .n{flex:none;min-width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;background:var(--accent);padding:0 5px}
+.ep-step-editor.flow .ep-step-head .who .n{background:var(--steam)}
+.ep-step-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .ep-meta{display:grid;grid-template-columns:1fr 1.25fr;gap:6px 14px;align-items:start;margin-bottom:2px}
 .ep-meta>*{margin:0}
 .ep-meta .ep-name-input{grid-column:1;grid-row:1}
@@ -1846,6 +1857,8 @@ var I18N={
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
+    exitShort:'Exit',
+    dupStep:'Duplicate step', delStep:'Delete step',
     newStep:'New step', stepCol:'Step', kind:'Type', targetCol:'Target', volShort:'Volume', wtShort:'Weight', profileMeta:'Profile details',
     curveTitle:'Pressure & flow curve', addStep:'Add step', tempShort:'temp',
     tempLabel:'Temp °C', exitTitle:'Exit condition', exitOver:'over', exitUnder:'under', noLimit:'no limit', volLimit:'Volume limit', wtLimit:'Weight limit', exitDesc:'Leave this step the moment the reading crosses the line, even if its time is not up. This is what ends a shot early while every number on screen still looks right.',
@@ -1995,6 +2008,8 @@ var I18N={
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
+    exitShort:'넘김',
+    dupStep:'스텝 복제', delStep:'스텝 삭제',
     newStep:'새 스텝', stepCol:'스텝', kind:'유형', targetCol:'목표', volShort:'부피', wtShort:'무게', profileMeta:'프로파일 정보',
     curveTitle:'압력 · 유량 곡선', addStep:'스텝 추가', tempShort:'온도',
     tempLabel:'온도 °C', exitTitle:'조건부 넘김', exitOver:'이상', exitUnder:'이하', noLimit:'제한 없음', volLimit:'부피 제한', wtLimit:'무게 제한', exitDesc:'측정값이 이 선을 넘는 순간, 시간이 남아도 다음 스텝으로 넘어갑니다. 화면의 숫자는 전부 정상인데 샷이 일찍 끝나는 원인이 이것입니다.',
@@ -5225,7 +5240,9 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!edi
     +'</div>';
   wrap.innerHTML=meta
     +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve"></canvas></div>'
-    +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span><button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
+    +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span>'
+      +'<span class="ep-kindkey"><i class="p"></i>'+escapeHtml(t('pressure'))+'<i class="f"></i>'+escapeHtml(t('flow'))+'</span>'
+      +'<button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
     +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
     +'<div id="epStepEditor"></div>'
     +'<div class="ep-save-bar"><button class="m-btn" onclick="closeEditPage()">'+t('cancel')+'</button>'
@@ -5254,6 +5271,8 @@ function bindStepVals(ed,st){
           else if(k==='weight'){ st.weight=(v>0?v:null); }
           else { st[k]=v; }
           renderEpSteps(); drawEditCurve(); } }); }; }); }
+function t18nExitShort(st){ var x=st.exit; if(!x) return '';
+  return t(x.type==='pressure'?'pressure':'flow')+' '+(x.condition==='over'?'≥':'≤')+(x.value||0); }
 function t18nExit(st){ var x=st.exit; if(!x) return '';
   return t(x.type==='pressure'?'pressure':'flow')+' '+t(x.condition==='over'?'exitOver':'exitUnder')+' '+(x.value||0); }
 // A slider is quick to sweep and hopeless at landing on 92.5, and every other
@@ -5353,7 +5372,7 @@ function renderGridRow(i){
   var units=[isP?'bar':'ml/s','°','','','g'], dps=[1,1,1,0,1];
   tds.forEach(function(td,n){ td.innerHTML=gridNum(vals[n],units[n],dps[n]); });
   var xc=tr.querySelector('td.xc');
-  if(xc) xc.innerHTML=st.exit?('<span class="xon"><span class="d"></span>'+escapeHtml(t18nExit(st))+'</span>')
+  if(xc) xc.innerHTML=st.exit?('<span class="xon"><span class="d"></span>'+escapeHtml(t18nExitShort(st))+'</span>')
                              :('<span class="xoff">'+escapeHtml(t('noLimit'))+'</span>');
   bindGridNums(tr,i); }
 
@@ -5385,9 +5404,14 @@ function stepDragOver(y){
   var a=editing.profile.steps, moved=a.splice(SDRAG.i,1)[0];
   a.splice(to,0,moved); SDRAG.i=to; epStepIdx=to;
   renderEpSteps(); drawEditCurve(); stepDragMark(to); }
+function stepDragScroll(y){
+  var w=document.querySelector('.ep-grid-wrap'); if(!w) return;
+  var b=w.getBoundingClientRect(), edge=26;
+  if(y<b.top+edge) w.scrollTop-=14;
+  else if(y>b.bottom-edge) w.scrollTop+=14; }
 document.addEventListener('pointermove',function(e){
   if(SDRAG.timer&&Math.abs(e.clientY-SDRAG.y0)>8){ clearTimeout(SDRAG.timer); SDRAG.timer=null; }
-  if(SDRAG.on){ e.preventDefault(); stepDragOver(e.clientY); } },{passive:false});
+  if(SDRAG.on){ e.preventDefault(); stepDragScroll(e.clientY); stepDragOver(e.clientY); } },{passive:false});
 document.addEventListener('pointerup',stepDragEnd);
 document.addEventListener('pointercancel',stepDragEnd);
 function stepDragBind(tr,i){
@@ -5399,22 +5423,24 @@ function renderEpSteps(){
   var steps=editing.profile.steps||[];
   if(epStepIdx>=steps.length) epStepIdx=Math.max(0,steps.length-1);
   var g=document.getElementById('epStepGrid'); if(!g) return;
-  var h='<tr class="gh"><th class="l">'+escapeHtml(t('stepCol'))+'</th><th>'+escapeHtml(t('kind'))+'</th>'
+  var h='<tr class="gh"><th class="l">'+escapeHtml(t('stepCol'))+'</th>'
     +'<th>'+escapeHtml(t('targetCol'))+'</th><th>'+escapeHtml(t('tempShort'))+'</th><th>'+escapeHtml(t('secondsLabel'))+'</th>'
-    +'<th>'+escapeHtml(t('volShort'))+'</th><th>'+escapeHtml(t('wtShort'))+'</th><th>'+escapeHtml(t('exitTitle'))+'</th></tr>';
+    +'<th>'+escapeHtml(t('volShort'))+'</th><th>'+escapeHtml(t('wtShort'))+'</th><th>'+escapeHtml(t('exitShort'))+'</th><th></th></tr>';
   steps.forEach(function(st,i){
     var isP=(st.pump==='pressure');
-    h+='<tr class="gr'+(i===epStepIdx?' on':'')+'" data-i="'+i+'">'
-      +'<td class="nm"><span class="ix">'+(i+1)+'</span><input class="gname" value="'+escapeAttr(st.name||'')+'" data-i="'+i+'"></td>'
-      +'<td><button class="gpill'+(isP?'':' f')+'" data-pump="'+i+'">'+escapeHtml(isP?t('pressure'):t('flow'))+'</button></td>'
+    h+='<tr class="gr '+(isP?'p':'f')+(i===epStepIdx?' on':'')+'" data-i="'+i+'">'
+      +'<td class="nm"><button class="gkind" data-pump="'+i+'" title="'+escapeAttr(isP?t('pressure'):t('flow'))+'"></button>'
+        +'<span class="ix">'+(i+1)+'</span><input class="gname" value="'+escapeAttr(st.name||'')+'" title="'+escapeAttr(st.name||'')+'" data-i="'+i+'"></td>'
       +'<td data-k="'+(isP?'pressure':'flow')+'">'+gridNum(isP?(st.pressure||0):(st.flow||0),isP?'bar':'ml/s',1)+'</td>'
       +'<td data-k="temperature">'+gridNum(st.temperature||0,'°',1)+'</td>'
       +'<td data-k="seconds">'+gridNum(st.seconds||0,'',1)+'</td>'
       +'<td data-k="volume">'+gridNum(st.volume||0,'',0)+'</td>'
       +'<td data-k="weight">'+gridNum(st.weight||0,'g',1)+'</td>'
       +'<td class="xc">'+(st.exit
-          ?'<span class="xon"><span class="d"></span>'+escapeHtml(t18nExit(st))+'</span>'
+          ?'<span class="xon"><span class="d"></span>'+escapeHtml(t18nExitShort(st))+'</span>'
           :'<span class="xoff">'+escapeHtml(t('noLimit'))+'</span>')+'</td>'
+      +'<td class="ops"><button data-dup="'+i+'" title="'+escapeAttr(t('dupStep'))+'">⧉</button>'
+        +'<button class="del" data-del="'+i+'" title="'+escapeAttr(t('delStep'))+'">✕</button></td>'
       +'</tr>'; });
   g.innerHTML=h;
   g.querySelectorAll('tr.gr').forEach(function(tr){
@@ -5425,6 +5451,8 @@ function renderEpSteps(){
     inp.onfocus=function(){ if(epStepIdx!==i) stepSel(i); };
     inp.oninput=function(){ editing.profile.steps[i].name=this.value; }; });
   g.querySelectorAll('[data-pump]').forEach(function(b){ b.onclick=function(){ stepPump(+b.dataset.pump); }; });
+  g.querySelectorAll('[data-dup]').forEach(function(b){ b.onclick=function(){ stepDup(+b.dataset.dup); }; });
+  g.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delStepAt(+b.dataset.del); }; });
 
   var st=steps[epStepIdx]; var ed=document.getElementById('epStepEditor');
   if(!st){ ed.innerHTML=''; return; }
@@ -5432,9 +5460,8 @@ function renderEpSteps(){
   var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
   ed.className='ep-step-editor'+(isP?'':' flow');
   ed.innerHTML=''
-    +'<div class="ep-step-head">'
-      +'<span class="ep-step-ops"><button id="opUp">↑</button><button id="opDn">↓</button>'
-      +'<button id="opDup">⧉</button><button class="del" id="opDel">✕</button></span></div>'
+    +'<div class="ep-step-head"><span class="who"><span class="n">'+(epStepIdx+1)+'</span>'
+      +escapeHtml(st.name||'Step')+'</span></div>'
     +'<div class="ep-sliders">'
     +'<div class="ep-slider-row"><span class="lbl">'+valLabel+'</span><input type="range" min="0" max="'+valMax+'" step="0.1" value="'+valNow+'" data-k="'+(isP?'pressure':'flow')+'"><span class="val">'+valNow.toFixed(1)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('tempLabel')+'</span><input type="range" min="20" max="100" step="0.5" value="'+(st.temperature||90)+'" data-k="temperature"><span class="val">'+(st.temperature||90).toFixed(1)+'</span></div>'
@@ -5443,11 +5470,6 @@ function renderEpSteps(){
     +'<div class="ep-slider-row"><span class="lbl">'+t('wtLimit')+'</span><input type="range" min="0" max="80" step="0.5" value="'+(st.weight||0)+'" data-k0="weight"><span class="val">'+limTxt(st.weight,1)+'</span></div>'
     +'</div>'
     +exitEditorHtml(st);
-  var i0=epStepIdx;
-  ed.querySelector('#opUp').onclick=function(){ stepSwap(i0,i0-1); };
-  ed.querySelector('#opDn').onclick=function(){ stepSwap(i0,i0+1); };
-  ed.querySelector('#opDup').onclick=function(){ stepDup(i0); };
-  ed.querySelector('#opDel').onclick=function(){ delStepAt(i0); };
   bindExitEditor(ed,st);
   bindStepVals(ed,st);
   ed.querySelectorAll('input[data-k0]').forEach(function(inp){ inp.oninput=function(){
