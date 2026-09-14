@@ -701,18 +701,24 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-item{background:var(--field);border:1px solid var(--edge);border-radius:12px;padding:7px 10px;cursor:pointer;transition:all .18s;display:flex;gap:10px;align-items:center}
 .ep-item:hover{transform:translateX(3px);box-shadow:var(--shadow)}
 /* A name cut off at the width of a column is a name you cannot read, and
-   these are how a profile is recognised. The curve goes on top, across the
-   card, and the title has the whole width under it to wrap into. */
-.ep-item.ep-card{display:block;flex:0 0 auto;padding:0;overflow:hidden;border-radius:14px}
+   these are how a profile is recognised. The curve is the card -- it fills
+   the whole of it, behind everything -- and the words sit on a pane of
+   frosted glass laid over the lower part of it, which is what lets the
+   card be a third shorter than one with a picture stacked above text. */
+.ep-item.ep-card{position:relative;display:block;flex:0 0 auto;padding:26px 0 0;overflow:hidden;border-radius:14px}
 .ep-item.ep-card:hover{transform:translateY(-2px)}
-.ep-item.ep-card .thmb{width:100%;height:66px;border-radius:0;background:#f6f6fd}
-body.night .ep-card .thmb{background:rgba(255,255,255,.04)}
-.ep-cbody{padding:8px 11px 10px;min-width:0}
-.ep-card .mt{font-size:10px;font-weight:700;color:var(--ink-mute);margin:0 0 2px;text-transform:uppercase;letter-spacing:.04em}
+.ep-item.ep-card .thmb{position:absolute;inset:0;width:100%;height:100%;border-radius:0;background:none;z-index:0}
+.ep-cbody{position:relative;z-index:1;padding:7px 11px 9px;background:rgba(255,255,255,.46);backdrop-filter:blur(9px) saturate(150%);-webkit-backdrop-filter:blur(9px) saturate(150%);box-shadow:inset 0 1px 0 rgba(255,255,255,.75)}
+body.night .ep-cbody{background:rgba(22,19,36,.52);box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+/* the blur is off wherever the stage is scaled or effects are, so the
+   pane carries the contrast on its own there */
+body.scaled .ep-cbody,body.no-fx .ep-cbody{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.80)}
+body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,.86)}
+.ep-card .mt{font-size:10px;font-weight:700;color:var(--ink-mute);margin:0 0 1px;text-transform:uppercase;letter-spacing:.04em}
 .ep-card .nm{font-size:14px;font-weight:800;line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;color:var(--ink)}
-.ep-card .cfoot{display:flex;align-items:flex-end;gap:6px;margin-top:8px}
+.ep-card .cfoot{display:flex;align-items:flex-end;gap:6px;margin-top:6px}
 .ep-card .cfoot .ep-chips{flex:1;min-width:0}
-.ep-card .fav-btn,.ep-card .eye-btn{margin-left:0;flex-shrink:0;width:32px;height:32px;border-radius:10px}
+.ep-card .fav-btn,.ep-card .eye-btn{margin-left:0;flex-shrink:0;width:30px;height:30px;border-radius:9px}
 .ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.18)}
 .ep-item .thmb{width:44px;height:44px;border-radius:9px;background:#f8f8ff;position:relative;overflow:hidden;flex-shrink:0}
 .ep-item .thmb canvas{position:absolute;inset:0;width:100%;height:100%}
