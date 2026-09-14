@@ -1033,12 +1033,12 @@ body.step-dragging .ep-grid .grip{cursor:grabbing}
 .ep-step-head .who .n{flex:none;min-width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;background:var(--accent);padding:0 5px}
 .ep-step-editor.flow .ep-step-head .who .n{background:var(--steam)}
 .ep-step-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.ep-meta{display:grid;grid-template-columns:1fr 1.25fr;gap:6px 14px;align-items:start;margin-bottom:2px}
+.ep-meta{display:grid;grid-template-columns:1fr auto auto;gap:6px 12px;align-items:center;margin-bottom:2px}
 .ep-meta>*{margin:0}
 .ep-meta .ep-name-input{grid-column:1;grid-row:1}
-.ep-meta .ep-notes{grid-column:1;grid-row:2}
-.ep-meta .ep-colorrow{grid-column:2;grid-row:1;margin:0}
-.ep-meta .ep-roastrow{grid-column:2;grid-row:2;margin:0}
+.ep-meta .ep-notes{grid-column:1/-1;grid-row:2}
+.ep-meta .ep-colorrow{grid-column:2;grid-row:1;margin:0;flex-wrap:nowrap}
+.ep-meta .ep-roastrow{grid-column:3;grid-row:1;margin:0;flex-wrap:nowrap}
 body.night .ep-grid .gname{color:var(--ink)}
 .ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:12px 14px 14px;border-left:4px solid var(--accent)}
 .ep-step-editor.flow{border-left-color:var(--steam)}
@@ -5248,7 +5248,13 @@ function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
 function colorPicker(p){
   var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
   var cur=colorKeyOf(live);
-  var sw=PROFILE_COLORS.map(function(c){
+  // Nine swatches and a picker is a palette; the row has a roast to share
+  // with now. Five, plus the one in use when it is not among them, plus the
+  // picker for everything else.
+  var shown=PROFILE_COLORS.slice(0,5);
+  if(cur&&!isHexColor(cur)&&!shown.some(function(c){ return c.k===cur; })){
+    var extra=PROFILE_COLORS.find(function(c){ return c.k===cur; }); if(extra) shown=shown.concat([extra]); }
+  var sw=shown.map(function(c){
     return '<button class="ep-sw'+(cur===c.k?' on':'')+'" style="background:'+gradOf(c)+'" title="'+escapeAttr(c.k)
       +'" onclick="setProfileColor(\''+live.id+'\',\''+c.k+'\')"></button>'; }).join('');
   var custom=isHexColor(cur);
@@ -5258,15 +5264,18 @@ function colorPicker(p){
     +' onchange="setProfileColor(\''+live.id+'\',this.value)">'
     +(custom?'':'<span>+</span>')+'</label>';
   var auto='<button class="ep-sw auto'+(cur?'':' on')+'" onclick="setProfileColor(\''+live.id+'\',\'\')">'+escapeHtml(t('auto'))+'</button>';
-  return '<div class="ep-colorrow"><span class="ep-roastlab">'+escapeHtml(t('cardColor'))+'</span>'+sw+pick+auto+'</div>'; }
+  return '<div class="ep-colorrow">'+sw+pick+auto+'</div>'; }
 function roastPicker(p){
   var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
   var cur=profileRoast(live), isManual=manualRoast(live).length>0;
   var btns=ROAST_KEYS.map(function(k){
     return '<button class="ep-roast'+(cur.indexOf(k)>=0?' on':'')+'" onclick="setProfileRoast(\''+live.id+'\',\''+k+'\')">'+escapeHtml(t(k))+'</button>'; }).join('');
   var clear=isManual?'<button class="ep-roast clear" onclick="setProfileRoast(\''+live.id+'\',\'\')">'+escapeHtml(t('clear'))+'</button>':'';
-  return '<div class="ep-roastrow"><span class="ep-roastlab">'+escapeHtml(t('roastLevel'))
-    +(cur.length&&!isManual?' · '+escapeHtml(isAiRoast(live)?t('fromAi'):t('fromProfile')):'')+'</span>'+btns+clear+'</div>'; }
+  // the label goes; where the roast came from does not, because a guess and
+  // a choice are not the same claim
+  var src=(cur.length&&!isManual)
+    ? '<span class="ep-roastlab">'+escapeHtml(isAiRoast(live)?t('fromAi'):t('fromProfile'))+'</span>' : '';
+  return '<div class="ep-roastrow">'+src+btns+clear+'</div>'; }
 function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!editing){ wrap.innerHTML='<div class="ep-placeholder">← Select a profile</div>'; return; }
   var pr=editing.profile||{};
   var meta=''
