@@ -995,6 +995,8 @@ body.step-dragging .ep-grid tr.gr{touch-action:none}
 .ep-kindkey i{width:9px;height:9px;border-radius:3px;display:inline-block}
 .ep-kindkey i.p{background:var(--accent)}
 .ep-kindkey i.f{background:var(--steam);margin-left:7px}
+.ep-kindkey .drag{display:inline-flex;align-items:center;gap:4px;margin-left:12px;padding-left:12px;border-left:1px solid var(--ctl-edge);font-weight:700}
+.ep-kindkey .drag .bar{width:4px;height:11px;border-radius:2px;background:var(--ink-mute);opacity:.6}
 /* The one part of a row that can only be dragged. Everything else on it
    still scrolls the list, which is why this is the only place the
    browser is told a touch here is not a scroll. */
@@ -1863,6 +1865,7 @@ var I18N={
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
+    moveUp:'Move up', moveDown:'Move down', dragHint:'drag to reorder',
     dragStep:'Drag to reorder',
     exitShort:'Exit',
     dupStep:'Duplicate step', delStep:'Delete step',
@@ -2015,6 +2018,7 @@ var I18N={
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
+    moveUp:'위로', moveDown:'아래로', dragHint:'끌어서 순서 변경',
     dragStep:'끌어서 순서 변경',
     exitShort:'넘김',
     dupStep:'스텝 복제', delStep:'스텝 삭제',
@@ -5249,7 +5253,8 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!edi
   wrap.innerHTML=meta
     +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve"></canvas></div>'
     +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span>'
-      +'<span class="ep-kindkey"><i class="p"></i>'+escapeHtml(t('pressure'))+'<i class="f"></i>'+escapeHtml(t('flow'))+'</span>'
+      +'<span class="ep-kindkey"><i class="p"></i>'+escapeHtml(t('pressure'))+'<i class="f"></i>'+escapeHtml(t('flow'))
+        +'<span class="drag"><i class="bar"></i>'+escapeHtml(t('dragHint'))+'</span></span>'
       +'<button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
     +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
     +'<div id="epStepEditor"></div>'
@@ -5279,8 +5284,10 @@ function bindStepVals(ed,st){
           else if(k==='weight'){ st.weight=(v>0?v:null); }
           else { st[k]=v; }
           renderEpSteps(); drawEditCurve(); } }); }; }); }
+// P and F, because the column is forty pixels wide and the word for either
+// one is already above the table in the key.
 function t18nExitShort(st){ var x=st.exit; if(!x) return '';
-  return t(x.type==='pressure'?'pressure':'flow')+' '+(x.condition==='over'?'≥':'≤')+(x.value||0); }
+  return (x.type==='pressure'?'P':'F')+(x.condition==='over'?'≥':'≤')+(x.value||0); }
 function t18nExit(st){ var x=st.exit; if(!x) return '';
   return t(x.type==='pressure'?'pressure':'flow')+' '+t(x.condition==='over'?'exitOver':'exitUnder')+' '+(x.value||0); }
 // A slider is quick to sweep and hopeless at landing on 92.5, and every other
@@ -5342,6 +5349,8 @@ function addStep(){ var a=editing.profile.steps; if(!a) a=editing.profile.steps=
 // below for whichever row is selected -- sweeping is for finding a value, the
 // keypad for landing on one.
 function stepSel(i){ epStepIdx=i; renderEpSteps(); drawEditCurve(); }
+function stepSwap(i,j){ var a=editing.profile.steps; if(!a||j<0||j>=a.length) return;
+  var t2=a[i]; a[i]=a[j]; a[j]=t2; epStepIdx=j; renderEpSteps(); drawEditCurve(); }
 function stepDup(i){ var a=editing.profile.steps; if(!a) return;
   a.splice(i+1,0,JSON.parse(JSON.stringify(a[i]))); epStepIdx=i+1; renderEpSteps(); drawEditCurve(); }
 function delStepAt(i){ var a=editing.profile.steps; if(!a||a.length<=1) return;
@@ -5449,7 +5458,9 @@ function renderEpSteps(){
       +'<td class="xc">'+(st.exit
           ?'<span class="xon"><span class="d"></span>'+escapeHtml(t18nExitShort(st))+'</span>'
           :'<span class="xoff">'+escapeHtml(t('noLimit'))+'</span>')+'</td>'
-      +'<td class="ops"><button data-dup="'+i+'" title="'+escapeAttr(t('dupStep'))+'">⧉</button>'
+      +'<td class="ops"><button data-up="'+i+'" title="'+escapeAttr(t('moveUp'))+'">↑</button>'
+        +'<button data-dn="'+i+'" title="'+escapeAttr(t('moveDown'))+'">↓</button>'
+        +'<button data-dup="'+i+'" title="'+escapeAttr(t('dupStep'))+'">⧉</button>'
         +'<button class="del" data-del="'+i+'" title="'+escapeAttr(t('delStep'))+'">✕</button></td>'
       +'</tr>'; });
   g.innerHTML=h;
@@ -5463,6 +5474,8 @@ function renderEpSteps(){
   g.querySelectorAll('[data-grip]').forEach(function(h){
     var tr=h.closest('tr');
     h.addEventListener('pointerdown',function(e){ gripDown(e,tr); }); });
+  g.querySelectorAll('[data-up]').forEach(function(b){ b.onclick=function(){ var i=+b.dataset.up; stepSwap(i,i-1); }; });
+  g.querySelectorAll('[data-dn]').forEach(function(b){ b.onclick=function(){ var i=+b.dataset.dn; stepSwap(i,i+1); }; });
   g.querySelectorAll('[data-dup]').forEach(function(b){ b.onclick=function(){ stepDup(+b.dataset.dup); }; });
   g.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delStepAt(+b.dataset.del); }; });
 
