@@ -138,7 +138,7 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
-.brand{display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;flex:1 1 0;min-width:0}
 /* Under the name sit the two things a machine on a counter gets asked
    without anyone touching it: the time, and whether the tablet is still
    running on its own power. */
@@ -213,6 +213,7 @@ header>*{position:relative;z-index:1}
 .act-btn.start.stop{background-color:var(--ctl-tint-stop)}
 .act-btn.steam:not(:disabled){color:var(--steam)} .act-btn.flush:not(:disabled){color:var(--green)}
 .act-btn.water:not(:disabled){color:#0ea5e9}
+.act-btn.sleep{min-height:44px;padding-top:0;padding-bottom:0}
 /* Without a GHC these buttons run on a tap and open their options on a hold,
    and a hold leaves no mark. The hint used to appear on hover, which a tablet
    cannot do -- so on the machines that need it, it simply stands there. With a
@@ -231,7 +232,7 @@ header>*{position:relative;z-index:1}
 .conn-toggle.ing .conn-line .status-dot{background:var(--amber);animation:blink .8s infinite}
 @keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.hdr-group{display:flex;align-items:stretch;gap:9px}
+.hdr-group{display:flex;align-items:center;justify-content:flex-end;flex:1 1 0;gap:9px}
 .hdr-aux{position:relative;display:flex;align-items:stretch;gap:3px;padding:4px;border-radius:21px;background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift)}
 .hdr-aux .act-btn{border-radius:17px;border-color:transparent;background-color:transparent;background-image:none;box-shadow:none;padding:7px 15px}
 .hdr-aux .act-btn.start{color:var(--accent)}
@@ -1158,8 +1159,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         </div>
       </button></div>
 
-    <div class="hdr-group">
-      <div class="hdr-aux">
+    <div class="hdr-aux">
       <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
         <span class="ico" id="shotIco">▶</span><span id="shotLbl" data-i18n="actEspresso">Espresso</span>
       </button>
@@ -1182,7 +1182,9 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         </span>
       </button>
       <span class="aux-hint" id="auxHint"></span>
-      </div>
+    </div>
+
+    <div class="hdr-group">
       <button class="act-btn sleep" id="btnSleep" onclick="doSleep()" disabled>
         <span class="ico">🌙</span><span data-i18n="sleep">Sleep</span>
       </button>
