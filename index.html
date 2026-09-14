@@ -603,7 +603,7 @@ body.page-swap .editpage{transition:none}
 /* 336px is where the beverage-type filters stop needing two rows; 360 clears
    that with room for a longer translation, and halves how many profile names
    are cut off -- 63% of them at 300, 29% here -- for 60px the editor spares */
-.ep-body{flex:1;display:grid;grid-template-columns:360px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
+.ep-body{flex:1;display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
 .ep-col{display:flex;flex-direction:column;gap:10px;min-height:0}
 .ep-list{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:0}
 /* The search and the filters used to ride the list on a sticky position, so
@@ -716,14 +716,19 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-group-head.fav{background:linear-gradient(135deg,#fff6e6,#fff0f0)}
 .ep-editor{overflow-y:auto}
 .ep-editor::-webkit-scrollbar{width:6px}.ep-editor::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-.ep-editor-inner{padding:22px 26px}
+.ep-editor-inner{padding:18px 22px;display:grid;grid-template-columns:1fr 300px;gap:8px 14px;align-items:start}
+.ep-visual{grid-column:1;grid-row:1}
+.ep-steps-title{grid-column:1;grid-row:2}
+.ep-grid-wrap{grid-column:1;grid-row:3}
+.ep-step-editor{grid-column:2;grid-row:1/4;align-self:stretch}
+.ep-meta-title,.ep-name-input,.ep-colorrow,.ep-roastrow,.ep-notes,.ep-save-bar{grid-column:1/-1}
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
-.ep-visual{position:sticky;top:0;z-index:3;background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:16px;padding:12px 16px 10px;margin:-4px 0 14px}
+.ep-visual{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:16px;padding:12px 16px 10px;margin:0}
 .ep-visual-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:flex;justify-content:space-between}
-.ep-visual canvas{width:100%;height:78px;display:block}
+.ep-visual canvas{width:100%;height:196px;display:block}
 .ep-name-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:18px;font-weight:700;color:var(--ink);-webkit-appearance:none;margin-bottom:12px}
 .ep-notes{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:13px;color:var(--ink-soft);-webkit-appearance:none;resize:vertical;margin-bottom:18px}
-.ep-steps-title{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.ep-steps-title{font-size:13px;font-weight:700;margin:2px 0 4px;display:flex;justify-content:space-between;align-items:center}
 .ep-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
 .ep-step{background:var(--field);border:1px solid var(--edge);border-radius:13px;padding:14px 16px;position:relative;border-left:4px solid var(--accent)}
 .ep-step.flow{border-left-color:var(--steam)}
@@ -732,7 +737,7 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-pump-toggle{display:flex;border:1px solid var(--glass-line);border-radius:100px;overflow:hidden}
 .ep-pump-toggle button{min-height:40px;padding:0 16px;border:none;background:#fff;font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
 .ep-pump-toggle button.on{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
-.ep-sliders{display:grid;grid-template-columns:1fr 1fr;gap:2px 20px}
+.ep-sliders{display:grid;grid-template-columns:1fr;gap:2px}
 .ep-slider-row{display:flex;align-items:center;gap:10px}
 .ep-slider-row .lbl{font-size:11px;font-weight:700;color:var(--ink-mute);width:64px;flex-shrink:0}
 .ep-slider-row input[type=range]{flex:1;-webkit-appearance:none;height:28px;background:transparent;outline:none;cursor:pointer}
@@ -951,7 +956,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ep-stepnav .nav:hover{background:#f0eeff}
 /* Every step, every number under its column. The row you select is the one
    the sliders below are holding. */
-.ep-grid-wrap{max-height:196px;overflow-y:auto;margin-bottom:8px}
+.ep-grid-wrap{margin:0;overflow-x:auto}
 .ep-grid-wrap::-webkit-scrollbar{width:6px}
 .ep-grid-wrap::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .ep-grid{width:100%;border-collapse:separate;border-spacing:0 5px}
@@ -976,13 +981,15 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ep-grid td.xc{text-align:center;font-size:11px;font-weight:800;white-space:nowrap;padding:0 8px}
 .ep-grid .xon{color:var(--amber)} .ep-grid .xon .d{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);margin-right:4px;vertical-align:middle}
 .ep-grid .xoff{color:var(--ink-mute);opacity:.5;font-weight:700}
-.ep-grid td.ops{white-space:nowrap;text-align:right}
-.ep-grid td.ops button{width:24px;height:24px;margin-left:2px;border:none;border-radius:7px;background:rgba(99,102,241,.10);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:800;cursor:pointer}
-.ep-grid td.ops button:active{transform:scale(.9)}
-.ep-grid td.ops button.del{color:var(--red);background:rgba(239,68,68,.10)}
+.ep-step-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ep-step-head .who{font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ep-step-ops{display:flex;gap:3px;flex-shrink:0}
+.ep-step-ops button{width:26px;height:26px;border:none;border-radius:8px;background:rgba(99,102,241,.10);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:800;cursor:pointer}
+.ep-step-ops button:active{transform:scale(.9)}
+.ep-step-ops button.del{color:var(--red);background:rgba(239,68,68,.10)}
 .ep-meta-title{font-size:13px;font-weight:700;margin:18px 0 10px}
 body.night .ep-grid .gname{color:var(--ink)}
-.ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:12px 16px 14px;border-left:4px solid var(--accent)}
+.ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:12px 14px 14px;border-left:4px solid var(--accent)}
 .ep-step-editor.flow{border-left-color:var(--steam)}
 .ep-exit{margin-top:14px;padding-top:12px;border-top:1px solid var(--ctl-edge)}
 .ep-exit-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -5341,7 +5348,7 @@ function renderEpSteps(){
   var g=document.getElementById('epStepGrid'); if(!g) return;
   var h='<tr class="gh"><th class="l">'+escapeHtml(t('stepCol'))+'</th><th>'+escapeHtml(t('kind'))+'</th>'
     +'<th>'+escapeHtml(t('targetCol'))+'</th><th>'+escapeHtml(t('tempShort'))+'</th><th>'+escapeHtml(t('secondsLabel'))+'</th>'
-    +'<th>'+escapeHtml(t('volShort'))+'</th><th>'+escapeHtml(t('wtShort'))+'</th><th>'+escapeHtml(t('exitTitle'))+'</th><th></th></tr>';
+    +'<th>'+escapeHtml(t('volShort'))+'</th><th>'+escapeHtml(t('wtShort'))+'</th><th>'+escapeHtml(t('exitTitle'))+'</th></tr>';
   steps.forEach(function(st,i){
     var isP=(st.pump==='pressure');
     h+='<tr class="gr'+(i===epStepIdx?' on':'')+'" data-i="'+i+'">'
@@ -5355,8 +5362,6 @@ function renderEpSteps(){
       +'<td class="xc">'+(st.exit
           ?'<span class="xon"><span class="d"></span>'+escapeHtml(t18nExit(st))+'</span>'
           :'<span class="xoff">'+escapeHtml(t('noLimit'))+'</span>')+'</td>'
-      +'<td class="ops"><button data-up="'+i+'">↑</button><button data-dn="'+i+'">↓</button>'
-        +'<button data-dup="'+i+'">⧉</button><button class="del" data-del="'+i+'">✕</button></td>'
       +'</tr>'; });
   g.innerHTML=h;
   g.querySelectorAll('tr.gr').forEach(function(tr){
@@ -5367,10 +5372,6 @@ function renderEpSteps(){
     inp.onfocus=function(){ if(epStepIdx!==i) stepSel(i); };
     inp.oninput=function(){ editing.profile.steps[i].name=this.value; }; });
   g.querySelectorAll('[data-pump]').forEach(function(b){ b.onclick=function(){ stepPump(+b.dataset.pump); }; });
-  g.querySelectorAll('[data-up]').forEach(function(b){ b.onclick=function(){ var i=+b.dataset.up; stepSwap(i,i-1); }; });
-  g.querySelectorAll('[data-dn]').forEach(function(b){ b.onclick=function(){ var i=+b.dataset.dn; stepSwap(i,i+1); }; });
-  g.querySelectorAll('[data-dup]').forEach(function(b){ b.onclick=function(){ stepDup(+b.dataset.dup); }; });
-  g.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delStepAt(+b.dataset.del); }; });
 
   var st=steps[epStepIdx]; var ed=document.getElementById('epStepEditor');
   if(!st){ ed.innerHTML=''; return; }
@@ -5378,6 +5379,9 @@ function renderEpSteps(){
   var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
   ed.className='ep-step-editor'+(isP?'':' flow');
   ed.innerHTML=''
+    +'<div class="ep-step-head"><span class="who">'+escapeHtml((epStepIdx+1)+'. '+(st.name||'Step'))+'</span>'
+      +'<span class="ep-step-ops"><button id="opUp">↑</button><button id="opDn">↓</button>'
+      +'<button id="opDup">⧉</button><button class="del" id="opDel">✕</button></span></div>'
     +'<div class="ep-sliders">'
     +'<div class="ep-slider-row"><span class="lbl">'+valLabel+'</span><input type="range" min="0" max="'+valMax+'" step="0.1" value="'+valNow+'" data-k="'+(isP?'pressure':'flow')+'"><span class="val">'+valNow.toFixed(1)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('tempLabel')+'</span><input type="range" min="20" max="100" step="0.5" value="'+(st.temperature||90)+'" data-k="temperature"><span class="val">'+(st.temperature||90).toFixed(1)+'</span></div>'
@@ -5386,6 +5390,11 @@ function renderEpSteps(){
     +'<div class="ep-slider-row"><span class="lbl">'+t('wtLimit')+'</span><input type="range" min="0" max="80" step="0.5" value="'+(st.weight||0)+'" data-k0="weight"><span class="val">'+limTxt(st.weight,1)+'</span></div>'
     +'</div>'
     +exitEditorHtml(st);
+  var i0=epStepIdx;
+  ed.querySelector('#opUp').onclick=function(){ stepSwap(i0,i0-1); };
+  ed.querySelector('#opDn').onclick=function(){ stepSwap(i0,i0+1); };
+  ed.querySelector('#opDup').onclick=function(){ stepDup(i0); };
+  ed.querySelector('#opDel').onclick=function(){ delStepAt(i0); };
   bindExitEditor(ed,st);
   bindStepVals(ed,st);
   ed.querySelectorAll('input[data-k0]').forEach(function(inp){ inp.oninput=function(){
