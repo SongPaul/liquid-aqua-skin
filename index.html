@@ -736,10 +736,22 @@ body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,
 .ep-group-head.fav{background:linear-gradient(135deg,#fff6e6,#fff0f0)}
 .ep-editor{overflow-y:auto}
 .ep-editor::-webkit-scrollbar{width:6px}.ep-editor::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-/* Three panes wear this class. The shot log and the bean editor are documents:
-   a heading, then a graph with its own legend under it, then fields, top to
-   bottom. Only the profile editor is two columns, and it says so by id. */
+/* Three panes wear this class, and each says for itself what shape it is.
+   The default is a document: one column, top to bottom. */
 .ep-editor-inner{padding:18px 22px;display:flex;flex-direction:column;gap:8px}
+/* The shot log reads on the left and is edited on the right. Each side scrolls
+   on its own so the graphs stay put while the notes are filled in, and the two
+   legends stay under the canvases they name. */
+#slDetail{height:100%;display:grid;grid-template-columns:6fr 4fr;grid-template-rows:minmax(0,1fr) auto;gap:4px 20px;align-items:start}
+#slDetail .sl-view{grid-column:1;grid-row:1;min-width:0;min-height:0;overflow-y:auto;align-self:stretch;padding-right:2px}
+#slDetail .sl-edit{grid-column:2;grid-row:1;min-width:0;min-height:0;overflow-y:auto;align-self:stretch;padding-right:2px}
+#slDetail .ep-save-bar{grid-column:1/-1;grid-row:2;align-self:end}
+/* Wider than they were, so they can be shorter and still read; the metrics
+   below them start in view, which is what says the column scrolls. */
+#slDetail .sl-canvas-wrap{height:230px}
+#slDetail .sl-temp-wrap{height:108px}
+#slDetail .sl-view::-webkit-scrollbar,#slDetail .sl-edit::-webkit-scrollbar{width:6px}
+#slDetail .sl-view::-webkit-scrollbar-thumb,#slDetail .sl-edit::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 #epEditor{height:100%;padding:16px 22px;display:grid;grid-template-columns:6fr 4fr;grid-template-rows:auto auto auto minmax(120px,1fr) auto;gap:8px 14px;align-items:start}
 #epEditor .ep-meta{grid-column:1/-1;grid-row:1}
 #epEditor .ep-visual{grid-column:1;grid-row:2}
@@ -9693,6 +9705,7 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
   var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:(ctx.targetDoseWeight!=null?ctx.targetDoseWeight:null));
   var yld=(an.actualYield!=null?an.actualYield:(stats.weight!=null?Math.round(stats.weight*10)/10:(ctx.targetYield!=null?ctx.targetYield:null)));
   wrap.innerHTML=''
+    +'<div class="sl-view">'
     +'<div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(st.name)+'</div><div class="sl-dt-sub">'+(st.group?escapeHtml(st.group)+' · ':'')+escapeHtml(fmtShotDate(s))+(s.stopReason?' · '+escapeHtml(s.stopReason):'')+'</div>'+shotContextLine(s)+'</div></div>'
     +'<div class="sl-canvas-wrap"><canvas id="slCurve"></canvas></div>'
     +shotLegend(s,false)
@@ -9709,8 +9722,10 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
       +metric(stats.groupTemp?stats.groupTemp.toFixed(1):null,t('group')+' °C')
       +metric(stats.volume!=null?stats.volume.toFixed(1):null,t('volume')+' ml')
     +'</div>'
+    +'</div>'
+    +'<div class="sl-edit">'
     +aiPanelHtml()
-    +'<div class="ep-section-title" style="margin-top:16px">'+escapeHtml(t('shotBeanGrinder'))+'</div>'
+    +'<div class="ep-section-title" style="margin-top:14px">'+escapeHtml(t('shotBeanGrinder'))+'</div>'
     +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('roaster'))+'</label>'
       +'<input id="slRoaster" value="'+escapeAttr(ctx.coffeeRoaster||'')+'"></div>'
       +'<div class="field"><label>'+escapeHtml(t('coffee'))+'</label>'
@@ -9729,6 +9744,7 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
     +'<div class="field"><label>'+t('enjoyment')+'</label><div class="stars" id="slStars">'
       +[1,2,3,4,5].map(function(n){ return '<span class="star'+(an.enjoyment>=n?' on':'')+'" onclick="setSlStar('+n+')">★</span>'; }).join('')+'</div></div>'
     +'<div class="field"><label>'+t('notesLabel')+'</label><textarea id="slNotes" rows="2">'+escapeHtml(an.espressoNotes||'')+'</textarea></div>'
+    +'</div>'
     +'<div class="ep-save-bar">'
       +(have?'<button class="m-btn'+(isGuideShot(s.id)?' tinted':'')+'" onclick="useShotAsGuide(\''+s.id+'\')">'
         +escapeHtml(t(isGuideShot(s.id)?'guideUsing':'guideUse'))+'</button>':'')
