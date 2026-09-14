@@ -126,7 +126,7 @@ body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 .lock-ripple{position:absolute;inset:-40% -20%;z-index:-1;border-radius:50%;pointer-events:none;
   background:radial-gradient(60% 55% at 50% 50%,rgba(56,189,248,.10),rgba(99,102,241,.05) 45%,transparent 70%)}
 /* While asleep, stop the water-tank wave animation to save the panel/CPU. */
-body.asleep-settled .wave-path,body.asleep-settled .wave-path2{animation-play-state:paused!important}
+body.asleep-settled .wave-path,body.asleep-settled .wave-path2,body.asleep-settled .batt-fluid svg{animation-play-state:paused!important}
 
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
@@ -147,14 +147,23 @@ header>*{position:relative;z-index:1}
 .brand h1{font-size:19px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand span{font-size:11px;color:var(--ink-mute);font-weight:600}
 /* Tablet battery pill in the header brand row. */
-.batt{display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 5px;border-radius:100px;background:var(--ctl-face);border:1px solid var(--ctl-edge)}
-.batt .batt-pct{font-size:11px;font-weight:800;color:var(--ink);letter-spacing:0}
+/* The charge is the level of a liquid in the pill, read the way the water
+   tank below it is read -- a surface that moves, and the number. There is
+   no battery drawn around it: the pill is the vessel. */
+.batt{position:relative;overflow:hidden;box-sizing:border-box;height:22px;display:inline-flex;align-items:center;gap:3px;padding:0 9px;border-radius:100px;background-color:var(--ctl-face);box-shadow:var(--ctl-lift);border:1px solid var(--ctl-edge)}
+.batt>*{position:relative;z-index:1}
+.batt-fluid{position:absolute;left:0;bottom:0;z-index:0;width:100%;height:0;background:linear-gradient(180deg,rgba(16,185,129,.26),rgba(16,185,129,.52));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .6s ease}
+.batt .batt-fluid{color:rgba(16,185,129,.40)}
+.batt-fluid svg{position:absolute;top:-5px;left:0;width:200%;height:6px;display:block;animation:battwave 3.6s linear infinite}
+.batt-wave{fill:currentColor}
+@keyframes battwave{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.batt .batt-pct{font-size:11px;font-weight:800;color:var(--ink);letter-spacing:0;font-variant-numeric:tabular-nums}
+.batt.low .batt-fluid{background:linear-gradient(180deg,rgba(239,68,68,.26),rgba(239,68,68,.52));color:rgba(239,68,68,.40)}
 .batt.low .batt-pct{color:var(--red)}
+.batt.charging .batt-fluid{background:linear-gradient(180deg,rgba(99,102,241,.26),rgba(99,102,241,.52));color:rgba(99,102,241,.40)}
 .batt-ico{width:20px;height:11px;border:1.5px solid var(--ink-mute);border-radius:3px;position:relative;display:inline-block;box-sizing:border-box}
 .batt-ico::after{content:'';position:absolute;right:-3.5px;top:2.5px;width:2px;height:4px;background:var(--ink-mute);border-radius:0 1px 1px 0}
 .batt-ico::before{content:'';position:absolute;left:1px;top:1px;bottom:1px;width:var(--batt-fill,60%);max-width:calc(100% - 2px);background:var(--green);border-radius:1px;transition:width .5s ease,background .5s ease}
-.batt.low .batt-ico::before{background:var(--red)}
-.batt.charging .batt-ico::before{background:var(--accent)}
 .batt-bolt{display:none;width:5px;height:9px;background:currentColor;clip-path:polygon(60% 0,20% 55%,45% 55%,38% 100%,80% 42%,52% 42%)}
 .batt .batt-bolt{color:var(--accent)}
 .batt.charging .batt-bolt,.lock-batt.charging .batt-bolt{display:inline-block}
@@ -1129,7 +1138,14 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="brand-id"><h1>Liquid Aqua</h1>
         <div class="brand-meta">
           <span class="hdr-clock" id="hdrClock"></span>
-          <span class="batt" id="battPill" style="display:none"><span class="batt-ico" id="battIco"></span><i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span></span>
+          <span class="batt" id="battPill" style="display:none">
+            <span class="batt-fluid" id="battFluid" style="height:0">
+              <svg viewBox="0 0 128 10" preserveAspectRatio="none">
+                <path class="batt-wave" d="M0,5 Q8,1 16,5 T32,5 T48,5 T64,5 T80,5 T96,5 T112,5 T128,5 V10 H0 Z"/>
+              </svg>
+            </span>
+            <i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span>
+          </span>
         </div>
       </div>
       <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()">
@@ -2030,7 +2046,11 @@ function updateBatteryUI(){
   var low=b.percent<=20&&!b.charging, mods=(low?' low':'')+(b.charging?' charging':'');
   var label=b.percent+'%';
   pill.style.display=''; pill.className='batt'+mods;
-  document.getElementById('battIco').style.setProperty('--batt-fill',b.percent+'%');
+  // In pixels off the pill's own inner height: a percentage here resolves
+  // against a containing block whose height is set in CSS, and the two did
+  // not always agree on the frame the pill first became visible.
+  var fl=document.getElementById('battFluid'), vessel=fl.parentNode.clientHeight||20;
+  fl.style.height=(b.percent/100*vessel).toFixed(2)+'px';
   document.getElementById('battPct').textContent=label;
   lock.style.display='flex'; lock.className='lock-batt'+mods;
   document.getElementById('lockBattIco').style.setProperty('--batt-fill',b.percent+'%');
