@@ -736,18 +736,20 @@ body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,
 .ep-group-head.fav{background:linear-gradient(135deg,#fff6e6,#fff0f0)}
 .ep-editor{overflow-y:auto}
 .ep-editor::-webkit-scrollbar{width:6px}.ep-editor::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-.ep-editor-inner{padding:18px 22px;display:grid;grid-template-columns:1fr 300px;gap:8px 14px;align-items:start}
-/* The profile editor alone is a filled 6:4 column with a scrolling step table; the shot log and the bean editor share the class but not that shape. */
-#epEditor{height:100%;padding:16px 22px;grid-template-columns:6fr 4fr;grid-template-rows:auto auto auto minmax(120px,1fr) auto}
-.ep-meta{grid-column:1/-1;grid-row:1}
-.ep-visual{grid-column:1;grid-row:2}
-.ep-steps-title{grid-column:1;grid-row:3}
-.ep-grid-wrap{grid-column:1;grid-row:4;min-height:0;overflow-y:auto;align-self:stretch}
+/* Three panes wear this class. The shot log and the bean editor are documents:
+   a heading, then a graph with its own legend under it, then fields, top to
+   bottom. Only the profile editor is two columns, and it says so by id. */
+.ep-editor-inner{padding:18px 22px;display:flex;flex-direction:column;gap:8px}
+#epEditor{height:100%;padding:16px 22px;display:grid;grid-template-columns:6fr 4fr;grid-template-rows:auto auto auto minmax(120px,1fr) auto;gap:8px 14px;align-items:start}
+#epEditor .ep-meta{grid-column:1/-1;grid-row:1}
+#epEditor .ep-visual{grid-column:1;grid-row:2}
+#epEditor .ep-steps-title{grid-column:1;grid-row:3}
+#epEditor .ep-grid-wrap{grid-column:1;grid-row:4;min-height:0;overflow-y:auto;align-self:stretch}
 .ep-grid-wrap::-webkit-scrollbar{width:6px}
 .ep-grid-wrap::-webkit-scrollbar-thumb{background:rgba(139,92,246,.28);border-radius:3px}
 .ep-grid .gh th{position:sticky;top:0;z-index:1;background:var(--sheet)}
-.ep-step-editor{grid-column:2;grid-row:2/5;align-self:stretch;overflow-y:auto}
-.ep-save-bar{grid-column:1/-1;grid-row:5;align-self:end}
+#epEditor .ep-step-editor{grid-column:2;grid-row:2/5;align-self:stretch;overflow-y:auto}
+#epEditor .ep-save-bar{grid-column:1/-1;grid-row:5;align-self:end}
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
 /* Taste is the language of the questions; the translation into pressures
    and seconds happens out of sight. */
