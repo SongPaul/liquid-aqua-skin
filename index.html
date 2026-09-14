@@ -201,10 +201,6 @@ header>*{position:relative;z-index:1}
    cannot do -- so on the machines that need it, it simply stands there. With a
    GHC a tap opens the options already and there is nothing to explain, which
    is also why the marker that used to sit on all three buttons is gone. */
-.act-btn .gear-hint{display:none}
-.act-btn.has-hold{padding-bottom:20px}
-.act-btn.has-hold .gear-hint{display:block;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;letter-spacing:.1px;color:var(--ink-mute);white-space:nowrap;pointer-events:none}
-.act-btn.has-hold.active .gear-hint{color:rgba(255,255,255,.8)}
 
 .conn-toggle{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);cursor:pointer;transition:all .25s;-webkit-appearance:none;font-family:var(--font)}
 .conn-toggle:active{transform:scale(.96)}
@@ -219,9 +215,11 @@ header>*{position:relative;z-index:1}
 @keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .hdr-group{display:flex;align-items:stretch;gap:9px}
-.hdr-aux{display:flex;align-items:stretch;gap:3px;padding:4px;border-radius:21px;background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift)}
-.hdr-aux .act-btn{border-radius:17px;border-color:transparent;background-color:transparent;background-image:none;box-shadow:none;padding-left:15px;padding-right:15px}
+.hdr-aux{position:relative;display:flex;align-items:stretch;gap:3px;padding:4px;border-radius:21px;background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift)}
+.hdr-aux .act-btn{border-radius:17px;border-color:transparent;background-color:transparent;background-image:none;box-shadow:none;padding:7px 15px}
 .hdr-aux .act-btn.active{border-color:transparent}
+.aux-hint{position:absolute;top:100%;left:0;right:0;text-align:center;font-size:10px;font-weight:700;line-height:10px;letter-spacing:.1px;color:var(--ink-mute);white-space:nowrap;pointer-events:none}
+.aux-hint:empty{display:none}
 /* active (running) action buttons: filled + pulsing.
    Force white text/icon with a shadow for contrast against the bright fill,
    overriding the steam/flush accent-color rules above. */
@@ -1140,22 +1138,20 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
           <span class="ab-head"><span class="ico">♨️</span><span class="ab-name" data-i18n="steam">Steam</span><span class="ab-preset" id="auxPresetSteam">—</span></span>
           <span class="ab-sum" id="auxSumSteam">—</span>
         </span>
-        <span class="gear-hint" id="steamHint"></span>
       </button>
       <button class="act-btn flush" id="btnFlush" disabled>
         <span class="ab-txt">
           <span class="ab-head"><span class="ico">🚿</span><span class="ab-name" data-i18n="flush">Flush</span><span class="ab-preset" id="auxPresetFlush">—</span></span>
           <span class="ab-sum" id="auxSumFlush">—</span>
         </span>
-        <span class="gear-hint" id="flushHint"></span>
       </button>
       <button class="act-btn water" id="btnWater" disabled>
         <span class="ab-txt">
           <span class="ab-head"><span class="ico">💧</span><span class="ab-name" data-i18n="water">Water</span><span class="ab-preset" id="auxPresetWater">—</span></span>
           <span class="ab-sum" id="auxSumWater">—</span>
         </span>
-        <span class="gear-hint" id="waterHint"></span>
       </button>
+      <span class="aux-hint" id="auxHint"></span>
       </div>
       <button class="act-btn sleep" id="btnSleep" onclick="doSleep()" disabled>
         <span class="ico">🌙</span><span data-i18n="sleep">Sleep</span>
@@ -2137,20 +2133,18 @@ function applyActionMode(){
   // GHC present -> physical buttons control the machine, so our buttons open SETTINGS.
   // No GHC -> our buttons perform the ACTION; long-press opens settings.
   var steam=document.getElementById('btnSteam'), flush=document.getElementById('btnFlush'), water=document.getElementById('btnWater');
-  var sh=document.getElementById('steamHint'), fh=document.getElementById('flushHint'), wh=document.getElementById('waterHint');
+  var ah=document.getElementById('auxHint');
   // GHC owns starting the shot from the physical buttons — hide our Start button.
   document.getElementById('btnShot').style.display=state.ghc?'none':'';
   clearBtn(steam); clearBtn(flush); clearBtn(water);
   if(state.ghc){
     steam.onclick=openSteamModal; flush.onclick=openFlushModal; water.onclick=openWaterModal;
-    [steam,flush,water].forEach(function(b){ b.classList.remove('has-hold'); });
-    sh.textContent=''; fh.textContent=''; wh.textContent='';
+    ah.textContent='';
   } else {
     bindActionLongPress(steam, function(){ doSteamAction(); }, openSteamModal);
     bindActionLongPress(flush, function(){ doFlushAction(); }, openFlushModal);
     bindActionLongPress(water, function(){ doWaterAction(); }, openWaterModal);
-    [steam,flush,water].forEach(function(b){ b.classList.add('has-hold'); });
-    sh.textContent=t('hintTapHold'); fh.textContent=t('hintTapHold'); wh.textContent=t('hintTapHold');
+    ah.textContent=t('hintTapHold');
   }
 }
 function clearBtn(b){ b.onclick=null; b.onmousedown=null; b.onmouseup=null; b.onmouseleave=null; b.ontouchstart=null; b.ontouchend=null; }
