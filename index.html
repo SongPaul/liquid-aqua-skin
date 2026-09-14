@@ -136,8 +136,14 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
-.brand{display:flex;align-items:center;gap:10px}
-.brand h1{align-self:baseline}
+.brand{display:flex;align-items:center;gap:12px}
+/* Under the name sit the two things a machine on a counter gets asked
+   without anyone touching it: the time, and whether the tablet is still
+   running on its own power. */
+.brand-id{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.brand-meta{display:flex;align-items:center;gap:7px;padding-left:1px}
+.brand .hdr-clock{font-size:12px;font-weight:800;color:var(--ink-soft);font-variant-numeric:tabular-nums;letter-spacing:.2px;line-height:1}
+.hdr-clock:empty{display:none}
 .brand h1{font-size:19px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand span{font-size:11px;color:var(--ink-mute);font-weight:600}
 /* Tablet battery pill in the header brand row. */
@@ -1119,14 +1125,19 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
   <!-- ── Header ────────────────────────────────────────────────── -->
   <header class="glass">
-    <div class="brand"><h1>Liquid Aqua</h1>
+    <div class="brand">
+      <div class="brand-id"><h1>Liquid Aqua</h1>
+        <div class="brand-meta">
+          <span class="hdr-clock" id="hdrClock"></span>
+          <span class="batt" id="battPill" style="display:none"><span class="batt-ico" id="battIco"></span><i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span></span>
+        </div>
+      </div>
       <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()">
         <div class="conn-rows">
           <span class="conn-line" id="connMachineRow"><span class="status-dot" id="dotMachine"></span><span class="conn-txt" id="lblMachine">Machine</span></span>
           <span class="conn-line" id="connScaleRow"><span class="status-dot" id="dotScale"></span><span class="conn-txt" id="lblScale">Scale</span></span>
         </div>
-      </button>
-      <span class="batt" id="battPill" style="display:none"><span class="batt-ico" id="battIco"></span><i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span></span></div>
+      </button></div>
 
     <div class="hdr-group">
       <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
@@ -2936,6 +2947,14 @@ function doTare(){
   api('PUT','/api/v1/scale/tare').then(function(){toast(t('tared'),'ok');}).catch(function(e){toast(e.message,'err');}); }
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
+// H:MM, so it wakes on the minute rather than once a second, the same way
+// the sleep screen’s clock does.
+var _hdrClockT=null;
+function tickHdrClock(){
+  var el=document.getElementById('hdrClock');
+  if(el){ var d=new Date(); el.textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); }
+  if(_hdrClockT) clearTimeout(_hdrClockT);
+  _hdrClockT=setTimeout(tickHdrClock, 60000-(Date.now()%60000)+50); }
 var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
 // Nothing may be left running behind the sleep screen, and bubbles are only
 // worth having when someone is looking.
@@ -9639,7 +9658,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
   if(/[?&]camsetup=1/.test(window.location.search)){ bootCamSetup(); return; }
   bindDoseGestures(); thermoInit();
-  fitStage(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); tickHdrClock(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
