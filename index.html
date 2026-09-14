@@ -180,9 +180,15 @@ header>*{position:relative;z-index:1}
 .act-btn.start.stop{background:linear-gradient(135deg,var(--red),var(--hot));box-shadow:0 6px 18px rgba(239,68,68,.4)}
 .act-btn.steam:not(:disabled){color:var(--steam)} .act-btn.flush:not(:disabled){color:var(--green)}
 .act-btn.water:not(:disabled){color:#0ea5e9}
-.act-btn .cfg-dot{position:absolute;top:5px;right:8px;width:5px;height:5px;border-radius:50%;background:var(--amber)}
-.act-btn .gear-hint{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ink-mute);white-space:nowrap;opacity:0;transition:opacity .2s}
-.act-btn:hover .gear-hint{opacity:1}
+/* Without a GHC these buttons run on a tap and open their options on a hold,
+   and a hold leaves no mark. The hint used to appear on hover, which a tablet
+   cannot do -- so on the machines that need it, it simply stands there. With a
+   GHC a tap opens the options already and there is nothing to explain, which
+   is also why the marker that used to sit on all three buttons is gone. */
+.act-btn .gear-hint{display:none}
+.act-btn.has-hold{padding-bottom:20px}
+.act-btn.has-hold .gear-hint{display:block;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;letter-spacing:.1px;color:var(--ink-mute);white-space:nowrap;pointer-events:none}
+.act-btn.has-hold.active .gear-hint{color:rgba(255,255,255,.8)}
 
 .conn-toggle{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;border:1px solid var(--ctl-edge);background:var(--ctl-face);cursor:pointer;transition:all .25s;-webkit-appearance:none;font-family:var(--font)}
 .conn-toggle:active{transform:scale(.96)}
@@ -486,9 +492,12 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .mini-step{display:flex;align-items:center;justify-content:space-between;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:10px;padding:5px 7px}
 .mini-step .l{font-size:11px;font-weight:700;color:var(--ink-mute);padding-left:3px}
 .mini-step .c{display:flex;align-items:center;gap:5px}
-.ms-btn{width:36px;height:36px;flex:none;border-radius:12px;border:1px solid var(--ctl-edge);background:var(--ctl-face);color:var(--accent);font-size:18px;font-weight:700;line-height:1;cursor:pointer;-webkit-appearance:none;transition:background .15s,border-color .15s,transform .1s}
-.ms-btn:hover{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.42)}
-.ms-btn:active{transform:scale(.92);background:rgba(99,102,241,.24)}
+/* No outline: a 1px rule around a filled chip is two ways of saying the same
+   edge. The fill carries it, a shade stronger than the bordered version was,
+   so the target is no harder to find than before. */
+.ms-btn{width:36px;height:36px;flex:none;border-radius:12px;border:none;background:rgba(99,102,241,.13);color:var(--accent);font-size:18px;font-weight:700;line-height:1;cursor:pointer;-webkit-appearance:none;transition:background .15s,border-color .15s,transform .1s}
+.ms-btn:hover{background:rgba(99,102,241,.2)}
+.ms-btn:active{transform:scale(.92);background:rgba(99,102,241,.3)}
 .ms-val{min-width:36px;text-align:center;font-size:13px;font-weight:700}
 
 .bean-info{padding:5px 14px;flex:1;min-height:60px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
@@ -1108,7 +1117,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       </button>
       <div class="hdr-aux">
       <button class="act-btn steam" id="btnSteam" disabled>
-        <span class="cfg-dot"></span>
         <span class="ab-txt">
           <span class="ab-head"><span class="ico">♨️</span><span class="ab-name" data-i18n="steam">Steam</span><span class="ab-preset" id="auxPresetSteam">—</span></span>
           <span class="ab-sum" id="auxSumSteam">—</span>
@@ -1116,7 +1124,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <span class="gear-hint" id="steamHint"></span>
       </button>
       <button class="act-btn flush" id="btnFlush" disabled>
-        <span class="cfg-dot"></span>
         <span class="ab-txt">
           <span class="ab-head"><span class="ico">🚿</span><span class="ab-name" data-i18n="flush">Flush</span><span class="ab-preset" id="auxPresetFlush">—</span></span>
           <span class="ab-sum" id="auxSumFlush">—</span>
@@ -1124,7 +1131,6 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
         <span class="gear-hint" id="flushHint"></span>
       </button>
       <button class="act-btn water" id="btnWater" disabled>
-        <span class="cfg-dot"></span>
         <span class="ab-txt">
           <span class="ab-head"><span class="ico">💧</span><span class="ab-name" data-i18n="water">Water</span><span class="ab-preset" id="auxPresetWater">—</span></span>
           <span class="ab-sum" id="auxSumWater">—</span>
@@ -1735,6 +1741,7 @@ var I18N={
     stop_targetWeight:'Stopped at the target weight.', stop_targetVolume:'Stopped at the profile\u2019s target volume.', stop_profileAdvance:'The profile ran out before the target weight was reached. A step\u2019s own exit ended the shot \u2014 raise it, or give the last step longer, to pour more.', stop_profileSkip:'A step was skipped and the profile ended early.', stop_noScale:'No scale, so the shot could not stop on weight.', stop_stoppingBackstop:'The machine did not stop when asked; the backstop ended it.', stop_error:'The shot ended on an error.', stop_disconnected:'The machine disconnected during the shot.',
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
+    hintTapHold:'tap = run · hold = options',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
@@ -1880,6 +1887,7 @@ var I18N={
     stop_targetWeight:'목표 무게에 도달해 정지했습니다.', stop_targetVolume:'프로파일의 목표 볼륨에 도달해 정지했습니다.', stop_profileAdvance:'목표 무게에 닿기 전에 프로파일이 먼저 끝났습니다. 스텝의 종료 조건이 샷을 끝낸 것으로, 더 부으려면 그 값을 올리거나 마지막 스텝 시간을 늘리세요.', stop_profileSkip:'스텝이 건너뛰어져 프로파일이 일찍 끝났습니다.', stop_noScale:'저울이 없어 무게로 정지할 수 없었습니다.', stop_stoppingBackstop:'머신이 정지 요청에 응답하지 않아 안전장치가 끝냈습니다.', stop_error:'오류로 샷이 종료됐습니다.', stop_disconnected:'추출 중 머신 연결이 끊겼습니다.',
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
+    hintTapHold:'탭 = 실행 · 길게 = 설정',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
@@ -2116,12 +2124,14 @@ function applyActionMode(){
   clearBtn(steam); clearBtn(flush); clearBtn(water);
   if(state.ghc){
     steam.onclick=openSteamModal; flush.onclick=openFlushModal; water.onclick=openWaterModal;
-    sh.textContent='opens options'; fh.textContent='opens options'; wh.textContent='opens options';
+    [steam,flush,water].forEach(function(b){ b.classList.remove('has-hold'); });
+    sh.textContent=''; fh.textContent=''; wh.textContent='';
   } else {
     bindActionLongPress(steam, function(){ doSteamAction(); }, openSteamModal);
     bindActionLongPress(flush, function(){ doFlushAction(); }, openFlushModal);
     bindActionLongPress(water, function(){ doWaterAction(); }, openWaterModal);
-    sh.textContent='tap=run · hold=options'; fh.textContent='tap=run · hold=options'; wh.textContent='tap=run · hold=options';
+    [steam,flush,water].forEach(function(b){ b.classList.add('has-hold'); });
+    sh.textContent=t('hintTapHold'); fh.textContent=t('hintTapHold'); wh.textContent=t('hintTapHold');
   }
 }
 function clearBtn(b){ b.onclick=null; b.onmousedown=null; b.onmouseup=null; b.onmouseleave=null; b.ontouchstart=null; b.ontouchend=null; }
