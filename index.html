@@ -632,7 +632,7 @@ body.page-swap .editpage{transition:none}
 .ep-chip{font-size:11px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.10);border-radius:100px;padding:2px 6px}
 .ep-chip.roast{color:#c2620b;background:rgba(249,115,22,.12)}
 .ep-chip.ai{border:1px dashed currentColor;background:transparent}
-.ep-airow{display:flex;gap:5px}
+.ep-airow{display:flex;flex-wrap:wrap;gap:5px}
 .ep-aibtn{flex:1;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.1);color:var(--accent);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
 .ep-aibtn[disabled]{opacity:.55;cursor:default}
 /* The loaded profile's bloom, in the accent rather than the green: green here
@@ -746,6 +746,13 @@ body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,
 .ep-step-editor{grid-column:2;grid-row:2/5;align-self:stretch;overflow-y:auto}
 .ep-save-bar{grid-column:1/-1;grid-row:5;align-self:end}
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
+.ep-guide{max-width:520px;margin:40px auto 0;text-align:left}
+.ep-guide-t{font-size:19px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.ep-guide-b{font-size:13px;font-weight:600;color:var(--ink-mute);line-height:1.6}
+.ep-guide-l{list-style:none;margin:14px 0 20px;padding:0;display:flex;flex-direction:column;gap:8px}
+.ep-guide-l li{position:relative;padding-left:20px;font-size:13px;font-weight:600;color:var(--ink-soft);line-height:1.5}
+.ep-guide-l li:before{content:"";position:absolute;left:4px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.6}
+.ep-aibtn.new{flex:1 0 100%;order:-1;border-color:var(--accent);background:rgba(99,102,241,.16);font-weight:800}
 .ep-visual{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:16px;padding:12px 16px 10px;margin:0}
 .ep-visual-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:flex;justify-content:space-between}
 .ep-visual canvas{width:100%;height:196px;display:block;cursor:pointer}
@@ -1885,6 +1892,7 @@ var I18N={
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
+    newProfile:'New profile', newProfileName:'New profile', guideProfTitle:'Profiles', guideProfBody:'A profile is the shape of a shot: what the machine holds, for how long, and what makes it move on.', guideProf1:'Pick one on the left to see its curve and change it.', guideProf2:'A step ends on whichever comes first — its seconds, its volume, its weight, or a reading crossing a line.', guideProf3:'Press a stretch of the curve to edit the step that drew it.',
     stepsShort:'steps',
     moveUp:'Move up', moveDown:'Move down', dragHint:'drag to reorder',
     dragStep:'Drag to reorder',
@@ -2039,6 +2047,7 @@ var I18N={
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
+    newProfile:'새 프로파일', newProfileName:'새 프로파일', guideProfTitle:'프로파일', guideProfBody:'프로파일은 샷의 모양입니다 — 머신이 무엇을 얼마동안 유지하고, 언제 다음 단계로 넘어가는지를 정합니다.', guideProf1:'왼쪽에서 하나를 고르면 곱선과 단계가 보이고 바로 고칠 수 있습니다.', guideProf2:'스텝은 시간 · 부피 · 무게 · 조건부 넘김 중 먼저 오는 것으로 끝납니다.', guideProf3:'곱선의 구간을 누르면 그 단계를 바로 편집합니다.',
     stepsShort:'스텝',
     moveUp:'위로', moveDown:'아래로', dragHint:'끌어서 순서 변경',
     dragStep:'끌어서 순서 변경',
@@ -5177,7 +5186,8 @@ function renderEpTools(){
     +'<button class="ep-aibtn" onclick="aiClassifyProfiles()"'+(aiBusyFlag?' disabled aria-busy="true"':'')+'>'
     +escapeHtml(aiBusyFlag?t('aiClassifyingShort'):t('aiClassify'))+'</button>'
     +(allProfiles.some(function(p){ return aiTagsOf(p).length; })
-      ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '');
+      ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '')
+    +'<button class="ep-aibtn new" onclick="newProfile()">+ '+escapeHtml(t('newProfile'))+'</button>';
   bar.appendChild(ai);
   var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
   var counts={}; pool.forEach(function(p){ allTagsOf(p).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
@@ -5242,10 +5252,40 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     groups[key].forEach(function(rec){ addItem(rec.p,rec.st); }); }); }
 function toggleFav(id){ if(favIds[id]) delete favIds[id]; else favIds[id]=true;
   saveFavs(); renderEpList(); buildCarousel(); }
+// Everything here could be edited and nothing could be started, so a profile
+// could only ever be a copy of one already on the machine. A new one is an
+// espresso with a single nine-bar step: enough to be valid, little enough that
+// whatever you meant to build is still ahead of you.
+function newProfile(){
+  editing={ id:'', isNew:true, metadata:{},
+    profile:{ title:t('newProfileName'), author:'', notes:'', beverage_type:'espresso',
+      target_volume:0, target_weight:0, target_volume_count_start:0, tank_temperature:0,
+      steps:[{ name:t('newStep'), pump:'pressure', transition:'smooth', pressure:9,
+        temperature:92, seconds:25, volume:0, sensor:'water' }] } };
+  epStepIdx=0;
+  Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.remove('active'); }); });
+  renderEpEditor(); }
+// Cancel gives up the edit rather than the page: the list stays, and the pane
+// goes back to saying what this screen is for. Opened from a bean, it still
+// returns there, because that is where it was come from.
+function cancelEdit(){
+  if(_backToBean){ closeEditPage(); return; }
+  editing=null; epStepIdx=0;
+  Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.remove('active'); }); });
+  renderEpEditor(); }
 function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
   // just move the active highlight — no full list rebuild (keeps it fast)
   Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.toggle('active', k===p.id); }); });
   renderEpEditor(); }
+function epGuideHtml(){
+  return '<div class="ep-guide">'
+    +'<div class="ep-guide-t">'+escapeHtml(t('guideProfTitle'))+'</div>'
+    +'<div class="ep-guide-b">'+escapeHtml(t('guideProfBody'))+'</div>'
+    +'<ul class="ep-guide-l"><li>'+escapeHtml(t('guideProf1'))+'</li>'
+      +'<li>'+escapeHtml(t('guideProf2'))+'</li>'
+      +'<li>'+escapeHtml(t('guideProf3'))+'</li></ul>'
+    +'<button class="m-btn primary" onclick="newProfile()">+ '+escapeHtml(t('newProfile'))+'</button>'
+    +'</div>'; }
 function colorPicker(p){
   var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
   var cur=colorKeyOf(live);
@@ -5277,13 +5317,15 @@ function roastPicker(p){
   var src=(cur.length&&!isManual)
     ? '<span class="ep-roastlab">'+escapeHtml(isAiRoast(live)?t('fromAi'):t('fromProfile'))+'</span>' : '';
   return '<div class="ep-roastrow">'+src+btns+clear+'</div>'; }
-function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!editing){ wrap.innerHTML='<div class="ep-placeholder">← Select a profile</div>'; return; }
+function renderEpEditor(){ var wrap=document.getElementById('epEditor');
+  if(!editing){ wrap.innerHTML=epGuideHtml(); return; }
   var pr=editing.profile||{};
   var meta=''
     +'<div class="ep-meta">'
     +'<input class="ep-name-input" id="epName" value="'+escapeAttr(pr.title||'')+'">'
-    +colorPicker(editing)
-    +roastPicker(editing)
+    // the card colour and the roast are kept against a profile the machine
+    // knows about, so they wait until this one has been saved
+    +(editing.isNew?'':(colorPicker(editing)+roastPicker(editing)))
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
     +'</div>';
   wrap.innerHTML=meta
@@ -5295,7 +5337,7 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!edi
       +'<button class="ep-step-add" onclick="addStep()">+ '+escapeHtml(t('addStep'))+'</button></div>'
     +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
     +'<div id="epStepEditor"></div>'
-    +'<div class="ep-save-bar"><button class="m-btn" onclick="closeEditPage()">'+t('cancel')+'</button>'
+    +'<div class="ep-save-bar"><button class="m-btn" onclick="cancelEdit()">'+t('cancel')+'</button>'
       +'<button class="m-btn" id="epUseBtn" onclick="useEditedProfile()">'+escapeHtml(t('useForShot'))+'</button>'
       +'<button class="m-btn primary" onclick="saveProfilePage()">'+t('saveProfile')+'</button></div>';
   epStepIdx=Math.min(epStepIdx,(pr.steps&&pr.steps.length-1)||0); if(epStepIdx<0) epStepIdx=0;
@@ -5620,8 +5662,18 @@ function useEditedProfile(){ if(!editing) return;
 function epDirty(){ var known=allProfiles.find(function(x){ return x.id===editing.id; });
   return !known||JSON.stringify(known.profile)!==JSON.stringify(editing.profile); }
 function saveProfilePage(){ if(!editing) return;
-  var req=editing.isDefault?api('POST','/api/v1/profiles',{profile:editing.profile,metadata:{tags:['edited']}}):api('PUT','/api/v1/profiles/'+editing.id,{profile:editing.profile,metadata:editing.metadata||{}});
-  req.then(function(){ toast(t('tProfileSaved'),'ok'); loadProfiles(); renderEpList(); }).catch(function(e){ toast(t('saveFailed')+': '+e.message,'err'); }); }
+  var creating=!!(editing.isNew||editing.isDefault);
+  var req=creating
+    ? api('POST','/api/v1/profiles',{profile:editing.profile,metadata:editing.isNew?(editing.metadata||{}):{tags:['edited']}})
+    : api('PUT','/api/v1/profiles/'+editing.id,{profile:editing.profile,metadata:editing.metadata||{}});
+  req.then(function(res){ toast(t('tProfileSaved'),'ok');
+    // a second press must not make a second profile, so the new one adopts the
+    // id it was given; without one to adopt, the pane goes back to the guide
+    if(editing&&editing.isNew){
+      var nid=(res&&(res.id||(res.profile&&res.profile.id)))||'';
+      if(nid){ editing.id=nid; editing.isNew=false; } else { editing=null; } }
+    loadProfiles(); renderEpList(); renderEpEditor();
+  }).catch(function(e){ toast(t('saveFailed')+': '+e.message,'err'); }); }
 
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
