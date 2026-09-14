@@ -4422,7 +4422,7 @@ function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||
   var tC=onColor?'rgba(255,214,170,.85)':'#f97316'; // temperature line
   function draw(field,color,mx,fill){ ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-6)-3; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   draw('temp',tC,110,null); // temperature (0-110C scale), drawn first (background)
-  draw('p',pC,12,pFill); draw('f',fC,8,null); }
+  draw('p',pC,12,pFill); draw('f',fC,12,null); }
 
 // ── The camera ──────────────────────────────────────────────────────
 // An <img> pointed at an MJPEG endpoint. The connection stays open for as long
@@ -5553,23 +5553,39 @@ function drawEditCurve(){ var canvas=document.getElementById('epCurve'); if(!can
   var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||400,height:200}; }
   canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
   var steps=editing.profile.steps||[]; var total=0; steps.forEach(function(s){ total+=Math.max(s.seconds||0,0.5); }); if(total<=0) return;
+  // The curve had a temperature axis and nothing for the two lines it is
+  // mostly made of, so the shape could be read but not the values. Pressure
+  // and flow share one scale on the left, the way the live chart draws them,
+  // and the plot keeps a margin on each side for its numbers to sit in.
+  var PMAX=12, TMAX=110;
+  var PADL=25, PADR=27, PW=W-PADL-PADR;
+  var night=document.body.classList.contains('night');
   // step background bands + active highlight
   var tAcc=0;
-  steps.forEach(function(s,i){ var dur=Math.max(s.seconds||0,0.5); var x0=(tAcc/total)*W, x1=((tAcc+dur)/total)*W;
+  steps.forEach(function(s,i){ var dur=Math.max(s.seconds||0,0.5);
+    var x0=PADL+(tAcc/total)*PW, x1=PADL+((tAcc+dur)/total)*PW;
     if(i===epStepIdx){ ctx.fillStyle='rgba(99,102,241,.1)'; ctx.fillRect(x0,0,x1-x0,H); }
     ctx.strokeStyle='rgba(139,92,246,.22)'; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(x1,0); ctx.lineTo(x1,H); ctx.stroke(); ctx.setLineDash([]);
-    // step number label
     ctx.fillStyle=i===epStepIdx?'#6366f1':'#a8a5c4'; ctx.font='600 11px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(String(i+1),(x0+x1)/2,4);
     tAcc+=dur; });
   // curve
   var sim=simulateProfile(editing.profile); if(sim.pts.length<2) return;
-  function draw(field,color,mx,fill,dash){ ctx.save(); if(dash) ctx.setLineDash(dash); ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-12)-6; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=dash?1.5:2.5; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } ctx.restore(); }
+  function draw(field,color,mx,fill,dash){ ctx.save(); if(dash) ctx.setLineDash(dash); ctx.beginPath();
+    sim.pts.forEach(function(pt,i){ var x=PADL+(pt.t/sim.total)*PW; var y=H-Math.min(pt[field]/mx,1)*(H-12)-6;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); });
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+    if(fill){ ctx.lineTo(PADL+PW,H); ctx.lineTo(PADL,H); ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); }
+    ctx.restore(); }
   // target temperature (dashed orange, right-side 0-110C scale)
-  draw('temp','#f97316',110,null,[4,4]);
-  draw('p','#6366f1',12,'rgba(99,102,241,.15)'); draw('f','#38bdf8',8,null);
-  // right-side temperature axis labels
-  ctx.fillStyle='#c2620b'; ctx.font='600 10px Inter,sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
-  for(var ti=0;ti<=4;ti++){ var ty=6+(ti/4)*(H-12); ctx.fillText(String(Math.round(110-(ti/4)*110)),W-3,ty); }
+  draw('temp','#f97316',TMAX,null,[4,4]);
+  draw('p','#6366f1',PMAX,'rgba(99,102,241,.15)'); draw('f','#38bdf8',PMAX,null);
+  ctx.font='600 10px Inter,sans-serif'; ctx.textBaseline='middle';
+  // left: bar and ml/s, which the profile is drawn in
+  ctx.fillStyle=night?'#9b98bb':'#6b6890'; ctx.textAlign='right';
+  for(var li=0;li<=3;li++){ var ly=6+(li/3)*(H-12); ctx.fillText(String(Math.round(PMAX-(li/3)*PMAX)),PADL-4,ly); }
+  // right: the temperature the steps are held at
+  ctx.fillStyle='#c2620b'; ctx.textAlign='left';
+  for(var ti=0;ti<=3;ti++){ var ty=6+(ti/3)*(H-12); ctx.fillText(String(Math.round(TMAX-(ti/3)*TMAX)),PADL+PW+4,ty); }
 }
 // Load the profile being edited onto the machine. Unsaved edits are what you see,
 // so they are what gets loaded; the profile itself is untouched until Save.
