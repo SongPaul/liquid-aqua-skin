@@ -748,7 +748,7 @@ body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
 .ep-visual{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:16px;padding:12px 16px 10px;margin:0}
 .ep-visual-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:flex;justify-content:space-between}
-.ep-visual canvas{width:100%;height:196px;display:block}
+.ep-visual canvas{width:100%;height:196px;display:block;cursor:pointer}
 .ep-name-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:18px;font-weight:700;color:var(--ink);-webkit-appearance:none;margin-bottom:12px}
 .ep-notes{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:13px;color:var(--ink-soft);-webkit-appearance:none;resize:vertical;margin-bottom:18px}
 .ep-steps-title{font-size:13px;font-weight:700;margin:0;display:flex;gap:8px;align-items:center}
@@ -5287,7 +5287,7 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor'); if(!edi
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
     +'</div>';
   wrap.innerHTML=meta
-    +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve"></canvas></div>'
+    +'<div class="ep-visual"><div class="ep-visual-title"><span>'+escapeHtml(t('curveTitle'))+'</span><span><span style="color:var(--accent)">■</span> '+escapeHtml(t('pressure'))+' &nbsp;<span style="color:var(--steam)">■</span> '+escapeHtml(t('flow'))+' &nbsp;<span style="color:#f97316">▬</span> '+escapeHtml(t('tempShort'))+'</span></div><canvas id="epCurve" onclick="epCurveHit(event)"></canvas></div>'
     +'<div class="ep-steps-title"><span>'+t('stepsLabel')+'</span>'
       +'<span class="ep-kindkey"><i class="p"></i><b>P</b>'+escapeHtml(t('pressure'))
         +'<i class="f"></i><b>F</b>'+escapeHtml(t('flow'))
@@ -5385,7 +5385,7 @@ function addStep(){ var a=editing.profile.steps; if(!a) a=editing.profile.steps=
 // step on screen, every number under the column it belongs to, and sliders
 // below for whichever row is selected -- sweeping is for finding a value, the
 // keypad for landing on one.
-function stepSel(i){ epStepIdx=i; renderEpSteps(); drawEditCurve(); }
+function stepSel(i){ epStepIdx=i; renderEpSteps(); drawEditCurve(); epScrollRowIntoView(i); }
 function stepSwap(i,j){ var a=editing.profile.steps; if(!a||j<0||j>=a.length) return;
   var t2=a[i]; a[i]=a[j]; a[j]=t2; epStepIdx=j; renderEpSteps(); drawEditCurve(); }
 function stepDup(i){ var a=editing.profile.steps; if(!a) return;
@@ -5549,6 +5549,31 @@ function renderEpSteps(){
 }
 
 // Curve with vertical step boundaries + highlight of the active step.
+var EP_PADL=25, EP_PADR=27;
+// The bands are already drawn and already numbered; a step is a stretch of the
+// curve, so pressing the stretch is the shortest way to say which one you mean
+// -- shorter than finding its row, and it works when the row is scrolled away.
+function epCurveHit(ev){
+  var canvas=document.getElementById('epCurve'); if(!canvas||!editing) return;
+  var steps=(editing.profile&&editing.profile.steps)||[]; if(!steps.length) return;
+  var total=0; steps.forEach(function(s){ total+=Math.max(s.seconds||0,0.5); });
+  if(total<=0) return;
+  var r=canvas.getBoundingClientRect(), PW=r.width-EP_PADL-EP_PADR;
+  if(PW<=0) return;
+  var at=((ev.clientX-r.left-EP_PADL)/PW)*total;
+  if(at<0) at=0; if(at>total) at=total;
+  var acc=0;
+  for(var i=0;i<steps.length;i++){ acc+=Math.max(steps[i].seconds||0,0.5);
+    if(at<=acc){ stepSel(i); return; } }
+  stepSel(steps.length-1); }
+// the table scrolls inside itself now, so the row that was just chosen has to
+// be brought to where it can be seen
+function epScrollRowIntoView(i){
+  var w=document.querySelector('.ep-grid-wrap'), tr=document.querySelector('.ep-grid tr.gr[data-i="'+i+'"]');
+  if(!w||!tr) return;
+  var wb=w.getBoundingClientRect(), rb=tr.getBoundingClientRect();
+  if(rb.top<wb.top) w.scrollTop-=(wb.top-rb.top)+4;
+  else if(rb.bottom>wb.bottom) w.scrollTop+=(rb.bottom-wb.bottom)+4; }
 function drawEditCurve(){ var canvas=document.getElementById('epCurve'); if(!canvas) return;
   var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||400,height:200}; }
   canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
@@ -5558,7 +5583,7 @@ function drawEditCurve(){ var canvas=document.getElementById('epCurve'); if(!can
   // and flow share one scale on the left, the way the live chart draws them,
   // and the plot keeps a margin on each side for its numbers to sit in.
   var PMAX=12, TMAX=110;
-  var PADL=25, PADR=27, PW=W-PADL-PADR;
+  var PADL=EP_PADL, PADR=EP_PADR, PW=W-PADL-PADR;
   var night=document.body.classList.contains('night');
   // step background bands + active highlight
   var tAcc=0;
