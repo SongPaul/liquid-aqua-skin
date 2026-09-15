@@ -7332,7 +7332,9 @@ function aiJson(key,parts,temperature,opts){
 // Claude speaks the Anthropic Messages API. The prompt parts this skin builds
 // are Gemini-shaped, so they are translated rather than written twice.
 var CLAUDE_API='https://api.anthropic.com/v1/messages';
-var CLAUDE_MODEL='claude-sonnet-5';
+// Haiku: the questions here are reading a label, sorting a profile and
+// summarising a shot, and it is the cheapest model that does them.
+var CLAUDE_MODEL='claude-haiku-4-5-20251001';
 var CLAUDE_MAX_TOKENS=8192;
 function claudeContent(parts){
   return (parts||[]).map(function(p){
