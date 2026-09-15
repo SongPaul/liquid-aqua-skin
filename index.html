@@ -7463,8 +7463,11 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     set('mbProcess',data.processing); set('mbProducer',data.producer);
     set('mbDecafProcess',data.decafProcess); set('mbVariety',(data.variety||[]).join(', '));
     set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
-    bgBlend=aiBlendParts(data);
-    var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=!!bgBlend;
+    // A label the model did not read as a blend is not a statement that this
+    // coffee is not one. Parts already entered stay; only found parts replace.
+    var scanned=aiBlendParts(data);
+    if(scanned){ bgBlend=scanned;
+      var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=true; }
     bgBlendRender();
     st.textContent=t('mbReview');
     _usageFor=null; loadBeanUsage('mb');
@@ -7478,11 +7481,13 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
     variety:parseList(v('mbVariety')), altitude:parseAltitude(v('mbAltitude')),
     notes:document.getElementById('mbNotes').value||null };
     if(!body.variety.length) body.variety=null;
-    var ex=recExtras(null)||{};
+    var ex=recExtras(mbBean&&mbBean.extras)||{};
     var saveBlend=bgBlendForSave();
     if(saveBlend){ ex.blend=saveBlend;
       body.country=null; body.region=null; body.processing=null;
       body.producer=null; body.variety=null; body.altitude=null; body.decafProcess=null; }
+    // Unticking is a statement too: the record stops being a blend.
+    else delete ex.blend;
     body.extras=Object.keys(ex).length?ex:null;
     body.decaf=saveBlend
       ? saveBlend.some(function(c){ return !!c.decafProcess; })
