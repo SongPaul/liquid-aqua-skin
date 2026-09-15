@@ -433,7 +433,7 @@ body.cam-on .bean-chips{display:none}
 /* mid shot the strip has nothing to offer, so it gets out of the way and
    gives its room to the one album that matters */
 body.brewing .car-nav,body.brewing #ccTags,body.brewing .cur-fav{display:none}
-body.brewing .carousel{height:210px}
+body.brewing .carousel{height:226px}
 body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 /* the space is always there; only the dot inside it comes and goes, so the
    name never slides when the loaded profile is browsed past */
@@ -479,6 +479,8 @@ body.night .car-tag.on{background-color:var(--accent);border-color:var(--accent)
   background:rgba(255,255,255,.92);border:0;border-radius:100px;cursor:pointer;
   box-shadow:0 1px 4px rgba(0,0,0,.28);-webkit-appearance:none;transition:transform .1s}
 .album.center .al-edit{display:flex}
+/* Mid shot the cover takes no presses, so it offers none. */
+body.brewing .al-edit{display:none}
 .al-edit:active{transform:scale(.88)}
 .al-shine{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s}
 .album.loaded .al-shine{opacity:1}
@@ -5184,7 +5186,9 @@ function renderCarousel(){
     if(lock){
       // one card, filling the space the neighbours and the strip gave up
       var here=(i===carIndex);
-      p._el.style.transform=here?'translateX(0) scale(1.72)':'translateX(0) scale(1)';
+      // Sized to the box it is shown in: 216x152 at the stage's .86 leaves
+      // 13px above and below the cover inside a 226px carousel.
+      p._el.style.transform=here?'translateX(0) scale(1.53)':'translateX(0) scale(1)';
       p._el.style.opacity=here?1:0;
       p._el.style.zIndex=here?100:0;
       p._el.style.pointerEvents='none';
