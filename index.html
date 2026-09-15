@@ -6468,10 +6468,28 @@ function pickOneScript(v){
   if(str.indexOf(',')<0) return pickOneScriptPart(str);
   return str.split(',').map(pickOneScriptPart).filter(Boolean).join(', ');
 }
+// A scanned blend arrives in the same shape the form keeps, give or take the
+// list fields, which are typed here and split again on save.
+function aiBlendParts(data){
+  var raw=Array.isArray(data&&data.blend)?data.blend:[];
+  var out=raw.filter(function(c){ return c&&typeof c==='object'&&(c.name||c.country||c.region||c.producer); })
+    .map(function(c){
+      return {name:String(c.name||''),
+        country:String(c.country||c.origin||''), region:String(c.region||''),
+        processing:String(c.processing||''), producer:String(c.producer||''),
+        variety:Array.isArray(c.variety)?c.variety.join(', '):String(c.variety||''),
+        altitude:Array.isArray(c.altitude)?fmtAltitude(c.altitude):String(c.altitude||''),
+        pct:(c.pct==null||c.pct==='')?'':String(c.pct)}; });
+  return out.length?out:null; }
 function cleanBeanText(data){
   ['roaster','name','country','region','producer','processing','species','decafProcess','roastLevel']
     .forEach(function(k){ if(typeof data[k]==='string') data[k]=pickOneScript(data[k]); });
   if(Array.isArray(data.variety)) data.variety=data.variety.map(pickOneScript).filter(Boolean);
+  if(Array.isArray(data.blend)) data.blend.forEach(function(c){
+    if(!c||typeof c!=='object') return;
+    ['name','country','region','producer','processing'].forEach(function(k){
+      if(typeof c[k]==='string') c[k]=pickOneScript(c[k]); });
+    if(Array.isArray(c.variety)) c.variety=c.variety.map(pickOneScript).filter(Boolean); });
   // the roaster is its own field; a name that repeats it just wastes the line
   if(data.name&&data.roaster){
     var r=data.roaster.trim();
@@ -7282,7 +7300,7 @@ function geminiMessage(e){
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"species\":\"\",\"decaf\":false,\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decaf is a boolean. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag lists the coffees that make up the blend, put only their COUNTRY names in country, separated by commas and in the order printed, and put the composition lines themselves - farm or lot name, process and percentage, exactly as printed - in notes under a Blend heading. Leave region, producer, processing, variety and altitude empty when they differ between components. Never invent an origin for a blend, and never copy the origin, farm or process of one component into region, producer or processing as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"species\":\"\",\"decaf\":false,\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decaf is a boolean. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety and altitude empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   return geminiJson(key,parts,0.1); }
 // Ask Gemini for JSON, retrying transient overload and falling back to the lite model.
@@ -7338,10 +7356,20 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
   function _btnDone(){ btn.removeAttribute('aria-busy'); btn.innerHTML=_btnLabel; }
   geminiAnalyze(key,aiImages)
     .then(function(data){ data=cleanBeanText(data); function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
-      put('bgRoaster',data.roaster); put('bgName',data.name); put('bgCountry',data.country); put('bgRegion',data.region);
-      put('bgProducer',data.producer); put('bgProcess',data.processing); put('bgSpecies',data.species);
+      put('bgRoaster',data.roaster); put('bgName',data.name); put('bgSpecies',data.species);
       put('bgDecafProcess',data.decafProcess); put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
-      put('bgVariety',(data.variety||[]).join(', ')); put('bgAltitude',fmtAltitude(data.altitude));
+      var scanned=aiBlendParts(data);
+      if(scanned){
+        // The label says several coffees, so the form says several coffees: the
+        // single-origin fields it replaces are not filled in behind it.
+        bgBlend=scanned;
+        var cb=document.getElementById('bgIsBlend'); if(cb) cb.checked=true;
+        bgBlendRender();
+      } else {
+        put('bgCountry',data.country); put('bgRegion',data.region);
+        put('bgProducer',data.producer); put('bgProcess',data.processing);
+        put('bgVariety',(data.variety||[]).join(', ')); put('bgAltitude',fmtAltitude(data.altitude));
+      }
       var dc=document.getElementById('bgDecaf'); if(dc&&data.decaf) dc.checked=true;
       var notesEl=document.getElementById('bgNotes'); if(notesEl&&data.notes){ notesEl.value=data.notes; }
       statusEl.textContent=t('aiFilled'); toast(t('aiDetected'),'ok');
