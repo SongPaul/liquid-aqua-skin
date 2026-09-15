@@ -594,8 +594,9 @@ body.night .bl-card{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 .bl-total{font-size:12px;font-weight:800;color:var(--ink-mute);margin-left:auto}
 /* A blend that does not come to a hundred is worth saying, not refusing. */
 .bl-total.off{color:var(--amber)}
-.mb-blend{font-size:13px;font-weight:700;color:var(--ink);padding:10px 13px;border-radius:11px;
-  border:1px solid var(--ctl-edge);background-color:var(--ctl-face);box-shadow:var(--ctl-well)}
+/* The phone says which bean it was sent to, so an update is never a surprise. */
+.mb-target{margin:0 0 12px;padding:10px 13px;border-radius:11px;font-size:13px;font-weight:700;
+  color:var(--accent);background:rgba(99,102,241,.10);border:1px solid rgba(99,102,241,.25)}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .bean-chip.multi{cursor:pointer;transition:background .15s,border-color .15s}
 .modal.bl-modal{width:360px}
@@ -1870,7 +1871,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 </div>
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
-    <div class="mb-head"><div class="mb-title"><span>✨ </span><span data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" data-i18n="scanAIDesc">Photograph the bag — AI fills the details.</div></div>
+    <div class="mb-head"><div class="mb-title"><span>✨ </span><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" data-i18n="scanAIDesc">Photograph the bag — AI fills the details.</div></div>
     <div class="ai-thumbs" id="mbThumbs" style="justify-content:center"></div>
     <div class="mb-actions">
       <button class="m-btn" onclick="document.getElementById('mbCam').click()" data-i18n="camera">📷 Camera</button>
@@ -1880,11 +1881,15 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     </div>
     <button class="m-btn primary mb-analyze" id="mbAnalyzeBtn" onclick="mbAnalyze()" disabled data-i18n="analyze">Analyze</button>
     <div id="mbRec" class="rec-box"></div>
+    <div class="mb-target" id="mbTarget" style="display:none"></div>
     <div class="mb-fields" id="mbFields" style="display:none">
       <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
       <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
       <div class="field"><label data-i18n="roastDate">Roast date</label><input id="mbRoastDate" type="date"></div>
       <div class="field"><label data-i18n="roastLevel">Roast level</label><input id="mbRoast"></div>
+      <div class="field"><label class="bean-check"><input type="checkbox" id="mbIsBlend" onchange="bgBlendToggle(this.checked)"> <span data-i18n="isBlend">Blend</span></label></div>
+      <div id="mbBlendBox"></div>
+      <div id="mbSoloOrigin">
       <div class="field"><label data-i18n="origin">Origin</label><input id="mbCountry"></div>
       <div class="field"><label data-i18n="region">Region</label><input id="mbRegion"></div>
       <div class="field"><label data-i18n="process">Process</label><input id="mbProcess"></div>
@@ -1892,9 +1897,9 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="field"><label data-i18n="variety">Variety</label><input id="mbVariety" placeholder="Heirloom, SL28"></div>
       <div class="field"><label data-i18n="altitude">Altitude (m)</label><input id="mbAltitude" placeholder="1800-2200"></div>
       <div class="field"><label data-i18n="decafProcess">Decaf process</label><input id="mbDecafProcess" placeholder="Swiss Water"></div>
-      <div class="field" id="mbBlendBox" style="display:none"><label data-i18n="isBlend">Blend</label><div class="mb-blend" id="mbBlendList"></div></div>
+      </div>
       <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="6"></textarea></div>
-      <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()" data-i18n="addToGateway">Add to gateway</button>
+      <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()"><span id="mbSaveLbl" data-i18n="addToGateway">Add to gateway</span></button>
     </div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
     <div class="mb-key" id="mbKeyBox" style="display:none">
@@ -2044,6 +2049,7 @@ var I18N={
     usApply:'Apply', usSkip:'Skip', usApplied:'Settings applied', brewTempLabel:'Brew temp',
     profileList:'Profiles',
     isBlend:'Blend', blendPart:'Coffee', blendAdd:'Add coffee', blendTotal:'Total', blendPartsSuffix:' coffees',
+    mbUpdating:'Updating {n}',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
     catMaint:'Maintenance', maintDesc:'The machine runs these itself. It has to be awake and idle to start one, and each says where it has got to.', maint_cleaning:'Clean the group', maint_cleaning_d:'A backflush cycle with a blind basket and cleaning tablet fitted.', maint_descaling:'Descale', maint_descaling_d:'Runs descaling solution through the group and the steam boiler. Follow the machine\u2019s instructions.', maint_airPurge:'Air purge', maint_airPurge_d:'Clears water from the lines, for transport or storage.', maintGo:'Start', maintStop:'Stop', maintDone:'Finished', maintBusy:'The machine is busy', maintStart:'Starting', maintFill:'Filling', maintSoak:'Soaking', maintFlush:'Flushing', maintDescale:'Descaling', maintSteam:'Steam boiler', maintPurge:'Purging',
@@ -2212,6 +2218,7 @@ var I18N={
     usApply:'적용', usSkip:'건너뛰기', usApplied:'설정을 적용했습니다', brewTempLabel:'물 온도',
     profileList:'목록',
     isBlend:'블렌드', blendPart:'원두', blendAdd:'원두 추가', blendTotal:'합계', blendPartsSuffix:'종',
+    mbUpdating:'수정: {n}',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
     catMaint:'관리', maintDesc:'머신이 직접 수행합니다. 깨어 있고 대기 상태여야 시작할 수 있으며, 각각 진행 단계를 보여줍니다.', maint_cleaning:'그룹헤드 청소', maint_cleaning_d:'블라인드 바스켓과 세정제를 끼우고 역세척을 돌립니다.', maint_descaling:'디스케일링', maint_descaling_d:'스케일 제거 용액을 그룹과 스팀 보일러에 통과시킵니다. 머신 안내를 따르세요.', maint_airPurge:'에어 퍼지', maint_airPurge_d:'배관의 물을 빼냅니다. 운송·보관 전에 씁니다.', maintGo:'시작', maintStop:'중지', maintDone:'완료', maintBusy:'머신이 사용 중입니다', maintStart:'시작', maintFill:'물 채움', maintSoak:'불림', maintFlush:'헹굼', maintDescale:'스케일 제거 중', maintSteam:'스팀 보일러', maintPurge:'배출 중',
@@ -6670,7 +6677,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       bgBatchId=null; bgNewBatch=false; histProfile=null; }
     recPfx='bg';
     if(isNew) bgPane='info';
-    bgBlend=blendOf(o);
+    blendHost(true); bgBlend=blendOf(o);
     wrap.innerHTML='<div class="bg-title">'+t(isNew?'newBean':'editBean')+'</div>'
       +'<div class="bg-tabs2" id="bgTabs"></div>'
       +'<div class="bg-pane" id="bgPaneProfiles"'+(bgPane==='profiles'?'':' style="display:none"')+'>'
@@ -7064,7 +7071,12 @@ function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
 // model has no field for, and they carry the origin fields the bean itself then
 // has no business answering.
 var bgBlend=null; // [{name,country,region,processing,producer,variety,altitude,decafProcess,pct}] while a bean form is open
-var mbBlend=null; // the same, as read on the phone
+// Which form the parts are being edited in. The tablet's editor and the phone's
+// scan page are the same document; only one of them is ever shown.
+var blendBox='bgBlendBox', blendSolo='bgSoloOrigin';
+function blendHost(tablet){
+  blendBox=tablet?'bgBlendBox':'mbBlendBox';
+  blendSolo=tablet?'bgSoloOrigin':'mbSoloOrigin'; }
 var BLEND_ORIGIN_FIELDS=['country','region','processing','producer','variety','altitude','decafProcess'];
 function blendOf(bean){
   var b=bean&&bean.extras&&bean.extras.blend;
@@ -7113,10 +7125,10 @@ function bgBlendRows(){
     +'<div class="bl-foot"><button class="m-btn bl-add" onclick="bgBlendAdd()">+ '+escapeHtml(t('blendAdd'))+'</button>'
     +blendTotalHtml()+'</div></div>'; }
 function bgBlendRender(){
-  var box=document.getElementById('bgBlendBox'); if(box) box.innerHTML=bgBlendRows();
+  var box=document.getElementById(blendBox); if(box) box.innerHTML=bgBlendRows();
   // The bean's own origin belongs to the parts now, so it steps aside entirely
   // rather than sitting under them saying something else.
-  var solo=document.getElementById('bgSoloOrigin');
+  var solo=document.getElementById(blendSolo);
   if(solo) solo.style.display=bgBlend?'none':''; }
 // Typing must not redraw the field being typed in, so a keystroke only ever
 // updates the model and, for a share, the running total beside the button.
@@ -7139,11 +7151,12 @@ function bgBlendRemove(el){
 function bgBlendToggle(on){
   if(!on){ bgBlend=null; bgBlendRender(); return; }
   if(!bgBlend||!bgBlend.length){
-    var first=blEmpty(), gv=function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
-    first.country=gv('bgCountry'); first.region=gv('bgRegion');
-    first.processing=gv('bgProcess'); first.producer=gv('bgProducer');
-    first.variety=gv('bgVariety'); first.altitude=gv('bgAltitude');
-    first.decafProcess=gv('bgDecafProcess');
+    var pfx=(blendBox==='bgBlendBox')?'bg':'mb';
+    var first=blEmpty(), gv=function(id){ var e=document.getElementById(pfx+id); return e?e.value.trim():''; };
+    first.country=gv('Country'); first.region=gv('Region');
+    first.processing=gv('Process'); first.producer=gv('Producer');
+    first.variety=gv('Variety'); first.altitude=gv('Altitude');
+    first.decafProcess=gv('DecafProcess');
     bgBlend=[first,blEmpty()]; }
   bgBlendRender(); }
 // Rows with nothing in them are not a part, so they are not saved as one.
@@ -7406,7 +7419,11 @@ function isLocalHost(h){ return !h||h==='localhost'||h==='127.0.0.1'||h==='0.0.0
 // that happens the user types it once and it is remembered.
 function beanScanUrl(host){ var port=window.location.port||'';
   var hasPort=host.indexOf(':')>=0;
-  return 'http://'+host+((hasPort||!port)?'':(':'+port))+window.location.pathname+'?beanscan=1'; }
+  // A bean already open is the bean being scanned: the phone is reading its bag,
+  // not somebody else's, so the code carries which one and the phone updates it.
+  var open=(bgSel&&bgSel.type==='bean'&&bgSel.obj&&bgSel.obj.id)?bgSel.obj.id:'';
+  return 'http://'+host+((hasPort||!port)?'':(':'+port))+window.location.pathname
+    +'?beanscan=1'+(open?('&bean='+encodeURIComponent(open)):''); }
 function setQrHost(v){ prefs.qrHost=(v||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''); savePrefs();
   var box=document.getElementById('aiQr'); if(box) box.style.display='none';
   togglePhoneQR(); }
@@ -7446,13 +7463,9 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     set('mbProcess',data.processing); set('mbProducer',data.producer);
     set('mbDecafProcess',data.decafProcess); set('mbVariety',(data.variety||[]).join(', '));
     set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
-    // The phone captures; the parts are reviewed on the tablet. They are shown
-    // here so it is plain they were read, and carried through on save.
-    mbBlend=aiBlendParts(data);
-    var bb=document.getElementById('mbBlendBox'), bl=document.getElementById('mbBlendList');
-    if(bb&&bl){ bb.style.display=mbBlend?'':'none';
-      bl.textContent=mbBlend?mbBlend.map(function(c){
-        return (c.name||c.country)+(c.pct!==''?' '+c.pct+'%':''); }).join(' · '):''; }
+    bgBlend=aiBlendParts(data);
+    var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=!!bgBlend;
+    bgBlendRender();
     st.textContent=t('mbReview');
     _usageFor=null; loadBeanUsage('mb');
     recommendProfiles('mb',true);
@@ -7466,7 +7479,7 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
     notes:document.getElementById('mbNotes').value||null };
     if(!body.variety.length) body.variety=null;
     var ex=recExtras(null)||{};
-    var saveBlend=mbBlend?bgBlendForSaveList(mbBlend):null;
+    var saveBlend=bgBlendForSave();
     if(saveBlend){ ex.blend=saveBlend;
       body.country=null; body.region=null; body.processing=null;
       body.producer=null; body.variety=null; body.altitude=null; body.decafProcess=null; }
@@ -7477,12 +7490,15 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
   }catch(e){ st.textContent=t('mbSaveFailed')+' '+e.message; return; }
   if(!body.roaster||!body.name){ st.textContent=t('mbNeedRoasterName'); return; }
   st.textContent=t('mbSaving'); if(btn) btn.disabled=true;
-  var dup=findBeanLike(body.roaster,body.name);
-  askDuplicateBean(dup)
-    .then(function(choice){
-      if(choice===null){ st.textContent=''; if(btn) btn.disabled=false; return Promise.reject({cancelled:true}); }
-      return (choice==='batch'&&dup)
-        ? api('PUT','/api/v1/beans/'+dup.id,body,15000).then(function(){ return dup; })
+  var target=mbBeanId?Promise.resolve('open'):(function(){
+    var dup=findBeanLike(body.roaster,body.name);
+    return askDuplicateBean(dup).then(function(choice){ return {choice:choice,dup:dup}; }); })();
+  target
+    .then(function(r){
+      if(r==='open') return api('PUT','/api/v1/beans/'+mbBeanId,body,15000).then(function(){ return {id:mbBeanId}; });
+      if(r.choice===null){ st.textContent=''; if(btn) btn.disabled=false; return Promise.reject({cancelled:true}); }
+      return (r.choice==='batch'&&r.dup)
+        ? api('PUT','/api/v1/beans/'+r.dup.id,body,15000).then(function(){ return r.dup; })
         : api('POST','/api/v1/beans',body,15000); })
     .then(function(saved){ return (saved&&saved.id)?saveBeanBatch(saved.id,v('mbRoastDate'),v('mbRoast'),null):null; })
     .then(function(){ st.textContent=t('mbSaved');
@@ -10995,8 +11011,28 @@ function bootCamSetup(){
   api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
     var url=(typeof v==='string'?v:(v&&v.value)||'');
     if(url) document.getElementById('csUrl').value=url; }).catch(function(){}); }
+// The bean the phone was sent to update, if any.
+var mbBeanId=null, mbBean=null;
+function mbFill(o){
+  function set(id,v){ var el=document.getElementById(id); if(el) el.value=(v==null?'':v); }
+  set('mbRoaster',o.roaster); set('mbName',o.name); set('mbCountry',o.country); set('mbRegion',o.region);
+  set('mbProcess',o.processing); set('mbProducer',o.producer); set('mbDecafProcess',o.decafProcess);
+  set('mbVariety',(o.variety||[]).join(', ')); set('mbAltitude',fmtAltitude(o.altitude));
+  set('mbNotes',o.notes);
+  bgBlend=blendOf(o);
+  var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=!!bgBlend;
+  bgBlendRender();
+  var box=document.getElementById('mbFields'); if(box) box.style.display='block'; }
+function mbShowTarget(){
+  var el=document.getElementById('mbTarget'); if(!el) return;
+  if(!mbBean){ el.style.display='none'; return; }
+  el.style.display='';
+  el.textContent=t('mbUpdating').replace('{n}',(mbBean.roaster?mbBean.roaster+' · ':'')+(mbBean.name||'')); }
 function bootMobileBeanScan(){
   loadPrefs(); // picks up language + applies i18n
+  blendHost(false);
+  var m=/[?&]bean=([^&]+)/.exec(window.location.search);
+  mbBeanId=m?decodeURIComponent(m[1]):null;
   document.querySelector('.stage-wrap').style.display='none';
   document.getElementById('mobilePage').style.display='block';
   document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
@@ -11004,7 +11040,13 @@ function bootMobileBeanScan(){
   if(!mbGetKey()) mbShowKeyBox();
   loadProfiles(); // the profile suggestion needs a catalogue to choose from
   Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
-    .then(function(r){ beans=r[0]||[]; }); // so a repeat purchase can be offered as a batch
+    .then(function(r){ beans=r[0]||[]; // so a repeat purchase can be offered as a batch
+      if(!mbBeanId) return;
+      mbBean=beans.filter(function(b){ return b.id===mbBeanId; })[0]||null;
+      if(!mbBean){ mbBeanId=null; return; }
+      mbShowTarget(); mbFill(mbBean);
+      var lbl=document.getElementById('mbSaveLbl'); if(lbl) lbl.textContent=t('save');
+      var ttl=document.getElementById('mbTitle'); if(ttl){ ttl.textContent=t('editBean'); ttl.removeAttribute('data-i18n'); } });
 }
 document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
