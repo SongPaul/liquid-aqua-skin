@@ -575,6 +575,21 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bean-chips::-webkit-scrollbar{display:none}
 .bean-chips:empty{display:none}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:3px 9px}
+/* The parts of a blend: a name, where it is from, and how much of it. */
+.bl-list{display:flex;flex-direction:column;gap:7px;margin:2px 0 14px}
+.bl-row{display:flex;align-items:center;gap:7px}
+.bl-row input{min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:13px;font-weight:600;color:var(--ink)}
+.bl-row .bl-name{flex:1 1 40%}
+.bl-row .bl-origin{flex:1 1 34%}
+.bl-row .bl-pct{flex:0 0 74px;text-align:right}
+.bl-del{flex:none;width:32px;height:32px;border-radius:9px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);color:var(--ink-mute);font-size:16px;line-height:1;cursor:pointer;-webkit-appearance:none}
+.bl-del:active{transform:scale(.9)}
+.bl-foot{display:flex;align-items:center;gap:10px}
+.bl-add{flex:none}
+.bl-total{font-size:12px;font-weight:800;color:var(--ink-mute);margin-left:auto}
+/* A blend that does not come to a hundred is worth saying, not refusing. */
+.bl-total.off{color:var(--amber)}
+body.night .bl-row input{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .bean-chip.multi{cursor:pointer;transition:background .15s,border-color .15s}
 .modal.bl-modal{width:360px}
@@ -2008,6 +2023,7 @@ var I18N={
     usTitle:'Carry settings over?', usFromThis:'From your last shot with {n}', usFromLast:'From your last shot',
     usApply:'Apply', usSkip:'Skip', usApplied:'Settings applied', brewTempLabel:'Brew temp',
     profileList:'Profiles',
+    isBlend:'Blend', blendPart:'Coffee', blendAdd:'Add coffee', blendTotal:'Total', blendPartsSuffix:' coffees',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
     catMaint:'Maintenance', maintDesc:'The machine runs these itself. It has to be awake and idle to start one, and each says where it has got to.', maint_cleaning:'Clean the group', maint_cleaning_d:'A backflush cycle with a blind basket and cleaning tablet fitted.', maint_descaling:'Descale', maint_descaling_d:'Runs descaling solution through the group and the steam boiler. Follow the machine\u2019s instructions.', maint_airPurge:'Air purge', maint_airPurge_d:'Clears water from the lines, for transport or storage.', maintGo:'Start', maintStop:'Stop', maintDone:'Finished', maintBusy:'The machine is busy', maintStart:'Starting', maintFill:'Filling', maintSoak:'Soaking', maintFlush:'Flushing', maintDescale:'Descaling', maintSteam:'Steam boiler', maintPurge:'Purging',
@@ -2175,6 +2191,7 @@ var I18N={
     usTitle:'이전 설정을 가져올까요?', usFromThis:'{n} 의 마지막 샷', usFromLast:'가장 최근 샷',
     usApply:'적용', usSkip:'건너뛰기', usApplied:'설정을 적용했습니다', brewTempLabel:'물 온도',
     profileList:'목록',
+    isBlend:'블렌드', blendPart:'원두', blendAdd:'원두 추가', blendTotal:'합계', blendPartsSuffix:'종',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
     catMaint:'관리', maintDesc:'머신이 직접 수행합니다. 깨어 있고 대기 상태여야 시작할 수 있으며, 각각 진행 단계를 보여줍니다.', maint_cleaning:'그룹헤드 청소', maint_cleaning_d:'블라인드 바스켓과 세정제를 끼우고 역세척을 돌립니다.', maint_descaling:'디스케일링', maint_descaling_d:'스케일 제거 용액을 그룹과 스팀 보일러에 통과시킵니다. 머신 안내를 따르세요.', maint_airPurge:'에어 퍼지', maint_airPurge_d:'배관의 물을 빼냅니다. 운송·보관 전에 씁니다.', maintGo:'시작', maintStop:'중지', maintDone:'완료', maintBusy:'머신이 사용 중입니다', maintStart:'시작', maintFill:'물 채움', maintSoak:'불림', maintFlush:'헹굼', maintDescale:'스케일 제거 중', maintSteam:'스팀 보일러', maintPurge:'배출 중',
@@ -6614,6 +6631,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       bgBatchId=null; bgNewBatch=false; histProfile=null; }
     recPfx='bg';
     if(isNew) bgPane='info';
+    bgBlend=blendOf(o);
     wrap.innerHTML='<div class="bg-title">'+t(isNew?'newBean':'editBean')+'</div>'
       +'<div class="bg-tabs2" id="bgTabs"></div>'
       +'<div class="bg-pane" id="bgPaneProfiles"'+(bgPane==='profiles'?'':' style="display:none"')+'>'
@@ -6642,6 +6660,8 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('roaster')+'</label><input id="bgRoaster" value="'+escapeAttr(o.roaster||'')+'"></div><div class="field"><label>'+t('name')+'</label><input id="bgName" value="'+escapeAttr(o.name||'')+'"></div></div>'
       +batchPicker(o)
       +'<div class="field-row"><div class="field"><label>'+t('roastDate')+'</label><input id="bgRoastDate" type="date" value="'+escapeAttr(isoDay(batch.roastDate))+'"></div><div class="field"><label>'+t('roastLevel')+'</label><input id="bgRoast" value="'+escapeAttr(batch.roastLevel||'')+'" placeholder="light / medium / dark"></div></div>'
+      +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgIsBlend"'+(blendOf(o)?' checked':'')+' onchange="bgBlendToggle(this.checked)"> '+t('isBlend')+'</label></div>'
+      +'<div id="bgBlendBox">'+bgBlendRows()+'</div>'
       +'<div class="field-row"><div class="field"><label>'+t('origin')+'</label><input id="bgCountry" value="'+escapeAttr(o.country||'')+'"></div><div class="field"><label>'+t('region')+'</label><input id="bgRegion" value="'+escapeAttr(o.region||'')+'"></div></div>'
       +'<div class="field-row"><div class="field"><label>'+t('process')+'</label><input id="bgProcess" value="'+escapeAttr(o.processing||'')+'"></div><div class="field"><label>'+t('producer')+'</label><input id="bgProducer" value="'+escapeAttr(o.producer||'')+'"></div></div>'
       +'<div class="field-row"><div class="field"><label>'+t('variety')+'</label><input id="bgVariety" value="'+escapeAttr((o.variety||[]).join(', '))+'" placeholder="Heirloom, SL28"></div><div class="field"><label>'+t('altitude')+'</label><input id="bgAltitude" value="'+escapeAttr(fmtAltitude(o.altitude))+'" placeholder="1800-2200"></div></div>'
@@ -6996,6 +7016,67 @@ function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
   selectProfile(r.p);
   var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
   if(o&&o.name) api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).catch(function(){}); }
+// -- Blends -------------------------------------------------------
+// A blend is several coffees in a stated proportion, and the gateway's bean
+// record has one name and one origin. The parts live in that record's extras
+// bag, which is where this skin already keeps what the model has no field for.
+var bgBlend=null; // [{name, origin, pct}] while a bean form is open, else null
+function blendOf(bean){
+  var b=bean&&bean.extras&&bean.extras.blend;
+  return (b&&b.length)?b.map(function(x){
+    return {name:String(x.name||''),origin:String(x.origin||''),pct:(x.pct==null?'':String(x.pct))}; }):null; }
+function blendPctTotal(list){
+  var sum=0, any=false;
+  (list||[]).forEach(function(c){ var n=parseFloat(c.pct); if(!isNaN(n)){ sum+=n; any=true; } });
+  return any?Math.round(sum*10)/10:null; }
+function blendSummary(bean){
+  var b=blendOf(bean); if(!b) return '';
+  return b.filter(function(c){ return c.name||c.origin; })
+    .map(function(c){ return (c.name||c.origin)+(c.pct!==''?' '+c.pct+'%':''); }).join(' · '); }
+function blendTotalHtml(){
+  var total=blendPctTotal(bgBlend);
+  var off=(total!=null&&Math.abs(total-100)>0.05);
+  return '<span class="bl-total'+(off?' off':'')+'" id="bgBlendTotal">'
+    +escapeHtml(t('blendTotal'))+' '+(total==null?'—':total+'%')+'</span>'; }
+function bgBlendRows(){
+  if(!bgBlend) return '';
+  var rows=bgBlend.map(function(c,i){
+    return '<div class="bl-row">'
+      +'<input class="bl-name" data-i="'+i+'" data-k="name" placeholder="'+escapeAttr(t('blendPart'))+'" value="'+escapeAttr(c.name)+'" oninput="bgBlendInput(this)">'
+      +'<input class="bl-origin" data-i="'+i+'" data-k="origin" placeholder="'+escapeAttr(t('origin'))+'" value="'+escapeAttr(c.origin)+'" oninput="bgBlendInput(this)">'
+      +'<input class="bl-pct" data-i="'+i+'" data-k="pct" type="number" step="1" min="0" max="100" placeholder="%" value="'+escapeAttr(c.pct)+'" oninput="bgBlendInput(this)">'
+      +'<button class="bl-del" data-i="'+i+'" title="'+escapeAttr(t('delete'))+'" onclick="bgBlendRemove(this)">×</button></div>'; }).join('');
+  return '<div class="bl-list">'+rows
+    +'<div class="bl-foot"><button class="m-btn bl-add" onclick="bgBlendAdd()">+ '+escapeHtml(t('blendAdd'))+'</button>'
+    +blendTotalHtml()+'</div></div>'; }
+function bgBlendRender(){
+  var box=document.getElementById('bgBlendBox'); if(box) box.innerHTML=bgBlendRows(); }
+// Typing must not redraw the field being typed in, so a keystroke only ever
+// updates the model and, for a share, the running total beside the button.
+function bgBlendInput(el){
+  var i=parseInt(el.getAttribute('data-i'),10), k=el.getAttribute('data-k');
+  if(!bgBlend||!bgBlend[i]) return;
+  bgBlend[i][k]=el.value;
+  if(k!=='pct') return;
+  var span=document.getElementById('bgBlendTotal'); if(!span) return;
+  var total=blendPctTotal(bgBlend);
+  span.textContent=t('blendTotal')+' '+(total==null?'—':total+'%');
+  span.classList.toggle('off',total!=null&&Math.abs(total-100)>0.05); }
+function bgBlendAdd(){ if(!bgBlend) bgBlend=[]; bgBlend.push({name:'',origin:'',pct:''}); bgBlendRender(); }
+function bgBlendRemove(el){
+  var i=parseInt(el.getAttribute('data-i'),10);
+  if(!bgBlend) return; bgBlend.splice(i,1); bgBlendRender(); }
+function bgBlendToggle(on){
+  bgBlend=on?(bgBlend&&bgBlend.length?bgBlend:[{name:'',origin:'',pct:''},{name:'',origin:'',pct:''}]):null;
+  bgBlendRender(); }
+// Rows with nothing in them are not a blend, so they are not saved as one.
+function bgBlendForSave(){
+  if(!bgBlend) return null;
+  var out=bgBlend.filter(function(c){ return String(c.name).trim()||String(c.origin).trim(); })
+    .map(function(c){ var n=parseFloat(c.pct);
+      return {name:String(c.name).trim(),origin:String(c.origin).trim()||null,pct:isNaN(n)?null:n}; });
+  return out.length?out:null; }
+
 function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
   var body={roaster:v('bgRoaster'),name:v('bgName'),country:v('bgCountry')||null,region:v('bgRegion')||null,
     producer:v('bgProducer')||null,processing:v('bgProcess')||null,species:v('bgSpecies')||null,
@@ -7003,7 +7084,10 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
     variety:parseList(v('bgVariety')),altitude:parseAltitude(v('bgAltitude')),
     notes:document.getElementById('bgNotes').value||null};
   if(!body.variety.length) body.variety=null;
-  var ex=recExtras(o.extras); if(ex) body.extras=ex;
+  var ex=recExtras(o.extras)||{};
+  var blend=bgBlendForSave();
+  if(blend) ex.blend=blend; else delete ex.blend;
+  body.extras=Object.keys(ex).length?ex:null;
   if(!body.roaster||!body.name){ toast(t('mbNeedRoasterName'),'err'); return; }
   var roastDate=v('bgRoastDate'), roastLevel=v('bgRoast');
   var finish=function(){ toast(t('beanSaved'),'ok'); bgBatchId=null; bgNewBatch=false; bgSel=null;
@@ -9647,7 +9731,9 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
   var nameEl=document.getElementById('beanName'), subEl=document.getElementById('beanSub');
   if(name){ nameEl.textContent=(roaster?roaster+' · ':'')+name;
     var line=[];
-    if(bean){ if(bean.country) line.push(beanShort(bean.country));
+    var blend=bean?blendSummary(bean):'';
+    if(blend) line.push(blend);
+    else if(bean){ if(bean.country) line.push(beanShort(bean.country));
       if(bean.region) line.push(beanShort(bean.region));
       if(bean.producer) line.push(bean.producer); }
     var age=daysSinceRoast(batch);
@@ -9658,6 +9744,7 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
     function chip(k,v){ if(v==null||v==='') return; var c=document.createElement('span'); c.className='bean-chip';
       c.innerHTML='<span class="k">'+escapeHtml(k)+'</span>'+escapeHtml(String(v)); chips.appendChild(c); }
     if(bean){
+      if(blendOf(bean)) chip(t('isBlend'),blendOf(bean).length+t('blendPartsSuffix'));
       chipList(chips,t('origin'),bean.country);
       chipList(chips,t('region'),bean.region);
       chipList(chips,t('process'),bean.processing);
