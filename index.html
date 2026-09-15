@@ -5067,6 +5067,9 @@ function setProfileColor(id,key){
     buildCarousel(); renderEpList(); renderEpEditor();
   }).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
 var carItems=[], carIndex=0;
+// Stage pixels between one cover and the next; renderCarousel lays them out
+// with it and the swipe reads distance back through it.
+var CAR_STEP=206;
 // '' is the shelf you keep: favourites. A tag is a question asked of every
 // profile instead, which is the only way a profile you never starred can reach
 // the carousel at all.
@@ -5105,7 +5108,7 @@ function buildCarousel(){
     var nmt=document.createElement('div'); nmt.className='al-nametext'; nmt.textContent=st.name; nm.appendChild(nmt);
     if(favIds[p.id]){ var fv=document.createElement('div'); fv.className='al-fav'; fv.textContent='★'; el.appendChild(fv); }
     el.appendChild(curve); el.appendChild(shine()); el.appendChild(nm);
-    el.onclick=function(){ if(i===carIndex) return; carIndex=i; renderCarousel(); loadCentered(); };
+    el.onclick=function(){ if(carJustSwiped()||i===carIndex) return; carIndex=i; renderCarousel(); loadCentered(); };
     stage.appendChild(el); p._el=el; p._curveCv=cv;
     setTimeout(function(){ drawSimCurve(cv,p.profile,true); },0); });
   buildCarTags();
@@ -5179,7 +5182,7 @@ function renderCarousel(){
       p._el.style.transform='translateX(0) scale(1.12)';
     } else {
       // flat slide: neighbours step out sideways, smaller (clipped at panel edge)
-      var tx=off*206, sc=Math.max(0.7,0.86-abs*0.09);
+      var tx=off*CAR_STEP, sc=Math.max(0.7,0.86-abs*0.09);
       p._el.style.transform='translateX('+tx+'px) scale('+sc+')';
     }
     var op=abs>2?0:(off===0?1:0.55);
@@ -5202,7 +5205,41 @@ function renderCarousel(){
       fb.title=t('toggleFav')+' — '+splitTitle(profTitle(cur)).name; }
   }
 }
-function carouselMove(dir){ if(!carItems.length||brewLocked()) return; carIndex=(carIndex+dir+carItems.length)%carItems.length; renderCarousel(); loadCentered(); }
+function carouselMove(dir){ carouselMoveBy(dir); }
+// A swipe is worth as many covers as it crossed, so a long drag is not the same
+// request as a short one. More than a full pass round the strip is not, though:
+// past that the wrap makes the landing arbitrary.
+function carouselMoveBy(n){
+  if(!carItems.length||brewLocked()) return;
+  var lim=carItems.length-1; if(lim<1) return;
+  n=Math.max(-lim,Math.min(lim,Math.round(n)));
+  if(!n) return;
+  carIndex=((carIndex+n)%carItems.length+carItems.length)%carItems.length;
+  renderCarousel(); loadCentered(); }
+// How far apart the covers are drawn, in the pixels a finger actually travels.
+// The stage is scaled, and the whole app is scaled again to fit the screen, so
+// both are taken off the same places that set them rather than guessed.
+function carStageScale(){
+  var st=document.getElementById('carouselStage');
+  if(st){ var m=/matrix\(([-\d.]+)/.exec(getComputedStyle(st).transform||''); if(m) return parseFloat(m[1])||1; }
+  return 1; }
+function appFitScale(){
+  var s=Math.min(window.innerWidth/1280,window.innerHeight/800,1.6);
+  return (s>=0.97&&s<=1.04)?1:s; }
+function carStepPx(){ return CAR_STEP*carStageScale()*appFitScale(); }
+var _carSwipeAt=0;
+function carJustSwiped(){ return Date.now()-_carSwipeAt<400; }
+function carSwipeEnd(dx,dt){
+  _carSwipeAt=Date.now();
+  var steps=-dx/carStepPx();
+  // A drag that crossed covers is worth exactly the covers it crossed -- speed
+  // is not added to it, or a deliberate three-cover pull would land on four.
+  if(Math.abs(steps)>=0.34){
+    carouselMoveBy(steps<0?Math.min(-1,steps):Math.max(1,steps)); return; }
+  // Short of that, only a flick counts, and a flick is worth one: it said where
+  // to go rather than how far.
+  var v=dt>0?dx/dt:0;
+  if(Math.abs(v)>0.6) carouselMoveBy(dx<0?1:-1); }
 // Whatever is in the middle is what the next shot pulls, so moving the strip is
 // the act of choosing. The machine is told once the strip settles: pressing
 // through five covers to reach the sixth is one choice, not six.
@@ -10736,10 +10773,11 @@ document.addEventListener('DOMContentLoaded', function(){
     if(e.key==='ArrowRight') carouselMove(1);
     if(e.key==='Enter') loadCentered();
   });
-  var car=document.querySelector('.carousel'); var sx=0,tracking=false;
+  var car=document.querySelector('.carousel'); var sx=0,st0=0,tracking=false;
   if(car){
-    car.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; tracking=true; },{passive:true});
-    car.addEventListener('touchend',function(e){ if(!tracking) return; tracking=false; var dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>40) carouselMove(dx<0?1:-1); },{passive:true});
+    car.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; st0=Date.now(); tracking=true; },{passive:true});
+    car.addEventListener('touchend',function(e){ if(!tracking) return; tracking=false;
+      carSwipeEnd(e.changedTouches[0].clientX-sx, Date.now()-st0); },{passive:true});
     car.addEventListener('wheel',function(e){ if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){ e.preventDefault(); carouselMove(e.deltaX>0?1:-1); } },{passive:false});
   }
 });
