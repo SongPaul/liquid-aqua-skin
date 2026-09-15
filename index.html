@@ -575,21 +575,25 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bean-chips::-webkit-scrollbar{display:none}
 .bean-chips:empty{display:none}
 .bean-chip{flex:none;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:3px 9px}
-/* The parts of a blend: a name, where it is from, and how much of it. */
-.bl-list{display:flex;flex-direction:column;gap:7px;margin:2px 0 14px}
-.bl-row{display:flex;align-items:center;gap:7px}
-.bl-row input{min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--edge);background:var(--field);font-family:var(--font);font-size:13px;font-weight:600;color:var(--ink)}
-.bl-row .bl-name{flex:1 1 40%}
-.bl-row .bl-origin{flex:1 1 34%}
-.bl-row .bl-pct{flex:0 0 74px;text-align:right}
-.bl-del{flex:none;width:32px;height:32px;border-radius:9px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);color:var(--ink-mute);font-size:16px;line-height:1;cursor:pointer;-webkit-appearance:none}
+/* Each part of a blend is a small record of its own: what it is and how much
+   of it, then where it is from. */
+.bl-list{display:flex;flex-direction:column;gap:10px;margin:2px 0 14px}
+.bl-card{border:1px solid var(--edge);border-radius:13px;padding:11px 12px 2px;background:rgba(255,255,255,.45)}
+body.night .bl-card{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.10)}
+.bl-head{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.bl-head input{min-width:0;min-height:40px;padding:9px 11px;border-radius:10px;border:1px solid var(--ctl-edge);
+  background-color:var(--ctl-face);box-shadow:var(--ctl-well);font-family:var(--font);font-size:14px;font-weight:700;color:var(--ink);-webkit-appearance:none}
+.bl-head .bl-name{flex:1 1 auto}
+.bl-head .bl-pct{flex:0 0 78px;text-align:right;font-weight:800}
+.bl-card .field{margin-bottom:9px}
+.bl-card .field input{min-height:40px;font-size:13px}
+.bl-del{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);color:var(--ink-mute);font-size:16px;line-height:1;cursor:pointer;-webkit-appearance:none}
 .bl-del:active{transform:scale(.9)}
 .bl-foot{display:flex;align-items:center;gap:10px}
 .bl-add{flex:none}
 .bl-total{font-size:12px;font-weight:800;color:var(--ink-mute);margin-left:auto}
 /* A blend that does not come to a hundred is worth saying, not refusing. */
 .bl-total.off{color:var(--amber)}
-body.night .bl-row input{background:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .bean-chip.multi{cursor:pointer;transition:background .15s,border-color .15s}
 .modal.bl-modal{width:360px}
@@ -6677,9 +6681,11 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('roastDate')+'</label><input id="bgRoastDate" type="date" value="'+escapeAttr(isoDay(batch.roastDate))+'"></div><div class="field"><label>'+t('roastLevel')+'</label><input id="bgRoast" value="'+escapeAttr(batch.roastLevel||'')+'" placeholder="light / medium / dark"></div></div>'
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgIsBlend"'+(blendOf(o)?' checked':'')+' onchange="bgBlendToggle(this.checked)"> '+t('isBlend')+'</label></div>'
       +'<div id="bgBlendBox">'+bgBlendRows()+'</div>'
+      +'<div id="bgSoloOrigin"'+(blendOf(o)?' style="display:none"':'')+'>'
       +'<div class="field-row"><div class="field"><label>'+t('origin')+'</label><input id="bgCountry" value="'+escapeAttr(o.country||'')+'"></div><div class="field"><label>'+t('region')+'</label><input id="bgRegion" value="'+escapeAttr(o.region||'')+'"></div></div>'
       +'<div class="field-row"><div class="field"><label>'+t('process')+'</label><input id="bgProcess" value="'+escapeAttr(o.processing||'')+'"></div><div class="field"><label>'+t('producer')+'</label><input id="bgProducer" value="'+escapeAttr(o.producer||'')+'"></div></div>'
       +'<div class="field-row"><div class="field"><label>'+t('variety')+'</label><input id="bgVariety" value="'+escapeAttr((o.variety||[]).join(', '))+'" placeholder="Heirloom, SL28"></div><div class="field"><label>'+t('altitude')+'</label><input id="bgAltitude" value="'+escapeAttr(fmtAltitude(o.altitude))+'" placeholder="1800-2200"></div></div>'
+      +'</div>'
       +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
@@ -7033,39 +7039,63 @@ function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
   if(o&&o.name) api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).catch(function(){}); }
 // -- Blends -------------------------------------------------------
 // A blend is several coffees in a stated proportion, and the gateway's bean
-// record has one name and one origin. The parts live in that record's extras
-// bag, which is where this skin already keeps what the model has no field for.
-var bgBlend=null; // [{name, origin, pct}] while a bean form is open, else null
+// record describes one: one origin, one process, one variety. The parts live in
+// that record's extras bag, which is where this skin already keeps what the
+// model has no field for, and they carry the origin fields the bean itself then
+// has no business answering.
+var bgBlend=null; // [{name,country,region,processing,producer,variety,altitude,pct}] while a bean form is open
+var BLEND_ORIGIN_FIELDS=['country','region','processing','producer','variety','altitude'];
 function blendOf(bean){
   var b=bean&&bean.extras&&bean.extras.blend;
-  return (b&&b.length)?b.map(function(x){
-    return {name:String(x.name||''),origin:String(x.origin||''),pct:(x.pct==null?'':String(x.pct))}; }):null; }
+  if(!b||!b.length) return null;
+  return b.map(function(x){
+    return {name:String(x.name||''),
+      // `origin` is what the first version of this called the country
+      country:String(x.country||x.origin||''),
+      region:String(x.region||''), processing:String(x.processing||''),
+      producer:String(x.producer||''),
+      variety:Array.isArray(x.variety)?x.variety.join(', '):String(x.variety||''),
+      altitude:Array.isArray(x.altitude)?fmtAltitude(x.altitude):String(x.altitude||''),
+      pct:(x.pct==null?'':String(x.pct))}; }); }
 function blendPctTotal(list){
   var sum=0, any=false;
   (list||[]).forEach(function(c){ var n=parseFloat(c.pct); if(!isNaN(n)){ sum+=n; any=true; } });
   return any?Math.round(sum*10)/10:null; }
 function blendSummary(bean){
   var b=blendOf(bean); if(!b) return '';
-  return b.filter(function(c){ return c.name||c.origin; })
-    .map(function(c){ return (c.name||c.origin)+(c.pct!==''?' '+c.pct+'%':''); }).join(' · '); }
+  return b.filter(function(c){ return c.name||c.country; })
+    .map(function(c){ return (c.name||c.country)+(c.pct!==''?' '+c.pct+'%':''); }).join(' · '); }
 function blendTotalHtml(){
   var total=blendPctTotal(bgBlend);
   var off=(total!=null&&Math.abs(total-100)>0.05);
   return '<span class="bl-total'+(off?' off':'')+'" id="bgBlendTotal">'
     +escapeHtml(t('blendTotal'))+' '+(total==null?'—':total+'%')+'</span>'; }
+function blFld(i,k,label,val,ph){
+  return '<div class="field"><label>'+escapeHtml(label)+'</label>'
+    +'<input data-i="'+i+'" data-k="'+k+'" value="'+escapeAttr(val||'')+'"'
+    +(ph?' placeholder="'+escapeAttr(ph)+'"':'')+' oninput="bgBlendInput(this)"></div>'; }
 function bgBlendRows(){
   if(!bgBlend) return '';
-  var rows=bgBlend.map(function(c,i){
-    return '<div class="bl-row">'
-      +'<input class="bl-name" data-i="'+i+'" data-k="name" placeholder="'+escapeAttr(t('blendPart'))+'" value="'+escapeAttr(c.name)+'" oninput="bgBlendInput(this)">'
-      +'<input class="bl-origin" data-i="'+i+'" data-k="origin" placeholder="'+escapeAttr(t('origin'))+'" value="'+escapeAttr(c.origin)+'" oninput="bgBlendInput(this)">'
-      +'<input class="bl-pct" data-i="'+i+'" data-k="pct" type="number" step="1" min="0" max="100" placeholder="%" value="'+escapeAttr(c.pct)+'" oninput="bgBlendInput(this)">'
-      +'<button class="bl-del" data-i="'+i+'" title="'+escapeAttr(t('delete'))+'" onclick="bgBlendRemove(this)">×</button></div>'; }).join('');
-  return '<div class="bl-list">'+rows
+  var cards=bgBlend.map(function(c,i){
+    return '<div class="bl-card">'
+      +'<div class="bl-head">'
+        +'<input class="bl-name" data-i="'+i+'" data-k="name" placeholder="'+escapeAttr(t('blendPart'))+'" value="'+escapeAttr(c.name)+'" oninput="bgBlendInput(this)">'
+        +'<input class="bl-pct" data-i="'+i+'" data-k="pct" type="number" step="1" min="0" max="100" placeholder="%" value="'+escapeAttr(c.pct)+'" oninput="bgBlendInput(this)">'
+        +'<button class="bl-del" data-i="'+i+'" title="'+escapeAttr(t('delete'))+'" onclick="bgBlendRemove(this)">×</button>'
+      +'</div>'
+      +'<div class="field-row">'+blFld(i,'country',t('origin'),c.country)+blFld(i,'region',t('region'),c.region)+'</div>'
+      +'<div class="field-row">'+blFld(i,'processing',t('process'),c.processing)+blFld(i,'producer',t('producer'),c.producer)+'</div>'
+      +'<div class="field-row">'+blFld(i,'variety',t('variety'),c.variety,'Heirloom, SL28')+blFld(i,'altitude',t('altitude'),c.altitude,'1800-2200')+'</div>'
+      +'</div>'; }).join('');
+  return '<div class="bl-list">'+cards
     +'<div class="bl-foot"><button class="m-btn bl-add" onclick="bgBlendAdd()">+ '+escapeHtml(t('blendAdd'))+'</button>'
     +blendTotalHtml()+'</div></div>'; }
 function bgBlendRender(){
-  var box=document.getElementById('bgBlendBox'); if(box) box.innerHTML=bgBlendRows(); }
+  var box=document.getElementById('bgBlendBox'); if(box) box.innerHTML=bgBlendRows();
+  // The bean's own origin belongs to the parts now, so it steps aside entirely
+  // rather than sitting under them saying something else.
+  var solo=document.getElementById('bgSoloOrigin');
+  if(solo) solo.style.display=bgBlend?'none':''; }
 // Typing must not redraw the field being typed in, so a keystroke only ever
 // updates the model and, for a share, the running total beside the button.
 function bgBlendInput(el){
@@ -7077,19 +7107,37 @@ function bgBlendInput(el){
   var total=blendPctTotal(bgBlend);
   span.textContent=t('blendTotal')+' '+(total==null?'—':total+'%');
   span.classList.toggle('off',total!=null&&Math.abs(total-100)>0.05); }
-function bgBlendAdd(){ if(!bgBlend) bgBlend=[]; bgBlend.push({name:'',origin:'',pct:''}); bgBlendRender(); }
+function blEmpty(){ return {name:'',country:'',region:'',processing:'',producer:'',variety:'',altitude:'',pct:''}; }
+function bgBlendAdd(){ if(!bgBlend) bgBlend=[]; bgBlend.push(blEmpty()); bgBlendRender(); }
 function bgBlendRemove(el){
   var i=parseInt(el.getAttribute('data-i'),10);
   if(!bgBlend) return; bgBlend.splice(i,1); bgBlendRender(); }
+// Turning it on for the first time carries the single origin into the first
+// part, so what was already typed is not simply thrown away.
 function bgBlendToggle(on){
-  bgBlend=on?(bgBlend&&bgBlend.length?bgBlend:[{name:'',origin:'',pct:''},{name:'',origin:'',pct:''}]):null;
+  if(!on){ bgBlend=null; bgBlendRender(); return; }
+  if(!bgBlend||!bgBlend.length){
+    var first=blEmpty(), gv=function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
+    first.country=gv('bgCountry'); first.region=gv('bgRegion');
+    first.processing=gv('bgProcess'); first.producer=gv('bgProducer');
+    first.variety=gv('bgVariety'); first.altitude=gv('bgAltitude');
+    bgBlend=[first,blEmpty()]; }
   bgBlendRender(); }
-// Rows with nothing in them are not a blend, so they are not saved as one.
+// Rows with nothing in them are not a part, so they are not saved as one.
+function blHasAnything(c){
+  if(String(c.name).trim()) return true;
+  for(var i=0;i<BLEND_ORIGIN_FIELDS.length;i++){ if(String(c[BLEND_ORIGIN_FIELDS[i]]||'').trim()) return true; }
+  return false; }
 function bgBlendForSave(){
   if(!bgBlend) return null;
-  var out=bgBlend.filter(function(c){ return String(c.name).trim()||String(c.origin).trim(); })
-    .map(function(c){ var n=parseFloat(c.pct);
-      return {name:String(c.name).trim(),origin:String(c.origin).trim()||null,pct:isNaN(n)?null:n}; });
+  var out=bgBlend.filter(blHasAnything).map(function(c){
+    var n=parseFloat(c.pct);
+    var v=parseList(c.variety), a=parseAltitude(c.altitude);
+    return {name:String(c.name).trim(),
+      country:String(c.country).trim()||null, region:String(c.region).trim()||null,
+      processing:String(c.processing).trim()||null, producer:String(c.producer).trim()||null,
+      variety:(v&&v.length)?v:null, altitude:a||null,
+      pct:isNaN(n)?null:n}; });
   return out.length?out:null; }
 
 function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
@@ -7103,6 +7151,10 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
   var blend=bgBlendForSave();
   if(blend) ex.blend=blend; else delete ex.blend;
   body.extras=Object.keys(ex).length?ex:null;
+  // With parts to answer for it, the bean's own origin fields would only
+  // contradict them, so they are cleared rather than left behind a hidden form.
+  if(blend){ body.country=null; body.region=null; body.processing=null;
+    body.producer=null; body.variety=null; body.altitude=null; }
   if(!body.roaster||!body.name){ toast(t('mbNeedRoasterName'),'err'); return; }
   var roastDate=v('bgRoastDate'), roastLevel=v('bgRoast');
   var finish=function(){ toast(t('beanSaved'),'ok'); bgBatchId=null; bgNewBatch=false; bgSel=null;
