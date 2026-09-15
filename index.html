@@ -470,11 +470,16 @@ body.night .car-tag.on{background-color:var(--accent);border-color:var(--accent)
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.75),inset 0 0 20px rgba(16,185,129,.35)}
 /* the strip card is 58px wide: the rim and the glow already say it, and a
    check on top of them is one thing too many */
-.album.loaded::after{content:'\2713';position:absolute;z-index:4;top:8px;left:8px;
-  width:20px;height:20px;font-size:12px;font-weight:900;
-  display:flex;align-items:center;justify-content:center;color:var(--green);
-  background:rgba(255,255,255,.92);border-radius:100px;
-  box-shadow:0 1px 4px rgba(0,0,0,.28),0 0 0 1px rgba(16,185,129,.5)}
+/* Opening a profile is a thing you do to it, so it has a button on it. Only
+   the centre cover carries one: the others are too small to aim at, and a tap
+   anywhere on them opens them anyway. */
+.al-edit{position:absolute;z-index:4;top:6px;left:6px;width:26px;height:26px;
+  display:none;align-items:center;justify-content:center;
+  font-family:var(--font);font-size:13px;line-height:1;color:var(--ink);
+  background:rgba(255,255,255,.92);border:0;border-radius:100px;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.28);-webkit-appearance:none;transition:transform .1s}
+.album.center .al-edit{display:flex}
+.al-edit:active{transform:scale(.88)}
 .al-shine{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s}
 .album.loaded .al-shine{opacity:1}
 body.no-fx .al-shine{display:none}
@@ -5111,6 +5116,10 @@ function buildCarousel(){
     if(st.group){ var g=document.createElement('div'); g.className='al-group'; g.textContent=st.group; nm.appendChild(g); }
     var nmt=document.createElement('div'); nmt.className='al-nametext'; nmt.textContent=st.name; nm.appendChild(nmt);
     if(favIds[p.id]){ var fv=document.createElement('div'); fv.className='al-fav'; fv.textContent='★'; el.appendChild(fv); }
+    var ed=document.createElement('button'); ed.className='al-edit'; ed.type='button';
+    ed.textContent='\u270e'; ed.title=t('edit');
+    ed.onclick=function(e){ e.stopPropagation(); if(carJustSwiped()) return; openEditPageFor(p); };
+    el.appendChild(ed);
     el.appendChild(curve); el.appendChild(shine()); el.appendChild(nm);
     el.onclick=function(){ if(carJustSwiped()) return; openEditPageFor(p); };
     stage.appendChild(el); p._el=el; p._curveCv=cv;
@@ -5250,7 +5259,9 @@ function carDragStop(){
 var _carSwipeAt=0;
 function carJustSwiped(){ return Date.now()-_carSwipeAt<400; }
 function carSwipeEnd(dx,dt){
-  _carSwipeAt=Date.now();
+  // Only a finger that travelled counts as a swipe. Marking every touchend as
+  // one suppressed the tap that follows it, and a cover could not be opened.
+  if(Math.abs(dx)>8) _carSwipeAt=Date.now();
   var pulled=carDragSteps;
   carDragStop();
   // It settles on the cover it is nearest, because that is the one it is
