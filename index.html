@@ -1335,7 +1335,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       </button>
       <button class="act-btn steam" id="btnSteam" disabled>
         <span class="ab-txt">
-          <span class="ab-head"><span class="ico">♨️</span><span class="ab-name" data-i18n="steam">Steam</span><span class="ab-preset" id="auxPresetSteam">—</span></span>
+          <span class="ab-head"><span class="ico">💨</span><span class="ab-name" data-i18n="steam">Steam</span><span class="ab-preset" id="auxPresetSteam">—</span></span>
           <span class="ab-sum" id="auxSumSteam">—</span>
         </span>
       </button>
@@ -1377,8 +1377,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="tank-content">
         <div class="htemp" title="Group head temperature"><span class="ht-ico">🔥</span><span class="ht-v"><span id="groupTemp">—</span>°</span><span class="ht-l" data-i18n="group">Group</span></div>
         <div class="htemp" title="Mix (blended water) temperature"><span class="ht-ico">💧</span><span class="ht-v"><span id="mixTemp">—</span>°</span><span class="ht-l" data-i18n="mix">Mix</span></div>
-        <div class="htemp" title="Steam boiler temperature"><span class="ht-ico">♨️</span><span class="ht-v"><span id="steamTempDisp">—</span>°</span><span class="ht-l" data-i18n="steam">Steam</span></div>
-        <div class="htemp tank"><span class="ht-ico">💧</span><span class="ht-v"><span id="waterPct">—</span>%</span><span class="ht-l" id="tankLbl" data-i18n="tank">Tank</span><span class="water-warn" id="waterWarn" style="display:none">⚠</span></div>
+        <div class="htemp" title="Steam boiler temperature"><span class="ht-ico">💨</span><span class="ht-v"><span id="steamTempDisp">—</span>°</span><span class="ht-l" data-i18n="steam">Steam</span></div>
+        <div class="htemp tank"><span class="ht-ico">🪣</span><span class="ht-v"><span id="waterPct">—</span>%</span><span class="ht-l" id="tankLbl" data-i18n="tank">Tank</span><span class="water-warn" id="waterWarn" style="display:none">⚠</span></div>
       </div>
     </div>
     <div class="live glass">
@@ -1637,7 +1637,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
 <!-- ── Steam modal ─────────────────────────────────────────────── -->
 <div class="overlay" id="steamOverlay" onclick="closeModal(event,'steamOverlay')">
-  <div class="modal"><div class="modal-head"><div class="modal-title">♨️ Steam Options</div><button class="modal-close" onclick="closeModal(null,'steamOverlay')">×</button></div>
+  <div class="modal"><div class="modal-head"><div class="modal-title">💨 Steam Options</div><button class="modal-close" onclick="closeModal(null,'steamOverlay')">×</button></div>
   <div class="modal-body">
     <div class="preset-bar"><span class="preset-lbl">Presets</span><div class="preset-chips" id="steamPresets"></div></div>
     <div class="opt-row"><div class="opt-label">Target Temperature<span class="hint">135–160 °C · 0 = off</span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamTemp" min="0" max="165" step="1" oninput="optChange('steamTemp',this.value)"><span class="opt-val"><span id="steamTempV">150</span>°</span></div></div>
@@ -2037,7 +2037,7 @@ var I18N={
     mbAnalyzing:'Analyzing… ✨', mbAnalyzeFailed:'Analyze failed:', mbReview:'Review, then add to gateway',
     mbNeedKey:'Enter your Gemini API key to analyze', mbKeySaved:'Key saved — tap Analyze',
     profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'☕ Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
-    steamOptions:'♨️ Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
+    steamOptions:'💨 Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
     tapWake:'Tap anywhere to wake'
   },
   ko:{
@@ -2203,7 +2203,7 @@ var I18N={
     mbAnalyzing:'분석 중… ✨', mbAnalyzeFailed:'분석 실패:', mbReview:'확인 후 게이트웨이에 추가하세요',
     mbNeedKey:'분석하려면 Gemini API 키를 입력하세요', mbKeySaved:'키 저장됨 — 분석을 누르세요',
     profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'☕ 에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
-    steamOptions:'♨️ 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
+    steamOptions:'💨 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
     tapWake:'화면을 눌러 깨우기'
   }
 };
@@ -3475,7 +3475,7 @@ function saveWater(){ settings.waterTemp=+document.getElementById('waterTemp').v
 // shows what they are set to, and while one of them is running it swaps to
 // steppers that push the change straight to the machine.
 var AUX_KINDS={
-  steam:{ico:'♨️',state:'steam',act:'doSteamAction',open:'openSteamModal',sync:'syncSteamModal',cols:3,
+  steam:{ico:'💨',state:'steam',act:'doSteamAction',open:'openSteamModal',sync:'syncSteamModal',cols:3,
     fields:[{k:'steamTemp',step:1,min:0,max:165,dec:0,unit:'tempShort'},
             {k:'steamDur',step:5,min:0,max:120,dec:0,unit:'secShort'},
             {k:'steamFlow',step:0.1,min:0,max:2.5,dec:1,unit:'flowShort'}]},
