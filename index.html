@@ -1871,7 +1871,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 </div>
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
-    <div class="mb-head"><div class="mb-title"><span>✨ </span><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" data-i18n="scanAIDesc">Photograph the bag — AI fills the details.</div></div>
+    <div class="mb-head"><div class="mb-title"><span>✨ </span><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" id="mbSub">Photograph the bag — AI fills the details.</div></div>
     <div class="ai-thumbs" id="mbThumbs" style="justify-content:center"></div>
     <div class="mb-actions">
       <button class="m-btn" onclick="document.getElementById('mbCam').click()" data-i18n="camera">📷 Camera</button>
@@ -1903,7 +1903,10 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     </div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
     <div class="mb-key" id="mbKeyBox" style="display:none">
-      <div class="field"><label data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
+      <div class="field"><label data-i18n="aiProvider">Model</label>
+        <select id="mbProvider" onchange="mbSetProvider(this.value)">
+          <option value="gemini">Gemini</option><option value="claude">Claude</option></select></div>
+      <div class="field"><label id="mbKeyLbl" data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
       <button class="m-btn primary" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
     </div>
   </div>
@@ -1968,12 +1971,12 @@ var I18N={
     shotBeanGrinder:'Bean & grinder', roaster:'Roaster', coffee:'Coffee', shotFixed:'Shot updated',
     brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Reading the grinder…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what is known about it', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
     model:'Model', burrs:'Burrs', burrType:'Burr type', burrSize:'Burr size (mm)', grindSetting:'Grind Setting', current:'Current setting',
-    scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; Gemini fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
+    scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; {n} fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
     qrNoLib:'QR library not loaded', qrNoLan:'The gateway did not report a LAN address. Enter the Wi-Fi/LAN address of the tablet so the phone can reach it.',
     aiBusy:'The AI model is busy right now. Please try again in a moment.',
     aiRate:'Too many AI requests just now. Please try again in a minute.',
-    aiCap:'Gemini has stopped: the project is over its spending cap. Raise it at ai.studio/spend.',
-    aiExhausted:'Gemini has stopped: the daily allowance for this key is used up. It resets tomorrow.',
+    aiCap:'{n} has stopped: the account is over its spending cap.',
+    aiExhausted:'{n} has stopped: the allowance for this key is used up.',
     addToGateway:'Add to gateway', mbSaving:'Saving…', mbSaved:'Added ✓ — you can scan another',
     mbKeyLabel:'Gemini API key (stored on this phone)', mbSaveKey:'Save key',
     confirmDeleteBean:'Delete this bean?', deleted:'Deleted', deleteFailed:'Delete failed:', selectItem:'Select an item',
@@ -2050,6 +2053,10 @@ var I18N={
     profileList:'Profiles',
     isBlend:'Blend', blendPart:'Coffee', blendAdd:'Add coffee', blendTotal:'Total', blendPartsSuffix:' coffees',
     mbUpdating:'Updating {n}',
+    aiProvider:'Model', aiProviderDesc:'Which service answers when the skin asks.',
+    claudePh:'Anthropic API key', claudeGet:'Get a key',
+    aiKeyNote:'The key is held on this device and sent straight to the service from here. Search grounding is used with Gemini only.',
+    mbKeyLabelClaude:'Anthropic API key (stored on this phone)',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
     catMaint:'Maintenance', maintDesc:'The machine runs these itself. It has to be awake and idle to start one, and each says where it has got to.', maint_cleaning:'Clean the group', maint_cleaning_d:'A backflush cycle with a blind basket and cleaning tablet fitted.', maint_descaling:'Descale', maint_descaling_d:'Runs descaling solution through the group and the steam boiler. Follow the machine\u2019s instructions.', maint_airPurge:'Air purge', maint_airPurge_d:'Clears water from the lines, for transport or storage.', maintGo:'Start', maintStop:'Stop', maintDone:'Finished', maintBusy:'The machine is busy', maintStart:'Starting', maintFill:'Filling', maintSoak:'Soaking', maintFlush:'Flushing', maintDescale:'Descaling', maintSteam:'Steam boiler', maintPurge:'Purging',
@@ -2065,7 +2072,7 @@ var I18N={
     tagForMilk:'for milk', tagForLong:'long drink',
     aiClassify:'✨ Classify with AI', aiClassifyingShort:'Classifying…', aiClear:'Clear AI',
     aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
-    aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a Gemini API key in Settings',
+    aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a {n} API key in Settings',
     actEspresso:'Espresso', actWater:'Hot water',
     monAuto:'Full-screen monitor', monAutoDesc:'Which actions open the monitor by themselves. Tap the graph to open it at any time.',
     stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
@@ -2085,7 +2092,7 @@ var I18N={
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
     mbSaveFailed:'Save failed:', mbNeedRoasterName:'Roaster and name required', mbTimeout:'No response from the gateway',
     mbAnalyzing:'Analyzing… ✨', mbAnalyzeFailed:'Analyze failed:', mbReview:'Review, then add to gateway',
-    mbNeedKey:'Enter your Gemini API key to analyze', mbKeySaved:'Key saved — tap Analyze',
+    mbNeedKey:'Enter your {n} API key to analyze', mbKeySaved:'Key saved — tap Analyze',
     profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'☕ Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
     steamOptions:'💨 Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
     tapWake:'Tap anywhere to wake'
@@ -2137,7 +2144,7 @@ var I18N={
     shotBeanGrinder:'원두 · 그라인더', roaster:'로스터', coffee:'원두', shotFixed:'샷 정보 수정됨',
     brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'그라인더를 찾는 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'알려진 내용을 채웠습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
     model:'모델', burrs:'버', burrType:'버 종류', burrSize:'버 크기 (mm)', grindSetting:'분쇄도 설정', current:'현재 값',
-    scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 Gemini가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
+    scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 {n}가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
     qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'게이트웨이가 LAN 주소를 알려주지 않았습니다. 폰이 접속할 태블릿의 Wi-Fi/LAN 주소를 입력하세요.',
     aiBusy:'AI 모델이 지금 혼잡합니다. 잠시 후 다시 시도해 주세요.',
     aiRate:'요청이 너무 잦습니다. 1분 뒤에 다시 시도해 주세요.',
@@ -2219,6 +2226,10 @@ var I18N={
     profileList:'목록',
     isBlend:'블렌드', blendPart:'원두', blendAdd:'원두 추가', blendTotal:'합계', blendPartsSuffix:'종',
     mbUpdating:'수정: {n}',
+    aiProvider:'모델', aiProviderDesc:'스킨이 물을 때 어느 서비스가 답할지 정합니다.',
+    claudePh:'Anthropic API 키', claudeGet:'키 발급',
+    aiKeyNote:'키는 이 기기에 보관되며 여기서 서비스로 바로 전송됩니다. 검색 보강은 Gemini에서만 사용됩니다.',
+    mbKeyLabelClaude:'Anthropic API 키 (이 휴대폰에 저장됩니다)',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
     catMaint:'관리', maintDesc:'머신이 직접 수행합니다. 깨어 있고 대기 상태여야 시작할 수 있으며, 각각 진행 단계를 보여줍니다.', maint_cleaning:'그룹헤드 청소', maint_cleaning_d:'블라인드 바스켓과 세정제를 끼우고 역세척을 돌립니다.', maint_descaling:'디스케일링', maint_descaling_d:'스케일 제거 용액을 그룹과 스팀 보일러에 통과시킵니다. 머신 안내를 따르세요.', maint_airPurge:'에어 퍼지', maint_airPurge_d:'배관의 물을 빼냅니다. 운송·보관 전에 씁니다.', maintGo:'시작', maintStop:'중지', maintDone:'완료', maintBusy:'머신이 사용 중입니다', maintStart:'시작', maintFill:'물 채움', maintSoak:'불림', maintFlush:'헹굼', maintDescale:'스케일 제거 중', maintSteam:'스팀 보일러', maintPurge:'배출 중',
@@ -2254,7 +2265,7 @@ var I18N={
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
     mbSaveFailed:'저장 실패:', mbNeedRoasterName:'로스터와 이름은 필수입니다', mbTimeout:'게이트웨이 응답 없음',
     mbAnalyzing:'분석 중… ✨', mbAnalyzeFailed:'분석 실패:', mbReview:'확인 후 게이트웨이에 추가하세요',
-    mbNeedKey:'분석하려면 Gemini API 키를 입력하세요', mbKeySaved:'키 저장됨 — 분석을 누르세요',
+    mbNeedKey:'분석하려면 {n} API 키를 입력하세요', mbKeySaved:'키 저장됨 — 분석을 누르세요',
     profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'☕ 에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
     steamOptions:'💨 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
     tapWake:'화면을 눌러 깨우기'
@@ -3829,6 +3840,8 @@ function applyPrefsObject(p){
   if(typeof p.night==='boolean') prefs.night=p.night;
   if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto;
   if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey;
+  if(typeof p.claudeKey==='string') prefs.claudeKey=p.claudeKey;
+  if(p.aiProvider==='claude'||p.aiProvider==='gemini') prefs.aiProvider=p.aiProvider;
   if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost;
   if(typeof p.lang==='string') prefs.lang=p.lang;
   if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit;
@@ -3913,10 +3926,10 @@ function grinderAiFill(){
   bgReadGrinderForm();
   var name=String(bgSel.obj.model||'').trim();
   if(!name){ toast(t('gAiNeedModel'),'err'); return Promise.resolve(); }
-  var key=(prefs.geminiKey||'').trim();
-  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
+  var key=aiKey();
+  if(!key){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
   gAiBusy=true; renderBgEditor();
-  return geminiJson(key,[{text:grinderAiPrompt(name,_lang)}],0.1,{search:true}).then(function(r){
+  return aiJson(key,[{text:grinderAiPrompt(name,_lang)}],0.1,{search:true}).then(function(r){
     if(!r||typeof r!=='object') { toast(t('gAiUnknown'),'err'); return; }
     var o=bgSel.obj, got=0;
     if(typeof r.burrs==='string'&&r.burrs.trim()){ o.burrs=r.burrs.trim(); got++; }
@@ -3962,7 +3975,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', claudeKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
   // Which scale this skin weighs a dose on. The gateway holds it open on request and attaches no meaning to it, so the choice lives here.
   dosingScaleId:'',
   // 'on' | 'off'. guideSrc is not chosen in settings: loading a profile makes
@@ -4041,6 +4054,8 @@ function applyFx(){ document.body.classList.toggle('no-fx',!prefs.fx); _gsCache=
 function setFx(on){ prefs.fx=!!on; savePrefs(); applyFx(); }
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
 function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
+function saveClaudeKey(v){ prefs.claudeKey=(v||'').trim(); savePrefs(); }
+function setAiProvider(v){ prefs.aiProvider=(v==='claude')?'claude':'gemini'; savePrefs(); renderSpContent(); }
 
 // ── Settings full page ──────────────────────────────────────────────
 var SP_CATS=[
@@ -4310,7 +4325,16 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div id="appBox" style="margin-top:16px"><div class="ls-empty">'+t('loading')+'</div></div>';
   } else if(spCat==='ai'){
     h+='<div class="sp-cat-title">'+t('catAI')+'</div>';
-    h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="'+escapeAttr(t('geminiPh'))+'" value="'+escapeAttr(prefs.geminiKey||'')+'" oninput="saveGeminiKey(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">'+t('geminiGet')+' ↗</a></div></div>';
+    var prov=aiProvider();
+    h+=row('aiProvider','aiProviderDesc','<select class="set-select" onchange="setAiProvider(this.value)">'
+      +opt('gemini','Gemini',prov)+opt('claude','Claude',prov)+'</select>');
+    // Only the key of the provider in use is asked for; the other is kept, so
+    // switching back does not mean typing it in again.
+    if(prov==='claude')
+      h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="setClaudeKey" placeholder="'+escapeAttr(t('claudePh'))+'" value="'+escapeAttr(prefs.claudeKey||'')+'" oninput="saveClaudeKey(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">'+t('claudeGet')+' ↗</a></div></div>';
+    else
+      h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="'+escapeAttr(t('geminiPh'))+'" value="'+escapeAttr(prefs.geminiKey||'')+'" oninput="saveGeminiKey(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">'+t('geminiGet')+' ↗</a></div></div>';
+    h+='<div class="set-desc" style="margin-top:10px">'+t('aiKeyNote')+'</div>';
   } else if(spCat==='plugins'){
     h+='<div class="sp-cat-title">'+t('plugins')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('pluginsDesc')+'</div>';
@@ -5529,8 +5553,8 @@ function aiClassifyPrompt(list){
     +JSON.stringify(list); }
 function aiClassifyProfiles(){
   if(aiBusyFlag) return;
-  var key=(prefs.geminiKey||'').trim();
-  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
+  var key=aiKey();
+  if(!key){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
   var targets=allProfiles.filter(epMatches).filter(function(p){ return !manualRoast(p).length; });
   if(!targets.length){ toast(t('aiNothingToDo'),'ok'); return; }
   aiBusyFlag=true; renderEpList();
@@ -5541,7 +5565,7 @@ function aiClassifyProfiles(){
     var slice=targets.slice(idx,idx+BATCH);
     var parts=[{text:aiClassifyPrompt(slice.map(profileDigest))}];
     toast(t('aiClassifying').replace('{a}',Math.min(idx+BATCH,targets.length)).replace('{b}',targets.length),'ok');
-    geminiJson(key,parts,0).then(function(res){
+    aiJson(key,parts,0).then(function(res){
       var rows=Array.isArray(res)?res:(res&&res.profiles)||[];
       var writes=rows.map(function(row){
         var p=slice[row&&row.i]; if(!p) return null;
@@ -5843,12 +5867,12 @@ function aipStatus(txt,kind){
   el.textContent=txt||''; el.className='aip-status'+(kind?' '+kind:''); }
 function aiProfRun(){
   if(aipBusy) return;
-  var key=(prefs.geminiKey||'').trim();
-  if(!key){ closeModal(null,'aiProfOverlay'); toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
+  var key=aiKey();
+  if(!key){ closeModal(null,'aiProfOverlay'); toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
   if(!editing){ closeModal(null,'aiProfOverlay'); return; }
   aipBusy=true; aipStatus(t('aipWorking'),'busy');
   var go=document.getElementById('aipGo'); if(go) go.disabled=true;
-  geminiJson(key,[{text:aiProfPrompt(curBeanForAi(),curGrinderForAi(),_lang)}],0.6)
+  aiJson(key,[{text:aiProfPrompt(curBeanForAi(),curGrinderForAi(),_lang)}],0.6)
     .then(function(res){ applyAiProfile(res); closeModal(null,'aiProfOverlay'); })
     .catch(function(e){ aipStatus(t('tAiFailed')+': '+apiErrorText(e),'err'); })
     .then(function(){ aipBusy=false; aipStatus(''); var g=document.getElementById('aipGo'); if(g) g.disabled=false; }); }
@@ -6690,7 +6714,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'</div>'
       +'<div class="bg-pane" id="bgPaneInfo"'+(bgPane==='info'?'':' style="display:none"')+'>'
       +'<div class="ai-scan" id="aiScan">'
-        +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+t('scanAIDesc')+'</span></div>'
+        +'<div class="ai-scan-head"><span>'+t('scanAI')+'</span><span class="ai-scan-sub">'+tAi('scanAIDesc')+'</span></div>'
         +'<div class="ai-thumbs" id="aiThumbs"></div>'
         +'<div class="ai-scan-actions">'
           +'<button class="m-btn" onclick="document.getElementById(\'aiCam\').click()">'+t('camera')+'</button>'
@@ -6948,14 +6972,14 @@ var recPfx='bg';
 function recommendProfiles(pfx,quiet){
   if(recBusy) return Promise.resolve();
   recPfx=pfx||'bg';
-  var key=(prefs.geminiKey||'').trim();
-  if(!key){ if(!quiet){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); } return Promise.resolve(); }
+  var key=aiKey();
+  if(!key){ if(!quiet){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); } return Promise.resolve(); }
   var bean=beanFormDigest(recPfx);
   if(!bean.name&&!bean.roaster){ if(!quiet) toast(t('mbNeedRoasterName'),'err'); return Promise.resolve(); }
   var cat=profileCatalogForAi();
   if(!cat.length){ if(!quiet) toast(t('recNoProfiles'),'err'); return Promise.resolve(); }
   recBusy=true; recResults=null; renderRecBox();
-  return geminiJson(key,[{text:recommendPrompt(bean,cat,_lang,
+  return aiJson(key,[{text:recommendPrompt(bean,cat,_lang,
       grinderDigest(grinderByName(context&&context.grinderModel),context&&context.grinderSetting))}],0.2).then(function(res){
     var rows=Array.isArray(res)?res:(res&&res.picks)||[];
     recResults=rows.map(function(r){
@@ -7017,8 +7041,8 @@ function renderProfileList(){
     box.innerHTML='<div class="rec-wait">'+escapeHtml(t(recBusy?'recWorking':'usageWorking'))+'</div>'; return; }
   var rows=buildProfileRows();
   if(!rows.length){
-    if(!recBusy&&!usageBusy&&!(prefs.geminiKey||'').trim()){ box.style.display='';
-      box.innerHTML='<div class="rec-wait rec-nokey" onclick="openSettingsPage();spSelect(\'ai\')">'+escapeHtml(t('aiNeedKey'))+' ↗</div>'; return; }
+    if(!recBusy&&!usageBusy&&!aiKey()){ box.style.display='';
+      box.innerHTML='<div class="rec-wait rec-nokey" onclick="openSettingsPage();spSelect(\'ai\')">'+escapeHtml(tAi('aiNeedKey'))+' ↗</div>'; return; }
     box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='';
   var canUse=(recPfx==='bg');
@@ -7287,6 +7311,78 @@ function pickFlashModel(models){
   cand.sort(function(a,b){ return ver(a)-ver(b); });
   return cand[cand.length-1];
 }
+// -- Which model answers ------------------------------------------
+// Everything the skin asks an AI goes through aiJson, so the choice of provider
+// is made once, here, and nothing that asks a question has to know about it.
+// Prompts are written once and sent to either: both are asked for JSON in the
+// prompt itself, which is what Gemini's JSON mode and Claude's absence of one
+// have in common.
+var AI_PROVIDERS=['gemini','claude'];
+function aiProvider(){ return prefs.aiProvider==='claude'?'claude':'gemini'; }
+function aiName(){ return aiProvider()==='claude'?'Claude':'Gemini'; }
+// The lines that name the service read it from the setting rather than assuming.
+function tAi(k){ return t(k).replace('{n}',aiName()); }
+function aiKeyFor(p){ return String((p==='claude'?prefs.claudeKey:prefs.geminiKey)||'').trim(); }
+function aiKey(){ return aiKeyFor(aiProvider()); }
+function aiJson(key,parts,temperature,opts){
+  return aiProvider()==='claude'
+    ? claudeJson(key,parts,temperature)
+    : geminiJson(key,parts,temperature,opts); }
+
+// Claude speaks the Anthropic Messages API. The prompt parts this skin builds
+// are Gemini-shaped, so they are translated rather than written twice.
+var CLAUDE_API='https://api.anthropic.com/v1/messages';
+var CLAUDE_MODEL='claude-sonnet-5';
+var CLAUDE_MAX_TOKENS=8192;
+function claudeContent(parts){
+  return (parts||[]).map(function(p){
+    if(p&&p.text!=null) return {type:'text',text:String(p.text)};
+    var d=p&&p.inline_data;
+    if(d) return {type:'image',source:{type:'base64',media_type:d.mime_type,data:d.data}};
+    return null; }).filter(Boolean); }
+function claudeCall(key,parts,temperature){
+  var body={model:CLAUDE_MODEL,max_tokens:CLAUDE_MAX_TOKENS,
+    temperature:(temperature==null?0:temperature),
+    messages:[{role:'user',content:claudeContent(parts)}]};
+  // A key used from a page is a key the page can read; the browser refuses the
+  // call outright without this header saying so.
+  return fetch(CLAUDE_API,{method:'POST',headers:{
+      'Content-Type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify(body)})
+    .then(function(r){ return r.json().catch(function(){ return null; }).then(function(j){
+      if(!r.ok){ var e=new Error((j&&j.error&&j.error.message)||('HTTP '+r.status)); e.status=r.status; throw e; }
+      return j; }); })
+    .then(function(j){
+      var blocks=(j&&j.content)||[];
+      var txt=blocks.filter(function(b){ return b&&b.type==='text'; })
+        .map(function(b){ return b.text||''; }).join('');
+      if(!txt) throw new Error('Empty response');
+      var data; try{ data=JSON.parse(txt); }
+      catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
+      if(!data) throw new Error('Could not parse result');
+      return data; }); }
+// The same three failures as Gemini, read off Anthropic's wording, and the same
+// rule: only a busy model is worth waiting for.
+function claudeFailure(e){
+  var m=(e&&e.message)||'', st=e&&e.status;
+  if(/credit balance|billing|payment/i.test(m)) return 'cap';
+  if(/usage limit|quota/i.test(m)) return 'exhausted';
+  if(st===529||st===503||/overload/i.test(m)) return 'busy';
+  if(st===429) return 'busy';
+  return null; }
+function claudeJson(key,parts,temperature){
+  function attempt(tries){
+    return claudeCall(key,parts,temperature).catch(function(e){
+      var kind=claudeFailure(e);
+      if(kind==='cap'||kind==='exhausted'){
+        var ce=new Error(e.message); ce.status=e.status; ce.kind=kind; throw ce; }
+      if(kind==='busy'&&tries>0) return _sleep(1200*(3-tries)).then(function(){ return attempt(tries-1); });
+      throw e; }); }
+  return attempt(2); }
+
 function resolveGeminiModel(key){
   if(_geminiModel) return Promise.resolve(_geminiModel);
   return fetch(GEMINI_API+'/models?key='+encodeURIComponent(key))
@@ -7330,7 +7426,7 @@ function geminiMessage(e){
 function geminiAnalyze(key,images){
   var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
-  return geminiJson(key,parts,0.1); }
+  return aiJson(key,parts,0.1); }
 // Ask Gemini for JSON, retrying transient overload and falling back to the lite model.
 // opts.search asks for Google Search grounding. That is a separately metered
 // feature: a key without it answers 429 to every grounded call while ordinary
@@ -7375,8 +7471,8 @@ function geminiJsonCall(key,parts,temperature,search){
     return attempt(model,2);
   }); }
 function analyzeBeanImages(){ if(!aiImages.length) return;
-  var key=(prefs.geminiKey||'').trim();
-  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
+  var key=aiKey();
+  if(!key){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return; }
   var statusEl=document.getElementById('aiStatus'); statusEl.textContent=t('mbAnalyzing');
   var btn=document.getElementById('aiAnalyzeBtn'); btn.disabled=true;
   btn.setAttribute('aria-busy','true'); var _btnLabel=btn.innerHTML;
@@ -7512,9 +7608,27 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
       document.getElementById('mbFields').style.display='none'; })
     .catch(function(e){ if(!(e&&e.cancelled)) st.textContent=t('mbSaveFailed')+' '+apiErrorText(e); })
     .then(function(){ if(btn) btn.disabled=false; return loadBeanBatches(); }); }
-function mbGetKey(){ try{ return (localStorage.getItem('aurora_gemini')||'').trim(); }catch(_){ return ''; } }
-function mbShowKeyBox(){ document.getElementById('mbKeyBox').style.display='block'; document.getElementById('mbStatus').textContent=t('mbNeedKey'); }
-function mbSaveKey(){ var v=document.getElementById('mbKey').value.trim(); if(!v) return; try{ localStorage.setItem('aurora_gemini',v); }catch(_){}
+// The phone keeps its own keys: it is a different device, and the tablet's are
+// not its to read. One per provider, so switching does not lose the other.
+function mbStoreKey(p){ return p==='claude'?'aurora_claude':'aurora_gemini'; }
+function mbGetKey(){ try{ return (localStorage.getItem(mbStoreKey(aiProvider()))||'').trim(); }catch(_){ return ''; } }
+function mbSetProvider(v){
+  prefs.aiProvider=(v==='claude')?'claude':'gemini';
+  try{ localStorage.setItem('aurora_aiprov',prefs.aiProvider); }catch(_){}
+  mbSyncKeyBox();
+  var st=document.getElementById('mbStatus');
+  if(st) st.textContent=mbGetKey()?'':tAi('mbNeedKey'); }
+function mbSyncKeyBox(){
+  var claude=(aiProvider()==='claude');
+  var sub=document.getElementById('mbSub'); if(sub) sub.textContent=tAi('scanAIDesc');
+  var sel=document.getElementById('mbProvider'); if(sel) sel.value=aiProvider();
+  var lbl=document.getElementById('mbKeyLbl'); if(lbl) lbl.textContent=claude?t('mbKeyLabelClaude'):t('mbKeyLabel');
+  var inp=document.getElementById('mbKey');
+  if(inp){ inp.placeholder=claude?'sk-ant-…':'AIza…'; inp.value=mbGetKey(); } }
+function mbShowKeyBox(){ document.getElementById('mbKeyBox').style.display='block'; mbSyncKeyBox();
+  document.getElementById('mbStatus').textContent=tAi('mbNeedKey'); }
+function mbSaveKey(){ var v=document.getElementById('mbKey').value.trim(); if(!v) return;
+  try{ localStorage.setItem(mbStoreKey(aiProvider()),v); }catch(_){}
   document.getElementById('mbKeyBox').style.display='none'; document.getElementById('mbStatus').textContent=t('mbKeySaved'); }
 
 // ── QR code (qrcode-generator by Kazuhiko Arase, MIT) ──────────────
@@ -10801,11 +10915,11 @@ function aiRows(){ return (slCompare.length>=2)?slCompare.slice():(slSel?[slSel]
 function analyzeShots(){
   if(slAiBusy) return Promise.resolve();
   var rows=aiRows(); if(!rows.length) return Promise.resolve();
-  var key=(prefs.geminiKey||'').trim();
-  if(!key){ toast(t('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
+  var key=aiKey();
+  if(!key){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
   slAiBusy=true; slAi=null; refreshAiPanel();
   return withFullShots(rows).then(function(shots){
-      return geminiJson(key,[{text:shotAiPrompt(shots.map(shotDigestForAi),_lang)}],0.2); })
+      return aiJson(key,[{text:shotAiPrompt(shots.map(shotDigestForAi),_lang)}],0.2); })
     .then(function(res){
       slAi=(res&&(res.verdict||res.observations||res.suggestions))?res:null;
       if(slAi) saveShotAi(rows,slAi); else toast(t('aiNoResult'),'err'); })
@@ -11082,6 +11196,8 @@ function mbShowTarget(){
   el.textContent=t('mbUpdating').replace('{n}',(mbBean.roaster?mbBean.roaster+' · ':'')+(mbBean.name||'')); }
 function bootMobileBeanScan(){
   loadPrefs(); // picks up language + applies i18n
+  // loadPrefs reads the tablet's stored settings; the phone's own choice wins.
+  try{ var pv=localStorage.getItem('aurora_aiprov'); if(pv==='claude'||pv==='gemini') prefs.aiProvider=pv; }catch(_){}
   blendHost(false);
   var m=/[?&]bean=([^&]+)/.exec(window.location.search);
   mbBeanId=m?decodeURIComponent(m[1]):null;
@@ -11089,6 +11205,7 @@ function bootMobileBeanScan(){
   document.getElementById('mobilePage').style.display='block';
   document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
   if(prefs.night) document.body.classList.add('night');
+  mbSyncKeyBox();
   if(!mbGetKey()) mbShowKeyBox();
   loadProfiles(); // the profile suggestion needs a catalogue to choose from
   Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
