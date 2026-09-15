@@ -10310,13 +10310,35 @@ function drawTempChart(){
     drawReadouts(ctx, rows.map(function(r){
       return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,u:U_TEMP,y:py(r.v)}; }), px(N-1), Y0, Y0+PH); }
 }
-function shotSeconds(s){ var m=s.measurements||[]; if(m.length<2) return 0;
+// The machine brackets a shot with preparingForShot before it and pouringDone
+// after; neither is extraction. The live timer has always counted only the
+// middle, and a recorded shot counted every sample it held, so the same shot
+// read longer once saved. This is that middle, for the number and the graphs
+// alike.
+function shotExtractSpan(s){
+  var m=(s&&s.measurements)||[];
+  var a=-1,b=-1;
+  for(var i=0;i<m.length;i++){
+    var sub=((m[i].machine||{}).state||{}).substate;
+    if(sub==='preinfusion'||sub==='pouring'){ if(a<0) a=i; b=i; } }
+  // A shot stopped before it poured, or one recorded without substates, is
+  // shown whole rather than as nothing.
+  if(a<0||b<=a) return {i0:0,i1:Math.max(0,m.length-1),full:true};
+  return {i0:a,i1:b,full:false}; }
+function shotSlice(s){
+  var m=(s&&s.measurements)||[], sp=shotExtractSpan(s);
+  return m.slice(sp.i0,sp.i1+1); }
+function shotSeconds(s){ var m=shotSlice(s); if(m.length<2) return 0;
   var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
   return (isNaN(a)||isNaN(b))?0:Math.max(0,(b-a)/1000); }
 function shotStats(s){
   var m=s.measurements||[], peak=0, tSum=0, tN=0, vol=null, wt=null;
+  // The peak belongs to the extraction; the machine can push against a closed
+  // valve while preparing. Yield and volume are read to the last sample there
+  // is, because what lands in the cup after the pump stops still landed in it.
+  shotSlice(s).forEach(function(pt){ var p=(pt.machine||{}).pressure;
+    if(p>peak) peak=p; });
   m.forEach(function(pt){ var mac=pt.machine||{};
-    if(mac.pressure>peak) peak=mac.pressure;
     var sub=(mac.state||{}).substate;
     if((sub==='pouring'||sub==='preinfusion')&&mac.groupTemperature){ tSum+=mac.groupTemperature; tN++; }
     if(pt.volume!=null) vol=pt.volume;
@@ -10326,7 +10348,7 @@ function shotStats(s){
 // so the two are read together. Null means nothing is being pointed at.
 var _slScrub=null;
 function slScrubFrom(canvas,clientX){
-  var s=slSel&&slFull[slSel.id]; var m=(s&&s.measurements)||[];
+  var s=slSel&&slFull[slSel.id]; var m=shotSlice(s);
   if(m.length<2) return;
   var r=canvas.getBoundingClientRect();
   var padL=30, padR=(canvas.id==='slTempCurve')?10:30;
@@ -10368,7 +10390,7 @@ function drawShotMeasurements(canvas,s,temps){
   canvas.width=r.width*dpr; canvas.height=r.height*dpr;
   var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
-  var m=s.measurements||[];
+  var m=shotSlice(s);
   if(m.length<2){ if(!temps) drawSimCurve(canvas,(s.workflow&&s.workflow.profile)||{}); return; }
   var night=document.body.classList.contains('night');
   var padL=30, padR=temps?10:30, padT=temps?10:24, padB=14;
