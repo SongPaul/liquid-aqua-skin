@@ -594,6 +594,8 @@ body.night .bl-card{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 .bl-total{font-size:12px;font-weight:800;color:var(--ink-mute);margin-left:auto}
 /* A blend that does not come to a hundred is worth saying, not refusing. */
 .bl-total.off{color:var(--amber)}
+.mb-blend{font-size:13px;font-weight:700;color:var(--ink);padding:10px 13px;border-radius:11px;
+  border:1px solid var(--ctl-edge);background-color:var(--ctl-face);box-shadow:var(--ctl-well)}
 .bean-chip .k{color:var(--ink-mute);margin-right:4px}
 .bean-chip.multi{cursor:pointer;transition:background .15s,border-color .15s}
 .modal.bl-modal{width:360px}
@@ -1889,9 +1891,8 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
       <div class="field"><label data-i18n="producer">Producer</label><input id="mbProducer"></div>
       <div class="field"><label data-i18n="variety">Variety</label><input id="mbVariety" placeholder="Heirloom, SL28"></div>
       <div class="field"><label data-i18n="altitude">Altitude (m)</label><input id="mbAltitude" placeholder="1800-2200"></div>
-      <div class="field"><label data-i18n="species">Species</label><input id="mbSpecies" placeholder="arabica"></div>
-      <div class="field"><label class="bean-check"><input type="checkbox" id="mbDecaf"> <span data-i18n="decaf">Decaf</span></label></div>
       <div class="field"><label data-i18n="decafProcess">Decaf process</label><input id="mbDecafProcess" placeholder="Swiss Water"></div>
+      <div class="field" id="mbBlendBox" style="display:none"><label data-i18n="isBlend">Blend</label><div class="mb-blend" id="mbBlendList"></div></div>
       <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="6"></textarea></div>
       <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()" data-i18n="addToGateway">Add to gateway</button>
     </div>
@@ -6477,17 +6478,18 @@ function aiBlendParts(data){
       return {name:String(c.name||''),
         country:String(c.country||c.origin||''), region:String(c.region||''),
         processing:String(c.processing||''), producer:String(c.producer||''),
+        decafProcess:String(c.decafProcess||''),
         variety:Array.isArray(c.variety)?c.variety.join(', '):String(c.variety||''),
         altitude:Array.isArray(c.altitude)?fmtAltitude(c.altitude):String(c.altitude||''),
         pct:(c.pct==null||c.pct==='')?'':String(c.pct)}; });
   return out.length?out:null; }
 function cleanBeanText(data){
-  ['roaster','name','country','region','producer','processing','species','decafProcess','roastLevel']
+  ['roaster','name','country','region','producer','processing','decafProcess','roastLevel']
     .forEach(function(k){ if(typeof data[k]==='string') data[k]=pickOneScript(data[k]); });
   if(Array.isArray(data.variety)) data.variety=data.variety.map(pickOneScript).filter(Boolean);
   if(Array.isArray(data.blend)) data.blend.forEach(function(c){
     if(!c||typeof c!=='object') return;
-    ['name','country','region','producer','processing'].forEach(function(k){
+    ['name','country','region','producer','processing','decafProcess'].forEach(function(k){
       if(typeof c[k]==='string') c[k]=pickOneScript(c[k]); });
     if(Array.isArray(c.variety)) c.variety=c.variety.map(pickOneScript).filter(Boolean); });
   // the roaster is its own field; a name that repeats it just wastes the line
@@ -6703,9 +6705,9 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'<div class="field-row"><div class="field"><label>'+t('origin')+'</label><input id="bgCountry" value="'+escapeAttr(o.country||'')+'"></div><div class="field"><label>'+t('region')+'</label><input id="bgRegion" value="'+escapeAttr(o.region||'')+'"></div></div>'
       +'<div class="field-row"><div class="field"><label>'+t('process')+'</label><input id="bgProcess" value="'+escapeAttr(o.processing||'')+'"></div><div class="field"><label>'+t('producer')+'</label><input id="bgProducer" value="'+escapeAttr(o.producer||'')+'"></div></div>'
       +'<div class="field-row"><div class="field"><label>'+t('variety')+'</label><input id="bgVariety" value="'+escapeAttr((o.variety||[]).join(', '))+'" placeholder="Heirloom, SL28"></div><div class="field"><label>'+t('altitude')+'</label><input id="bgAltitude" value="'+escapeAttr(fmtAltitude(o.altitude))+'" placeholder="1800-2200"></div></div>'
+      +'<div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div>'
       +'</div>'
-      +'<div class="field-row"><div class="field"><label>'+t('species')+'</label><input id="bgSpecies" value="'+escapeAttr(o.species||'')+'" placeholder="arabica"></div><div class="field"><label>'+t('decafProcess')+'</label><input id="bgDecafProcess" value="'+escapeAttr(o.decafProcess||'')+'" placeholder="Swiss Water"></div></div>'
-      +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgDecaf"'+(o.decaf?' checked':'')+'> '+t('decaf')+'</label></div>'
+
       +'<div class="field"><label>'+t('notes')+'</label><textarea id="bgNotes" rows="5">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'</div>'
       +'<div class="ep-save-bar">'+'<button class="m-btn" style="margin-right:auto" onclick="bgCloseEditor()">'+t('close')+'</button>'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
@@ -7061,8 +7063,9 @@ function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
 // that record's extras bag, which is where this skin already keeps what the
 // model has no field for, and they carry the origin fields the bean itself then
 // has no business answering.
-var bgBlend=null; // [{name,country,region,processing,producer,variety,altitude,pct}] while a bean form is open
-var BLEND_ORIGIN_FIELDS=['country','region','processing','producer','variety','altitude'];
+var bgBlend=null; // [{name,country,region,processing,producer,variety,altitude,decafProcess,pct}] while a bean form is open
+var mbBlend=null; // the same, as read on the phone
+var BLEND_ORIGIN_FIELDS=['country','region','processing','producer','variety','altitude','decafProcess'];
 function blendOf(bean){
   var b=bean&&bean.extras&&bean.extras.blend;
   if(!b||!b.length) return null;
@@ -7071,7 +7074,7 @@ function blendOf(bean){
       // `origin` is what the first version of this called the country
       country:String(x.country||x.origin||''),
       region:String(x.region||''), processing:String(x.processing||''),
-      producer:String(x.producer||''),
+      producer:String(x.producer||''), decafProcess:String(x.decafProcess||''),
       variety:Array.isArray(x.variety)?x.variety.join(', '):String(x.variety||''),
       altitude:Array.isArray(x.altitude)?fmtAltitude(x.altitude):String(x.altitude||''),
       pct:(x.pct==null?'':String(x.pct))}; }); }
@@ -7104,6 +7107,7 @@ function bgBlendRows(){
       +'<div class="field-row">'+blFld(i,'country',t('origin'),c.country)+blFld(i,'region',t('region'),c.region)+'</div>'
       +'<div class="field-row">'+blFld(i,'processing',t('process'),c.processing)+blFld(i,'producer',t('producer'),c.producer)+'</div>'
       +'<div class="field-row">'+blFld(i,'variety',t('variety'),c.variety,'Heirloom, SL28')+blFld(i,'altitude',t('altitude'),c.altitude,'1800-2200')+'</div>'
+      +blFld(i,'decafProcess',t('decafProcess'),c.decafProcess,'Swiss Water')
       +'</div>'; }).join('');
   return '<div class="bl-list">'+cards
     +'<div class="bl-foot"><button class="m-btn bl-add" onclick="bgBlendAdd()">+ '+escapeHtml(t('blendAdd'))+'</button>'
@@ -7125,7 +7129,7 @@ function bgBlendInput(el){
   var total=blendPctTotal(bgBlend);
   span.textContent=t('blendTotal')+' '+(total==null?'—':total+'%');
   span.classList.toggle('off',total!=null&&Math.abs(total-100)>0.05); }
-function blEmpty(){ return {name:'',country:'',region:'',processing:'',producer:'',variety:'',altitude:'',pct:''}; }
+function blEmpty(){ return {name:'',country:'',region:'',processing:'',producer:'',variety:'',altitude:'',decafProcess:'',pct:''}; }
 function bgBlendAdd(){ if(!bgBlend) bgBlend=[]; bgBlend.push(blEmpty()); bgBlendRender(); }
 function bgBlendRemove(el){
   var i=parseInt(el.getAttribute('data-i'),10);
@@ -7139,6 +7143,7 @@ function bgBlendToggle(on){
     first.country=gv('bgCountry'); first.region=gv('bgRegion');
     first.processing=gv('bgProcess'); first.producer=gv('bgProducer');
     first.variety=gv('bgVariety'); first.altitude=gv('bgAltitude');
+    first.decafProcess=gv('bgDecafProcess');
     bgBlend=[first,blEmpty()]; }
   bgBlendRender(); }
 // Rows with nothing in them are not a part, so they are not saved as one.
@@ -7146,22 +7151,27 @@ function blHasAnything(c){
   if(String(c.name).trim()) return true;
   for(var i=0;i<BLEND_ORIGIN_FIELDS.length;i++){ if(String(c[BLEND_ORIGIN_FIELDS[i]]||'').trim()) return true; }
   return false; }
-function bgBlendForSave(){
-  if(!bgBlend) return null;
-  var out=bgBlend.filter(blHasAnything).map(function(c){
+function bgBlendForSave(){ return bgBlendForSaveList(bgBlend); }
+function bgBlendForSaveList(list){
+  if(!list) return null;
+  var out=list.filter(blHasAnything).map(function(c){
     var n=parseFloat(c.pct);
     var v=parseList(c.variety), a=parseAltitude(c.altitude);
     return {name:String(c.name).trim(),
       country:String(c.country).trim()||null, region:String(c.region).trim()||null,
       processing:String(c.processing).trim()||null, producer:String(c.producer).trim()||null,
+      decafProcess:String(c.decafProcess||'').trim()||null,
       variety:(v&&v.length)?v:null, altitude:a||null,
       pct:isNaN(n)?null:n}; });
   return out.length?out:null; }
 
 function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
   var body={roaster:v('bgRoaster'),name:v('bgName'),country:v('bgCountry')||null,region:v('bgRegion')||null,
-    producer:v('bgProducer')||null,processing:v('bgProcess')||null,species:v('bgSpecies')||null,
-    decafProcess:v('bgDecafProcess')||null,decaf:!!(document.getElementById('bgDecaf')||{}).checked,
+    producer:v('bgProducer')||null,processing:v('bgProcess')||null,
+    // Nothing asks for the species any more; what a record already holds is not
+    // thrown away for the want of a field to show it in.
+    species:o.species||null,
+    decafProcess:v('bgDecafProcess')||null,
     variety:parseList(v('bgVariety')),altitude:parseAltitude(v('bgAltitude')),
     notes:document.getElementById('bgNotes').value||null};
   if(!body.variety.length) body.variety=null;
@@ -7172,7 +7182,12 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
   // With parts to answer for it, the bean's own origin fields would only
   // contradict them, so they are cleared rather than left behind a hidden form.
   if(blend){ body.country=null; body.region=null; body.processing=null;
-    body.producer=null; body.variety=null; body.altitude=null; }
+    body.producer=null; body.variety=null; body.altitude=null; body.decafProcess=null; }
+  // A coffee with a decaffeination method named is decaffeinated -- saying so
+  // twice only leaves room for the two to disagree.
+  body.decaf=blend
+    ? blend.some(function(c){ return !!c.decafProcess; })
+    : !!body.decafProcess;
   if(!body.roaster||!body.name){ toast(t('mbNeedRoasterName'),'err'); return; }
   var roastDate=v('bgRoastDate'), roastLevel=v('bgRoast');
   var finish=function(){ toast(t('beanSaved'),'ok'); bgBatchId=null; bgNewBatch=false; bgSel=null;
@@ -7300,7 +7315,7 @@ function geminiMessage(e){
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"species\":\"\",\"decaf\":false,\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decaf is a boolean. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety and altitude empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   return geminiJson(key,parts,0.1); }
 // Ask Gemini for JSON, retrying transient overload and falling back to the lite model.
@@ -7356,8 +7371,8 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
   function _btnDone(){ btn.removeAttribute('aria-busy'); btn.innerHTML=_btnLabel; }
   geminiAnalyze(key,aiImages)
     .then(function(data){ data=cleanBeanText(data); function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
-      put('bgRoaster',data.roaster); put('bgName',data.name); put('bgSpecies',data.species);
-      put('bgDecafProcess',data.decafProcess); put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
+      put('bgRoaster',data.roaster); put('bgName',data.name);
+      put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
       var scanned=aiBlendParts(data);
       if(scanned){
         // The label says several coffees, so the form says several coffees: the
@@ -7369,8 +7384,8 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
         put('bgCountry',data.country); put('bgRegion',data.region);
         put('bgProducer',data.producer); put('bgProcess',data.processing);
         put('bgVariety',(data.variety||[]).join(', ')); put('bgAltitude',fmtAltitude(data.altitude));
+        put('bgDecafProcess',data.decafProcess);
       }
-      var dc=document.getElementById('bgDecaf'); if(dc&&data.decaf) dc.checked=true;
       var notesEl=document.getElementById('bgNotes'); if(notesEl&&data.notes){ notesEl.value=data.notes; }
       statusEl.textContent=t('aiFilled'); toast(t('aiDetected'),'ok');
       recommendProfiles('bg',true);
@@ -7428,10 +7443,16 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     function set(id,v){ var el=document.getElementById(id); if(el) el.value=v||''; }
     set('mbRoaster',data.roaster); set('mbName',data.name); set('mbRoastDate',toIsoDate(data.roastDate));
     set('mbRoast',data.roastLevel); set('mbCountry',data.country); set('mbRegion',data.region);
-    set('mbProcess',data.processing); set('mbProducer',data.producer); set('mbSpecies',data.species);
+    set('mbProcess',data.processing); set('mbProducer',data.producer);
     set('mbDecafProcess',data.decafProcess); set('mbVariety',(data.variety||[]).join(', '));
     set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
-    var dc=document.getElementById('mbDecaf'); if(dc) dc.checked=!!data.decaf;
+    // The phone captures; the parts are reviewed on the tablet. They are shown
+    // here so it is plain they were read, and carried through on save.
+    mbBlend=aiBlendParts(data);
+    var bb=document.getElementById('mbBlendBox'), bl=document.getElementById('mbBlendList');
+    if(bb&&bl){ bb.style.display=mbBlend?'':'none';
+      bl.textContent=mbBlend?mbBlend.map(function(c){
+        return (c.name||c.country)+(c.pct!==''?' '+c.pct+'%':''); }).join(' · '):''; }
     st.textContent=t('mbReview');
     _usageFor=null; loadBeanUsage('mb');
     recommendProfiles('mb',true);
@@ -7439,12 +7460,20 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
 function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getElementById('mbSaveBtn'), body;
   var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
   try{ body={ roaster:v('mbRoaster'), name:v('mbName'), country:v('mbCountry')||null, region:v('mbRegion')||null,
-    producer:v('mbProducer')||null, processing:v('mbProcess')||null, species:v('mbSpecies')||null,
-    decafProcess:v('mbDecafProcess')||null, decaf:!!(document.getElementById('mbDecaf')||{}).checked,
+    producer:v('mbProducer')||null, processing:v('mbProcess')||null,
+    decafProcess:v('mbDecafProcess')||null,
     variety:parseList(v('mbVariety')), altitude:parseAltitude(v('mbAltitude')),
     notes:document.getElementById('mbNotes').value||null };
     if(!body.variety.length) body.variety=null;
-    var ex=recExtras(null); if(ex) body.extras=ex;
+    var ex=recExtras(null)||{};
+    var saveBlend=mbBlend?bgBlendForSaveList(mbBlend):null;
+    if(saveBlend){ ex.blend=saveBlend;
+      body.country=null; body.region=null; body.processing=null;
+      body.producer=null; body.variety=null; body.altitude=null; body.decafProcess=null; }
+    body.extras=Object.keys(ex).length?ex:null;
+    body.decaf=saveBlend
+      ? saveBlend.some(function(c){ return !!c.decafProcess; })
+      : !!body.decafProcess;
   }catch(e){ st.textContent=t('mbSaveFailed')+' '+e.message; return; }
   if(!body.roaster||!body.name){ st.textContent=t('mbNeedRoasterName'); return; }
   st.textContent=t('mbSaving'); if(btn) btn.disabled=true;
@@ -9847,8 +9876,12 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
       if(batch&&batch.roastDate) chip(t('roastDate'),isoDay(batch.roastDate));
       chipList(chips,t('variety'),bean.variety);
       chip(t('altitude'),fmtAltitude(bean.altitude));
-      chip(t('species'),bean.species);
-      if(bean.decaf) chip(t('decaf'),bean.decafProcess||'✓'); } }
+      // The method is the statement; for a blend it is whichever parts carry one.
+      if(bean.decaf){
+        var parts=blendOf(bean);
+        var how=bean.decafProcess||(parts?parts.map(function(c){ return c.decafProcess; })
+          .filter(Boolean).join(', '):'');
+        chip(t('decaf'),how||'✓'); } } }
   updateGrindRow(); }
 // Populate the "Last Shot" mini panel + today's count from the shot history.
 function loadLastShot(){
