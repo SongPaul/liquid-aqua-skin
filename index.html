@@ -413,11 +413,13 @@ body.cam-on .ls-stat{padding:4px 4px}
 /* the picture takes what the bean card can spare while it is on */
 body.cam-on .bean-info{min-height:56px}
 body.cam-on .bean-chips{display:none}
-.carousel{position:relative;height:156px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible}
+.carousel{position:relative;height:156px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible;touch-action:pan-y}
 .carousel-stage{position:relative;width:100%;height:100%;transform:scale(.86)}
 .car-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--ink-mute);font-size:12px}
 .album{position:absolute;top:50%;left:50%;width:216px;height:152px;margin:-76px 0 0 -108px;border-radius:16px;cursor:pointer;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
 .album.side{opacity:.55}
+/* Under a finger the cover is where the finger is, not easing towards it. */
+.carousel.dragging .album{transition:none}
 .album.center{box-shadow:0 14px 32px rgba(80,70,160,.3);border-color:rgba(255,255,255,.6)}
 .album .al-curve{position:absolute;inset:0;min-height:0}
 .album .al-curve canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -5167,7 +5169,7 @@ function shine(){
   return sv; }
 function renderCarousel(){
   var lock=brewLocked();
-  carItems.forEach(function(p,i){ var off=i-carIndex; var abs=Math.abs(off);
+  carItems.forEach(function(p,i){ var off=i-carIndex-carDragSteps; var abs=Math.abs(off);
     if(lock){
       // one card, filling the space the neighbours and the strip gave up
       var here=(i===carIndex);
@@ -5178,20 +5180,18 @@ function renderCarousel(){
       p._el.classList.toggle('center',here); p._el.classList.toggle('side',!here);
       p._el.classList.toggle('loaded',here);
       return; }
-    if(off===0){
-      p._el.style.transform='translateX(0) scale(1.12)';
-    } else {
-      // flat slide: neighbours step out sideways, smaller (clipped at panel edge)
-      var tx=off*CAR_STEP, sc=Math.max(0.7,0.86-abs*0.09);
-      p._el.style.transform='translateX('+tx+'px) scale('+sc+')';
-    }
-    var op=abs>2?0:(off===0?1:0.55);
-    p._el.style.opacity=op; p._el.style.zIndex=100-abs; p._el.style.pointerEvents=abs>2?'none':'auto';
-    p._el.classList.toggle('center', off===0); p._el.classList.toggle('side', off!==0);
+    // One curve through the whole range rather than a centre case and a rest:
+    // mid-drag a cover is genuinely between two places and has to look it.
+    // At 0, 1 and 2 out it lands exactly where the stepped version did.
+    var sc=abs<=1?(1.12-abs*0.35):Math.max(0.7,0.77-(abs-1)*0.09);
+    p._el.style.transform='translateX('+(off*CAR_STEP)+'px) scale('+sc+')';
+    var op=abs>2.4?0:(abs<=1?(0.55+0.45*(1-abs)):0.55);
+    p._el.style.opacity=op; p._el.style.zIndex=Math.round(100-abs*10); p._el.style.pointerEvents=abs>2.4?'none':'auto';
+    p._el.classList.toggle('center', abs<0.5); p._el.classList.toggle('side', abs>=0.5);
     var isLoaded=!!(curProfileObj&&curProfileObj.id===p.id);
     p._el.classList.toggle('loaded', isLoaded); });
   // redraw center curve crisp at its scaled size after transform applies
-  var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); }
+  if(!_carDragging){ var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); } }
   var cur=carItems[carIndex]; if(cur){ var pr=cur.profile||{};
     var stc=splitTitle(pr.title||cur.id);
     var isCur=curProfileObj&&curProfileObj.id===cur.id;
@@ -5227,19 +5227,38 @@ function appFitScale(){
   var s=Math.min(window.innerWidth/1280,window.innerHeight/800,1.6);
   return (s>=0.97&&s<=1.04)?1:s; }
 function carStepPx(){ return CAR_STEP*carStageScale()*appFitScale(); }
+// How far the strip has been pulled from carIndex, in covers. Fractional while
+// a finger is down, zero the rest of the time.
+var carDragSteps=0, _carDragging=false;
+function carDragStart(){
+  if(!carItems.length||brewLocked()) return false;
+  _carDragging=true; carDragSteps=0;
+  var car=document.querySelector('.carousel'); if(car) car.classList.add('dragging');
+  return true; }
+function carDragMove(dxPx){
+  if(!_carDragging) return;
+  var want=carIndex-dxPx/carStepPx();
+  // The ends are ends: there is nothing past them to slide into view.
+  want=Math.max(0,Math.min(carItems.length-1,want));
+  carDragSteps=want-carIndex;
+  renderCarousel(); }
+function carDragStop(){
+  _carDragging=false; carDragSteps=0;
+  var car=document.querySelector('.carousel'); if(car) car.classList.remove('dragging'); }
 var _carSwipeAt=0;
 function carJustSwiped(){ return Date.now()-_carSwipeAt<400; }
 function carSwipeEnd(dx,dt){
   _carSwipeAt=Date.now();
-  var steps=-dx/carStepPx();
-  // A drag that crossed covers is worth exactly the covers it crossed -- speed
-  // is not added to it, or a deliberate three-cover pull would land on four.
-  if(Math.abs(steps)>=0.34){
-    carouselMoveBy(steps<0?Math.min(-1,steps):Math.max(1,steps)); return; }
-  // Short of that, only a flick counts, and a flick is worth one: it said where
-  // to go rather than how far.
-  var v=dt>0?dx/dt:0;
-  if(Math.abs(v)>0.6) carouselMoveBy(dx<0?1:-1); }
+  var pulled=carDragSteps;
+  carDragStop();
+  // It settles on the cover it is nearest, because that is the one it is
+  // showing. Speed is never added to distance: a deliberate three-cover pull
+  // would land on four.
+  var steps=Math.round(pulled||(-dx/carStepPx()));
+  // A flick too short to have reached the next cover still asked for it.
+  if(!steps){ var v=dt>0?dx/dt:0;
+    if(Math.abs(v)>0.6) steps=(dx<0?1:-1); }
+  if(steps) carouselMoveBy(steps); else renderCarousel(); }
 // Whatever is in the middle is what the next shot pulls, so moving the strip is
 // the act of choosing. The machine is told once the strip settles: pressing
 // through five covers to reach the sixth is one choice, not six.
@@ -10775,9 +10794,12 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   var car=document.querySelector('.carousel'); var sx=0,st0=0,tracking=false;
   if(car){
-    car.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; st0=Date.now(); tracking=true; },{passive:true});
+    car.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; st0=Date.now(); tracking=carDragStart(); },{passive:true});
+    car.addEventListener('touchmove',function(e){ if(!tracking) return;
+      carDragMove(e.touches[0].clientX-sx); },{passive:true});
     car.addEventListener('touchend',function(e){ if(!tracking) return; tracking=false;
       carSwipeEnd(e.changedTouches[0].clientX-sx, Date.now()-st0); },{passive:true});
+    car.addEventListener('touchcancel',function(){ if(!tracking) return; tracking=false; carDragStop(); renderCarousel(); },{passive:true});
     car.addEventListener('wheel',function(e){ if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){ e.preventDefault(); carouselMove(e.deltaX>0?1:-1); } },{passive:false});
   }
 });
