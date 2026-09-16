@@ -2179,6 +2179,7 @@ var I18N={
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
+    recipeFromLast:'Recipe brought back from this profile\u2019s last shot ({n})',
     lockedBrewing:'The profile cannot be changed while a shot is running.',
     brewingNow:'Brewing — this profile is locked',
     exitDash:'Decaid dashboard', exitDashDesc:'The app’s own settings and skin picker. This leaves the skin; it does not close Decaid.', exitDashBtn:'Go to dashboard', exitDashFailed:'Could not leave the skin',
@@ -2379,6 +2380,7 @@ var I18N={
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
+    recipeFromLast:'이 프로파일로 마지막에 내린 레시피를 가져왔습니다 ({n})',
     lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
     brewingNow:'추출 중 — 프로파일 잠김',
     exitDash:'Decaid 대시보드', exitDashDesc:'앱 자체 설정과 스킨 선택 화면입니다. 스킨을 벗어날 뿐, Decaid를 종료하지는 않습니다.', exitDashBtn:'대시보드로', exitDashFailed:'스킨을 벗어나지 못했습니다',
@@ -5617,7 +5619,12 @@ function carListProfiles(){
       return carVisible(p)&&allTagsOf(p).indexOf(carTag)>=0; }); }
   else { list=allProfiles.filter(function(p){ return favIds[p.id]&&carVisible(p); });
     if(!list.length) list=allProfiles.filter(carVisible).slice(0,6); }
-  if(curProfileObj&&!list.some(function(p){ return p.id===curProfileObj.id; })) list=[curProfileObj].concat(list);
+  // A filter means what it says: a profile taken out of favourites leaves the
+  // favourites strip, or the star reads as a button that does nothing. The one
+  // exception is a shot in progress -- the strip is then a single cover, and it
+  // has to be the cover of what is actually pulling.
+  if(brewLocked()&&curProfileObj&&!list.some(function(p){ return p.id===curProfileObj.id; }))
+    list=[curProfileObj].concat(list);
   return list;
 }
 function carSetTag(k){
@@ -5822,7 +5829,7 @@ function loadCentered(){
   if(_carLoadT) clearTimeout(_carLoadT);
   _carLoadT=setTimeout(function(){ _carLoadT=null;
     var q=carItems[carIndex];
-    if(q&&!(curProfileObj&&curProfileObj.id===q.id)) selectProfile(q); },420); }
+    if(q&&!(curProfileObj&&curProfileObj.id===q.id)) selectProfile(q,false,true); },420); }
 function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
   // A profile the library does not know cannot be keyed by id, so favouriting it
   // would store a key that never matches anything again.
@@ -5835,7 +5842,28 @@ function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
 // A profile write reaches the machine, and the machine is running frames from
 // the profile it holds. Changing it now changes the shot in progress.
 function brewLocked(){ return state.machine.state==='espresso'; }
-function selectProfile(p,keepGuideSrc){
+// A profile is pulled at a recipe, and the one it was last pulled at is a
+// better answer than whatever the profile before it left behind. Nothing
+// recorded for it is nothing to say, so the recipe is left alone.
+function applyProfileRecipe(p){
+  var title=String(((p&&p.profile)||{}).title||'').trim(); if(!title) return;
+  api('GET','/api/v1/shots?limit=50').then(function(r){
+    var items=(r&&(r.items||r.shots))||[];
+    var sh=items.filter(function(x){
+      var pr=(x.workflow&&x.workflow.profile)||{};
+      return String(pr.title||'').trim()===title; })[0];
+    if(!sh) return;
+    var ctx=(sh.workflow&&sh.workflow.context)||{}, an=sh.annotations||{};
+    var d=usNum(an.actualDoseWeight!=null?an.actualDoseWeight:ctx.targetDoseWeight);
+    var y=usNum(an.actualYield!=null?an.actualYield:ctx.targetYield);
+    var moved=false;
+    if(d!=null&&d>=1&&d<=60&&Math.abs(d-settings.doseIn)>0.05){ settings.doseIn=d; moved=true; }
+    if(y!=null&&y>=1&&y<=200&&Math.abs(y-settings.doseOut)>0.05){ settings.doseOut=y; moved=true; }
+    if(!moved) return;
+    syncRecipe(); pushRecipe();
+    toast(t('recipeFromLast').replace('{n}',fmtShotDate(sh)),'ok');
+  }).catch(function(){}); }
+function selectProfile(p,keepGuideSrc,withRecipe){
   if(brewLocked()){ toast(t('lockedBrewing'),'err'); return; }
   // loading a profile by hand is the other half of the rule: the guideline
   // follows it from here, unless the load came from picking a guide shot.
@@ -5846,7 +5874,8 @@ function selectProfile(p,keepGuideSrc){
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
   syncRecipe();
   if(chartBackToEspresso()) drawChart();
-  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); }).catch(function(){ toast(t('tProfileError'),'err'); }); }
+  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark();
+    if(withRecipe) applyProfileRecipe(p); }).catch(function(){ toast(t('tProfileError'),'err'); }); }
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
 function refreshCarouselMark(){
