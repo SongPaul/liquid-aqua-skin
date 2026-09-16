@@ -1096,7 +1096,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .gs-tick.big b{color:var(--ink-soft)}
 .gs-needle{position:absolute;left:8px;right:8px;top:50%;height:2px;margin-top:-1px;
   border-radius:2px;background:var(--accent);pointer-events:none;box-shadow:0 0 0 3px var(--glass-hi)}
-.gs-read{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
+.gs-read{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px;min-height:24px}
 .gs-val{font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
 .gs-hint{font-size:11px;color:var(--ink-mute);margin-top:3px;line-height:1.4}
 .gs-clear{min-height:24px;padding:0 9px;border-radius:100px;border:1px solid var(--ctl-edge);
@@ -7171,13 +7171,15 @@ function bgSpeedDialHtml(v){
     var big=(Math.round(x*10)%10===0);
     return '<button type="button" class="gs-tick'+(big?' big':'')+'" data-v="'+x+'"'
       +' onclick="bgSpeedPick('+x+')"><i></i><b>'+(big?x:'')+'</b></button>'; }).join('');
+  // The reading answers the label, so it sits with it -- above the dial the
+  // finger is on, where a hand does not cover it.
   return '<div class="field"><label>'+escapeHtml(t('grindSpeed'))+'</label>'
+    +'<div class="gs-read"><span class="gs-val" id="bgSpeedVal">'+escapeHtml(gsFmt(v))+'</span>'
+      +'<button type="button" class="gs-clear" onclick="bgSpeedClear()">'+escapeHtml(t('gsClear'))+'</button></div>'
     +'<div class="gs-dial">'
       +'<div class="gs-track" id="bgSpeedTrack" onscroll="bgSpeedScroll()">'
         +'<div class="gs-pad"></div>'+ticks+'<div class="gs-pad"></div></div>'
       +'<div class="gs-needle"></div></div>'
-    +'<div class="gs-read"><span class="gs-val" id="bgSpeedVal">'+escapeHtml(gsFmt(v))+'</span>'
-      +'<button type="button" class="gs-clear" onclick="bgSpeedClear()">'+escapeHtml(t('gsClear'))+'</button></div>'
     +'<div class="gs-hint">'+escapeHtml(t('grindSpeedHint'))+'</div>'
     +'</div>'; }
 // The top of the track is the largest value, so a position counted from the top
