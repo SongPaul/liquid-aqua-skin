@@ -437,10 +437,18 @@ body.cam-on .bean-chips{display:none}
    so the whole row stands aside and the cover takes the card. */
 body.brewing .car-nav,body.brewing .cc-head{display:none}
 /* Mid shot there is nothing else on the card -- the tags, the arrows and the
-   star are all gone -- so the cover takes the whole of it. The card itself is
-   pinned to the height it already had, so filling it costs the bean card
+   star are all gone -- so the cover stops being a picture on a card and
+   becomes the card: edge to edge, the card's own corners, no frame of its own.
+   The card is pinned to the height it already had, so this costs the bean card
    beside it nothing. */
-body.brewing .carousel{height:auto;flex:1;min-height:0}
+body.brewing .carousel{height:auto;flex:1;min-height:0;overflow:hidden}
+body.brewing .carousel-card{position:relative;padding:0;overflow:hidden}
+body.brewing .carousel-stage{transform:none}
+body.brewing .album.center{top:0;left:0;right:0;bottom:0;width:auto;height:auto;
+  margin:0;border:0;border-radius:var(--r-lg);box-shadow:none}
+body.brewing .album.center .al-name{padding:22px 16px 14px}
+body.brewing .album.center .al-group{font-size:13px}
+body.brewing .album.center .al-nametext{font-size:18px;-webkit-line-clamp:2}
 body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 /* the space is always there; only the dot inside it comes and goes, so the
    name never slides when the loaded profile is browsed past */
@@ -5674,10 +5682,16 @@ function lockedIndex(){
 // no further; leaving gives the height back to the layout.
 function applyBrewLock(on){
   var card=document.getElementById('carouselCard');
+  var was=document.body.classList.contains('brewing');
   if(card){
-    if(on){ if(!document.body.classList.contains('brewing')) card.style.height=card.offsetHeight+'px'; }
+    if(on){ if(!was) card.style.height=card.offsetHeight+'px'; }
     else card.style.height=''; }
-  document.body.classList.toggle('brewing',on); }
+  document.body.classList.toggle('brewing',on);
+  // the curve is drawn into a canvas sized to its box, and the box has just
+  // changed shape, so a redraw is what keeps it from being a stretched copy
+  if(was!==on) setTimeout(function(){
+    var c=carItems[carIndex];
+    if(c&&c._curveCv) drawSimCurve(c._curveCv,c.profile,true); },60); }
 function syncCarouselLock(){
   var on=brewLocked();
   applyBrewLock(on);
@@ -5702,22 +5716,14 @@ function shine(){
     +'<animate attributeName="x" values="-40;130" dur="4.5s" begin="0s" repeatCount="indefinite"/>'
     +'</rect></g>';
   return sv; }
-// Fill the box, do not guess at it. offsetWidth and clientHeight are layout
-// values, so the stage's own scale does not enter into this and the answer is
-// right whatever size the card ends up.
-var CAR_W=216, CAR_H=152, STAGE_SCALE=0.86, CAR_INSET=8;
-function lockScale(){
-  var car=document.querySelector('.carousel'); if(!car) return 1;
-  var w=car.clientWidth-CAR_INSET*2, h=car.clientHeight-CAR_INSET*2;
-  if(w<=0||h<=0) return 1;
-  return Math.max(1, Math.round(Math.min(w/CAR_W,h/CAR_H)/STAGE_SCALE*1000)/1000); }
 function renderCarousel(){
   var lock=brewLocked();
   carItems.forEach(function(p,i){ var off=i-carIndex-carDragSteps; var abs=Math.abs(off);
     if(lock){
       // one card, filling the space the neighbours and the strip gave up
       var here=(i===carIndex);
-      p._el.style.transform=here?('translateX(0) scale('+lockScale()+')'):'translateX(0) scale(1)';
+      // the centre one is given the box by CSS, so it is not scaled into it
+      p._el.style.transform=here?'none':'translateX(0) scale(1)';
       p._el.style.opacity=here?1:0;
       p._el.style.zIndex=here?100:0;
       p._el.style.pointerEvents='none';
