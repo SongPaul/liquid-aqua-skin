@@ -2041,7 +2041,7 @@ var I18N={
     beans:'Beans', grinders:'Grinders', addBean:'+ Add Bean', addGrinder:'+ Add Grinder', newBean:'New Bean', editBean:'Edit Bean', newGrinder:'New Grinder', editGrinder:'Edit Grinder',
     roaster:'Roaster', name:'Name', origin:'Origin', process:'Process', roastLevel:'Roast level', notes:'Notes',
     shotBeanGrinder:'Bean & grinder', roaster:'Roaster', coffee:'Coffee', shotFixed:'Shot updated',
-    brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Reading the grinder…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what is known about it', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
+    brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Reading the grinder…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what was still empty', gAiKept:'Nothing was empty to fill', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
     burrBrand:'Burr brand', burrModel:'Burr type', burrCoating:'Coating', burrGeom:'Geometry', burrSet:'Burrs',
     burrNotes:'What these burrs do', bAiFill:'Ask about these burrs', bAiWorking:'Reading the burrs…',
     bAiNeedSet:'Name the burr set first', bAiFilled:'Written from what is known about them',
@@ -2232,7 +2232,7 @@ var I18N={
     beans:'원두', grinders:'그라인더', addBean:'+ 원두 추가', addGrinder:'+ 그라인더 추가', newBean:'새 원두', editBean:'원두 편집', newGrinder:'새 그라인더', editGrinder:'그라인더 편집',
     roaster:'로스터', name:'이름', origin:'원산지', process:'가공', roastLevel:'로스팅', notes:'메모',
     shotBeanGrinder:'원두 · 그라인더', roaster:'로스터', coffee:'원두', shotFixed:'샷 정보 수정됨',
-    brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'그라인더를 찾는 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'알려진 내용을 채웠습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
+    brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'그라인더를 찾는 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'비어 있던 칸을 채웠습니다', gAiKept:'비어 있는 칸이 없어 그대로 두었습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
     burrBrand:'버 브랜드', burrModel:'버 타입', burrCoating:'코팅', burrGeom:'형상', burrSet:'버',
     burrNotes:'이 버가 하는 일', bAiFill:'이 버에 대해 묻기', bAiWorking:'버를 읽는 중…',
     bAiNeedSet:'버 세트를 먼저 적어주세요', bAiFilled:'알려진 내용으로 채웠습니다',
@@ -4143,15 +4143,24 @@ function grinderAiFill(){
   gAiBusy=true; renderBgEditor();
   return aiJson(key,[{text:grinderAiPrompt(name,_lang)}],0.1,{search:true}).then(function(r){
     if(!r||typeof r!=='object') { toast(t('gAiUnknown'),'err'); return; }
-    var o=bgSel.obj, got=0;
-    var bp={ brand:String(r.burrBrand||'').trim(), model:String(r.burrModel||'').trim(),
-             coating:String(r.burrCoating||'').trim() };
-    if(bp.brand||bp.model||bp.coating){ o._burr=bp; got++; }
-    if(typeof r.burrType==='string'&&r.burrType.trim()){ o.burrType=r.burrType.trim().toLowerCase(); got++; }
+    var o=bgSel.obj, got=0, offered=0;
+    // It fills; it does not correct. A lookup describes the grinder as it is
+    // sold, and what is already in the form is what is actually fitted to this
+    // one -- so an answer only ever lands in a box that is empty.
+    function txt(v){ return String(v==null?'':v).trim(); }
+    function take(cur,val){ var w=txt(val); if(!w) return null; offered++;
+      if(txt(cur)) return null; got++; return w; }
+    var cur=o._burr||burrPartsOf(o), x;
+    var bp={ brand:txt(cur.brand), model:txt(cur.model), coating:txt(cur.coating), notes:String(cur.notes||'') };
+    if((x=take(bp.brand,r.burrBrand))) bp.brand=x;
+    if((x=take(bp.model,r.burrModel))) bp.model=x;
+    if((x=take(bp.coating,r.burrCoating))) bp.coating=x;
+    o._burr=bp;
+    if((x=take(o.burrType,r.burrType))) o.burrType=x.toLowerCase();
     var sz=(typeof r.burrSize==='number')?r.burrSize:parseFloat(r.burrSize);
-    if(!isNaN(sz)&&sz>0){ o.burrSize=sz; got++; }
-    if(typeof r.notes==='string'&&r.notes.trim()){ o.notes=r.notes.trim(); got++; }
-    toast(got?t('gAiFilled'):t('gAiUnknown'),got?'ok':'err');
+    if(!isNaN(sz)&&sz>0){ offered++; if(o.burrSize==null||o.burrSize===''){ o.burrSize=sz; got++; } }
+    if((x=take(o.notes,r.notes))) o.notes=x;
+    toast(got?t('gAiFilled'):(offered?t('gAiKept'):t('gAiUnknown')),got?'ok':(offered?'ok':'err'));
   }).catch(function(e){ toast(t('gAiFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ gAiBusy=false; renderBgEditor(); }); }
 
