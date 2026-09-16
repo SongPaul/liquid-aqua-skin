@@ -7365,15 +7365,43 @@ function aiParseJson(txt){
 // GPT speaks the OpenAI chat completions API. Same translation job as Claude:
 // the prompt parts are Gemini-shaped and become message content here.
 var OPENAI_API='https://api.openai.com/v1/chat/completions';
-var OPENAI_MODEL='gpt-4o-mini';
+var OPENAI_MODELS_API='https://api.openai.com/v1/models';
+// Luna is the light, quick one, which is what these questions want. The account
+// is asked which id it actually carries rather than one being assumed here: a
+// name that has moved on would otherwise fail every call with a 404.
+var OPENAI_WANT=/luna/i;
+var OPENAI_PREFERRED='gpt-5.6-luna';
+var OPENAI_FALLBACK='gpt-4o-mini';
+var _openaiModel=null;
+function pickOpenaiModel(ids){
+  var cand=(ids||[]).filter(function(id){ return OPENAI_WANT.test(id); });
+  if(!cand.length) return null;
+  if(cand.indexOf(OPENAI_PREFERRED)>=0) return OPENAI_PREFERRED;
+  // Otherwise the highest version that answers to the name.
+  function ver(n){ var m=String(n).match(/(\d+(?:\.\d+)?)/); return m?parseFloat(m[1]):0; }
+  cand.sort(function(a,b){ return ver(a)-ver(b); });
+  return cand[cand.length-1]; }
+function resolveOpenaiModel(key){
+  if(_openaiModel) return Promise.resolve(_openaiModel);
+  return fetch(OPENAI_MODELS_API,{headers:{'Authorization':'Bearer '+key}})
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(j){
+      var ids=((j&&j.data)||[]).map(function(m){ return m&&m.id; }).filter(Boolean);
+      _openaiModel=pickOpenaiModel(ids)
+        ||(ids.indexOf(OPENAI_PREFERRED)>=0?OPENAI_PREFERRED:null)
+        ||(ids.length?OPENAI_FALLBACK:OPENAI_PREFERRED);
+      return _openaiModel; })
+    // The listing failing is not a reason to give up on the model that was asked
+    // for; the call itself will say if it is wrong.
+    .catch(function(){ _openaiModel=OPENAI_PREFERRED; return _openaiModel; }); }
 function openaiContent(parts){
   return (parts||[]).map(function(p){
     if(p&&p.text!=null) return {type:'text',text:String(p.text)};
     var d=p&&p.inline_data;
     if(d) return {type:'image_url',image_url:{url:'data:'+d.mime_type+';base64,'+d.data}};
     return null; }).filter(Boolean); }
-function openaiCall(key,parts,temperature){
-  var body={model:OPENAI_MODEL,temperature:(temperature==null?0:temperature),
+function openaiCall(key,parts,temperature,model){
+  var body={model:model,temperature:(temperature==null?0:temperature),
     messages:[{role:'user',content:openaiContent(parts)}]};
   return fetch(OPENAI_API,{method:'POST',headers:{
       'Content-Type':'application/json','Authorization':'Bearer '+key},
@@ -7391,14 +7419,19 @@ function openaiFailure(e){
   if(st===429) return 'busy';
   return null; }
 function openaiJson(key,parts,temperature){
-  function attempt(tries){
-    return openaiCall(key,parts,temperature).catch(function(e){
-      var kind=openaiFailure(e);
-      if(kind==='cap'||kind==='exhausted'){
-        var ce=new Error(e.message); ce.status=e.status; ce.kind=kind; throw ce; }
-      if(kind==='busy'&&tries>0) return _sleep(1200*(3-tries)).then(function(){ return attempt(tries-1); });
-      throw e; }); }
-  return attempt(2); }
+  return resolveOpenaiModel(key).then(function(model){
+    function attempt(m,tries,swapped){
+      return openaiCall(key,parts,temperature,m).catch(function(e){
+        // A model this account cannot reach is worth one try on the plain one,
+        // and worth forgetting so the next question resolves again.
+        if((e.status===404||/model/i.test(e.message||''))&&!swapped&&m!==OPENAI_FALLBACK){
+          _openaiModel=null; return attempt(OPENAI_FALLBACK,tries,true); }
+        var kind=openaiFailure(e);
+        if(kind==='cap'||kind==='exhausted'){
+          var ce=new Error(e.message); ce.status=e.status; ce.kind=kind; throw ce; }
+        if(kind==='busy'&&tries>0) return _sleep(1200*(3-tries)).then(function(){ return attempt(m,tries-1,swapped); });
+        throw e; }); }
+    return attempt(model,2,false); }); }
 
 // Claude speaks the Anthropic Messages API. The prompt parts this skin builds
 // are Gemini-shaped, so they are translated rather than written twice.
