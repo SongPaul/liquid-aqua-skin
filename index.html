@@ -475,7 +475,11 @@ body.night .car-tag.on{background-color:var(--accent);border-color:var(--accent)
    anywhere on them opens them anyway. */
 .al-edit{position:absolute;z-index:4;top:6px;left:6px;width:26px;height:26px;
   display:none;align-items:center;justify-content:center;
-  font-family:var(--font);font-size:13px;line-height:1;color:var(--ink);
+  /* The chip sits on a cover, not on the page, so it keeps one face in both
+     themes -- and a face that does not follow the theme cannot carry a glyph
+     that does: at night var(--ink) is white, and a white mark on a white chip
+     is no mark at all. */
+  font-family:var(--font);font-size:13px;line-height:1;color:#1e1b3a;
   background:rgba(255,255,255,.92);border:0;border-radius:100px;cursor:pointer;
   box-shadow:0 1px 4px rgba(0,0,0,.28);-webkit-appearance:none;transition:transform .1s}
 .album.center .al-edit{display:flex}
@@ -1358,6 +1362,10 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);padding:13px 26px;border-radius:100px;font-size:14px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.95);border:1px solid var(--glass-line);box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:all .3s;z-index:300}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.ok{color:var(--green)}.toast.err{color:var(--red)}
+/* The same trap as the cover's edit chip: a white pill whose text colour
+   follows the theme has no text at night. The pill takes the night face the
+   modals wear, and the green and red of a result read on either. */
+body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 </style>
 </head>
 <body>
