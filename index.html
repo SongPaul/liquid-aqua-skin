@@ -433,7 +433,10 @@ body.cam-on .bean-chips{display:none}
 /* mid shot the strip has nothing to offer, so it gets out of the way and
    gives its room to the one album that matters */
 body.brewing .car-nav,body.brewing #ccTags,body.brewing .cur-fav{display:none}
-body.brewing .carousel{height:226px}
+/* Mid shot the cover fills the strip it already has and does not ask for more.
+   The card shares a fixed column with the recipe and the bean, and every pixel
+   it grew by was taken off the bean card beside it -- which was half its size
+   through a shot to pay for a bigger picture. */
 body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 /* the space is always there; only the dot inside it comes and goes, so the
    name never slides when the loaded profile is browsed past */
@@ -483,8 +486,10 @@ body.night .car-tag.on{background-color:var(--accent);border-color:var(--accent)
   background:rgba(255,255,255,.92);border:0;border-radius:100px;cursor:pointer;
   box-shadow:0 1px 4px rgba(0,0,0,.28);-webkit-appearance:none;transition:transform .1s}
 .album.center .al-edit{display:flex}
-/* Mid shot the cover takes no presses, so it offers none. */
-body.brewing .al-edit{display:none}
+/* Mid shot the cover takes no presses, so it offers none. The centre rule
+   that shows it is more specific, so this one has to be at least as specific
+   to answer it. */
+body.brewing .album.center .al-edit{display:none}
 .al-edit:active{transform:scale(.88)}
 .al-shine{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s}
 .album.loaded .al-shine{opacity:1}
@@ -5622,15 +5627,22 @@ function shine(){
     +'<animate attributeName="x" values="-40;130" dur="4.5s" begin="0s" repeatCount="indefinite"/>'
     +'</rect></g>';
   return sv; }
+// Fill the box, do not guess at it. offsetWidth and clientHeight are layout
+// values, so the stage's own scale does not enter into this and the answer is
+// right whatever size the card ends up.
+var CAR_W=216, CAR_H=152, STAGE_SCALE=0.86, CAR_INSET=8;
+function lockScale(){
+  var car=document.querySelector('.carousel'); if(!car) return 1;
+  var w=car.clientWidth-CAR_INSET*2, h=car.clientHeight-CAR_INSET*2;
+  if(w<=0||h<=0) return 1;
+  return Math.max(1, Math.round(Math.min(w/CAR_W,h/CAR_H)/STAGE_SCALE*1000)/1000); }
 function renderCarousel(){
   var lock=brewLocked();
   carItems.forEach(function(p,i){ var off=i-carIndex-carDragSteps; var abs=Math.abs(off);
     if(lock){
       // one card, filling the space the neighbours and the strip gave up
       var here=(i===carIndex);
-      // Sized to the box it is shown in: 216x152 at the stage's .86 leaves
-      // 13px above and below the cover inside a 226px carousel.
-      p._el.style.transform=here?'translateX(0) scale(1.53)':'translateX(0) scale(1)';
+      p._el.style.transform=here?('translateX(0) scale('+lockScale()+')'):'translateX(0) scale(1)';
       p._el.style.opacity=here?1:0;
       p._el.style.zIndex=here?100:0;
       p._el.style.pointerEvents='none';
