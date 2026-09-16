@@ -1084,6 +1084,34 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .sl-ai{margin-top:16px;border:1px solid rgba(99,102,241,.16);border-radius:14px;padding:14px;background:rgba(99,102,241,.05)}
 .sl-ai-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .sl-ai-head span{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em}
+.tune-shots{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.tune-shot{font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--field);border:1px solid var(--edge);border-radius:100px;padding:4px 10px}
+.tune-rows{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.tune-row{display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;align-items:baseline;
+  background:var(--field);border:1px solid var(--edge);border-radius:11px;padding:10px 12px}
+.tune-step{font-size:13px;font-weight:800;color:var(--ink);min-width:0}
+.tune-field{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em}
+.tune-move{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tune-move .from{color:var(--ink-mute);text-decoration:line-through}
+.tune-move .arr{color:var(--ink-mute);margin:0 5px}
+.tune-move .to{color:var(--accent)}
+.tune-why{grid-column:1/-1;font-size:12px;line-height:1.5;color:var(--ink-soft)}
+.tune-curve{margin-top:14px;height:150px;border-radius:12px;background:var(--field);border:1px solid var(--edge);padding:8px}
+.tune-curve canvas{width:100%;height:100%;display:block}
+.tune-legend{display:flex;gap:14px;margin-top:7px;font-size:11px;font-weight:700;color:var(--ink-mute)}
+.tune-legend .tl{display:flex;align-items:center;gap:6px}
+.tune-legend .tl::before{content:'';width:18px;height:2px;border-radius:2px;background:var(--ink-mute)}
+.tune-legend .tl.dash::before{background:repeating-linear-gradient(90deg,var(--ink-mute) 0 4px,transparent 4px 8px)}
+.tune-legend .tl.solid::before{background:var(--accent)}
+.tp-list{display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto}
+.tp-item{display:flex;align-items:center;gap:10px;background:var(--field);border:1px solid var(--edge);
+  border-radius:11px;padding:9px 12px;cursor:pointer}
+.tp-item.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.tp-mark{width:20px;height:20px;flex-shrink:0;border-radius:6px;border:1px solid var(--ctl-edge);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:transparent}
+.tp-item.on .tp-mark{background:var(--accent);border-color:var(--accent);color:#fff}
+.tp-when{font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0}
+.tp-meta{font-size:11px;color:var(--ink-mute);white-space:nowrap}
 .ai-verdict{font-size:15px;font-weight:700;color:var(--ink);line-height:1.5;margin-top:12px}
 .ai-list{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink-soft)}
 .ai-sugs{display:flex;flex-direction:column;gap:8px;margin-top:12px}
@@ -1919,6 +1947,22 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div></div>
 </div>
 
+<!-- ── Profile tuning modal (reads shots, edits step values) ── -->
+<div class="overlay" id="tuneOverlay" onclick="closeModal(event,'tuneOverlay')">
+  <div class="modal wide"><div class="modal-head"><div class="modal-title" id="tuneTitle">Tune</div><button class="modal-close" onclick="closeTune()">&times;</button></div>
+  <div class="modal-body" id="tuneBody"></div></div>
+</div>
+
+<!-- ── Pick which shots to tune against ───────────────── -->
+<div class="overlay" id="tunePickOverlay" onclick="closeModal(event,'tunePickOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title" data-i18n="tunePick">Shots to tune against</div><button class="modal-close" onclick="closeModal(null,'tunePickOverlay')">&times;</button></div>
+  <div class="modal-body"><div class="set-desc" data-i18n="tunePickLead" style="margin-bottom:10px">Pick the shots this profile should learn from.</div>
+    <div id="tunePickList" class="tp-list"></div>
+    <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'tunePickOverlay')" data-i18n="close">Close</button>
+      <button class="m-btn primary" id="tunePickGo" onclick="tunePickGo()" data-i18n="tuneRun">Tune</button></div>
+  </div></div>
+</div>
+
 <!-- ── Visualizer import modal ───────────────────────── -->
 <div class="overlay" id="vizOverlay" onclick="closeModal(event,'vizOverlay')">
   <div class="modal"><div class="modal-head"><div class="modal-title">☁ <span data-i18n="vizTitle">Import from Visualizer</span></div><button class="modal-close" onclick="closeModal(null,'vizOverlay')">×</button></div>
@@ -2185,6 +2229,15 @@ var I18N={
     stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
     flushGraph:'Flush Graph',
     rating:'Rating', cmpAll:'All', cmpAdd:'Add to comparison', cmpMax:'Compare up to {n} shots', cmpHead:'Comparing shots', cmpSub:'{n} shots overlaid', cmpClear:'Clear',
+    tuneTitle:'Tune this profile', tuneRun:'Tune from these shots', tuneWorking:'Reading the shots\u2026',
+    tuneLead:'Only the values on the steps this profile already has are moved. No step is added, removed or renamed.',
+    tuneNoChange:'These shots do not call for a change.', tuneBefore:'now', tuneAfter:'tuned',
+    tuneSaveCopy:'Save as a copy', tuneSaveOver:'Change this profile',
+    tuneSavedCopy:'Saved as a new profile', tuneSavedOver:'Profile changed', tuneCopyMark:'(tuned)',
+    tuneNoProfile:'No profile with steps to tune', tuneNoShots:'No shots to tune against',
+    tunePick:'Shots to tune against', tunePickLead:'Pick the shots this profile should learn from.',
+    tunePickNone:'No shots recorded with this profile yet', tuneBtn:'Tune profile',
+    tf_pressure:'pressure', tf_flow:'flow', tf_seconds:'seconds', tf_temperature:'temp',
     aiFbGood:'Worked', aiFbBad:'Did not', aiFbNotePh:'What happened (optional)',
     aiMemory:'What the reader remembers', aiMemoryDesc:'Your reactions to earlier suggestions are sent with the next reading, so it stops repeating what did not work. Nothing here trains the model; it is a note passed along, and removing one removes it from the next reading.',
     aiMemoryEmpty:'Nothing remembered yet. Mark a suggestion in a shot reading.',
@@ -2376,6 +2429,15 @@ var I18N={
     stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
     flushGraph:'플러시 그래프',
     rating:'평점', cmpAll:'전체', cmpAdd:'비교에 추가', cmpMax:'최대 {n}개까지 비교할 수 있습니다', cmpHead:'추출 비교', cmpSub:'{n}개 겹쳐보기', cmpClear:'해제',
+    tuneTitle:'이 프로파일 다듬기', tuneRun:'이 샷들로 다듬기', tuneWorking:'샷을 읽는 중…',
+    tuneLead:'이미 있는 스텝의 값만 움직입니다. 스텝을 더하거나 빼거나 이름을 바꾸지 않습니다.',
+    tuneNoChange:'이 샷들로는 바꿀 이유가 없습니다.', tuneBefore:'지금', tuneAfter:'다듬은 뒤',
+    tuneSaveCopy:'수정본으로 저장', tuneSaveOver:'이 프로파일 수정',
+    tuneSavedCopy:'새 프로파일로 저장했습니다', tuneSavedOver:'프로파일을 수정했습니다', tuneCopyMark:'(다듬음)',
+    tuneNoProfile:'다듬을 스텝이 있는 프로파일이 없습니다', tuneNoShots:'근거로 쓸 샷이 없습니다',
+    tunePick:'근거로 쓸 샷', tunePickLead:'이 프로파일이 배울 샷을 고르세요.',
+    tunePickNone:'이 프로파일로 내린 샷이 아직 없습니다', tuneBtn:'프로파일 다듬기',
+    tf_pressure:'압력', tf_flow:'유량', tf_seconds:'시간', tf_temperature:'온도',
     aiFbGood:'맞았음', aiFbBad:'아니었음', aiFbNotePh:'무슨 일이 있었는지 (선택)',
     aiMemory:'분석이 기억하는 것', aiMemoryDesc:'이전 조언에 남긴 반응을 다음 분석에 함께 보냅니다. 통하지 않았던 조언을 되풀이하지 않게 하기 위해서입니다. 모델을 학습시키는 것은 아니며 그때마다 전달하는 메모이므로, 여기서 지우면 다음 분석에서 빠집니다.',
     aiMemoryEmpty:'아직 기억한 것이 없습니다. 샷 분석의 조언에 표시해 보세요.',
@@ -6364,6 +6426,7 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor');
     +'<div class="ep-grid-wrap"><table class="ep-grid" id="epStepGrid"></table></div>'
     +'<div id="epStepEditor"></div>'
     +'<div class="ep-save-bar"><button class="m-btn" onclick="cancelEdit()">'+t('cancel')+'</button>'
+      +'<button class="m-btn" style="margin-right:auto" onclick="tuneOpenPick()">\u2699 '+escapeHtml(t('tuneBtn'))+'</button>'
       +'<button class="m-btn" id="epUseBtn" onclick="useEditedProfile()">'+escapeHtml(t('useForShot'))+'</button>'
       +'<button class="m-btn primary" onclick="saveProfilePage()">'+t('saveProfile')+'</button></div>';
   epStepIdx=Math.min(epStepIdx,(pr.steps&&pr.steps.length-1)||0); if(epStepIdx<0) epStepIdx=0;
@@ -11536,7 +11599,22 @@ function aiPanelHtml(){
   return '<div class="sl-ai" id="slAi"><div class="sl-ai-head"><span>'+escapeHtml(t('aiAnalysis'))+'</span>'
     +'<button class="m-btn" onclick="analyzeShots()"'+(slAiBusy?' disabled aria-busy="true"':'')+'>'
     +(slAiBusy?escapeHtml(t('aiReading')):'\u2728 '+escapeHtml(slAi?t('aiAgain'):t('aiRun')))
-    +'</button></div>'+body+'</div>'; }
+    +'</button>'
+    +'<button class="m-btn" onclick="tuneFromShots()"'+(slAiBusy?' disabled':'')+'>\u2699 '
+      +escapeHtml(t('tuneBtn'))+'</button>'
+    +'</div>'+body+'</div>'; }
+// A shot keeps a copy of the profile it ran; the library holds the one that can
+// be written back to, and the title is what ties the two together.
+function tuneFromShots(){
+  var rows=aiRows();
+  if(!rows.length){ toast(t('tuneNoShots'),'err'); return; }
+  withFullShots(rows).then(function(shots){
+    var pr=(shots[0]&&shots[0].workflow&&shots[0].workflow.profile)||null;
+    if(!pr||!(pr.steps||[]).length){ toast(t('tuneNoProfile'),'err'); return; }
+    var title=String(pr.title||'').trim();
+    var known=(allProfiles||[]).filter(function(x){
+      return String((x.profile&&x.profile.title)||'').trim()===title; })[0];
+    tuneOpenFor(known||{id:null,profile:pr,metadata:{}},rows); }); }
 function aiResultHtml(r){
   return '<div class="ai-verdict">'+escapeHtml(String(r.verdict||''))+'</div>'
     +((r.observations||[]).length?'<ul class="ai-list">'+r.observations.map(function(o){
@@ -11638,6 +11716,193 @@ function analyzeShots(){
     .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ slAiBusy=false; refreshAiPanel(); }); }
 function refreshAiPanel(){ var el=document.getElementById('slAi'); if(el) el.outerHTML=aiPanelHtml(); }
+
+// ── Tuning a profile against what it actually pulled ────────────────
+// A profile is a guess until a shot answers it, and the answers are already
+// here. What changes is only the numbers on the steps that already exist:
+// adding or removing one makes a different profile, and someone who wants
+// that is better served by the editor than by a paragraph of reasoning.
+var TUNE_FIELDS={pressure:[0,12],flow:[0,12],seconds:[0.5,120],temperature:[70,100]};
+var tuneBase=null, tuneShots=[], tuneResult=null, tuneBusy=false;
+function tuneStepDigest(pr){
+  return ((pr&&pr.steps)||[]).map(function(st,i){
+    return { step:i, name:st.name, pump:st.pump,
+      pressure:st.pressure, flow:st.flow, seconds:st.seconds, temperature:st.temperature }; }); }
+function tunePrompt(pr,digests,lang){
+  return 'You are tuning an espresso profile using shots that were pulled with it. Answer in '
+    +(lang==='ko'?'Korean':'English')+'.\n'
+    +'Change ONLY the numeric values of the steps listed. Never add a step, never remove one, '
+    +'never rename one, and never change the pump type of one.\n'
+    +'The fields you may move are pressure (bar), flow (ml/s), seconds, temperature (C).\n'
+    +'Reply as JSON: {"summary":"one sentence","changes":[{"step":<index>,"field":"pressure|flow|seconds|temperature","to":<number>,"why":"one sentence"}]}\n'
+    +'At most 6 changes, each one field of one step. Ground every change in the numbers given: '
+    +'the curve, the time, the ratio and what the taste note says. If the shots do not justify '
+    +'changing anything, return an empty changes array and say so in summary.\n'
+    +'In curve, t is seconds, p is bar, f is ml/s, w is grams on the scale.\n'
+    +aiFbPromptBlock()
+    +'\nPROFILE: '+JSON.stringify({title:(pr&&pr.title)||'',steps:tuneStepDigest(pr)})
+    +'\nSHOTS: '+JSON.stringify(digests); }
+// An answer is read, not trusted: a step that is not there, a field that is not
+// one of the four, or a number outside what the machine can be asked for is
+// dropped rather than written into a profile.
+function tuneApply(base,changes){
+  var pr=JSON.parse(JSON.stringify(base)), steps=(pr.steps||[]), out=[];
+  (changes||[]).forEach(function(c){
+    var i=parseInt(c&&c.step,10), f=String((c&&c.field)||''), to=parseFloat(c&&c.to);
+    if(!(i>=0&&i<steps.length)) return;
+    if(!TUNE_FIELDS[f]) return;
+    if(!isFinite(to)) return;
+    var lim=TUNE_FIELDS[f]; if(to<lim[0]||to>lim[1]) return;
+    var from=steps[i][f];
+    if(from!=null&&Math.abs(parseFloat(from)-to)<0.005) return;
+    steps[i][f]=Math.round(to*100)/100;
+    out.push({step:i,name:steps[i].name||('#'+(i+1)),field:f,
+      from:(from==null?null:parseFloat(from)),to:steps[i][f],why:String((c&&c.why)||'')}); });
+  return {profile:pr,changes:out}; }
+function tuneOpenFor(baseProfileObj,rows){
+  tuneBase=baseProfileObj||null; tuneShots=(rows||[]).slice(0,4); tuneResult=null;
+  if(!tuneBase||!((tuneBase.profile&&tuneBase.profile.steps)||[]).length){ toast(t('tuneNoProfile'),'err'); return; }
+  if(!tuneShots.length){ toast(t('tuneNoShots'),'err'); return; }
+  document.getElementById('tuneOverlay').classList.add('show');
+  renderTune(); }
+function closeTune(){ document.getElementById('tuneOverlay').classList.remove('show'); }
+function tuneRun(){
+  if(tuneBusy||!tuneBase) return Promise.resolve();
+  var key=aiKey();
+  if(!key){ toast(tAi('aiNeedKey'),'err'); closeTune(); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
+  tuneBusy=true; tuneResult=null; renderTune();
+  return withFullShots(tuneShots).then(function(shots){
+      return aiJson(key,[{text:tunePrompt(tuneBase.profile,shots.map(shotDigestForAi),_lang)}],0.2); })
+    .then(function(r){
+      if(!r||typeof r!=='object'){ toast(t('aiNoResult'),'err'); return; }
+      var ap=tuneApply(tuneBase.profile,r.changes);
+      tuneResult={summary:String(r.summary||''),changes:ap.changes,profile:ap.profile}; })
+    .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
+    .then(function(){ tuneBusy=false; renderTune(); }); }
+// The curve the profile would draw, over the one it draws now.
+function drawTuneCurve(canvas,before,after){
+  var dpr=window.devicePixelRatio||1, r=canvas.getBoundingClientRect();
+  if(!r.width) return;
+  canvas.width=r.width*dpr; canvas.height=r.height*dpr;
+  var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  var a=simulateProfile(before), b=simulateProfile(after);
+  var total=Math.max(a.total,b.total,1);
+  function line(sim,field,color,mx,alpha,dash){
+    if(sim.pts.length<2) return;
+    ctx.save(); ctx.globalAlpha=alpha; if(dash) ctx.setLineDash(dash);
+    ctx.beginPath(); sim.pts.forEach(function(pt,i){
+      var x=(pt.t/total)*W, y=H-Math.min(pt[field]/mx,1)*(H-8)-4;
+      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.strokeStyle=color; ctx.lineWidth=dash?1.6:2.4; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
+  line(a,'temp',SERIES.basket,110,.25,GOAL_DASH);
+  line(a,'p',SERIES.pressure,12,.3,GOAL_DASH);
+  line(a,'f',SERIES.flow,12,.3,GOAL_DASH);
+  line(b,'temp',SERIES.basket,110,.65,null);
+  line(b,'p',SERIES.pressure,12,1,null);
+  line(b,'f',SERIES.flow,12,1,null); }
+// From the editor the shots are not already chosen, so they are offered: the
+// ones this profile actually pulled, newest first, with the latest ticked so
+// the button means something the moment it opens.
+var tunePickSel={};
+function tuneShotsForProfile(){
+  var title=String(((editing&&editing.profile)||{}).title||'').trim();
+  if(!title) return [];
+  return (shotList||[]).filter(function(sh){
+    var pr=(sh.workflow&&sh.workflow.profile)||{};
+    return String(pr.title||'').trim()===title; }).slice(0,12); }
+function tuneOpenPick(){
+  if(!editing||!((editing.profile&&editing.profile.steps)||[]).length){ toast(t('tuneNoProfile'),'err'); return; }
+  tunePickSel={};
+  document.getElementById('tunePickOverlay').classList.add('show');
+  renderTunePick();
+  if(!shotList.length) loadShotList(null,true).then(function(){ renderTunePick(); }).catch(function(){}); }
+function tunePickToggle(id){
+  if(tunePickSel[id]) delete tunePickSel[id]; else tunePickSel[id]=1;
+  renderTunePick(); }
+function renderTunePick(){
+  var box=document.getElementById('tunePickList'); if(!box) return;
+  var rows=tuneShotsForProfile();
+  if(!rows.length){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('tunePickNone'))+'</div>'; return; }
+  if(!Object.keys(tunePickSel).length) tunePickSel[rows[0].id]=1;
+  box.innerHTML=rows.map(function(r){
+    var a=r.annotations||{}, bits=[];
+    if(a.enjoyment!=null) bits.push('\u2605 '+a.enjoyment);
+    if(a.actualYield!=null) bits.push(a.actualYield+'g');
+    var c=(r.workflow&&r.workflow.context)||{};
+    if(c.coffeeName) bits.push(c.coffeeName);
+    return '<div class="tp-item'+(tunePickSel[r.id]?' on':'')+'" onclick="tunePickToggle(\''+r.id+'\')">'
+      +'<span class="tp-mark">\u2713</span>'
+      +'<span class="tp-when">'+escapeHtml(tuneShotLabel(r))+'</span>'
+      +'<span class="tp-meta">'+escapeHtml(bits.join('  \u00b7  '))+'</span></div>'; }).join(''); }
+function tunePickGo(){
+  var rows=tuneShotsForProfile().filter(function(r){ return tunePickSel[r.id]; });
+  if(!rows.length){ toast(t('tuneNoShots'),'err'); return; }
+  closeModal(null,'tunePickOverlay');
+  tuneOpenFor(editing,rows); }
+function tuneShotLabel(r){ return fmtShotWhen(r)||isoDay(r.timestamp||r.createdAt||''); }
+function renderTune(){
+  var box=document.getElementById('tuneBody'); if(!box) return;
+  var title=(tuneBase&&tuneBase.profile&&tuneBase.profile.title)||'';
+  document.getElementById('tuneTitle').textContent=t('tuneTitle')+(title?(' \u00b7 '+title):'');
+  var h='<div class="set-desc">'+escapeHtml(t('tuneLead'))+'</div>';
+  h+='<div class="tune-shots">'+tuneShots.map(function(r){
+    return '<span class="tune-shot">'+escapeHtml(tuneShotLabel(r))+'</span>'; }).join('')+'</div>';
+  if(tuneBusy) h+='<div class="rec-wait">'+escapeHtml(t('tuneWorking'))+'</div>';
+  else if(!tuneResult) h+='<div class="modal-actions"><button class="m-btn primary" onclick="tuneRun()">\u2728 '
+    +escapeHtml(t('tuneRun'))+'</button></div>';
+  else {
+    h+='<div class="ai-verdict">'+escapeHtml(tuneResult.summary)+'</div>';
+    if(!tuneResult.changes.length) h+='<div class="ls-empty">'+escapeHtml(t('tuneNoChange'))+'</div>';
+    else {
+      h+='<div class="tune-rows">'+tuneResult.changes.map(function(c){
+        return '<div class="tune-row"><div class="tune-step">'+escapeHtml(String(c.step+1)+'. '+c.name)+'</div>'
+          +'<div class="tune-field">'+escapeHtml(t('tf_'+c.field))+'</div>'
+          +'<div class="tune-move"><span class="from">'+escapeHtml(c.from==null?'\u2014':String(c.from))+'</span>'
+            +'<span class="arr">\u2192</span><span class="to">'+escapeHtml(String(c.to))+'</span></div>'
+          +'<div class="tune-why">'+escapeHtml(c.why)+'</div></div>'; }).join('')+'</div>';
+      h+='<div class="tune-curve"><canvas id="tuneCanvas"></canvas></div>'
+        +'<div class="tune-legend"><span class="tl dash">'+escapeHtml(t('tuneBefore'))
+        +'</span><span class="tl solid">'+escapeHtml(t('tuneAfter'))+'</span></div>';
+    }
+    h+='<div class="modal-actions">'
+      +'<button class="m-btn" onclick="tuneRun()">'+escapeHtml(t('aiAgain'))+'</button>'
+      +(tuneResult.changes.length
+        ? '<button class="m-btn" onclick="tuneSave(false)">'+escapeHtml(t('tuneSaveCopy'))+'</button>'
+          +'<button class="m-btn primary" onclick="tuneSave(true)">'+escapeHtml(t('tuneSaveOver'))+'</button>'
+        : '')+'</div>';
+  }
+  box.innerHTML=h;
+  var cv=document.getElementById('tuneCanvas');
+  if(cv&&tuneResult) drawTuneCurve(cv,tuneBase.profile,tuneResult.profile); }
+// Saved over, or saved beside. A profile that came with the machine has nothing
+// to be written back to, so for one of those it is always a copy.
+function tuneSave(overwrite){
+  if(!tuneResult||!tuneResult.changes.length||!tuneBase) return;
+  var pr=JSON.parse(JSON.stringify(tuneResult.profile));
+  var canOver=overwrite&&!!tuneBase.id&&!tuneBase.isDefault;
+  if(!canOver) pr.title=tuneTitleFor(pr.title||'');
+  var req=canOver
+    ? api('PUT','/api/v1/profiles/'+encodeURIComponent(tuneBase.id),{profile:pr,metadata:tuneBase.metadata||{}})
+    : api('POST','/api/v1/profiles',{profile:pr,metadata:{tags:['tuned']}});
+  req.then(function(res){
+    toast(t(canOver?'tuneSavedOver':'tuneSavedCopy'),'ok');
+    closeTune();
+    loadProfiles().then(function(){
+      var page=document.getElementById('editPage');
+      if(page&&page.classList.contains('show')){
+        var nid=canOver?tuneBase.id:((res&&(res.id||(res.profile&&res.profile.id)))||'');
+        var np=(allProfiles||[]).filter(function(x){ return x.id===nid; })[0];
+        renderEpList(); if(np) epSelect(np); }
+      if(carItems.length) buildCarousel(); });
+  }).catch(function(e){ toast(t('saveFailed')+': '+((e&&e.message)||'error'),'err'); }); }
+function tuneTitleFor(title){
+  var base=String(title||'').replace(/\s*\(\d+\)\s*$/,'').trim();
+  var mark=base+' '+t('tuneCopyMark');
+  var names={}; (allProfiles||[]).forEach(function(p){ names[((p.profile&&p.profile.title)||'').trim()]=1; });
+  if(!names[mark]) return mark;
+  for(var n=2;n<50;n++){ if(!names[mark+' ('+n+')']) return mark+' ('+n+')'; }
+  return mark+' '+Date.now(); }
 
 // ── Monitor ─────────────────────────────────────────────────────────
 // One action, full screen: the graph it is worth watching, the numbers worth
