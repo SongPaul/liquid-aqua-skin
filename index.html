@@ -4000,7 +4000,19 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', claudeKey:
   // the same, for the graph under a recorded shot; nothing hidden to begin with
   slHide:{} };
 var NIGHT_START=19, NIGHT_END=7; // night window: 19:00–07:00 (local hours)
-function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); }
+function loadPrefs(){ var p=lsGet('aurora_prefs'); if(p) applyPrefsObject(p); applyNight(); applyI18n(); dropStaleShotAi(); }
+// Readings already stored were written against a timeline that began at the
+// machine's preparation rather than at the shot, so every time they quote is
+// off by however long that took. They are dropped once; the button that made
+// them is still there.
+function dropStaleShotAi(){
+  try{
+    if(localStorage.getItem('aurora_shotai_tbase')==='extract') return;
+    localStorage.setItem('aurora_shotai_tbase','extract');
+    var all=lsGet('aurora_shotai');
+    if(all&&Object.keys(all).length){ lsSet('aurora_shotai',{}); storeSave('shotai',{}); }
+  }catch(_){}
+}
 // Convert the raw tank height (mm, from the DE1) to a display percentage using
 // the chosen calibration. Falls back to treating the raw value as % (legacy).
 // mm -> ml for the standard tank. Ported from the TCL skin via streamline.js so
@@ -5014,12 +5026,9 @@ function retimeGuide(g){
   return {pts:pts,total:pts[pts.length-1].t,hasTemp:g.hasTemp}; }
 function guideHasTemp(pts){ for(var i=0;i<pts.length;i++){ if(pts[i].temp>0) return true; } return false; }
 function guideFromShot(s){
-  var m=(s&&s.measurements)||[]; if(m.length<2) return null;
   // the recording opens at preparingForShot, the live chart only starts at
   // preinfusion, so the lead-in is dropped rather than shifting the whole guide
-  var pour=m.filter(function(pt){ var st=(pt.machine&&pt.machine.state)||{};
-    return st.substate==='preinfusion'||st.substate==='pouring'; });
-  if(pour.length>1) m=pour;
+  var m=shotSlice(s); if(m.length<2) return null;
   function tOf(pt){ return Date.parse((pt.machine||{}).timestamp)||0; }
   var t0=tOf(m[0]), pts=[];
   m.forEach(function(pt){ var o=pt.machine||{};
@@ -10144,7 +10153,7 @@ function viewLastShotGraph(){
   if(!lastShotSummary){ toast(t('noShotsYet'),'err'); return; }
   if(state.shotRunning||state.steamRunning||state.waterRunning){ toast(t('tBusyFirst'),'err'); return; }
   api('GET','/api/v1/shots/'+lastShotSummary.id).then(function(s){ if(!s){ toast(t('tShotNotFound'),'err'); return; }
-    var m=s.measurements||[]; if(m.length<2){ toast(t('tNoMeasurements'),'err'); return; }
+    var m=shotSlice(s); if(m.length<2){ toast(t('tNoMeasurements'),'err'); return; }
     chart.mode='espresso'; chartReviewing=true; chartReviewLabel=null;
     reviewProfile=(s.workflow&&s.workflow.profile)||null; _guideKey=null;
     chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.groupTemp=[];chart.mixTemp=[];
@@ -10761,12 +10770,12 @@ function cmpWeightMax(shots){ var w=0;
   shots.forEach(function(sh){ (sh.measurements||[]).forEach(function(pt){
     var v=pt.scale&&pt.scale.weight; if(v>w) w=v; }); });
   return w>0?Math.max(10,Math.ceil(w/10)*10):0; }
-function cmpPoints(sh,get){ var m=sh.measurements||[]; if(m.length<2) return [];
+function cmpPoints(sh,get){ var m=shotSlice(sh); if(m.length<2) return [];
   var t0=Date.parse((m[0].machine||{}).timestamp)||0, out=[];
   m.forEach(function(pt){ var v=get(pt); if(v==null) return;
     out.push({t:((Date.parse((pt.machine||{}).timestamp)||0)-t0)/1000, v:v}); });
   return out; }
-function cmpSeconds(sh){ var m=sh.measurements||[]; if(m.length<2) return 0;
+function cmpSeconds(sh){ var m=shotSlice(sh); if(m.length<2) return 0;
   var a=Date.parse((m[0].machine||{}).timestamp), b=Date.parse((m[m.length-1].machine||{}).timestamp);
   return (isNaN(a)||isNaN(b))?0:Math.max(0,(b-a)/1000); }
 function cmpStyleKeys(){
@@ -10882,7 +10891,9 @@ function renderCompare(){
 // shipping three hundred points per shot.
 function shotDigestForAi(sh){
   var pr=(sh.workflow&&sh.workflow.profile)||{}, c=(sh.workflow&&sh.workflow.context)||{};
-  var a=sh.annotations||{}, st=shotStats(sh), m=sh.measurements||[], pts=[];
+  // The times in the reading are quoted back to someone looking at the graph,
+  // so they are measured from where the graph starts.
+  var a=sh.annotations||{}, st=shotStats(sh), m=shotSlice(sh), pts=[];
   if(m.length>1){
     var t0=Date.parse((m[0].machine||{}).timestamp)||0, step=Math.max(1,Math.floor(m.length/24));
     for(var i=0;i<m.length;i+=step){ var pt=m[i], mac=pt.machine||{};
