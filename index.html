@@ -7400,9 +7400,12 @@ function openaiContent(parts){
     var d=p&&p.inline_data;
     if(d) return {type:'image_url',image_url:{url:'data:'+d.mime_type+';base64,'+d.data}};
     return null; }).filter(Boolean); }
+// Some models take only their own temperature and refuse any other, so it is
+// sent until one says no and left off from then on.
+var _openaiNoTemp=false;
 function openaiCall(key,parts,temperature,model){
-  var body={model:model,temperature:(temperature==null?0:temperature),
-    messages:[{role:'user',content:openaiContent(parts)}]};
+  var body={model:model,messages:[{role:'user',content:openaiContent(parts)}]};
+  if(!_openaiNoTemp) body.temperature=(temperature==null?0:temperature);
   return fetch(OPENAI_API,{method:'POST',headers:{
       'Content-Type':'application/json','Authorization':'Bearer '+key},
     body:JSON.stringify(body)})
@@ -7422,9 +7425,16 @@ function openaiJson(key,parts,temperature){
   return resolveOpenaiModel(key).then(function(model){
     function attempt(m,tries,swapped){
       return openaiCall(key,parts,temperature,m).catch(function(e){
-        // A model this account cannot reach is worth one try on the plain one,
-        // and worth forgetting so the next question resolves again.
-        if((e.status===404||/model/i.test(e.message||''))&&!swapped&&m!==OPENAI_FALLBACK){
+        var msg=(e&&e.message)||'';
+        // Refusing the temperature is the model saying how to ask, not that it
+        // cannot answer. Ask again its way -- and stop sending one after that.
+        if(/temperature/i.test(msg)&&!_openaiNoTemp){
+          _openaiNoTemp=true; return attempt(m,tries,swapped); }
+        // Only a model that is genuinely out of reach is worth swapping for, and
+        // worth forgetting so the next question resolves again. "with this
+        // model" appears in errors that have nothing to do with reaching it.
+        if((e.status===404||/does not exist|do not have access|unknown model/i.test(msg))
+           &&!swapped&&m!==OPENAI_FALLBACK){
           _openaiModel=null; return attempt(OPENAI_FALLBACK,tries,true); }
         var kind=openaiFailure(e);
         if(kind==='cap'||kind==='exhausted'){
