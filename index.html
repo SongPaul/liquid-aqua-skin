@@ -2179,6 +2179,8 @@ var I18N={
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
+    scanFound:'Not on the bag, found by search: {n} \u2014 worth checking',
+    sf_processing:'process', sf_altitude:'altitude', sf_variety:'variety', sf_producer:'producer', sf_region:'region',
     recipeFromLast:'Recipe brought back from this profile\u2019s last shot ({n})',
     lockedBrewing:'The profile cannot be changed while a shot is running.',
     brewingNow:'Brewing — this profile is locked',
@@ -2380,6 +2382,8 @@ var I18N={
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
+    scanFound:'봉투에 없어 검색으로 찾은 항목: {n} \u2014 확인해 주세요',
+    sf_processing:'가공법', sf_altitude:'고도', sf_variety:'품종', sf_producer:'생산자', sf_region:'지역',
     recipeFromLast:'이 프로파일로 마지막에 내린 레시피를 가져왔습니다 ({n})',
     lockedBrewing:'추출 중에는 프로파일을 바꿀 수 없습니다.',
     brewingNow:'추출 중 — 프로파일 잠김',
@@ -7924,8 +7928,13 @@ function aiKeyFor(p){
   var k=(p==='claude')?prefs.claudeKey:(p==='openai')?prefs.openaiKey:prefs.geminiKey;
   return String(k||'').trim(); }
 function aiKey(){ return aiKeyFor(aiProvider()); }
+// Whether the last answer was allowed to search. Only one provider can, and
+// even there the tool is dropped when the key is not entitled to it, so the
+// caller cannot assume and has to be told.
+var aiLastGrounded=false;
 function aiJson(key,parts,temperature,opts){
   var p=aiProvider();
+  aiLastGrounded=false;
   if(p==='claude') return claudeJson(key,parts,temperature);
   if(p==='openai') return openaiJson(key,parts,temperature);
   return geminiJson(key,parts,temperature,opts); }
@@ -8109,12 +8118,73 @@ function isOverload(e){ var k=geminiFailure(e); return k==='busy'||k==='rate'; }
 function geminiMessage(e){
   var k=geminiFailure(e);
   return t(k==='cap'?'aiCap':k==='exhausted'?'aiExhausted':k==='rate'?'aiRate':'aiBusy'); }
+// -- What the bag does not print -------------------------------------
+// A scan transcribes; it does not remember, and a value recalled from what a
+// region is usually like is a guess wearing a number. But a coffee that names
+// itself has its altitude and its process written down somewhere, and a key
+// that can search can go and read it. So: the blanks only, only where there is
+// a search to do, and only when the answer says a page stated it for this
+// coffee. Anything less is left blank, which was the right answer already.
+var LOOKUP_FIELDS=['processing','altitude','variety','producer','region'];
+function scanEmpty(v){ return v==null||v===''||(Array.isArray(v)&&!v.length); }
+function scanLookupPrompt(d,want,lang){
+  return 'You are filling in what a coffee bag did not print, for a coffee that has already been identified. '
+    +'Use web search. Answer in '+(lang==='ko'?'Korean':'English')+'.\n'
+    +'COFFEE: '+JSON.stringify({roaster:d.roaster||'',name:d.name||'',country:d.country||'',region:d.region||''})+'\n'
+    +'Fill ONLY these fields: '+want.join(', ')+'.\n'
+    +'Return ONLY JSON, one entry per field you can answer: '
+    +'{"<field>":{"value":<value>,"confidence":"high|medium|low","source":"<where you read it, a few words>"}}\n'
+    +'value types: processing a string as it is commonly written; altitude [min,max] or [value] in metres as numbers; '
+    +'variety a list of cultivar names; producer a string; region a string.\n'
+    +'Answer a field ONLY if you found it stated for THIS roaster\'s THIS coffee, or for the lot or farm it names. '
+    +'A value that is merely typical of the country, the region or the varietal is NOT an answer: omit that field.\n'
+    +'confidence is "high" only when a page you actually found states it for this coffee. '
+    +'Omit every field you cannot answer that way. An empty object {} is a good answer.'; }
+function scanLookupOk(field,v){
+  if(field==='altitude'){
+    if(!Array.isArray(v)||!v.length||v.length>2) return null;
+    var nums=v.map(function(x){ return parseFloat(x); });
+    if(nums.some(function(n){ return !isFinite(n)||n<0||n>3500; })) return null;
+    return nums; }
+  if(field==='variety'){
+    if(!Array.isArray(v)) return null;
+    var list=v.map(function(x){ return String(x||'').trim(); }).filter(Boolean);
+    return list.length?list.slice(0,6):null; }
+  var str=String(v==null?'':v).trim();
+  return (str&&str.length<=80)?str:null; }
+function scanLookup(key,d){
+  // Only one provider can search, and a coffee with no name cannot be looked up.
+  if(aiProvider()!=='gemini') return Promise.resolve(null);
+  if(!String(d.name||'').trim()&&!String(d.roaster||'').trim()) return Promise.resolve(null);
+  if((d.blend||[]).length) return Promise.resolve(null);
+  var want=LOOKUP_FIELDS.filter(function(k){ return scanEmpty(d[k]); });
+  if(!want.length) return Promise.resolve(null);
+  return aiJson(key,[{text:scanLookupPrompt(d,want,_lang)}],0,{search:true}).then(function(r){
+    // An ungrounded answer is the model remembering, which is the thing this
+    // was meant to avoid.
+    if(!aiLastGrounded||!r||typeof r!=='object') return null;
+    var fields=[], sources={};
+    want.forEach(function(k){
+      var e=r[k]; if(!e||typeof e!=='object') return;
+      if(String(e.confidence||'').toLowerCase()!=='high') return;
+      var src=String(e.source||'').trim(); if(!src) return;
+      var val=scanLookupOk(k,e.value); if(val==null) return;
+      d[k]=val; fields.push(k); sources[k]=src.slice(0,80); });
+    return fields.length?{fields:fields,sources:sources}:null;
+  }).catch(function(){ return null; }); }
+function scanLookupNote(data){
+  var f=(data&&data._lookedUp)||[];
+  if(!f.length) return '';
+  return t('scanFound').replace('{n}',f.map(function(k){ return t('sf_'+k); }).join(', ')); }
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. NEVER fill a field from what you know about the coffee rather than from what is printed: a country or a region does not tell you the altitude, the process or the variety, and a famous name does not either. If the bag does not print it, leave it empty. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
-  return aiJson(key,parts,0.1); }
+  return aiJson(key,parts,0.1).then(function(d){
+    return scanLookup(key,d).then(function(found){
+      if(found){ d._lookedUp=found.fields; d._lookupSrc=found.sources; }
+      return d; }); }); }
 // Ask Gemini for JSON, retrying transient overload and falling back to the lite model.
 // opts.search asks for Google Search grounding. That is a separately metered
 // feature: a key without it answers 429 to every grounded call while ordinary
@@ -8125,11 +8195,15 @@ function geminiAnalyze(key,images){
 // anything without one is retried the same way.
 function geminiJson(key,parts,temperature,opts){
   var want=!!(opts&&opts.search);
-  return geminiJsonCall(key,parts,temperature,want).catch(function(e){
-    // Dropping the search tool cannot help when the project is out of money.
-    if(e.kind==='cap'||e.kind==='exhausted') throw e;
-    if(want&&(e.status===429||e.status===400||!e.status)) return geminiJsonCall(key,parts,temperature,false);
-    throw e; }); }
+  return geminiJsonCall(key,parts,temperature,want)
+    .then(function(v){ aiLastGrounded=want; return v; })
+    .catch(function(e){
+      // Dropping the search tool cannot help when the project is out of money.
+      if(e.kind==='cap'||e.kind==='exhausted') throw e;
+      if(want&&(e.status===429||e.status===400||!e.status))
+        return geminiJsonCall(key,parts,temperature,false)
+          .then(function(v){ aiLastGrounded=false; return v; });
+      throw e; }); }
 function geminiJsonCall(key,parts,temperature,search){
   var cfg={temperature:(temperature==null?0:temperature)};
   // JSON mode alongside google_search is accepted but answers with an empty
@@ -8167,7 +8241,8 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
   btn.innerHTML=escapeHtml(t('mbAnalyzing'));
   function _btnDone(){ btn.removeAttribute('aria-busy'); btn.innerHTML=_btnLabel; }
   geminiAnalyze(key,aiImages)
-    .then(function(data){ data=cleanBeanText(data); function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
+    .then(function(data){ data=cleanBeanText(data); var _note=scanLookupNote(data);
+      function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
       put('bgRoaster',data.roaster); put('bgName',data.name);
       put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
       var scanned=aiBlendParts(data);
@@ -8253,7 +8328,8 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     if(scanned){ bgBlend=scanned;
       var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=true; }
     bgBlendRender();
-    st.textContent=t('mbReview');
+    var note=scanLookupNote(data);
+    st.textContent=t('mbReview')+(note?('  '+note):'');
     _usageFor=null; loadBeanUsage('mb');
     recommendProfiles('mb',true);
   }).catch(function(e){ st.textContent=t('mbAnalyzeFailed')+' '+((e&&e.message)||'error'); }).then(function(){ document.getElementById('mbAnalyzeBtn').disabled=aiImages.length===0; }); }
