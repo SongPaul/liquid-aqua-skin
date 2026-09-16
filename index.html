@@ -1076,27 +1076,35 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
    numbers run under a fixed mark and the one under the mark is the value. */
 .bg-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
 .bg-col{display:flex;flex-direction:column;min-width:0}
-.gs-dial{position:relative;margin-top:2px}
-.gs-track{display:flex;align-items:flex-end;overflow-x:auto;overflow-y:hidden;
-  scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;
-  padding:0 calc(50% - 23px);height:52px;touch-action:pan-x;
-  border-radius:12px;background-color:var(--ctl-face);box-shadow:var(--ctl-well)}
+/* A speed knob stands upright beside the grind setting: the numbers run past a
+   fixed line, more speed higher up, and whatever sits on the line is the value.
+   Centring uses spacers rather than percentage padding -- a percentage padding
+   is measured against width even when it is applied to the top. */
+.gs-dial{position:relative;width:112px}
+.gs-track{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;
+  scroll-snap-type:y mandatory;scrollbar-width:none;-ms-overflow-style:none;
+  height:170px;touch-action:pan-y;border-radius:12px;
+  background-color:var(--ctl-face);box-shadow:var(--ctl-well)}
 .gs-track::-webkit-scrollbar{display:none}
-.gs-tick{flex:0 0 46px;height:100%;scroll-snap-align:center;display:flex;flex-direction:column;
-  align-items:center;justify-content:flex-end;padding-bottom:7px;gap:5px;
-  border:0;background:transparent;font-family:var(--font);cursor:pointer;-webkit-appearance:none}
-.gs-tick i{display:block;width:2px;height:10px;border-radius:2px;background:var(--ink-mute);opacity:.45}
-.gs-tick.big i{height:16px;opacity:.7}
-.gs-tick b{font-size:12px;font-weight:800;color:var(--ink-mute);line-height:1}
+.gs-pad{flex:0 0 68px}
+.gs-tick{flex:0 0 34px;width:100%;scroll-snap-align:center;display:flex;align-items:center;
+  justify-content:center;gap:7px;border:0;background:transparent;font-family:var(--font);
+  cursor:pointer;-webkit-appearance:none;padding:0}
+.gs-tick i{display:block;width:10px;height:2px;border-radius:2px;background:var(--ink-mute);opacity:.45}
+.gs-tick.big i{width:16px;opacity:.7}
+.gs-tick b{font-size:12px;font-weight:800;color:var(--ink-mute);line-height:1;min-width:18px;text-align:left}
 .gs-tick.big b{color:var(--ink-soft)}
-.gs-needle{position:absolute;top:6px;bottom:6px;left:50%;width:2px;margin-left:-1px;
+.gs-needle{position:absolute;left:8px;right:8px;top:50%;height:2px;margin-top:-1px;
   border-radius:2px;background:var(--accent);pointer-events:none;box-shadow:0 0 0 3px var(--glass-hi)}
-.gs-read{display:flex;align-items:center;gap:8px;margin-top:7px}
-.gs-val{font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;min-width:38px}
-.gs-hint{font-size:11px;color:var(--ink-mute);flex:1}
-.gs-clear{min-height:26px;padding:0 10px;border-radius:100px;border:1px solid var(--ctl-edge);
+.gs-read{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
+.gs-val{font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.gs-hint{font-size:11px;color:var(--ink-mute);margin-top:3px;line-height:1.4}
+.gs-clear{min-height:24px;padding:0 9px;border-radius:100px;border:1px solid var(--ctl-edge);
   background-color:var(--ctl-face);font-family:var(--font);font-size:11px;font-weight:700;
   color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+/* the grind setting and the speed knob, side by side */
+.gset-cols{display:grid;grid-template-columns:1fr 112px;gap:16px;align-items:start}
+.gset-main{min-width:0}
 /* What the reader is told it got right or wrong, said on the suggestion itself */
 .ai-fb{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}
 .ai-fb-btn{min-height:28px;padding:0 11px;border-radius:100px;border:1px solid var(--ctl-edge);
@@ -2046,7 +2054,7 @@ var I18N={
     burrNotes:'What these burrs do', bAiFill:'Ask about these burrs', bAiWorking:'Reading the burrs…',
     bAiNeedSet:'Name the burr set first', bAiFilled:'Written from what is known about them',
     bAiUnknown:'This burr set is not known — write it yourself', bAiFailed:'Lookup failed:',
-    grindSpeed:'Grind speed', grindSpeedHint:'The motor speed dial, if this grinder has one. Leave it unset if it does not.', grindSpeedNone:'Not set', gsClear:'Unset',
+    grindSpeed:'Grind speed', grindSpeedHint:'Leave unset if it has no speed dial.', grindSpeedNone:'Not set', gsClear:'Unset',
     model:'Model', burrSize:'Size (mm)', grindSetting:'Grind Setting', current:'Current setting',
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; {n} fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
     qrNoLib:'QR library not loaded', qrNoLan:'The gateway did not report a LAN address. Enter the Wi-Fi/LAN address of the tablet so the phone can reach it.',
@@ -2237,7 +2245,7 @@ var I18N={
     burrNotes:'이 버가 하는 일', bAiFill:'이 버에 대해 묻기', bAiWorking:'버를 읽는 중…',
     bAiNeedSet:'버 세트를 먼저 적어주세요', bAiFilled:'알려진 내용으로 채웠습니다',
     bAiUnknown:'이 버 세트는 알지 못합니다 — 직접 적어주세요', bAiFailed:'조회 실패:',
-    grindSpeed:'분쇄 속도', grindSpeedHint:'모터 속도 다이얼이 있는 그라인더만. 없으면 비워 두세요.', grindSpeedNone:'설정 안 함', gsClear:'비우기',
+    grindSpeed:'분쇄 속도', grindSpeedHint:'속도 조절이 없으면 비워 두세요.', grindSpeedNone:'설정 안 함', gsClear:'비우기',
     model:'모델', burrSize:'크기 (mm)', grindSetting:'분쇄도 설정', current:'현재 값',
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 {n}가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
     qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'게이트웨이가 LAN 주소를 알려주지 않았습니다. 폰이 접속할 태블릿의 Wi-Fi/LAN 주소를 입력하세요.',
@@ -7115,6 +7123,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
           +escapeHtml(gAiBusy?t('gAiWorking'):('\u2728 '+t('gAiFill')))+'</button>'
           +'<span class="g-ai-hint">'+escapeHtml(t('gAiHint'))+'</span></div>'
         +'<div class="ep-section-title" style="margin-top:14px">'+t('grindSetting')+'</div>'
+        +'<div class="gset-cols"><div class="gset-main">'
         +'<div class="field"><label>'+t('settingType')+'</label>'
           +'<div class="ep-pump-toggle" style="width:fit-content"><button class="'+(isPreset?'':'on')+'" onclick="bgSetGrindType(\'numeric\')">'+t('numericDial')+'</button><button class="'+(isPreset?'on':'')+'" onclick="bgSetGrindType(\'preset\')">'+t('namedPresets')+'</button></div></div>'
         +(isPreset
@@ -7122,8 +7131,8 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
             +'<div class="field"><label>'+t('currentSetting')+'</label><input id="bgGrindSetting" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. Medium"></div>'
           : '<div class="field-row"><div class="field"><label>'+t('fineStep')+'</label><input id="bgSmallStep" type="number" step="0.1" value="'+(o.settingSmallStep!=null?o.settingSmallStep:0.1)+'"></div><div class="field"><label>'+t('coarseStep')+'</label><input id="bgBigStep" type="number" step="0.1" value="'+(o.settingBigStep!=null?o.settingBigStep:1.0)+'"></div></div>'
             +'<div class="field"><label>'+t('currentSettingDial')+'</label><input id="bgGrindSetting" type="text" inputmode="decimal" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. 5.2"></div>')
-        +bgSpeedDialHtml(o.grindSpeed)
-        +'<div class="field"><label>'+t('notesLabel')+'</label><textarea id="bgGNotes" rows="3">'+escapeHtml(o.notes||'')+'</textarea></div>'
+        +'</div>'+bgSpeedDialHtml(o.grindSpeed)+'</div>'
+        +'<div class="field" style="margin-top:12px"><label>'+t('notesLabel')+'</label><textarea id="bgGNotes" rows="3">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'</div>'
       +'<div class="bg-col">'
         +'<div class="ep-section-title">'+escapeHtml(t('burrSet'))+'</div>'
@@ -7150,25 +7159,34 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
 // it is set here: the numbers run under a fixed mark and whichever sits under
 // the mark is the value. The browser's own scroll snapping does the dragging,
 // the momentum and the wheel, so none of that is written twice.
-var GS_STEP=0.5, GS_MAX=10, GS_W=46;
+var GS_STEP=0.5, GS_MAX=10, GS_H=34;
 function gsValues(){ var a=[]; for(var v=0;v<=GS_MAX+1e-9;v+=GS_STEP) a.push(Math.round(v*10)/10); return a; }
 function gsFmt(v){ return v==null?'\u2014':(Math.round(v*10)%10?v.toFixed(1):String(Math.round(v))); }
 function dl(id,items){
   return '<datalist id="'+id+'">'+items.map(function(x){
     return '<option value="'+escapeAttr(x)+'"></option>'; }).join('')+'</datalist>'; }
+// More speed is higher up, so the list is built from the top down.
 function bgSpeedDialHtml(v){
-  var ticks=gsValues().map(function(x){
+  var ticks=gsValues().slice().reverse().map(function(x){
     var big=(Math.round(x*10)%10===0);
     return '<button type="button" class="gs-tick'+(big?' big':'')+'" data-v="'+x+'"'
-      +' onclick="bgSpeedPick('+x+')"><i></i>'+(big?'<b>'+x+'</b>':'<b>&nbsp;</b>')+'</button>'; }).join('');
+      +' onclick="bgSpeedPick('+x+')"><i></i><b>'+(big?x:'')+'</b></button>'; }).join('');
   return '<div class="field"><label>'+escapeHtml(t('grindSpeed'))+'</label>'
     +'<div class="gs-dial">'
-      +'<div class="gs-track" id="bgSpeedTrack" onscroll="bgSpeedScroll()">'+ticks+'</div>'
+      +'<div class="gs-track" id="bgSpeedTrack" onscroll="bgSpeedScroll()">'
+        +'<div class="gs-pad"></div>'+ticks+'<div class="gs-pad"></div></div>'
       +'<div class="gs-needle"></div></div>'
     +'<div class="gs-read"><span class="gs-val" id="bgSpeedVal">'+escapeHtml(gsFmt(v))+'</span>'
-      +'<span class="gs-hint">'+escapeHtml(t('grindSpeedHint'))+'</span>'
       +'<button type="button" class="gs-clear" onclick="bgSpeedClear()">'+escapeHtml(t('gsClear'))+'</button></div>'
+    +'<div class="gs-hint">'+escapeHtml(t('grindSpeedHint'))+'</div>'
     +'</div>'; }
+// The top of the track is the largest value, so a position counted from the top
+// is the value counted from the end.
+function gsTopOf(v){ var n=gsValues().length;
+  return ((n-1)-Math.round(v/GS_STEP))*GS_H; }
+function gsValueAt(top){ var vals=gsValues(), n=vals.length;
+  var p=Math.round(top/GS_H);
+  return vals[Math.max(0,Math.min((n-1)-p,n-1))]; }
 // An unset speed is not zero, so the dial rests at zero without claiming it.
 // Putting it there scrolls, and a scroll is how a value is set -- so the
 // position this asked for is remembered, and an unset dial sitting exactly
@@ -7177,14 +7195,13 @@ var _gsWant=-1, _gsT=null;
 function bgSpeedSync(){
   var tr=document.getElementById('bgSpeedTrack'); if(!tr||!bgSel||bgSel.type!=='grinder') return;
   var v=bgSel.obj.grindSpeed;
-  _gsWant=(v==null?0:Math.round(v/GS_STEP))*GS_W;
-  tr.scrollLeft=_gsWant; }
+  _gsWant=gsTopOf(v==null?0:v);
+  tr.scrollTop=_gsWant; }
 function bgSpeedScroll(){
   var tr=document.getElementById('bgSpeedTrack'); if(!tr||!bgSel||bgSel.type!=='grinder') return;
-  if(bgSel.obj.grindSpeed==null&&Math.abs(tr.scrollLeft-_gsWant)<2) return;
+  if(bgSel.obj.grindSpeed==null&&Math.abs(tr.scrollTop-_gsWant)<2) return;
   clearTimeout(_gsT); _gsT=setTimeout(function(){
-    var i=Math.round(tr.scrollLeft/GS_W), vals=gsValues();
-    bgSpeedSet(vals[Math.max(0,Math.min(i,vals.length-1))]); },90); }
+    bgSpeedSet(gsValueAt(tr.scrollTop)); },90); }
 function bgSpeedPick(v){ bgSpeedSet(v); bgSpeedSync(); }
 function bgSpeedSet(v){
   if(!bgSel||bgSel.type!=='grinder') return;
