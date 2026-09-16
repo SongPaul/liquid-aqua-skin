@@ -1072,6 +1072,29 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ai-sug{background:#fff;border:1px solid var(--glass-line);border-radius:11px;padding:10px 12px}
 .ai-sug-c{font-size:14px;font-weight:800;color:var(--accent)}
 .ai-sug-w{font-size:12px;color:var(--ink-mute);line-height:1.5;margin-top:3px}
+/* A grinder's speed knob is a dial on the machine, so it is a dial here: the
+   numbers run under a fixed mark and the one under the mark is the value. */
+.gs-dial{position:relative;margin-top:2px}
+.gs-track{display:flex;align-items:flex-end;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;
+  padding:0 calc(50% - 23px);height:52px;touch-action:pan-x;
+  border-radius:12px;background-color:var(--ctl-face);box-shadow:var(--ctl-well)}
+.gs-track::-webkit-scrollbar{display:none}
+.gs-tick{flex:0 0 46px;height:100%;scroll-snap-align:center;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;padding-bottom:7px;gap:5px;
+  border:0;background:transparent;font-family:var(--font);cursor:pointer;-webkit-appearance:none}
+.gs-tick i{display:block;width:2px;height:10px;border-radius:2px;background:var(--ink-mute);opacity:.45}
+.gs-tick.big i{height:16px;opacity:.7}
+.gs-tick b{font-size:12px;font-weight:800;color:var(--ink-mute);line-height:1}
+.gs-tick.big b{color:var(--ink-soft)}
+.gs-needle{position:absolute;top:6px;bottom:6px;left:50%;width:2px;margin-left:-1px;
+  border-radius:2px;background:var(--accent);pointer-events:none;box-shadow:0 0 0 3px var(--glass-hi)}
+.gs-read{display:flex;align-items:center;gap:8px;margin-top:7px}
+.gs-val{font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;min-width:38px}
+.gs-hint{font-size:11px;color:var(--ink-mute);flex:1}
+.gs-clear{min-height:26px;padding:0 10px;border-radius:100px;border:1px solid var(--ctl-edge);
+  background-color:var(--ctl-face);font-family:var(--font);font-size:11px;font-weight:700;
+  color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
 /* What the reader is told it got right or wrong, said on the suggestion itself */
 .ai-fb{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}
 .ai-fb-btn{min-height:28px;padding:0 11px;border-radius:100px;border:1px solid var(--ctl-edge);
@@ -2017,6 +2040,7 @@ var I18N={
     roaster:'Roaster', name:'Name', origin:'Origin', process:'Process', roastLevel:'Roast level', notes:'Notes',
     shotBeanGrinder:'Bean & grinder', roaster:'Roaster', coffee:'Coffee', shotFixed:'Shot updated',
     brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Reading the grinder…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what is known about it', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
+    grindSpeed:'Grind speed', grindSpeedHint:'The motor speed dial, if this grinder has one. Leave it unset if it does not.', grindSpeedNone:'Not set', gsClear:'Unset',
     model:'Model', burrs:'Burrs', burrType:'Burr type', burrSize:'Burr size (mm)', grindSetting:'Grind Setting', current:'Current setting',
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; {n} fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
     qrNoLib:'QR library not loaded', qrNoLan:'The gateway did not report a LAN address. Enter the Wi-Fi/LAN address of the tablet so the phone can reach it.',
@@ -2203,6 +2227,7 @@ var I18N={
     roaster:'로스터', name:'이름', origin:'원산지', process:'가공', roastLevel:'로스팅', notes:'메모',
     shotBeanGrinder:'원두 · 그라인더', roaster:'로스터', coffee:'원두', shotFixed:'샷 정보 수정됨',
     brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'그라인더를 찾는 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'알려진 내용을 채웠습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
+    grindSpeed:'분쇄 속도', grindSpeedHint:'모터 속도 다이얼이 있는 그라인더만. 없으면 비워 두세요.', grindSpeedNone:'설정 안 함', gsClear:'비우기',
     model:'모델', burrs:'버', burrType:'버 종류', burrSize:'버 크기 (mm)', grindSetting:'분쇄도 설정', current:'현재 값',
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 {n}가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
     qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'게이트웨이가 LAN 주소를 알려주지 않았습니다. 폰이 접속할 태블릿의 Wi-Fi/LAN 주소를 입력하세요.',
@@ -3902,6 +3927,8 @@ function hydrateFromStore(){
     else { var lfb=aiFbAll(); if(lfb.length) storePut('aifb',lfb); }
     if(all.gbrands&&typeof all.gbrands==='object'){ grinderBrands=all.gbrands; lsSet('aurora_gbrands',grinderBrands); }
     else if(Object.keys(grinderBrands).length) storePut('gbrands',grinderBrands);
+    if(all.gspeed&&typeof all.gspeed==='object'){ grinderSpeeds=all.gspeed; lsSet('aurora_gspeed',grinderSpeeds); }
+    else if(Object.keys(grinderSpeeds).length) storePut('gspeed',grinderSpeeds);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
       updateBeanInfo(); applyCam(); applyFx(); if(carItems.length) buildCarousel(); }
   }); }
@@ -3950,6 +3977,15 @@ function applyPrefsObject(p){
 var grinderBrands={};
 function loadGrinderBrands(){ grinderBrands=lsGet('aurora_gbrands')||{}; }
 function saveGrinderBrands(){ lsSet('aurora_gbrands',grinderBrands); storeSave('gbrands',grinderBrands); }
+// A speed knob is not part of the gateway's grinder, so it is kept beside it
+// the way the brand already is: by id, in the store every device reads.
+var grinderSpeeds={};
+function loadGrinderSpeeds(){ grinderSpeeds=lsGet('aurora_gspeed')||{}; }
+function saveGrinderSpeeds(){ lsSet('aurora_gspeed',grinderSpeeds); storeSave('gspeed',grinderSpeeds); }
+function grinderSpeedOf(g){
+  if(!g) return null;
+  if(g.grindSpeed!==undefined) return g.grindSpeed;
+  return (g.id&&grinderSpeeds[g.id]!=null)?grinderSpeeds[g.id]:null; }
 function splitGrinderName(g){
   if(!g) return {brand:'',model:''};
   var full=String(g.model||'');
@@ -3976,6 +4012,8 @@ function grinderDigest(g,setting){
   if(g.burrs) d.burrs=g.burrs;
   if(g.notes) d.notes=String(g.notes).replace(/\s+/g,' ').slice(0,300);
   if(g.settingType) d.dial=g.settingType;
+  // named so it cannot be read as the grind size: it is the motor's own dial
+  var sp=grinderSpeedOf(g); if(sp!=null) d.motorSpeedDial0to10=sp;
   if(setting!=null&&setting!=='') d.setting=setting;
   return d; }
 
@@ -6865,7 +6903,7 @@ function renderBgListOLD(){ var list=document.getElementById('bgList'); list.inn
     it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(g.burrs||g.burrType||'grinder')+'</div></div>';
     it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
 }
-function bgSelectNew(type){ bgTab=type; aiImages=[]; bgBatchId=null; bgNewBatch=false; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',region:'',producer:'',processing:'',species:'',decaf:false,decafProcess:'',variety:[],altitude:null}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:''}}; renderBgList(); renderBgEditor(); }
+function bgSelectNew(type){ bgTab=type; aiImages=[]; bgBatchId=null; bgNewBatch=false; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',region:'',producer:'',processing:'',species:'',decaf:false,decafProcess:'',variety:[],altitude:null}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:'',grindSpeed:null}}; renderBgList(); renderBgEditor(); }
 var _recFor=null;
 // The right half stood empty with an arrow pointing at the list. What goes in
 // a bean or a grinder is not obvious -- which fields earn their keep, which are
@@ -6949,6 +6987,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
     renderRecBox(); renderBeanStats(); renderBgTabs(); loadBeanUsage('bg');
   } else {
     var isPreset=(o.settingType==='preset'), gname=splitGrinderName(o);
+    if(o.grindSpeed===undefined) o.grindSpeed=(o.id&&grinderSpeeds[o.id]!=null)?grinderSpeeds[o.id]:null;
     wrap.innerHTML='<div class="bg-title">'+t(isNew?'newGrinder':'editGrinder')+'</div>'
       +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('brand'))+'</label><input id="bgBrand" value="'+escapeAttr(gname.brand)+'" placeholder="Niche"></div>'
         +'<div class="field"><label>'+escapeHtml(t('model'))+'</label><input id="bgModel" value="'+escapeAttr(gname.model)+'" placeholder="Zero"></div></div>'
@@ -6965,10 +7004,59 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
           +'<div class="field"><label>'+t('currentSetting')+'</label><input id="bgGrindSetting" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. Medium"></div>'
         : '<div class="field-row"><div class="field"><label>'+t('fineStep')+'</label><input id="bgSmallStep" type="number" step="0.1" value="'+(o.settingSmallStep!=null?o.settingSmallStep:0.1)+'"></div><div class="field"><label>'+t('coarseStep')+'</label><input id="bgBigStep" type="number" step="0.1" value="'+(o.settingBigStep!=null?o.settingBigStep:1.0)+'"></div></div>'
           +'<div class="field"><label>'+t('currentSettingDial')+'</label><input id="bgGrindSetting" type="text" inputmode="decimal" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. 5.2"></div>')
+      +bgSpeedDialHtml(o.grindSpeed)
       +'<div class="field"><label>'+t('notesLabel')+'</label><textarea id="bgGNotes" rows="2">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'<div class="ep-save-bar">'+'<button class="m-btn" style="margin-right:auto" onclick="bgCloseEditor()">'+t('close')+'</button>'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteGrinder()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useGrinder()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveGrinder()">'+t('save')+'</button></div>';
+    bgSpeedSync();
   }
 }
+// -- The speed knob ------------------------------------------------
+// Typing 6.5 into a box is not how this is set on the machine, so it is not how
+// it is set here: the numbers run under a fixed mark and whichever sits under
+// the mark is the value. The browser's own scroll snapping does the dragging,
+// the momentum and the wheel, so none of that is written twice.
+var GS_STEP=0.5, GS_MAX=10, GS_W=46;
+function gsValues(){ var a=[]; for(var v=0;v<=GS_MAX+1e-9;v+=GS_STEP) a.push(Math.round(v*10)/10); return a; }
+function gsFmt(v){ return v==null?'\u2014':(Math.round(v*10)%10?v.toFixed(1):String(Math.round(v))); }
+function bgSpeedDialHtml(v){
+  var ticks=gsValues().map(function(x){
+    var big=(Math.round(x*10)%10===0);
+    return '<button type="button" class="gs-tick'+(big?' big':'')+'" data-v="'+x+'"'
+      +' onclick="bgSpeedPick('+x+')"><i></i>'+(big?'<b>'+x+'</b>':'<b>&nbsp;</b>')+'</button>'; }).join('');
+  return '<div class="field"><label>'+escapeHtml(t('grindSpeed'))+'</label>'
+    +'<div class="gs-dial">'
+      +'<div class="gs-track" id="bgSpeedTrack" onscroll="bgSpeedScroll()">'+ticks+'</div>'
+      +'<div class="gs-needle"></div></div>'
+    +'<div class="gs-read"><span class="gs-val" id="bgSpeedVal">'+escapeHtml(gsFmt(v))+'</span>'
+      +'<span class="gs-hint">'+escapeHtml(t('grindSpeedHint'))+'</span>'
+      +'<button type="button" class="gs-clear" onclick="bgSpeedClear()">'+escapeHtml(t('gsClear'))+'</button></div>'
+    +'</div>'; }
+// An unset speed is not zero, so the dial rests at zero without claiming it.
+// Putting it there scrolls, and a scroll is how a value is set -- so the
+// position this asked for is remembered, and an unset dial sitting exactly
+// there is the dial resting, not the user choosing 0.
+var _gsWant=-1, _gsT=null;
+function bgSpeedSync(){
+  var tr=document.getElementById('bgSpeedTrack'); if(!tr||!bgSel||bgSel.type!=='grinder') return;
+  var v=bgSel.obj.grindSpeed;
+  _gsWant=(v==null?0:Math.round(v/GS_STEP))*GS_W;
+  tr.scrollLeft=_gsWant; }
+function bgSpeedScroll(){
+  var tr=document.getElementById('bgSpeedTrack'); if(!tr||!bgSel||bgSel.type!=='grinder') return;
+  if(bgSel.obj.grindSpeed==null&&Math.abs(tr.scrollLeft-_gsWant)<2) return;
+  clearTimeout(_gsT); _gsT=setTimeout(function(){
+    var i=Math.round(tr.scrollLeft/GS_W), vals=gsValues();
+    bgSpeedSet(vals[Math.max(0,Math.min(i,vals.length-1))]); },90); }
+function bgSpeedPick(v){ bgSpeedSet(v); bgSpeedSync(); }
+function bgSpeedSet(v){
+  if(!bgSel||bgSel.type!=='grinder') return;
+  bgSel.obj.grindSpeed=v;
+  var el=document.getElementById('bgSpeedVal'); if(el) el.textContent=gsFmt(v); }
+function bgSpeedClear(){
+  if(!bgSel||bgSel.type!=='grinder') return;
+  bgSel.obj.grindSpeed=null;
+  var el=document.getElementById('bgSpeedVal'); if(el) el.textContent=gsFmt(null);
+  bgSpeedSync(); }
 // Switch grinder setting type in-place (preserves other edited fields).
 function bgSetGrindType(t){ if(!bgSel||bgSel.type!=='grinder') return; bgReadGrinderForm(); bgSel.obj.settingType=t; renderBgEditor(); }
 // Read current grinder form values back into the selected object (before re-render).
@@ -10242,7 +10330,8 @@ function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
   var req=o.id?api('PUT','/api/v1/grinders/'+o.id,body):api('POST','/api/v1/grinders',body);
   req.then(function(saved){
     var id=o.id||(saved&&saved.id);
-    if(id){ if(brand) grinderBrands[id]=brand; else delete grinderBrands[id]; saveGrinderBrands(); }
+    if(id){ if(brand) grinderBrands[id]=brand; else delete grinderBrands[id]; saveGrinderBrands();
+      if(o.grindSpeed!=null) grinderSpeeds[id]=o.grindSpeed; else delete grinderSpeeds[id]; saveGrinderSpeeds(); }
     toast(t('tGrinderSaved'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); }).catch(function(){ toast(t('saveFailed'),'err'); }); }
 function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast(t('deleted'),'ok'); delete grinderBrands[o.id]; saveGrinderBrands(); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast(t('deleteFailed'),'err'); }); }
 function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
@@ -11236,6 +11325,9 @@ function shotAiPrompt(digests,lang){
     +'In curve, t is seconds, p is bar, f is ml/s, w is grams on the scale.\n'
     +'grinder describes what ground the coffee. Burr geometry and size change how a grind setting behaves, '
     +'so when you suggest a grind change, say it in terms of this grinder\'s own dial and what its burrs do.\n'
+    +'motorSpeedDial0to10, when it is there, is that grinder\'s own motor speed knob on its 0-10 scale. '
+    +'It is not the grind size and never stands in for it. Treat it as a lever you may suggest moving, '
+    +'and when you do, say that you mean the speed dial and what you expect it to change.\n'
     +'Reply as JSON: {"verdict":"one sentence","observations":["..."],"suggestions":[{"change":"short imperative","why":"one sentence"}]}\n'
     +'At most 4 observations and 3 suggestions.\n'
     +aiFbPromptBlock()
@@ -11645,7 +11737,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
   if(/[?&]camsetup=1/.test(window.location.search)){ bootCamSetup(); return; }
   bindDoseGestures(); thermoInit();
-  fitStage(); tickHdrClock(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); tickHdrClock(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
