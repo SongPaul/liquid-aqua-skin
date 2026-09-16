@@ -1072,6 +1072,30 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ai-sug{background:#fff;border:1px solid var(--glass-line);border-radius:11px;padding:10px 12px}
 .ai-sug-c{font-size:14px;font-weight:800;color:var(--accent)}
 .ai-sug-w{font-size:12px;color:var(--ink-mute);line-height:1.5;margin-top:3px}
+/* What the reader is told it got right or wrong, said on the suggestion itself */
+.ai-fb{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}
+.ai-fb-btn{min-height:28px;padding:0 11px;border-radius:100px;border:1px solid var(--ctl-edge);
+  background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);
+  font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;
+  -webkit-appearance:none;transition:transform .1s}
+.ai-fb-btn:active{transform:scale(.94)}
+.ai-fb-btn.on{background-color:var(--ctl-on-face);box-shadow:var(--ctl-on-lift);color:var(--green);border-color:var(--green)}
+.ai-fb-btn.no.on{color:var(--red);border-color:var(--red)}
+.ai-fb-note{flex:1;min-width:140px;min-height:30px;padding:0 10px;border-radius:9px;
+  border:1px solid var(--ctl-edge);background-color:var(--field);font-family:var(--font);
+  font-size:12px;color:var(--ink);-webkit-appearance:none}
+/* The same reactions, gathered where they can be read back and removed */
+.fb-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.fb-item{display:flex;align-items:flex-start;gap:9px;background:var(--field);border:1px solid var(--edge);border-radius:11px;padding:9px 11px}
+.fb-mark{font-size:13px;font-weight:800;line-height:1.5}
+.fb-mark.up{color:var(--green)}
+.fb-mark.down{color:var(--red)}
+.fb-body{flex:1;min-width:0}
+.fb-change{font-size:13px;font-weight:700;color:var(--ink);line-height:1.45}
+.fb-meta{font-size:11px;color:var(--ink-mute);margin-top:2px;line-height:1.45}
+.fb-del{width:26px;height:26px;flex-shrink:0;border:0;border-radius:100px;background:transparent;
+  font-family:var(--font);font-size:15px;line-height:1;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+.fb-del:hover{color:var(--red)}
 /* step carousel in editor */
 .ep-stepnav .nav:hover{background:#f0eeff}
 /* Every step, every number under its column. The row you select is the one
@@ -2105,6 +2129,10 @@ var I18N={
     stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
     flushGraph:'Flush Graph',
     rating:'Rating', cmpAll:'All', cmpAdd:'Add to comparison', cmpMax:'Compare up to {n} shots', cmpHead:'Comparing shots', cmpSub:'{n} shots overlaid', cmpClear:'Clear',
+    aiFbGood:'Worked', aiFbBad:'Did not', aiFbNotePh:'What happened (optional)',
+    aiMemory:'What the reader remembers', aiMemoryDesc:'Your reactions to earlier suggestions are sent with the next reading, so it stops repeating what did not work. Nothing here trains the model; it is a note passed along, and removing one removes it from the next reading.',
+    aiMemoryEmpty:'Nothing remembered yet. Mark a suggestion in a shot reading.',
+    aiMemoryClear:'Forget all', aiMemoryCleared:'Forgotten',
     aiAnalysis:'AI reading', aiRun:'Analyse', aiAgain:'Again', aiReading:'Reading the shot…', aiNoResult:'No analysis came back', aiFailed:'Analysis failed:',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
@@ -2287,6 +2315,10 @@ var I18N={
     stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
     flushGraph:'플러시 그래프',
     rating:'평점', cmpAll:'전체', cmpAdd:'비교에 추가', cmpMax:'최대 {n}개까지 비교할 수 있습니다', cmpHead:'추출 비교', cmpSub:'{n}개 겹쳐보기', cmpClear:'해제',
+    aiFbGood:'맞았음', aiFbBad:'아니었음', aiFbNotePh:'무슨 일이 있었는지 (선택)',
+    aiMemory:'분석이 기억하는 것', aiMemoryDesc:'이전 조언에 남긴 반응을 다음 분석에 함께 보냅니다. 통하지 않았던 조언을 되풀이하지 않게 하기 위해서입니다. 모델을 학습시키는 것은 아니며 그때마다 전달하는 메모이므로, 여기서 지우면 다음 분석에서 빠집니다.',
+    aiMemoryEmpty:'아직 기억한 것이 없습니다. 샷 분석의 조언에 표시해 보세요.',
+    aiMemoryClear:'모두 지우기', aiMemoryCleared:'지웠습니다',
     aiAnalysis:'AI 추출 분석', aiRun:'분석', aiAgain:'다시 분석', aiReading:'추출을 읽는 중…', aiNoResult:'분석 결과가 없습니다', aiFailed:'분석 실패:',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
@@ -3866,6 +3898,8 @@ function hydrateFromStore(){
     else storePut('presets',presets);
     if(all.shotai&&typeof all.shotai==='object') lsSet('aurora_shotai',all.shotai);
     else { var local=lsGet('aurora_shotai'); if(local&&Object.keys(local).length) storePut('shotai',local); }
+    if(Array.isArray(all.aifb)) lsSet('aurora_aifb',all.aifb);
+    else { var lfb=aiFbAll(); if(lfb.length) storePut('aifb',lfb); }
     if(all.gbrands&&typeof all.gbrands==='object'){ grinderBrands=all.gbrands; lsSet('aurora_gbrands',grinderBrands); }
     else if(Object.keys(grinderBrands).length) storePut('gbrands',grinderBrands);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
@@ -4395,6 +4429,9 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     var ku=KEYUI[prov];
     h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="'+ku.id+'" placeholder="'+escapeAttr(t(ku.ph))+'" value="'+escapeAttr(ku.val||'')+'" oninput="'+ku.save+'(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="'+ku.url+'" target="_blank" style="color:var(--accent)">'+t(ku.get)+' ↗</a></div></div>';
     h+='<div class="set-desc" style="margin-top:10px">'+t('aiKeyNote')+'</div>';
+    h+='<div class="ep-section-title" style="margin-top:22px">'+escapeHtml(t('aiMemory'))+'</div>';
+    h+='<div class="set-desc">'+escapeHtml(t('aiMemoryDesc'))+'</div>';
+    h+='<div id="aiFbBox">'+aiFbListHtml()+'</div>';
   } else if(spCat==='plugins'){
     h+='<div class="sp-cat-title">'+t('plugins')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('pluginsDesc')+'</div>';
@@ -11164,6 +11201,32 @@ function shotDigestForAi(sh){
     groupC:st.groupTemp?Math.round(st.groupTemp*10)/10:null,
     tds:a.drinkTds, ey:a.drinkEy, rating:a.enjoyment, notes:a.espressoNotes||'',
     curve:pts }; }
+// -- What the reader has been told it got right, and wrong ----------
+// The models this skin talks to are not trained by anything said here, so a
+// reaction is not teaching: it is a note kept and passed along with the next
+// reading. That makes it immediate, readable and removable, which suits a
+// judgement about one person's grinder and one person's taste.
+var AI_FB_MAX=40;
+function aiFbAll(){ var v=lsGet('aurora_aifb'); return Array.isArray(v)?v:[]; }
+function aiFbSave(list){ lsSet('aurora_aifb',list); storeSave('aifb',list); }
+// A reaction is only worth as much as what it was reacting to, so the grinder
+// and the coffee of the shot it was said about travel with it.
+function aiCtxOf(d){
+  if(!d) return null;
+  var g=d.grinder||{};
+  var dial=(g.setting!=null&&g.setting!=='')?g.setting:(d.grind!=null?d.grind:'');
+  return { g:[g.model||'',(dial!==''&&dial!=null)?('@'+dial):''].filter(Boolean).join(' '),
+           b:d.coffee||'', p:d.profile||'' }; }
+function aiFbPromptBlock(){
+  var list=aiFbAll(); if(!list.length) return '';
+  var rows=list.slice(-24).reverse().map(function(x){
+    return { suggestion:x.c, user:(x.v==='up'?'worked':'did not work'),
+      note:x.n||undefined,
+      on:{ grinder:x.g||undefined, coffee:x.b||undefined } }; });
+  return '\nThis user has already told you how earlier suggestions turned out. Prefer a direction they '
+    +'said worked, and do not repeat one they said did not; their notes describe their own machine, '
+    +'grinder and taste. If the numbers in this shot point the other way, follow the numbers and say '
+    +'plainly why you differ.\nFEEDBACK: '+JSON.stringify(rows)+'\n'; }
 function shotAiPrompt(digests,lang){
   return 'You are an espresso dial-in assistant. Answer in '+(lang==='ko'?'Korean':'English')+'.\n'
     +(digests.length>1
@@ -11174,7 +11237,9 @@ function shotAiPrompt(digests,lang){
     +'grinder describes what ground the coffee. Burr geometry and size change how a grind setting behaves, '
     +'so when you suggest a grind change, say it in terms of this grinder\'s own dial and what its burrs do.\n'
     +'Reply as JSON: {"verdict":"one sentence","observations":["..."],"suggestions":[{"change":"short imperative","why":"one sentence"}]}\n'
-    +'At most 4 observations and 3 suggestions.\n\nSHOTS: '+JSON.stringify(digests); }
+    +'At most 4 observations and 3 suggestions.\n'
+    +aiFbPromptBlock()
+    +'\nSHOTS: '+JSON.stringify(digests); }
 function aiPanelHtml(){
   var body='';
   if(slAiBusy) body='<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>';
@@ -11187,9 +11252,77 @@ function aiResultHtml(r){
   return '<div class="ai-verdict">'+escapeHtml(String(r.verdict||''))+'</div>'
     +((r.observations||[]).length?'<ul class="ai-list">'+r.observations.map(function(o){
         return '<li>'+escapeHtml(String(o))+'</li>'; }).join('')+'</ul>':'')
-    +((r.suggestions||[]).length?'<div class="ai-sugs">'+r.suggestions.map(function(x){
+    +((r.suggestions||[]).length?'<div class="ai-sugs">'+r.suggestions.map(function(x,i){
         return '<div class="ai-sug"><div class="ai-sug-c">'+escapeHtml(String((x&&x.change)||''))+'</div>'
-          +'<div class="ai-sug-w">'+escapeHtml(String((x&&x.why)||''))+'</div></div>'; }).join('')+'</div>':''); }
+          +'<div class="ai-sug-w">'+escapeHtml(String((x&&x.why)||''))+'</div>'
+          +aiSugFbHtml(i,x)+'</div>'; }).join('')+'</div>':''); }
+// The note only appears once a side has been taken: there is nothing to say
+// about a suggestion that has not been tried.
+function aiSugFbHtml(i,x){
+  var v=(x&&x.fb)||null;
+  function b(kind,label,cls){
+    return '<button class="ai-fb-btn'+cls+(v===kind?' on':'')+'" type="button"'
+      +' aria-pressed="'+(v===kind)+'" onclick="aiFbVote('+i+',\''+kind+'\')">'+escapeHtml(label)+'</button>'; }
+  return '<div class="ai-fb">'
+    +b('up','\u2713 '+t('aiFbGood'),'')
+    +b('down','\u2715 '+t('aiFbBad'),' no')
+    +(v?'<input class="ai-fb-note" value="'+escapeAttr((x&&x.note)||'')+'"'
+        +' placeholder="'+escapeAttr(t('aiFbNotePh'))+'" oninput="aiFbNote('+i+',this.value)">':'')
+    +'</div>'; }
+function aiFbKey(i){ var rows=aiRows(); return (rows.length?aiCacheKey(rows):'?')+'#'+i; }
+// A reaction is kept twice: on the reading, so the marks are still there when
+// it is opened again, and in the list the next prompt carries.
+function aiFbRecord(i,x){
+  var list=aiFbAll().filter(function(e){ return e.k!==aiFbKey(i); });
+  if(x&&x.fb){ var c=(slAi&&slAi._ctx)||{};
+    list.push({ k:aiFbKey(i), c:String(x.change||''), w:String(x.why||''), v:x.fb,
+      n:String(x.note||''), at:new Date().toISOString(),
+      g:c.g||'', b:c.b||'', p:c.p||'' }); }
+  while(list.length>AI_FB_MAX) list.shift();
+  aiFbSave(list); }
+function aiFbVote(i,v){
+  var x=slAi&&slAi.suggestions&&slAi.suggestions[i]; if(!x) return;
+  x.fb=(x.fb===v)?null:v;
+  if(!x.fb) delete x.note;
+  aiFbRecord(i,x);
+  var rows=aiRows(); if(rows.length) saveShotAi(rows,slAi);
+  refreshAiPanel();
+  if(spOpen()&&spCat==='ai') renderAiFbBox(); }
+// Typing must not redraw the field being typed in, so a keystroke only ever
+// updates what is kept.
+var _aiFbT=null;
+function aiFbNote(i,v){
+  var x=slAi&&slAi.suggestions&&slAi.suggestions[i]; if(!x||!x.fb) return;
+  x.note=v;
+  clearTimeout(_aiFbT); _aiFbT=setTimeout(function(){
+    aiFbRecord(i,x);
+    var rows=aiRows(); if(rows.length) saveShotAi(rows,slAi);
+    if(spOpen()&&spCat==='ai') renderAiFbBox(); },500); }
+function aiFbForget(k){
+  aiFbSave(aiFbAll().filter(function(e){ return e.k!==k; }));
+  renderAiFbBox();
+  // the reading on screen still carries the mark, and it would be a lie
+  if(slAi&&slAi.suggestions) slAi.suggestions.forEach(function(x,i){
+    if(aiFbKey(i)===k){ x.fb=null; delete x.note; } });
+  refreshAiPanel(); }
+function aiFbClear(){
+  aiFbSave([]);
+  if(slAi&&slAi.suggestions) slAi.suggestions.forEach(function(x){ x.fb=null; delete x.note; });
+  renderAiFbBox(); refreshAiPanel(); toast(t('aiMemoryCleared'),'ok'); }
+function aiFbListHtml(){
+  var list=aiFbAll();
+  if(!list.length) return '<div class="ls-empty">'+escapeHtml(t('aiMemoryEmpty'))+'</div>';
+  return '<div class="fb-list">'+list.slice().reverse().map(function(e){
+    var meta=[isoDay(e.at),e.g,e.b,e.n].filter(Boolean).join('  \u00b7  ');
+    return '<div class="fb-item">'
+      +'<span class="fb-mark '+(e.v==='up'?'up':'down')+'">'+(e.v==='up'?'\u2713':'\u2715')+'</span>'
+      +'<div class="fb-body"><div class="fb-change">'+escapeHtml(e.c)+'</div>'
+      +(meta?'<div class="fb-meta">'+escapeHtml(meta)+'</div>':'')+'</div>'
+      +'<button class="fb-del" type="button" title="'+escapeAttr(t('delete'))+'"'
+      +' onclick="aiFbForget('+JSON.stringify(e.k).replace(/"/g,'&quot;')+')">\u00d7</button></div>'; }).join('')
+    +'</div><div style="margin-top:12px"><button class="m-btn" onclick="aiFbClear()">'
+    +escapeHtml(t('aiMemoryClear'))+'</button></div>'; }
+function renderAiFbBox(){ var box=document.getElementById('aiFbBox'); if(box) box.innerHTML=aiFbListHtml(); }
 function aiCacheKey(rows){ return rows.map(function(r){ return r.id; }).sort().join(','); }
 function loadShotAi(rows){ if(!rows||!rows.length) return null;
   var all=lsGet('aurora_shotai')||{};
@@ -11206,11 +11339,13 @@ function analyzeShots(){
   var key=aiKey();
   if(!key){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
   slAiBusy=true; slAi=null; refreshAiPanel();
+  var ctx=null;
   return withFullShots(rows).then(function(shots){
-      return aiJson(key,[{text:shotAiPrompt(shots.map(shotDigestForAi),_lang)}],0.2); })
+      var digests=shots.map(shotDigestForAi); ctx=aiCtxOf(digests[0]);
+      return aiJson(key,[{text:shotAiPrompt(digests,_lang)}],0.2); })
     .then(function(res){
       slAi=(res&&(res.verdict||res.observations||res.suggestions))?res:null;
-      if(slAi) saveShotAi(rows,slAi); else toast(t('aiNoResult'),'err'); })
+      if(slAi){ slAi._ctx=ctx; saveShotAi(rows,slAi); } else toast(t('aiNoResult'),'err'); })
     .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ slAiBusy=false; refreshAiPanel(); }); }
 function refreshAiPanel(){ var el=document.getElementById('slAi'); if(el) el.outerHTML=aiPanelHtml(); }
