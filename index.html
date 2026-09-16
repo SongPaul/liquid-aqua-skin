@@ -1274,6 +1274,20 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 .fw-prog-label.err{color:#ef4444}
 .fw-prog-track{height:8px;border-radius:100px;background:var(--glass-hi);border:1px solid var(--glass-line);overflow:hidden}
 .fw-prog-fill{height:100%;border-radius:100px;background:var(--accent);transition:width .2s linear}
+.sk-list{display:flex;flex-direction:column;gap:10px}
+.sk-rel{background:var(--field);border:1px solid var(--edge);border-radius:var(--r-sm);padding:12px 14px}
+.sk-rel.now{border-color:var(--accent)}
+.sk-rel-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;cursor:pointer;-webkit-user-select:none;user-select:none}
+.sk-rel-head:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sk-caret{font-size:10px;color:var(--ink-mute);transition:transform .15s}
+.sk-rel.open .sk-caret{transform:rotate(90deg)}
+.sk-rel .sk-body{display:none}
+.sk-rel.open .sk-body{display:block}
+.sk-ver{font-size:12px;font-weight:800;color:var(--accent)}
+.sk-rel-name{font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0}
+.sk-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 7px}
+.sk-date{font-size:11px;font-weight:600;color:var(--ink-mute)}
+.sk-body{margin-top:8px;font-size:12px;line-height:1.55;color:var(--ink-soft);white-space:pre-wrap;word-break:break-word}
 .app-notes{margin-top:12px;padding:12px 14px;border-radius:var(--r-sm);background:var(--field);border:1px solid var(--edge);font-size:12px;line-height:1.55;color:var(--ink-soft);white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto}
 .switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
 .switch input{opacity:0;width:0;height:0}
@@ -1946,6 +1960,11 @@ var I18N={
     vizNoPlugin:'The Visualizer plugin is not installed or is disabled — a share code needs it. A shot link works without it.',
     vizProfileSaved:'Profile saved: {n}', vizShown:'Showing Visualizer shot — {n}', vizFailed:'Import failed',
     vizGraph:'Visualizer shot',
+    catSkin:'Skin', skinHistory:'Update history', skinCheck:'Check for skin updates',
+    skinChecking:'Checking…', skinChecked:'Update check finished.', skinUpToDate:'This skin is up to date.',
+    skinNewer:'v{v} is available.', skinNewsFail:'Could not load the update history.',
+    skinInstalledTag:'running', skinAll:'All releases',
+    skinStale:'v{v} is installed but this page is still running v{r}. Reload to use it.', skinReload:'Reload',
     catApp:'App update', appNotes:"What's new", appUpToDate:'Decaid is up to date.', appChecking:'Checking for updates…',
     appDownloading:'Downloading…', appInstalling:'Installing…', appCheck:'Check for updates', appUpdateBtn:'Update Decaid',
     appOpenRelease:'Open release page', appManual:'This platform installs updates outside the app. Open the release page and install it there.',
@@ -2123,6 +2142,11 @@ var I18N={
     vizNoPlugin:'Visualizer 플러그인이 없거나 꺼져 있습니다 — 공유 코드는 플러그인이 필요합니다. 샷 링크는 없어도 됩니다.',
     vizProfileSaved:'프로파일 저장됨: {n}', vizShown:'Visualizer 샷 표시 중 — {n}', vizFailed:'가져오기 실패',
     vizGraph:'Visualizer 샷',
+    catSkin:'스킨', skinHistory:'업데이트 내역', skinCheck:'스킨 업데이트 확인',
+    skinChecking:'확인 중…', skinChecked:'업데이트 확인을 마쳤습니다.', skinUpToDate:'스킨이 최신입니다.',
+    skinNewer:'v{v}를 사용할 수 있습니다.', skinNewsFail:'업데이트 내역을 불러오지 못했습니다.',
+    skinInstalledTag:'사용 중', skinAll:'전체 릴리스',
+    skinStale:'v{v}가 설치되었지만 이 화면은 아직 v{r}입니다. 새로고침하면 적용됩니다.', skinReload:'새로고침',
     catApp:'앱 업데이트', appNotes:'업데이트 내역', appUpToDate:'Decaid가 최신입니다.', appChecking:'업데이트 확인 중…',
     appDownloading:'다운로드 중…', appInstalling:'설치 중…', appCheck:'업데이트 확인', appUpdateBtn:'Decaid 업데이트',
     appOpenRelease:'릴리즈 페이지 열기', appManual:'이 플랫폼은 앱 밖에서 업데이트를 설치합니다. 릴리즈 페이지를 열어 설치하세요.',
@@ -4090,6 +4114,7 @@ var SP_CATS=[
   {id:'calib',   ic:'📐', key:'catCalib'},
   {id:'firmware',ic:'⬆', key:'catFirmware'},
   {id:'app',     ic:'🔄', key:'catApp'},
+  {id:'skin',    ic:'🎨', key:'catSkin'},
   {id:'ai',      ic:'✨', key:'catAI'},
   {id:'plugins', ic:'🧩', key:'plugins'}
 ];
@@ -4120,6 +4145,7 @@ function spSelect(id){ spCat=id;
   if(id==='scale') loadDevicesForDosing();
   if(id==='presence') loadPresence();
   if(id==='calib') loadCalib();
+  if(id==='skin') loadSkinInfo();
   renderSpNav(); renderSpContent(); }
 function row(nameKey,descKey,control){ return '<div class="set-row"><div class="set-info"><div class="set-name">'+t(nameKey)+'</div>'+(descKey?'<div class="set-desc">'+t(descKey)+'</div>':'')+'</div>'+control+'</div>'; }
 function sw(id,checked,onchg,disabled){ return '<label class="switch"><input type="checkbox" id="'+id+'"'+(checked?' checked':'')+(disabled?' disabled':'')+' onchange="'+onchg+'"><span class="track"></span></label>'; }
@@ -4344,6 +4370,9 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div class="sp-cat-title">'+t('catApp')+'</div>';
     h+=row('autoUpdChk','autoUpdChkDesc',sw('setAutoUpd',gwSettings.automaticUpdateCheck!==false,'setAutoUpdateCheck(this.checked)'));
     h+='<div id="appBox" style="margin-top:16px"><div class="ls-empty">'+t('loading')+'</div></div>';
+  } else if(spCat==='skin'){
+    h+='<div class="sp-cat-title">'+t('catSkin')+'</div>';
+    h+='<div id="skinBox"><div class="ls-empty">'+t('loading')+'</div></div>';
   } else if(spCat==='ai'){
     h+='<div class="sp-cat-title">'+t('catAI')+'</div>';
     var prov=aiProvider();
@@ -4367,6 +4396,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
   if(spCat==='plugins') loadPlugins();
   if(spCat==='firmware') loadFirmware();
   if(spCat==='app') renderAppUpdate();
+  if(spCat==='skin') renderSkinBox();
 }
 function opt(val,label,cur){ return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+label+'</option>'; }
 function dosingOptions(){
@@ -4716,6 +4746,114 @@ function renderAppUpdate(){ var box=document.getElementById('appBox'); if(!box) 
     h+='<div class="fw-prog"><div class="fw-prog-track"><div class="fw-prog-fill" style="width:'+Math.round(s.progress*100)+'%"></div></div></div>'; }
   if(s.releaseNotes){ h+='<div class="ep-section-title" style="margin-top:20px">'+t('appNotes')+'</div>'
     +'<div class="app-notes">'+escapeHtml(String(s.releaseNotes))+'</div>'; }
+  box.innerHTML=h; }
+
+// ── The skin's own release history ──────────────────────────────────
+// The gateway is the one that knows which skin it is serving, which version it
+// installed and where that came from, so none of it is written in here a
+// second time: the record is read from it and the repository's own releases
+// are the history. The page in front of the user can be older than what is on
+// disk, so the version it was loaded from is read from the manifest beside it
+// rather than assumed.
+var SKIN_ID='liquid-aqua', SKIN_REPO='SongPaul/liquid-aqua-skin';
+var SKIN_NEWS_TTL=6*3600*1000;
+var skinInfo=null, skinNews=null, skinRunningVer=null, _skinNewsState='', _skinChecking=false;
+function skinRepo(){
+  var src=(skinInfo&&skinInfo.reaMetadata&&skinInfo.reaMetadata.sourceUrl)||'';
+  var m=src.match(/^github_(?:release|branch):([^@\s]+)/);
+  return m?m[1]:SKIN_REPO; }
+function skinVer(){ return String((skinInfo&&skinInfo.version)||''); }
+function relVer(tag){ return String(tag||'').replace(/^v/i,''); }
+// Newer is a comparison of numbers, not of strings: 1.10.0 follows 1.9.0.
+function verCmp(a,b){
+  var x=String(a||'').split('.'), y=String(b||'').split('.'), n=Math.max(x.length,y.length);
+  for(var i=0;i<n;i++){ var p=parseInt(x[i],10)||0, q=parseInt(y[i],10)||0;
+    if(p!==q) return p<q?-1:1; }
+  return 0; }
+function skinLatest(){ return (skinNews&&skinNews.length)?relVer(skinNews[0].tag):''; }
+function loadSkinInfo(){
+  if(skinRunningVer===null){ skinRunningVer='';
+    fetch('skin-manifest.json?_='+Date.now()).then(function(r){ return r.json(); })
+      .then(function(m){ skinRunningVer=String((m&&m.version)||'');
+        if(spOpen()&&spCat==='skin') renderSkinBox(); }).catch(function(){}); }
+  api('GET','/api/v1/webui/skins/'+encodeURIComponent(SKIN_ID))
+    .then(function(x){ if(x) skinInfo=x; }).catch(function(){})
+    .then(function(){ if(spOpen()&&spCat==='skin') renderSkinBox(); loadSkinNews(); }); }
+// A tablet at a machine is not always on a network, so the last history it saw
+// is kept and shown while a fresher one is asked for.
+function loadSkinNews(force){
+  var repo=skinRepo();
+  if(!force){
+    var c=lsGet('aurora_skinnews');
+    if(c&&c.repo===repo&&c.list&&c.list.length){ skinNews=c.list;
+      if(Date.now()-(c.at||0)<SKIN_NEWS_TTL){ if(spOpen()&&spCat==='skin') renderSkinBox(); return; } } }
+  if(_skinNewsState==='loading') return;
+  _skinNewsState='loading';
+  if(spOpen()&&spCat==='skin') renderSkinBox();
+  fetch('https://api.github.com/repos/'+repo+'/releases?per_page=20',
+        {headers:{Accept:'application/vnd.github+json'}})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(list){
+      skinNews=(Array.isArray(list)?list:[]).filter(function(r){ return r&&!r.draft; })
+        .map(function(r){ return {tag:String(r.tag_name||''),name:String(r.name||''),
+          at:String(r.published_at||r.created_at||''),body:String(r.body||'')}; });
+      _skinNewsState='';
+      lsSet('aurora_skinnews',{repo:repo,at:Date.now(),list:skinNews}); })
+    .catch(function(){ _skinNewsState=(skinNews&&skinNews.length)?'':'err'; })
+    .then(function(){ if(spOpen()&&spCat==='skin') renderSkinBox(); }); }
+function skinCheckUpdate(){
+  if(_skinChecking) return;
+  _skinChecking=true; renderSkinBox();
+  api('POST','/api/v1/webui/skins/update',null,90000)
+    .then(function(){ toast(t('skinChecked'),'ok'); })
+    .catch(function(e){ toast(apiErrorText(e),'err'); })
+    .then(function(){ _skinChecking=false; loadSkinNews(true); loadSkinInfo(); }); }
+// A release is titled "v1.96.0 - something", and the version is already its own
+// chip beside it, so the title keeps only the half that is not the version.
+function relTitle(r,v){
+  var n=String(r.name||'').trim().replace(/^v?\d+(?:\.\d+)*\s*[\u2014\u2013:-]\s*/,'');
+  return n||('v'+v); }
+// Twenty releases of notes is a page nobody scrolls to the end of, so only the
+// newest is open and the rest are a heading until they are asked for.
+function skinRelToggle(el){ var c=el.parentElement; c.classList.toggle('open');
+  el.setAttribute('aria-expanded',c.classList.contains('open')); }
+function skinRelHtml(r,running,open){
+  var v=relVer(r.tag), now=(v&&v===running), body=r.body?r.body.replace(/\r/g,'').trim():'';
+  var shown=!!(open&&body);
+  return '<div class="sk-rel'+(now?' now':'')+(shown?' open':'')+'">'
+    +'<div class="sk-rel-head" role="button" tabindex="0" aria-expanded="'+shown+'"'
+      +' onclick="skinRelToggle(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();skinRelToggle(this);}">'
+      +'<span class="sk-caret">\u25b6</span>'
+      +'<span class="sk-ver">v'+escapeHtml(v)+'</span>'
+      +'<span class="sk-rel-name">'+escapeHtml(relTitle(r,v))+'</span>'
+      +(now?'<span class="sk-badge">'+escapeHtml(t('skinInstalledTag'))+'</span>':'')
+      +'<span class="sk-date">'+escapeHtml(isoDay(r.at))+'</span></div>'
+    +(body?'<div class="sk-body">'+escapeHtml(body)+'</div>':'')
+    +'</div>'; }
+function renderSkinBox(){
+  var box=document.getElementById('skinBox'); if(!box) return;
+  var inst=skinVer(), latest=skinLatest(), running=skinRunningVer||inst;
+  var h='<div class="sp-info-grid">'+infoCell(t('installed'),inst?('v'+inst):'\u2014')
+    +infoCell(t('available'),latest?('v'+latest):'\u2014')+'</div>';
+  h+='<div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap">'
+    +'<button class="m-btn primary" onclick="skinCheckUpdate()"'+(_skinChecking?' disabled':'')+'>'
+      +escapeHtml(t('skinCheck'))+'</button>'
+    +'<button class="m-btn tinted" onclick="window.open(\'https://github.com/'+escapeAttr(skinRepo())+'/releases\',\'_blank\')">'
+      +escapeHtml(t('skinAll'))+' \u2197</button>';
+  // What is on disk can be newer than what this page was loaded from, and only
+  // then is a reload what the user wants.
+  var stale=!!(inst&&running&&verCmp(inst,running)>0);
+  if(stale) h+='<button class="m-btn" onclick="location.reload()">'+escapeHtml(t('skinReload'))+'</button>';
+  h+='</div>';
+  var note=_skinChecking?t('skinChecking')
+    :stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
+    :(inst&&latest&&verCmp(latest,inst)>0)?t('skinNewer').replace('{v}',latest)
+    :(inst&&latest)?t('skinUpToDate'):'';
+  if(note) h+='<div class="set-desc" style="margin-top:8px">'+escapeHtml(note)+'</div>';
+  h+='<div class="ep-section-title" style="margin-top:20px">'+escapeHtml(t('skinHistory'))+'</div>';
+  if(!skinNews||!skinNews.length)
+    h+='<div class="ls-empty">'+escapeHtml(_skinNewsState==='loading'?t('loading'):t('skinNewsFail'))+'</div>';
+  else h+='<div class="sk-list">'+skinNews.map(function(r,i){ return skinRelHtml(r,running,i===0); }).join('')+'</div>';
   box.innerHTML=h; }
 
 // ── Gateway plugins (list + enable/disable + open UI) ───────────────
