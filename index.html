@@ -432,11 +432,15 @@ body.cam-on .bean-chips{display:none}
 .car-nav.prev{left:0} .car-nav.next{right:0}
 /* mid shot the strip has nothing to offer, so it gets out of the way and
    gives its room to the one album that matters */
-body.brewing .car-nav,body.brewing #ccTags,body.brewing .cur-fav{display:none}
-/* Mid shot the cover fills the strip it already has and does not ask for more.
-   The card shares a fixed column with the recipe and the bean, and every pixel
-   it grew by was taken off the bean card beside it -- which was half its size
-   through a shot to pay for a bigger picture. */
+/* Mid shot nothing on that row can be used -- the tags filter a strip that is
+   not there, the star and the list lead to a profile that cannot be loaded --
+   so the whole row stands aside and the cover takes the card. */
+body.brewing .car-nav,body.brewing .cc-head{display:none}
+/* Mid shot there is nothing else on the card -- the tags, the arrows and the
+   star are all gone -- so the cover takes the whole of it. The card itself is
+   pinned to the height it already had, so filling it costs the bean card
+   beside it nothing. */
+body.brewing .carousel{height:auto;flex:1;min-height:0}
 body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 /* the space is always there; only the dot inside it comes and goes, so the
    name never slides when the loaded profile is browsed past */
@@ -5613,7 +5617,7 @@ function carSetTag(k){
   carTag=(carTag===k)?'':k;
   buildCarousel(); }
 function buildCarousel(){
-  document.body.classList.toggle('brewing',brewLocked());
+  applyBrewLock(brewLocked());
   carItems=carListProfiles();
   var stage=document.getElementById('carouselStage'); stage.innerHTML='';
   if(!carItems.length){ stage.innerHTML='<div class="car-empty">'+t('noProfilesFound')+'</div>'; return; }
@@ -5665,9 +5669,18 @@ function lockedIndex(){
   var found=-1;
   carItems.forEach(function(x,k){ if(x.id===curProfileObj.id) found=k; });
   return found>=0?found:carIndex; }
+// Entering a shot is the moment the card still has its ordinary height, so it
+// is the moment to write it down. Everything inside then grows into that and
+// no further; leaving gives the height back to the layout.
+function applyBrewLock(on){
+  var card=document.getElementById('carouselCard');
+  if(card){
+    if(on){ if(!document.body.classList.contains('brewing')) card.style.height=card.offsetHeight+'px'; }
+    else card.style.height=''; }
+  document.body.classList.toggle('brewing',on); }
 function syncCarouselLock(){
   var on=brewLocked();
-  document.body.classList.toggle('brewing',on);
+  applyBrewLock(on);
   if(on){ var i=lockedIndex(); if(i!==carIndex) carIndex=i; }
   if(carItems.length) renderCarousel(); }
 // The same idea as the tank: an SVG animation, so the one call that pauses every
