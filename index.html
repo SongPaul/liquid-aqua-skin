@@ -6918,7 +6918,9 @@ function fmtAltitude(a){ return (a&&a.length)?a.join('-'):''; }
 // Write the roast fields back to the bean's batch, creating one on first use.
 function saveBeanBatch(beanId,roastDate,roastLevel,batchId){
   var body={ roastDate:toIsoDate(roastDate)||null, roastLevel:roastLevel||null };
-  if(!body.roastDate&&!body.roastLevel) return Promise.resolve(batchId?null:(beanBatches[beanId]||null));
+  // Nothing to record is a reason not to invent a batch, not a reason to
+  // ignore a date being cleared off one that already exists.
+  if(!batchId&&!body.roastDate&&!body.roastLevel) return Promise.resolve(beanBatches[beanId]||null);
   var req=batchId?api('PUT','/api/v1/bean-batches/'+encodeURIComponent(batchId),body)
                  :api('POST','/api/v1/beans/'+encodeURIComponent(beanId)+'/batches',body);
   return req; }
@@ -7055,11 +7057,19 @@ function bgCloseEditor(){
 function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML=bgGuideHtml(); return; }
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
+    // Which bean is open settles what is remembered about it, and it has to be
+    // settled first: resolving the batch before this reset meant the reset
+    // threw the answer away, leaving the form showing one batch and the save
+    // holding none -- which posted a second batch instead of editing the one
+    // on screen.
+    if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); usageResults=null; _usageFor=null;
+      bgBatchId=null; bgNewBatch=false; histProfile=null; }
     var _bl=batchesOf(o.id);
     if(!bgNewBatch&&!bgBatchId&&_bl.length) bgBatchId=_bl[0].id;
     var batch=bgNewBatch?{}:(_bl.filter(function(b){ return b.id===bgBatchId; })[0]||_bl[0]||{});
-    if(_recFor!==(o.id||'new')){ _recFor=(o.id||'new'); recResults=recFromExtras(o); usageResults=null; _usageFor=null;
-      bgBatchId=null; bgNewBatch=false; histProfile=null; }
+    // What a save writes to is what the form is showing, so the two are one
+    // value: a batch deleted elsewhere is not still the one being edited.
+    if(!bgNewBatch) bgBatchId=batch.id||null;
     recPfx='bg';
     if(isNew) bgPane='info';
     blendHost(true); bgBlend=blendOf(o);
