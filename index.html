@@ -1905,7 +1905,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
     <div class="mb-key" id="mbKeyBox" style="display:none">
       <div class="field"><label data-i18n="aiProvider">Model</label>
         <select id="mbProvider" onchange="mbSetProvider(this.value)">
-          <option value="gemini">Gemini</option><option value="claude">Claude</option></select></div>
+          <option value="gemini">Gemini</option><option value="claude">Claude</option><option value="openai">GPT</option></select></div>
       <div class="field"><label id="mbKeyLbl" data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
       <button class="m-btn primary" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
     </div>
@@ -2059,6 +2059,8 @@ var I18N={
     mbKeyLabelClaude:'Anthropic API key (stored on this phone)',
     vizUpdate:'Update on Visualizer', vizUpdated:'Sent to Visualizer',
     vizUpdateFailed:'Could not update on Visualizer:',
+    openaiPh:'OpenAI API key', openaiGet:'Get a key',
+    mbKeyLabelOpenai:'OpenAI API key (stored on this phone)',
     catScale:'Scale', scaleDesc:'How the gateway treats the brew scale.', blockNoScale:'Scale required', blockNoScaleDesc:'Refuse to start a shot when no scale is connected.', scalePower:'When the machine sleeps', scalePowerDesc:'What to do with the scale once the machine goes to sleep.', spmNothing:'Nothing', spmDisplayOff:'Turn its display off', spmDisconnect:'Disconnect it', autoUpdChk:'Check automatically', autoUpdChkDesc:'Look for a new version every 12 hours.',
     catDe1:'Machine settings', de1Desc:'Settings that live in the machine itself, not in the gateway. They are read when this page opens and written straight through.', usbCharger:'USB charger', usbChargerDesc:'Power the tablet from the machine\u2019s USB port.', fan:'Fan threshold', fanDesc:'The temperature at which the cooling fan starts.', tankTemp:'Tank temperature', tankTempDesc:'Target temperature for the water tank heater, 10\u201340\u00b0C.', steamPurge:'Steam purge', steamPurgeDesc:'How the machine clears the steam wand when steaming ends.', purgeNormal:'Normal', purgeTwoTap:'Two tap stop', catPresence:'Presence', presenceDesc:'Let the gateway sleep the machine when nobody is using it.', presenceOn:'Presence detection', presenceOnDesc:'Track use and put the machine to sleep on its own.', sleepAfter:'Sleep after', sleepAfterDesc:'Minutes of inactivity before the machine sleeps.', minShort:'min', catCalib:'Calibration', calibWarn:'These are the machine\u2019s sensor calibrations, shown read-only. Bad values can make a machine unusable, so changing them is left to the Decaid app.', calib_flow:'Flow', calib_pressure:'Pressure', calib_temperature:'Temperature', calibUnread:'could not read',
     catMaint:'Maintenance', maintDesc:'The machine runs these itself. It has to be awake and idle to start one, and each says where it has got to.', maint_cleaning:'Clean the group', maint_cleaning_d:'A backflush cycle with a blind basket and cleaning tablet fitted.', maint_descaling:'Descale', maint_descaling_d:'Runs descaling solution through the group and the steam boiler. Follow the machine\u2019s instructions.', maint_airPurge:'Air purge', maint_airPurge_d:'Clears water from the lines, for transport or storage.', maintGo:'Start', maintStop:'Stop', maintDone:'Finished', maintBusy:'The machine is busy', maintStart:'Starting', maintFill:'Filling', maintSoak:'Soaking', maintFlush:'Flushing', maintDescale:'Descaling', maintSteam:'Steam boiler', maintPurge:'Purging',
@@ -2234,6 +2236,8 @@ var I18N={
     mbKeyLabelClaude:'Anthropic API 키 (이 휴대폰에 저장됩니다)',
     vizUpdate:'Visualizer 업데이트', vizUpdated:'Visualizer에 반영했습니다',
     vizUpdateFailed:'Visualizer 업데이트 실패:',
+    openaiPh:'OpenAI API 키', openaiGet:'키 발급',
+    mbKeyLabelOpenai:'OpenAI API 키 (이 휴대폰에 저장됩니다)',
     catScale:'저울', scaleDesc:'게이트웨이가 추출 저울을 다루는 방식입니다.', blockNoScale:'저울 필수', blockNoScaleDesc:'저울이 연결되지 않으면 추출을 시작하지 않습니다.', scalePower:'머신이 잠들 때', scalePowerDesc:'머신이 잠자기로 들어가면 저울을 어떻게 할지 정합니다.', spmNothing:'그대로 둡니다', spmDisplayOff:'화면을 둥니다', spmDisconnect:'연결을 끊습니다', autoUpdChk:'자동 확인', autoUpdChkDesc:'12시간마다 새 버전을 확인합니다.',
     catDe1:'머신 설정', de1Desc:'게이트웨이가 아니라 머신에 저장되는 설정입니다. 이 페이지를 열 때 읽어오고 바로 쓰여집니다.', usbCharger:'USB 충전', usbChargerDesc:'머신의 USB 포트로 태블릿에 전원을 공급합니다.', fan:'팬 동작 온도', fanDesc:'냉각 팬이 돌기 시작하는 온도입니다.', tankTemp:'탱크 온도', tankTempDesc:'물탱크 히터의 목표 온도, 10\u201340\u00b0C.', steamPurge:'스팀 퍼지', steamPurgeDesc:'스팀이 끝난 뒤 스팀봉을 비우는 방식입니다.', purgeNormal:'기본', purgeTwoTap:'두 번 눌러 정지', catPresence:'재실 감지', presenceDesc:'사용하는 사람이 없을 때 게이트웨이가 머신을 재울 수 있게 합니다.', presenceOn:'재실 감지', presenceOnDesc:'사용 여부를 보고 머신을 자동으로 재웁니다.', sleepAfter:'대기 시간', sleepAfterDesc:'이 시간 동안 사용이 없으면 잠자기로 들어갑니다.', minShort:'분', catCalib:'보정', calibWarn:'머신 센서의 보정값을 읽기 전용으로 보여줍니다. 잘못된 값은 머신을 사용할 수 없게 만들 수 있어 변경은 Decaid 앱에 맡깁니다.', calib_flow:'유량', calib_pressure:'압력', calib_temperature:'온도', calibUnread:'읽지 못함',
     catMaint:'관리', maintDesc:'머신이 직접 수행합니다. 깨어 있고 대기 상태여야 시작할 수 있으며, 각각 진행 단계를 보여줍니다.', maint_cleaning:'그룹헤드 청소', maint_cleaning_d:'블라인드 바스켓과 세정제를 끼우고 역세척을 돌립니다.', maint_descaling:'디스케일링', maint_descaling_d:'스케일 제거 용액을 그룹과 스팀 보일러에 통과시킵니다. 머신 안내를 따르세요.', maint_airPurge:'에어 퍼지', maint_airPurge_d:'배관의 물을 빼냅니다. 운송·보관 전에 씁니다.', maintGo:'시작', maintStop:'중지', maintDone:'완료', maintBusy:'머신이 사용 중입니다', maintStart:'시작', maintFill:'물 채움', maintSoak:'불림', maintFlush:'헹굼', maintDescale:'스케일 제거 중', maintSteam:'스팀 보일러', maintPurge:'배출 중',
@@ -3845,7 +3849,8 @@ function applyPrefsObject(p){
   if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto;
   if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey;
   if(typeof p.claudeKey==='string') prefs.claudeKey=p.claudeKey;
-  if(p.aiProvider==='claude'||p.aiProvider==='gemini') prefs.aiProvider=p.aiProvider;
+  if(typeof p.openaiKey==='string') prefs.openaiKey=p.openaiKey;
+  if(AI_PROVIDERS.indexOf(p.aiProvider)>=0) prefs.aiProvider=p.aiProvider;
   if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost;
   if(typeof p.lang==='string') prefs.lang=p.lang;
   if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit;
@@ -3979,7 +3984,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', claudeKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
+var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', claudeKey:'', openaiKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
   // Which scale this skin weighs a dose on. The gateway holds it open on request and attaches no meaning to it, so the choice lives here.
   dosingScaleId:'',
   // 'on' | 'off'. guideSrc is not chosen in settings: loading a profile makes
@@ -4071,7 +4076,8 @@ function setFx(on){ prefs.fx=!!on; savePrefs(); applyFx(); }
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
 function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
 function saveClaudeKey(v){ prefs.claudeKey=(v||'').trim(); savePrefs(); }
-function setAiProvider(v){ prefs.aiProvider=(v==='claude')?'claude':'gemini'; savePrefs(); renderSpContent(); }
+function saveOpenaiKey(v){ prefs.openaiKey=(v||'').trim(); savePrefs(); }
+function setAiProvider(v){ prefs.aiProvider=(AI_PROVIDERS.indexOf(v)>=0)?v:'gemini'; savePrefs(); renderSpContent(); }
 
 // ── Settings full page ──────────────────────────────────────────────
 var SP_CATS=[
@@ -4343,13 +4349,15 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div class="sp-cat-title">'+t('catAI')+'</div>';
     var prov=aiProvider();
     h+=row('aiProvider','aiProviderDesc','<select class="set-select" onchange="setAiProvider(this.value)">'
-      +opt('gemini','Gemini',prov)+opt('claude','Claude',prov)+'</select>');
+      +AI_PROVIDERS.map(function(k){ return opt(k,AI_NAMES[k],prov); }).join('')+'</select>');
     // Only the key of the provider in use is asked for; the other is kept, so
     // switching back does not mean typing it in again.
-    if(prov==='claude')
-      h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="setClaudeKey" placeholder="'+escapeAttr(t('claudePh'))+'" value="'+escapeAttr(prefs.claudeKey||'')+'" oninput="saveClaudeKey(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent)">'+t('claudeGet')+' ↗</a></div></div>';
-    else
-      h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="setGeminiKey" placeholder="'+escapeAttr(t('geminiPh'))+'" value="'+escapeAttr(prefs.geminiKey||'')+'" oninput="saveGeminiKey(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">'+t('geminiGet')+' ↗</a></div></div>';
+    var KEYUI={
+      gemini:{id:'setGeminiKey',save:'saveGeminiKey',ph:'geminiPh',get:'geminiGet',val:prefs.geminiKey,url:'https://aistudio.google.com/apikey'},
+      claude:{id:'setClaudeKey',save:'saveClaudeKey',ph:'claudePh',get:'claudeGet',val:prefs.claudeKey,url:'https://console.anthropic.com/settings/keys'},
+      openai:{id:'setOpenaiKey',save:'saveOpenaiKey',ph:'openaiPh',get:'openaiGet',val:prefs.openaiKey,url:'https://platform.openai.com/api-keys'}};
+    var ku=KEYUI[prov];
+    h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="'+ku.id+'" placeholder="'+escapeAttr(t(ku.ph))+'" value="'+escapeAttr(ku.val||'')+'" oninput="'+ku.save+'(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="'+ku.url+'" target="_blank" style="color:var(--accent)">'+t(ku.get)+' ↗</a></div></div>';
     h+='<div class="set-desc" style="margin-top:10px">'+t('aiKeyNote')+'</div>';
   } else if(spCat==='plugins'){
     h+='<div class="sp-cat-title">'+t('plugins')+'</div>';
@@ -7330,17 +7338,67 @@ function pickFlashModel(models){
 // Prompts are written once and sent to either: both are asked for JSON in the
 // prompt itself, which is what Gemini's JSON mode and Claude's absence of one
 // have in common.
-var AI_PROVIDERS=['gemini','claude'];
-function aiProvider(){ return prefs.aiProvider==='claude'?'claude':'gemini'; }
-function aiName(){ return aiProvider()==='claude'?'Claude':'Gemini'; }
+var AI_PROVIDERS=['gemini','claude','openai'];
+var AI_NAMES={gemini:'Gemini',claude:'Claude',openai:'GPT'};
+function aiProvider(){ return AI_PROVIDERS.indexOf(prefs.aiProvider)>=0?prefs.aiProvider:'gemini'; }
+function aiName(){ return AI_NAMES[aiProvider()]; }
 // The lines that name the service read it from the setting rather than assuming.
 function tAi(k){ return t(k).replace('{n}',aiName()); }
-function aiKeyFor(p){ return String((p==='claude'?prefs.claudeKey:prefs.geminiKey)||'').trim(); }
+function aiKeyFor(p){
+  var k=(p==='claude')?prefs.claudeKey:(p==='openai')?prefs.openaiKey:prefs.geminiKey;
+  return String(k||'').trim(); }
 function aiKey(){ return aiKeyFor(aiProvider()); }
 function aiJson(key,parts,temperature,opts){
-  return aiProvider()==='claude'
-    ? claudeJson(key,parts,temperature)
-    : geminiJson(key,parts,temperature,opts); }
+  var p=aiProvider();
+  if(p==='claude') return claudeJson(key,parts,temperature);
+  if(p==='openai') return openaiJson(key,parts,temperature);
+  return geminiJson(key,parts,temperature,opts); }
+// A JSON object out of whatever the model wrapped it in. Both of the providers
+// without a JSON mode are read the same way.
+function aiParseJson(txt){
+  if(!txt) throw new Error('Empty response');
+  var data; try{ data=JSON.parse(txt); }
+  catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
+  if(!data) throw new Error('Could not parse result');
+  return data; }
+
+// GPT speaks the OpenAI chat completions API. Same translation job as Claude:
+// the prompt parts are Gemini-shaped and become message content here.
+var OPENAI_API='https://api.openai.com/v1/chat/completions';
+var OPENAI_MODEL='gpt-4o-mini';
+function openaiContent(parts){
+  return (parts||[]).map(function(p){
+    if(p&&p.text!=null) return {type:'text',text:String(p.text)};
+    var d=p&&p.inline_data;
+    if(d) return {type:'image_url',image_url:{url:'data:'+d.mime_type+';base64,'+d.data}};
+    return null; }).filter(Boolean); }
+function openaiCall(key,parts,temperature){
+  var body={model:OPENAI_MODEL,temperature:(temperature==null?0:temperature),
+    messages:[{role:'user',content:openaiContent(parts)}]};
+  return fetch(OPENAI_API,{method:'POST',headers:{
+      'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify(body)})
+    .then(function(r){ return r.json().catch(function(){ return null; }).then(function(j){
+      if(!r.ok){ var e=new Error((j&&j.error&&j.error.message)||('HTTP '+r.status)); e.status=r.status; throw e; }
+      return j; }); })
+    .then(function(j){
+      var c=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+      return aiParseJson(c); }); }
+function openaiFailure(e){
+  var m=(e&&e.message)||'', st=e&&e.status;
+  if(/quota|billing|insufficient_quota/i.test(m)) return 'exhausted';
+  if(st===503||/overload/i.test(m)) return 'busy';
+  if(st===429) return 'busy';
+  return null; }
+function openaiJson(key,parts,temperature){
+  function attempt(tries){
+    return openaiCall(key,parts,temperature).catch(function(e){
+      var kind=openaiFailure(e);
+      if(kind==='cap'||kind==='exhausted'){
+        var ce=new Error(e.message); ce.status=e.status; ce.kind=kind; throw ce; }
+      if(kind==='busy'&&tries>0) return _sleep(1200*(3-tries)).then(function(){ return attempt(tries-1); });
+      throw e; }); }
+  return attempt(2); }
 
 // Claude speaks the Anthropic Messages API. The prompt parts this skin builds
 // are Gemini-shaped, so they are translated rather than written twice.
@@ -7374,11 +7432,7 @@ function claudeCall(key,parts,temperature){
       var blocks=(j&&j.content)||[];
       var txt=blocks.filter(function(b){ return b&&b.type==='text'; })
         .map(function(b){ return b.text||''; }).join('');
-      if(!txt) throw new Error('Empty response');
-      var data; try{ data=JSON.parse(txt); }
-      catch(_){ var m=txt.match(/\{[\s\S]*\}/); data=m?JSON.parse(m[0]):null; }
-      if(!data) throw new Error('Could not parse result');
-      return data; }); }
+      return aiParseJson(txt); }); }
 // The same three failures as Gemini, read off Anthropic's wording, and the same
 // rule: only a busy model is worth waiting for.
 function claudeFailure(e){
@@ -7625,21 +7679,24 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
     .then(function(){ if(btn) btn.disabled=false; return loadBeanBatches(); }); }
 // The phone keeps its own keys: it is a different device, and the tablet's are
 // not its to read. One per provider, so switching does not lose the other.
-function mbStoreKey(p){ return p==='claude'?'aurora_claude':'aurora_gemini'; }
+function mbStoreKey(p){ return p==='claude'?'aurora_claude':(p==='openai'?'aurora_openai':'aurora_gemini'); }
 function mbGetKey(){ try{ return (localStorage.getItem(mbStoreKey(aiProvider()))||'').trim(); }catch(_){ return ''; } }
 function mbSetProvider(v){
-  prefs.aiProvider=(v==='claude')?'claude':'gemini';
+  prefs.aiProvider=(AI_PROVIDERS.indexOf(v)>=0)?v:'gemini';
   try{ localStorage.setItem('aurora_aiprov',prefs.aiProvider); }catch(_){}
   mbSyncKeyBox();
   var st=document.getElementById('mbStatus');
   if(st) st.textContent=mbGetKey()?'':tAi('mbNeedKey'); }
+var MB_KEYHINT={gemini:{lbl:'mbKeyLabel',ph:'AIza…'},
+  claude:{lbl:'mbKeyLabelClaude',ph:'sk-ant-…'},
+  openai:{lbl:'mbKeyLabelOpenai',ph:'sk-…'}};
 function mbSyncKeyBox(){
-  var claude=(aiProvider()==='claude');
+  var hint=MB_KEYHINT[aiProvider()];
   var sub=document.getElementById('mbSub'); if(sub) sub.textContent=tAi('scanAIDesc');
   var sel=document.getElementById('mbProvider'); if(sel) sel.value=aiProvider();
-  var lbl=document.getElementById('mbKeyLbl'); if(lbl) lbl.textContent=claude?t('mbKeyLabelClaude'):t('mbKeyLabel');
+  var lbl=document.getElementById('mbKeyLbl'); if(lbl) lbl.textContent=t(hint.lbl);
   var inp=document.getElementById('mbKey');
-  if(inp){ inp.placeholder=claude?'sk-ant-…':'AIza…'; inp.value=mbGetKey(); } }
+  if(inp){ inp.placeholder=hint.ph; inp.value=mbGetKey(); } }
 function mbShowKeyBox(){ document.getElementById('mbKeyBox').style.display='block'; mbSyncKeyBox();
   document.getElementById('mbStatus').textContent=tAi('mbNeedKey'); }
 function mbSaveKey(){ var v=document.getElementById('mbKey').value.trim(); if(!v) return;
@@ -11237,7 +11294,7 @@ function mbShowTarget(){
 function bootMobileBeanScan(){
   loadPrefs(); // picks up language + applies i18n
   // loadPrefs reads the tablet's stored settings; the phone's own choice wins.
-  try{ var pv=localStorage.getItem('aurora_aiprov'); if(pv==='claude'||pv==='gemini') prefs.aiProvider=pv; }catch(_){}
+  try{ var pv=localStorage.getItem('aurora_aiprov'); if(AI_PROVIDERS.indexOf(pv)>=0) prefs.aiProvider=pv; }catch(_){}
   blendHost(false);
   var m=/[?&]bean=([^&]+)/.exec(window.location.search);
   mbBeanId=m?decodeURIComponent(m[1]):null;
