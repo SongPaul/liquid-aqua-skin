@@ -1455,11 +1455,7 @@ body.night .sp-info-cell{background:rgba(255,255,255,.06)}
 
     <div class="chart-card glass">
       <div class="chart-head"><span class="chart-title" id="chartTitle" onclick="exitReview()" style="cursor:pointer" data-i18n="extractionGraph">Extraction Graph</span>
-        <div class="chart-legend" id="chartLegend">
-          <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>'+t('pressure')+'</span>
-          <span class="legend-item"><span class="legend-dot" style="background:var(--steam)"></span>'+t('flow')+'</span>
-          <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Weight</span>
-        </div>
+        <div class="chart-legend" id="chartLegend"></div>
       </div>
       <div class="chart-canvas-wrap" onclick="openMonitor(false)"><canvas id="chart"></canvas></div>
     </div>
@@ -2935,7 +2931,7 @@ function toggleSerie(k){
   // A tap has to show its own result. Ordinary redraws are coalesced onto an
   // animation frame, and a frame already pending swallows the request -- fine
   // for a stream of samples, wrong for a press, so this one draws now.
-  if(!_asleep&&(!_pageOpen||_monOpen)) _drawChartNow(); else drawChart(); }
+  if(!_asleep&&(!_pageOpen||_monOpen)){ _drawChartNow(); drawTempChart(); } else drawChart(); }
 function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
   if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
@@ -2952,7 +2948,6 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     var titleEl=document.getElementById(_monOpen?'monChartTitle':'chartTitle');
     var legEl=document.getElementById(_monOpen?'monChartLegend':'chartLegend');
     if(titleEl) titleEl.textContent=isSteam?t('steamGraph'):(isFlush?t('flushGraph'):(isWater?t('hotWaterGraph'):(chartReviewing?((chartReviewLabel||t('lastShotGraph'))+' ↩'):t('extractionGraph'))));
-    function li(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+label+'</span>'; }
     // A legend entry that is also the switch for its own line. Off is shown by
     // hollowing the dot rather than greying it, so which line it stands for is
     // still readable when it is not being drawn.
@@ -2965,20 +2960,18 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
         +' onclick="toggleSerie(\''+k+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleSerie(\''+k+'\');}">'
         +'<span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)'
         +(off?';opacity:.45':'')+'"></span>'+label+'</span>'; }
-    // a goal is drawn dashed, so it is shown dashed
-    function lg(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+label+'</span>'; }
     if(legEl) legEl.innerHTML=isSteam
-      ? (hasTempAxis?li(SERIES.steam,t('steam')+' °'):'')+li(SERIES.flow,t('flow'))+li(SERIES.pressure,t('pressure'))
+      ? (hasTempAxis?lt('steam',SERIES.steam,t('steam')+' °'):'')+lt('flow',SERIES.flow,t('flow'))+lt('pressure',SERIES.pressure,t('pressure'))
       : isWater
-      ? (hasTempAxis?li(SERIES.water,t('water')+' °'):'')+li(SERIES.flow,t('flow'))
+      ? (hasTempAxis?lt('water',SERIES.water,t('water')+' °'):'')+lt('flow',SERIES.flow,t('flow'))
       : lt('pressure',SERIES.pressure,t('pressure'))+ltg('pressureGoal',SERIES.pressureGoal,t('pressureGoal'))
         +lt('flow',SERIES.flow,t('flow'))+ltg('flowGoal',SERIES.flowGoal,t('flowGoal'))
         +lt('weight',SERIES.weight,t('legWeight'))+lt('wflow',SERIES.wflow,t('legWeightFlow'))
-        +(hasTempAxis?li(SERIES.basket,t('tempBasket'))+li(SERIES.mix,t('tempMix')):'');
-    var tHtml=isSteam?li(SERIES.steam,t('steam')+' °')
-      :isWater?li(SERIES.water,t('water')+' °')+lg(SERIES.mixGoal,t('mixGoal'))
-      :li(SERIES.basket,t('tempBasket'))+lg(SERIES.basketGoal,t('basketGoal'))
-       +li(SERIES.mix,t('tempMix'))+lg(SERIES.mixGoal,t('mixGoal'));
+        +(hasTempAxis?lt('basket',SERIES.basket,t('tempBasket'))+lt('mix',SERIES.mix,t('tempMix')):'');
+    var tHtml=isSteam?lt('steam',SERIES.steam,t('steam')+' °')
+      :isWater?lt('water',SERIES.water,t('water')+' °')+ltg('mixGoal',SERIES.mixGoal,t('mixGoal'))
+      :lt('basket',SERIES.basket,t('tempBasket'))+ltg('basketGoal',SERIES.basketGoal,t('basketGoal'))
+       +lt('mix',SERIES.mix,t('tempMix'))+ltg('mixGoal',SERIES.mixGoal,t('mixGoal'));
     ['monTempLegend','tempLegend'].forEach(function(id){
       var e=document.getElementById(id); if(e) e.innerHTML=tHtml; }); }
   var padL=34, padR=hasTempAxis?34:8, padT=18, padB=22; // steam/water add a right gutter for the temp axis
@@ -3018,10 +3011,14 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   function drawGuide(){
     if(!guide) return;
     ctx.save(); ctx.lineWidth=2; ctx.lineJoin='round';
-    var series=[['p',PMAX,SERIES.pressure],['f',FMAX,SERIES.flow]];
+    // a guideline is the same series in the same colour, so a line switched
+    // off takes its guide with it -- otherwise the trace looks half-hidden
+    var series=[];
+    if(vis('pressure')) series.push(['p',PMAX,SERIES.pressure]);
+    if(vis('flow')) series.push(['f',FMAX,SERIES.flow]);
     // temperature first, so it sits behind pressure and flow the way the live
     // lines do; the monitor keeps its temperatures in a chart of their own
-    if(hasTempAxis&&guide.hasTemp) series.unshift(['temp',TMAX,SERIES.basket]);
+    if(hasTempAxis&&guide.hasTemp&&vis('basket')) series.unshift(['temp',TMAX,SERIES.basket]);
     series.forEach(function(d){
       ctx.beginPath();
       guide.pts.forEach(function(pt,i){ var x=pxT(pt.t), y=py(pt[d[0]],d[1]);
@@ -3092,12 +3089,12 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     ctx.strokeStyle=c; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
   function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(pxOf(d,i),py(d[i],mx));else ctx.lineTo(pxOf(d,i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
   if(isSteam){
-    if(hasTempAxis) line(chart.steamTemp,SERIES.steam,TMAX,'rgba(214,64,43,.15)'); // steam temp (right axis scale)
-    line(chart.flow,SERIES.flow,FMAX,null);                        // steam flow (small-range scale)
-    line(chart.pressure,SERIES.pressure,PMAX,null);                // steam pressure
+    if(hasTempAxis&&vis('steam')) line(chart.steamTemp,SERIES.steam,TMAX,'rgba(214,64,43,.15)'); // steam temp (right axis scale)
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);        // steam flow (small-range scale)
+    if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,null); // steam pressure
   } else if(isWater){
-    if(hasTempAxis) line(chart.waterTemp,SERIES.water,TMAX,'rgba(214,64,43,.15)');  // water temp (right axis scale)
-    line(chart.flow,SERIES.flow,FMAX,null);                        // water flow
+    if(hasTempAxis&&vis('water')) line(chart.waterTemp,SERIES.water,TMAX,'rgba(214,64,43,.15)');  // water temp (right axis scale)
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);        // water flow
   } else if(!hasTempAxis){
     drawGuide();
     if(vis('pressureGoal')) goal(chart.targetPressure,SERIES.pressureGoal,PMAX);
@@ -3111,8 +3108,10 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     // target temperature (dashed) on the right (°C) axis
     // group/mix temperature on the right (°C) axis, drawn under the pressure/flow lines
     drawGuide();
-    goal(chart.targetGroup,SERIES.basketGoal,TMAX); goal(chart.targetMix,SERIES.mixGoal,TMAX);
-    line(chart.groupTemp,SERIES.basket,TMAX,null); line(chart.mixTemp,SERIES.mix,TMAX,null);
+    if(vis('basketGoal')) goal(chart.targetGroup,SERIES.basketGoal,TMAX);
+    if(vis('mixGoal')) goal(chart.targetMix,SERIES.mixGoal,TMAX);
+    if(vis('basket')) line(chart.groupTemp,SERIES.basket,TMAX,null);
+    if(vis('mix')) line(chart.mixTemp,SERIES.mix,TMAX,null);
     if(vis('pressureGoal')) goal(chart.targetPressure,SERIES.pressureGoal,PMAX);
     if(vis('flowGoal')) goal(chart.targetFlow,SERIES.flowGoal,FMAX);
     if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)');
@@ -3134,19 +3133,19 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     function tags(items){
       drawReadouts(ctx, items.map(function(it){
         return (it.v==null||isNaN(it.v))?null:{v:it.v,c:it.c,u:it.u,y:py(it.v,it.mx)}; }), lx, Y0, Y0+PH); }
-    if(isSteam){ tags([{v:hasTempAxis?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam,u:U_TEMP},
-                       {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW},
-                       {v:chart.pressure[N-1],mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
-    else if(isWater){ tags([{v:hasTempAxis?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
-                            {v:chart.flow[N-1],mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
+    if(isSteam){ tags([{v:(hasTempAxis&&vis('steam'))?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam,u:U_TEMP},
+                       {v:vis('flow')?chart.flow[N-1]:null,mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                       {v:vis('pressure')?chart.pressure[N-1]:null,mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
+    else if(isWater){ tags([{v:(hasTempAxis&&vis('water'))?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
+                            {v:vis('flow')?chart.flow[N-1]:null,mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
     else { var wN=chart.weight.length, fN=chart.wflow.length;
            tags([{v:vis('pressure')?chart.pressure[N-1]:null,mx:PMAX,c:SERIES.pressure,u:U_BAR},
                  {v:vis('flow')?chart.flow[N-1]:null,mx:FMAX,c:SERIES.flow,u:U_FLOW},
                  {v:(vis('wflow')&&fN)?chart.wflow[fN-1]:null,mx:FMAX,c:SERIES.wflow,u:U_GS},
                  // the scale ticks on its own, so the weight reads from its own end
                  {v:(vis('weight')&&wN)?chart.weight[wN-1]:null,mx:settings.doseOut*1.2,c:SERIES.weight,u:U_G},
-                 {v:hasTempAxis?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket,u:U_TEMP},
-                 {v:hasTempAxis?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix,u:U_TEMP}]); }
+                 {v:(hasTempAxis&&vis('basket'))?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket,u:U_TEMP},
+                 {v:(hasTempAxis&&vis('mix'))?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix,u:U_TEMP}]); }
   }
 }
 
@@ -10543,22 +10542,26 @@ function drawTempChart(){
     ctx.save(); if(dash) ctx.setLineDash(dash);
     ctx.beginPath(); for(var i=0;i<d.length;i++){ var x=px(i),y=py(d[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
     ctx.strokeStyle=c; ctx.lineWidth=dash?1.5:2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); ctx.restore(); }
-  if(guide&&guide.hasTemp){ ctx.save(); ctx.globalAlpha=.22; ctx.lineWidth=2; ctx.lineJoin='round';
+  if(guide&&guide.hasTemp&&vis('basket')){ ctx.save(); ctx.globalAlpha=.22; ctx.lineWidth=2; ctx.lineJoin='round';
     ctx.beginPath(); guide.pts.forEach(function(pt,i){ var x=X0+Math.min(pt.t/SPAN,1)*PW, y=py(pt.temp);
       if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
     ctx.strokeStyle=SERIES.basket; ctx.stroke(); ctx.globalAlpha=1; ctx.restore(); }
-  if(isSteam) tline(chart.steamTemp,SERIES.steam);
-  else if(isWater){ tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
-    tline(chart.waterTemp,SERIES.water); }
-  else { tline(chart.targetGroup,SERIES.basketGoal,GOAL_DASH); tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
-         tline(chart.groupTemp,SERIES.basket); tline(chart.mixTemp,SERIES.mix); }
+  if(isSteam){ if(vis('steam')) tline(chart.steamTemp,SERIES.steam); }
+  else if(isWater){ if(vis('mixGoal')) tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
+    if(vis('water')) tline(chart.waterTemp,SERIES.water); }
+  else { if(vis('basketGoal')) tline(chart.targetGroup,SERIES.basketGoal,GOAL_DASH);
+         if(vis('mixGoal')) tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
+         if(vis('basket')) tline(chart.groupTemp,SERIES.basket);
+         if(vis('mix')) tline(chart.mixTemp,SERIES.mix); }
   // the same readouts the extraction chart carries, for the lines that live here
   var running=state.shotRunning||state.steamRunning||state.waterRunning;
   if(N>=1 && running){
     var last=function(d){ return (d&&d.length)?d[d.length-1]:null; };
-    var rows=isSteam?[{v:last(chart.steamTemp),c:SERIES.steam}]
-      :isWater?[{v:last(chart.waterTemp),c:SERIES.water},{v:last(chart.targetMix),c:SERIES.mixGoal}]
-      :[{v:last(chart.groupTemp),c:SERIES.basket},{v:last(chart.mixTemp),c:SERIES.mix}];
+    // a line that is not drawn has no reading to place against it
+    var rows=(isSteam?[{k:'steam',v:last(chart.steamTemp),c:SERIES.steam}]
+      :isWater?[{k:'water',v:last(chart.waterTemp),c:SERIES.water},{k:'mixGoal',v:last(chart.targetMix),c:SERIES.mixGoal}]
+      :[{k:'basket',v:last(chart.groupTemp),c:SERIES.basket},{k:'mix',v:last(chart.mixTemp),c:SERIES.mix}])
+      .filter(function(r){ return vis(r.k); });
     drawReadouts(ctx, rows.map(function(r){
       return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,u:U_TEMP,y:py(r.v)}; }), px(N-1), Y0, Y0+PH); }
 }
@@ -10766,8 +10769,6 @@ function hasWeightFlow(m){ return m.some(function(pt){ return pt.scale&&pt.scale
 
 // One legend per chart, under the chart it describes, in the shared colours --
 // a dot for something measured and a dash for the goal behind it.
-function legendDot(color,label){ return '<span class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+escapeHtml(label)+'</span>'; }
-function legendDash(color,label){ return '<span class="legend-item"><span class="legend-dash" style="background:repeating-linear-gradient(90deg,'+color+' 0 3px,transparent 3px 6px)"></span>'+escapeHtml(label)+'</span>'; }
 // A recorded shot has more lines on it than a live one and they cross more, so
 // the legend under it puts each away the way the live graph's does. Kept apart
 // from that one: hiding the rate while a shot pours says nothing about wanting
