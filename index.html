@@ -2383,7 +2383,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <div id="phoneShell" style="display:none">
 <div class="ph-net" id="phNet" hidden>
   <div class="ph-net-txt"><div class="ph-net-h" data-i18n="phNoNetH">Can't reach the machine</div>
-    <div class="ph-net-s" id="phNetSub"></div></div>
+    <div class="ph-net-s" id="phNetSub"></div>
+    <div class="ph-net-s" id="phNetWhy"></div></div>
   <button class="m-btn" onclick="phNetCheck(true)" data-i18n="phNetRetry">Try again</button>
 </div>
 <div id="phStatusPage" style="display:none">
@@ -2691,6 +2692,7 @@ var I18N={
     vfGrind:'Grind', vfTds:'TDS', vfEy:'Extraction', vfBarista:'Barista',
     vfUser:'Account', vfBeanNotes:'Bean notes',
     phLogSubViz:'Your shots on Visualizer, as they were uploaded.',
+    phNetFrom:'From {p}', phNetTimeout:'no answer in time', phNetApp:'home-screen app',
     phNoNetH:"Can't reach the machine",
     phNoNetS:'This phone has to be on the same network as the machine. Trying {h}',
     phNetRetry:'Try again', phNetBack:'Connected',
@@ -2974,6 +2976,7 @@ var I18N={
     vfGrind:'분쇄도', vfTds:'TDS', vfEy:'수율', vfBarista:'바리스타',
     vfUser:'계정', vfBeanNotes:'원두 메모',
     phLogSubViz:'Visualizer에 올라간 내 샷입니다.',
+    phNetFrom:'페이지 {p}', phNetTimeout:'응답 없음', phNetApp:'홈 화면 앱',
     phNoNetH:'머신에 닿지 않습니다',
     phNoNetS:'이 폰이 머신과 같은 네트워크에 있어야 합니다. 시도 중 {h}',
     phNetRetry:'다시 시도', phNetBack:'연결됐습니다',
@@ -13891,16 +13894,25 @@ function phHomeInstall(){
 // asked once at the start and kept under watch -- rarely while it answers, more
 // often while it does not, so a phone that walks back into range says so.
 var _phNetOk=null, _phNetT=null;
-function phNetSet(ok){
+// "It is not working" is not something anyone can act on. What was asked for,
+// from where, and what came back are.
+function phNetWhy(e){
+  var m=(e&&e.name==='AbortError')?t('phNetTimeout'):((e&&e.message)||'error');
+  var mode=phStandalone()?(' \u00b7 '+t('phNetApp')):'';
+  return t('phNetFrom').replace('{p}',window.location.origin)+mode+' \u00b7 '+m; }
+function phNetSet(ok,err){
   var el=document.getElementById('phNet'); if(!el) return;
   if(_phNetOk===false&&ok===true) toast(t('phNetBack'),'ok');
   _phNetOk=ok; el.hidden=!!ok;
-  if(!ok){ var sub=document.getElementById('phNetSub');
-    if(sub) sub.textContent=t('phNoNetS').replace('{h}',GATEWAY.http); } }
+  if(!ok){
+    var sub=document.getElementById('phNetSub');
+    if(sub) sub.textContent=t('phNoNetS').replace('{h}',GATEWAY.http);
+    var why=document.getElementById('phNetWhy');
+    if(why) why.textContent=phNetWhy(err); } }
 function phNetCheck(manual){
   return api('GET','/api/v1/info',null,6000)
     .then(function(){ phNetSet(true); return true; },
-          function(){ phNetSet(false); if(manual) toast(t('phNoNetH'),'err'); return false; }); }
+          function(e){ phNetSet(false,e); if(manual) toast(t('phNoNetH'),'err'); return false; }); }
 function phNetWatch(){
   clearTimeout(_phNetT);
   phNetCheck().then(function(ok){ _phNetT=setTimeout(phNetWatch,ok?30000:8000); }); }
