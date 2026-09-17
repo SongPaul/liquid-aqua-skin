@@ -973,7 +973,6 @@ body.night .ai-scan{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(
 
 /* Mobile bean-scan page (phone via QR) */
 html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
-#mobilePage{min-height:100vh;background:linear-gradient(135deg,#eef1ff,#f5edff);padding:22px 18px 40px}
 .mb-wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .mb-head{text-align:center;margin-bottom:4px}
 .mb-title{font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -1073,6 +1072,15 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .pl-rate{font-size:12px;font-weight:800;color:var(--amber);white-space:nowrap}
 .pl-sub{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
 .pl-open{margin-top:12px}
+.pl-rate-row{display:flex;align-items:center;gap:4px;margin-top:12px}
+.pl-rate-k{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
+  letter-spacing:.05em;margin-right:6px}
+.pl-star{width:36px;height:36px;border:0;background:transparent;font-size:19px;line-height:1;
+  color:var(--ink-mute);opacity:.35;cursor:pointer;-webkit-appearance:none;transition:opacity .12s,color .12s}
+.pl-star.on{color:var(--amber);opacity:1}
+.pl-ai{margin-top:6px}
+.pl-ai .ai-verdict{font-size:14px;margin-top:8px}
+.pl-ai .ai-list{font-size:12px}
 .pl-canvas{height:150px;border-radius:12px;background:var(--field);border:1px solid var(--edge);padding:6px}
 .pl-canvas canvas{width:100%;height:100%;display:block}
 body.night #phoneShell{background-attachment:fixed;
@@ -1191,7 +1199,10 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .cmp-table tr{border-bottom:1px solid var(--glass-line)}
 .cmp-table tr:last-child{border-bottom:0}
 .sl-ai{margin-top:16px;border:1px solid rgba(99,102,241,.16);border-radius:14px;padding:14px;background:rgba(99,102,241,.05)}
-.sl-ai-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+/* space-between spreads three children across the row, so a second button
+   pushed the first into the middle of it. The buttons are one group now. */
+.sl-ai-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sl-ai-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
 .sl-ai-head span{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em}
 .tune-shots{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
 .tune-shot{font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--field);border:1px solid var(--edge);border-radius:100px;padding:4px 10px}
@@ -2175,12 +2186,19 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <div class="mb-save"><button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()"><span id="mbSaveLbl" data-i18n="addToGateway">Add to gateway</span></button></div>
     </div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
-    <div class="mb-key mb-card" id="mbKeyBox" style="display:none">
+  </div>
+</div>
+<div id="phSetPage" style="display:none">
+  <div class="mb-wrap">
+    <div class="mb-head"><div class="mb-title"><span>⚙ </span><span data-i18n="phTabSet">Setup</span></div>
+      <div class="mb-sub" data-i18n="phSetSub">Kept on this phone, not on the machine.</div></div>
+    <div class="mb-key mb-card" id="mbKeyBox">
       <div class="field"><label data-i18n="aiProvider">Model</label>
         <select id="mbProvider" onchange="mbSetProvider(this.value)">
           <option value="gemini">Gemini</option><option value="claude">Claude</option><option value="openai">GPT</option></select></div>
       <div class="field"><label id="mbKeyLbl" data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
-      <button class="m-btn primary" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
+      <button class="m-btn primary mb-analyze" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
+      <div class="set-desc" style="margin-top:10px" data-i18n="aiKeyNote"></div>
     </div>
   </div>
 </div>
@@ -2305,7 +2323,8 @@ var I18N={
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
-    phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera',
+    phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera', phTabSet:'Setup',
+    phSetSub:'Kept on this phone, not on the machine.',
     phLogSub:'The last shots this machine pulled.', phLogEmpty:'No shots recorded yet',
     phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
     phSinceSeen:'since the phone looked',
@@ -2518,7 +2537,8 @@ var I18N={
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
-    phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라',
+    phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라', phTabSet:'설정',
+    phSetSub:'이 폰에만 저장되며 머신에는 남지 않습니다.',
     phLogSub:'이 머신이 최근에 내린 샷입니다.', phLogEmpty:'아직 기록된 샷이 없습니다',
     phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
     phSinceSeen:'폰이 본 순간부터',
@@ -8538,8 +8558,10 @@ function mbSyncKeyBox(){
   var lbl=document.getElementById('mbKeyLbl'); if(lbl) lbl.textContent=t(hint.lbl);
   var inp=document.getElementById('mbKey');
   if(inp){ inp.placeholder=hint.ph; inp.value=mbGetKey(); } }
-function mbShowKeyBox(){ document.getElementById('mbKeyBox').style.display='block'; mbSyncKeyBox();
-  document.getElementById('mbStatus').textContent=tAi('mbNeedKey'); }
+function mbShowKeyBox(){
+  var st=document.getElementById('mbStatus'); if(st) st.textContent=tAi('mbNeedKey');
+  if(typeof phoneGo==='function') phoneGo('set');
+  mbSyncKeyBox(); }
 function mbSaveKey(){ var v=document.getElementById('mbKey').value.trim(); if(!v) return;
   try{ localStorage.setItem(mbStoreKey(aiProvider()),v); }catch(_){}
   document.getElementById('mbKeyBox').style.display='none'; document.getElementById('mbStatus').textContent=t('mbKeySaved'); }
@@ -11867,12 +11889,13 @@ function aiPanelHtml(){
   if(slAiBusy) body='<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>';
   else if(slAi) body=aiResultHtml(slAi);
   return '<div class="sl-ai" id="slAi"><div class="sl-ai-head"><span>'+escapeHtml(t('aiAnalysis'))+'</span>'
+    +'<div class="sl-ai-acts">'
     +'<button class="m-btn" onclick="analyzeShots()"'+(slAiBusy?' disabled aria-busy="true"':'')+'>'
     +(slAiBusy?escapeHtml(t('aiReading')):'\u2728 '+escapeHtml(slAi?t('aiAgain'):t('aiRun')))
     +'</button>'
     +'<button class="m-btn" onclick="tuneFromShots()"'+(slAiBusy?' disabled':'')+'>\u2699 '
       +escapeHtml(t('tuneBtn'))+'</button>'
-    +'</div>'+body+'</div>'; }
+    +'</div></div>'+body+'</div>'; }
 // A shot keeps a copy of the profile it ran; the library holds the one that can
 // be written back to, and the title is what ties the two together.
 function tuneFromShots(){
@@ -12412,6 +12435,9 @@ function csSecureCheck(){
   var ok=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   note.hidden=ok; if(btn) btn.disabled=!ok;
   if(!ok) note.textContent=t('csNoSecure')+' '+window.location.origin; }
+// A key is not part of describing a coffee. It is how this phone is set up, it
+// is asked for once, and it belongs where the rest of that would be.
+function initPhoneSet(){ mbSyncKeyBox(); }
 function initPhoneCam(){
   // whatever the machine is already pointed at, so it can be corrected
   csSecureCheck();
@@ -12439,8 +12465,9 @@ function mbShowTarget(){
 // phone. It is one page now: the link still says which job was asked for, and
 // the other is a tap away rather than another code to find.
 var PHONE_TABS=[['status','\u2615','phTabStatus'],['log','\u25f7','phTabLog'],
-                ['bean','\u2728','phTabBean'],['cam','\ud83d\udcf7','phTabCam']];
-var PHONE_PANES={status:'phStatusPage',log:'phLogPage',bean:'mobilePage',cam:'camSetupPage'};
+                ['bean','\u2728','phTabBean'],['cam','\ud83d\udcf7','phTabCam'],
+                ['set','\u2699','phTabSet']];
+var PHONE_PANES={status:'phStatusPage',log:'phLogPage',bean:'mobilePage',cam:'camSetupPage',set:'phSetPage'};
 var phoneTab='', _phoneReady={};
 function bootPhone(tab){
   loadPrefs(); // picks up language + applies i18n
@@ -12476,7 +12503,8 @@ function phoneGo(tab){
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
     if(tab==='bean') initPhoneBean();
     else if(tab==='cam') initPhoneCam();
-    else if(tab==='log') initPhoneLog(); }
+    else if(tab==='log') initPhoneLog();
+    else if(tab==='set') initPhoneSet(); }
   try{ window.scrollTo(0,0); }catch(_){} }
 // -- What the machine is doing -------------------------------------
 // The tablet learns this from a socket it keeps open all day. A phone is
@@ -12580,8 +12608,41 @@ function phLoadLog(){
   api('GET','/api/v1/shots?limit=25').then(function(r){
     _phLog=(r&&(r.items||r.shots))||[]; renderPhoneLog(); })
     .catch(function(){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>'; }); }
+// The two things worth doing to a shot after it has been pulled: say what it
+// was like, and ask what it says. Both where the shot is already open.
+var _phAi=null, _phAiBusy=false;
+function phShotRow(id){ return _phLog.filter(function(x){ return x.id===id; })[0]||null; }
+function phRate(id,n){
+  var row=phShotRow(id); if(!row) return;
+  var ann=JSON.parse(JSON.stringify(row.annotations||{}));
+  if(ann.enjoyment===n) n=null;           // pressing the same star clears it
+  ann.enjoyment=n;
+  row.annotations=ann; renderPhoneLog();  // answer the tap now, reconcile after
+  api('PUT','/api/v1/shots/'+encodeURIComponent(id),{annotations:ann})
+    .then(function(){ if(slFull[id]) slFull[id].annotations=ann; })
+    .catch(function(){ toast(t('saveFailed'),'err'); phLoadLog(); }); }
+function phAiRun(id){
+  if(_phAiBusy) return;
+  var row=phShotRow(id); if(!row) return;
+  var key=aiKey();
+  if(!key){ toast(tAi('aiNeedKey'),'err'); phoneGo('set'); return; }
+  _phAiBusy=true; _phAi=null; renderPhoneLog();
+  withFullShots([row]).then(function(full){
+      return aiJson(key,[{text:shotAiPrompt([shotDigestForAi(full[0])],_lang)}],0.2); })
+    .then(function(r){
+      if(r&&(r.verdict||r.observations||r.suggestions)){ _phAi=r; saveShotAi([row],r); }
+      else toast(t('aiNoResult'),'err'); })
+    .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
+    .then(function(){ _phAiBusy=false; renderPhoneLog(); }); }
+function phStarsHtml(id,n){
+  var h='<div class="pl-rate-row"><span class="pl-rate-k">'+escapeHtml(t('enjoyment'))+'</span>';
+  for(var i=1;i<=5;i++)
+    h+='<button type="button" class="pl-star'+((n!=null&&i<=n)?' on':'')+'"'
+      +' onclick="event.stopPropagation();phRate(\''+id+'\','+i+')">\u2605</button>';
+  return h+'</div>'; }
 function phLogToggle(id){
   _phOpen=(_phOpen===id)?null:id;
+  _phAi=_phOpen?loadShotAi([{id:_phOpen}]):null;
   renderPhoneLog();
   if(!_phOpen) return;
   var row=_phLog.filter(function(x){ return x.id===_phOpen; })[0]; if(!row) return;
@@ -12605,14 +12666,21 @@ function renderPhoneLog(){
         +(a.enjoyment!=null?'<span class="pl-rate">\u2605 '+escapeHtml(String(a.enjoyment))+'</span>':'')
         +'<span class="pl-when">'+escapeHtml(fmtShotWhen(sh))+'</span></div>'
       +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
-      +(open?'<div class="pl-open"><div class="pl-canvas"><canvas id="phCanvas"></canvas></div></div>':'')
+      +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
+        +'<div class="pl-canvas"><canvas id="phCanvas"></canvas></div>'
+        +phStarsHtml(sh.id,(a.enjoyment==null?null:parseInt(a.enjoyment,10)))
+        +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>')
+          :_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi)+'</div>')
+          :('<button type="button" class="m-btn mb-analyze" style="margin-top:10px"'
+            +' onclick="event.stopPropagation();phAiRun(\''+sh.id+'\')">\u2728 '
+            +escapeHtml(t('aiRun'))+'</button>'))
+        +'</div>'):'')
       +'</div>'; }).join('')+'</div>'; }
 function initPhoneBean(){
   blendHost(false);
   var m=/[?&]bean=([^&]+)/.exec(window.location.search);
   mbBeanId=m?decodeURIComponent(m[1]):null;
   mbSyncKeyBox();
-  if(!mbGetKey()) mbShowKeyBox();
   loadProfiles(); // the profile suggestion needs a catalogue to choose from
   Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
     .then(function(r){ beans=r[0]||[]; // so a repeat purchase can be offered as a batch
