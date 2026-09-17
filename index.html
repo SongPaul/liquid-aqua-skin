@@ -879,6 +879,9 @@ body.night .aip-out{background-color:rgba(99,102,241,.16);box-shadow:inset 0 1px
 .ep-guide-l li{position:relative;padding-left:20px;font-size:13px;font-weight:600;color:var(--ink-soft);line-height:1.5}
 .ep-guide-l li:before{content:"";position:absolute;left:4px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.6}
 .ep-aibtn.new{flex:1 0 100%;order:-1;border-color:var(--accent);background:rgba(99,102,241,.16);font-weight:800}
+/* a pair of doorways side by side, and what acts on the shelf below them */
+.ep-aibtn.half{flex:1 1 calc(50% - 4px);min-width:0}
+.ep-aibtn.wide{flex:1 1 100%}
 .ep-visual{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:16px;padding:12px 16px 10px;margin:0}
 .ep-visual-title{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:flex;justify-content:space-between}
 .ep-visual canvas{width:100%;height:196px;display:block;cursor:pointer}
@@ -2506,6 +2509,7 @@ var I18N={
     plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
     catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
     foundInName:'In the name', foundInNotes:'In the notes',
+    fromViz:'Visualizer', fromFile:'From a file',
     piBtn:'Import', piTitle:'Import profiles',
     piHint:'Reads .tcl and .json files. A whole folder can be picked at once.',
     piPickFiles:'Choose files', piPickFolder:'Choose a folder',
@@ -2764,6 +2768,7 @@ var I18N={
     plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
     catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
     foundInName:'이름에서 찾음', foundInNotes:'메모에서 찾음',
+    fromViz:'Visualizer', fromFile:'파일에서',
     piBtn:'가져오기', piTitle:'프로파일 가져오기',
     piHint:'.tcl 과 .json 파일을 읽습니다. 폴더를 통째로 고를 수도 있습니다.',
     piPickFiles:'파일 선택', piPickFolder:'폴더 선택',
@@ -6912,13 +6917,16 @@ function renderEpTools(){
     +'<div class="ep-kinds">'+kinds.map(function(k){
         return '<button class="ep-kind'+(epKind===k[0]?' on':'')+'" onclick="epSetKind(\''+k[0]+'\')">'+escapeHtml(t(k[1]))+'</button>'; }).join('')+'</div>';
   var ai=document.createElement('div'); ai.className='ep-airow';
-  ai.innerHTML='<button class="ep-aibtn" onclick="openVizImport()">'+escapeHtml('☁ '+t('vizTitle'))+'</button>'
-    +'<button class="ep-aibtn" onclick="aiClassifyProfiles()"'+(aiBusyFlag?' disabled aria-busy="true"':'')+'>'
+  // Two ways in and one thing done to what is already here: the pair shares a
+  // row, the classifier takes its own. Three across was a third of a narrow
+  // column each, and the longest of them wrapped onto three lines.
+  ai.innerHTML='<button class="ep-aibtn new" onclick="newProfile()">+ '+escapeHtml(t('newProfile'))+'</button>'
+    +'<button class="ep-aibtn half" onclick="openVizImport()">☁ '+escapeHtml(t('fromViz'))+'</button>'
+    +'<button class="ep-aibtn half" onclick="openProfileImport()">📥 '+escapeHtml(t('fromFile'))+'</button>'
+    +'<button class="ep-aibtn wide" onclick="aiClassifyProfiles()"'+(aiBusyFlag?' disabled aria-busy="true"':'')+'>'
     +escapeHtml(aiBusyFlag?t('aiClassifyingShort'):t('aiClassify'))+'</button>'
     +(allProfiles.some(function(p){ return aiTagsOf(p).length; })
-      ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '')
-    +'<button class="ep-aibtn" onclick="openProfileImport()">📥 '+escapeHtml(t('piBtn'))+'</button>'
-    +'<button class="ep-aibtn new" onclick="newProfile()">+ '+escapeHtml(t('newProfile'))+'</button>';
+      ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '');
   bar.appendChild(ai);
   var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
   var counts={}; pool.forEach(function(p){ allTagsOf(p).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
