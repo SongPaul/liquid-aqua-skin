@@ -1145,6 +1145,11 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
   background:transparent;color:rgba(255,255,255,.78);font:700 13px/1 inherit;cursor:pointer}
 .ph-src button.on{background:rgba(255,255,255,.92);color:#3b1d72;
   box-shadow:0 6px 16px rgba(20,10,54,.26)}
+.pl-facts{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin-top:11px;font-size:12px}
+.pl-fk{color:var(--ink-mute);white-space:nowrap}
+.pl-fv{font-weight:600;overflow-wrap:anywhere}
+#phoneShell .pl-fk{color:rgba(255,255,255,.66)}
+#phoneShell .pl-fv{color:#fff}
 .pl-vizmark{margin-top:10px;font-size:11px;font-weight:700;color:var(--ink-mute)}
 #phoneShell .pl-vizmark{color:rgba(255,255,255,.72)}
 .pl-acts{display:flex;gap:8px;margin-top:10px}
@@ -2662,6 +2667,12 @@ var I18N={
     phVizLoading:'Reading your shots from Visualizer\u2026',
     phVizRead:'From Visualizer \u00b7 read only',
     phSrcDe1:'Machine', phSrcViz:'Visualizer',
+    phVizGot:'Read {n} shots\u2026',
+    vizCopyLink:'Copy the link', vizLinkCopied:'Link copied',
+    vfBean:'Coffee',
+    vfDose:'Dose', vfYield:'Yield', vfDuration:'Time', vfGrinder:'Grinder',
+    vfGrind:'Grind', vfTds:'TDS', vfEy:'Extraction', vfBarista:'Barista',
+    vfUser:'Account', vfBeanNotes:'Bean notes',
     phLogSubViz:'Your shots on Visualizer, as they were uploaded.',
     phNoNetH:"Can't reach the machine",
     phNoNetS:'This phone has to be on the same network as the machine. Trying {h}',
@@ -2931,6 +2942,12 @@ var I18N={
     phVizLoading:'Visualizer에서 샷을 읽는 중…',
     phVizRead:'Visualizer 에서 가져옴 · 읽기 전용',
     phSrcDe1:'머신', phSrcViz:'Visualizer',
+    phVizGot:'{n}개 읽는 중…',
+    vizCopyLink:'링크 복사', vizLinkCopied:'링크를 복사했습니다',
+    vfBean:'원두',
+    vfDose:'도스', vfYield:'추출량', vfDuration:'시간', vfGrinder:'그라인더',
+    vfGrind:'분쇄도', vfTds:'TDS', vfEy:'수율', vfBarista:'바리스타',
+    vfUser:'계정', vfBeanNotes:'원두 메모',
     phLogSubViz:'Visualizer에 올라간 내 샷입니다.',
     phNoNetH:'머신에 닿지 않습니다',
     phNoNetS:'이 폰이 머신과 같은 네트워크에 있어야 합니다. 시도 중 {h}',
@@ -9456,11 +9473,23 @@ function renderPhoneQrBox(){
 function setPhoneQrHost(v){
   prefs.qrHost=(v||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''); savePrefs();
   renderPhoneQrBox(); }
-function copyPhoneUrl(url){
-  var done=function(){ toast(t('phoneCopied'),'ok'); };
+function copyPhoneUrl(url,msg){
+  var done=function(){ toast(t(msg||'phoneCopied'),'ok'); };
+  // navigator.clipboard is only handed out on https, and the gateway is not.
+  // The old way still works there, so it is what the fall-back uses.
+  function old(){
+    try{
+      var ta=document.createElement('textarea');
+      ta.value=url; ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,url.length);
+      var ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(ok){ done(); return true; } }catch(_){}
+    return false; }
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(done,function(){ toast(url,'ok'); }); return; } }catch(_){}
-  toast(url,'ok'); }
+      navigator.clipboard.writeText(url).then(done,function(){ if(!old()) toast(url,'ok'); }); return; } }catch(_){}
+  if(!old()) toast(url,'ok'); }
 
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
@@ -12013,35 +12042,99 @@ function vizApi(path){
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json(); }); }
 function vizMe(){ return vizApi('/me'); }
-function vizMyShots(n){
-  return vizApi('/shots?sort=updated_at&items='+(n||30)+'&page=1')
-    .then(function(r){ return Array.isArray(r)?r:((r&&r.data)||(r&&r.shots)||[]); }); }
-// The list answers with rather less than a gateway shot, and not always under
-// the same names. Whatever is there is put where the phone already looks for it.
+// The list is only {id, clock, updated_at} \u2014 everything a shot is worth
+// showing lives behind /shots/{id}. So the list is read for its ids and the
+// shots themselves are fetched a handful at a time, reporting as they arrive.
+function vizShotUrl(id){ return 'https://visualizer.coffee/shots/'+id; }
 function vizPick(o){ for(var i=1;i<arguments.length;i++){
     var v=o&&o[arguments[i]]; if(v!==undefined&&v!==null&&v!=='') return v; } return null; }
 function vizNum(v){ var n=parseFloat(v); return isFinite(n)?n:null; }
+function vizDetails(ids,want,mine,onStep){
+  var out=[], i=0;
+  function batch(){
+    if(out.length>=want||i>=ids.length) return Promise.resolve(out.slice(0,want));
+    var slice=ids.slice(i,i+6); i+=6;
+    return Promise.all(slice.map(function(id){
+      return vizApi('/shots/'+encodeURIComponent(id)).catch(function(){ return null; }); }))
+      .then(function(rs){
+        rs.forEach(function(v){
+          if(!v||!v.id) return;
+          // Without an account the same list is the public feed, so a shot that
+          // belongs to someone else is not this phone's to show.
+          if(mine&&v.user_id&&String(v.user_id)!==String(mine)) return;
+          out.push(v); });
+        if(onStep) onStep(out.length);
+        return batch(); }); }
+  return batch(); }
+function vizMyShots(n,onStep){
+  n=n||20;
+  var mine=null;
+  return vizMe().then(function(me){ mine=(me&&(me.id||me.user_id))||null; },
+      function(e){ if((e&&e.message)==='auth') throw e; })
+    .then(function(){ return vizApi('/shots?sort=updated_at&items='+(n*2)+'&page=1'); })
+    .then(function(r){
+      var list=Array.isArray(r)?r:((r&&r.data)||(r&&r.shots)||[]);
+      var ids=list.map(function(x){ return x&&(x.id||x.shot_id); }).filter(Boolean);
+      return vizDetails(ids,n,mine,onStep); }); }
+function vizWhen(v){
+  var t=vizPick(v,'start_time','clock','timestamp','updated_at','created_at');
+  if(t==null) return new Date().toISOString();
+  var n=vizNum(t);
+  // an epoch second count on the list, an ISO string on the shot itself
+  if(n!==null&&!/[-:T]/.test(String(t))) return new Date(n*1000).toISOString();
+  var d=new Date(String(t));
+  return isNaN(d.getTime())?new Date().toISOString():d.toISOString(); }
 function vizToShot(v){
-  var st=(v&&v.app&&v.app.data&&v.app.data.settings)||{};
-  var secs=vizNum(vizPick(v,'start_time','timestamp','clock'));
-  var when=secs?new Date(secs*1000).toISOString()
-    :(vizPick(v,'created_at','updated_at')||new Date().toISOString());
-  return { id:'viz:'+v.id, _vizId:String(v.id), _viz:true,
+  var when=vizWhen(v);
+  return { id:'viz:'+v.id, _vizId:String(v.id), _viz:true, _vizRaw:v,
     timestamp:when, createdAt:when,
     workflow:{ profile:{ title:vizPick(v,'profile_title')||'' },
       context:{ coffeeName:vizPick(v,'bean_type','bean_brand')||'',
         coffeeRoaster:vizPick(v,'bean_brand')||'' } },
     annotations:{
-      actualDoseWeight:vizNum(vizPick(v,'bean_weight')||st.bean_weight),
-      actualYield:vizNum(vizPick(v,'drink_weight')||st.drink_weight),
-      enjoyment:vizNum(vizPick(v,'espresso_enjoyment')||st.espresso_enjoyment),
-      espressoNotes:vizPick(v,'espresso_notes')||st.espresso_notes||'' } }; }
+      actualDoseWeight:vizNum(v.bean_weight),
+      actualYield:vizNum(v.drink_weight),
+      enjoyment:vizNum(v.espresso_enjoyment)||null,
+      espressoNotes:v.espresso_notes||'' } }; }
+// Everything Visualizer holds about a shot, in the order it is worth reading.
+// 'n' means a number that is only worth printing when it is not zero \u2014 the
+// app writes 0 where nothing was entered.
+var VIZ_FACTS=[
+  ['bean_brand','roaster'],['bean_type','vfBean'],
+  ['roast_date','roastDate'],['roast_level','roastLevel'],
+  ['bean_weight','vfDose','g'],['drink_weight','vfYield','g'],
+  ['duration','vfDuration','s'],
+  ['grinder_model','vfGrinder'],['grinder_setting','vfGrind'],
+  ['drink_tds','vfTds','%'],['drink_ey','vfEy','%'],
+  ['barista','vfBarista'],['user_name','vfUser'],
+  ['bean_notes','vfBeanNotes'],['espresso_notes','notesLabel']];
+function vizFactsHtml(v){
+  if(!v) return '';
+  var rows=VIZ_FACTS.map(function(f){
+    var raw=v[f[0]];
+    if(raw==null||raw==='') return '';
+    // A zero is what the app writes where nothing was entered, in any field.
+    var n=vizNum(raw);
+    if(n===0) return '';
+    // A measured field keeps the spelling it came with \u2014 18.0, not 18 \u2014 and
+    // only a real number is rounded into shape.
+    var txt=(typeof raw==='number')?String(Math.round(raw*100)/100):String(raw).trim();
+    if(!txt) return '';
+    if(f[2]&&n!==null) txt+=f[2];
+    return '<div class="pl-fk">'+escapeHtml(t(f[1]))+'</div>'
+      +'<div class="pl-fv">'+escapeHtml(txt)+'</div>'; }).filter(Boolean);
+  var tags=(v.tags||[]).filter(Boolean);
+  if(tags.length) rows.push('<div class="pl-fk">'+escapeHtml(t('tagsLabel'))+'</div>'
+    +'<div class="pl-fv">'+escapeHtml(tags.join(', '))+'</div>');
+  return rows.length?('<div class="pl-facts">'+rows.join('')+'</div>'):''; }
 // The curve comes from the same shape the import already reads.
 function vizMeasurements(v){
   var tf=(v&&v.timeframe)||[], d=(v&&v.data)||{};
   var n=Math.min(tf.length,(d.espresso_pressure||[]).length);
   if(n<2) return [];
-  var t0=Date.now()-Math.round((parseFloat(tf[n-1])||0)*1000), out=[];
+  var t0=Date.parse(String(v&&v.start_time||''));
+  if(!isFinite(t0)) t0=Date.now()-Math.round((parseFloat(tf[n-1])||0)*1000);
+  var out=[];
   function at(a,i){ var x=a&&a[i]; x=parseFloat(x); return isFinite(x)?x:0; }
   for(var i=0;i<n;i++){
     out.push({ machine:{ timestamp:new Date(t0+Math.round((parseFloat(tf[i])||0)*1000)).toISOString(),
@@ -12050,7 +12143,8 @@ function vizMeasurements(v){
         groupTemperature:at(d.espresso_temperature_basket,i),
         mixTemperature:at(d.espresso_temperature_mix,i),
         targetGroupTemperature:at(d.espresso_temperature_goal,i) },
-      scale:{ weight:at(d.espresso_weight,i), weightFlow:at(d.espresso_flow_weight,i) } }); }
+      scale:{ weight:at(d.espresso_weight,i),
+        weightFlow:at(d.espresso_flow_weight||d.espresso_flow_weight_raw,i) } }); }
   return out; }
 function vizGet(path){ return fetch(VIZ_API+path,{headers:{'Accept':'application/json'}}).then(function(r){
   if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
@@ -13601,6 +13695,7 @@ function phVizSave(){
   var u=(document.getElementById('phVizU')||{}).value||'';
   var p=(document.getElementById('phVizP')||{}).value||'';
   u=u.trim();
+  _phVizCache=null;
   if(!u||!p){ vizSetCreds(null,null); phVizStat(t('phVizCleared')); return; }
   vizSetCreds(u,p);
   phVizStat(t('phVizChecking'));
@@ -14007,12 +14102,23 @@ function phSrcBar(){
       +' onclick="phSetSrc(\''+k+'\')">'+escapeHtml(t(k==='de1'?'phSrcDe1':'phSrcViz'))+'</button>'; }).join('');
   var sub=document.querySelector('#phLogPage .mb-sub');
   if(sub) sub.textContent=t(_phSrc==='viz'?'phLogSubViz':'phLogSub'); }
-function phSetSrc(k){ if(_phSrc===k) return; _phSrc=k; _phOpen=null; phLoadLog(); }
+function phSetSrc(k){
+  // tapping the side already shown is a way to ask for it again
+  var again=(_phSrc===k&&k==='viz');
+  if(_phSrc===k&&!again) return;
+  _phSrc=k; _phOpen=null;
+  if(again) _phVizCache=null;
+  phLoadLog(); }
+var _phVizCache=null;
 function phLoadViz(box){
+  if(_phVizCache){ _phVizMode=true; _phLog=_phVizCache; renderPhoneLog(); return; }
   box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phVizLoading'))+'</div>';
-  vizMyShots(25).then(function(list){
-    _phVizMode=true; _phOpen=null;
-    _phLog=list.map(vizToShot); renderPhoneLog(); },
+  vizMyShots(20,function(n){
+    var e=box.querySelector('.ls-empty');
+    if(e) e.textContent=t('phVizGot').replace('{n}',n); })
+    .then(function(list){
+      _phVizMode=true; _phOpen=null;
+      _phVizCache=list.map(vizToShot); _phLog=_phVizCache; renderPhoneLog(); },
     function(e){
       var m=((e&&e.message)==='auth')?t('phVizBad'):t('phVizNoNet');
       box.innerHTML='<div class="ls-empty">'+escapeHtml(m)+'</div>'; }); }
@@ -14076,13 +14182,10 @@ function phDrawOpen(){
   if(slFull[_phOpen]) return drawShotMeasurements(cv,slFull[_phOpen],false);
   var row=phShotRow(_phOpen); if(!row) return;
   if(row._viz){
-    var want=_phOpen;
-    vizApi('/shots/'+encodeURIComponent(row._vizId)).then(function(v){
-      var full={ id:row.id, workflow:row.workflow, annotations:row.annotations,
-        measurements:vizMeasurements(v) };
-      slFull[row.id]=full;
-      var c2=document.getElementById('phCanvas');
-      if(c2&&_phOpen===want) drawShotMeasurements(c2,full,false); }).catch(function(){});
+    var full={ id:row.id, workflow:row.workflow, annotations:row.annotations,
+      measurements:vizMeasurements(row._vizRaw) };
+    slFull[row.id]=full;
+    if(full.measurements.length) drawShotMeasurements(cv,full,false);
     return; }
   var want=_phOpen;
   withFullShots([row]).then(function(f){
@@ -14111,6 +14214,13 @@ function phAiRun(id){
       else toast(t('aiNoResult'),'err'); })
     .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ _phAiBusy=false; renderPhoneLog(); }); }
+function phVizLink(sh){
+  if(!sh) return null;
+  var id=sh._viz?sh._vizId:shotVizId(sh);
+  return id?vizShotUrl(id):null; }
+function phCopyViz(id){
+  var url=phVizLink(phShotRow(id));
+  if(url) copyPhoneUrl(url,'vizLinkCopied'); }
 function phLogToggle(id){
   _phOpen=(_phOpen===id)?null:id;
   _tcOpen=null; _tcCtx={mode:'ph',id:_phOpen};
@@ -14135,7 +14245,8 @@ function renderPhoneLog(){
       +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
       +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
         +'<div class="pl-canvas"><canvas id="phCanvas"></canvas></div>'
-        +(sh._viz?('<div class="pl-vizmark">'+escapeHtml(t('phVizRead'))+'</div>')
+        +(sh._viz?(vizFactsHtml(sh._vizRaw)
+            +'<div class="pl-vizmark">'+escapeHtml(t('phVizRead'))+'</div>')
           :tasteCardHtml(sh.id,tasteOf(sh),'ph')
         +(sh._viz?(a.espressoNotes?('<div class="pl-sub" style="margin-top:10px">'+escapeHtml(a.espressoNotes)+'</div>'):'')
           :('<div class="field pl-note"><label>'+escapeHtml(t('notesLabel'))+'</label>'
@@ -14153,6 +14264,11 @@ function renderPhoneLog(){
             +' onclick="event.stopPropagation();phAiRun(\''+sh.id+'\')">\u2728 '
             +escapeHtml(t(_phAi?'aiRerun':'aiRun'))+'</button>'
         +'</div>')
+        // A shot that is on Visualizer has an address there, whichever side of
+        // the switch it was read from.
+        +(phVizLink(sh)?('<div class="pl-acts"><button type="button" class="m-btn"'
+          +' onclick="event.stopPropagation();phCopyViz(\''+sh.id+'\')">\ud83d\udd17 '
+          +escapeHtml(t('vizCopyLink'))+'</button></div>'):'')
         +'</div>'):'')
       +'</div>'; }).join('')+'</div>';
   phDrawOpen(); }
