@@ -2433,6 +2433,7 @@ var I18N={
     geminiName:'Gemini API key', geminiPh:'Paste your Gemini API key — reads bean labels, stored on this device only', geminiGet:'Get a key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
     plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
     catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
+    catUpdates:'Updates',
     tcTitle:'Tasting', tcNone:'Not tasted yet',
     tcTaste:'Taste', tcFeel:'Feel', tcFin:'Finish & overall',
     tcAcid:'Acidity', tcBitter:'Bitterness', tcSweet:'Sweetness',
@@ -2673,6 +2674,7 @@ var I18N={
     geminiName:'Gemini API 키', geminiPh:'Gemini API 키 붙여넣기 — 원두 라벨 읽기에 사용, 이 기기에만 저장', geminiGet:'키 발급받기', language:'언어', tempUnit:'온도', weightUnit:'무게',
     plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
     catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
+    catUpdates:'업데이트',
     tcTitle:'맛 평가', tcNone:'아직 평가 없음',
     tcTaste:'맛', tcFeel:'감촉', tcFin:'여운과 총평',
     tcAcid:'신맛', tcBitter:'쓴맛', tcSweet:'단맛',
@@ -4825,9 +4827,7 @@ var SP_CATS=[
   {id:'presence',ic:'🛌', key:'catPresence'},
   {id:'phone',   ic:'📱', key:'catPhone'},
   {id:'calib',   ic:'📐', key:'catCalib'},
-  {id:'firmware',ic:'⬆', key:'catFirmware'},
-  {id:'app',     ic:'🔄', key:'catApp'},
-  {id:'skin',    ic:'🎨', key:'catSkin'},
+  {id:'updates', ic:'⬆', key:'catUpdates'},
   {id:'ai',      ic:'✨', key:'catAI'},
   {id:'plugins', ic:'🧩', key:'plugins'}
 ];
@@ -4835,7 +4835,7 @@ var spCat='general', gwSettings={}, displayState={}, machineInfo={};
 function openSettingsPage(){ document.getElementById('settingsPage').classList.add('show'); renderSpNav();
   _spMsg=null; paintSpStatus();
   // preload gateway settings + display + machine info
-  api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='display'||spCat==='machine'||spCat==='scale'||spCat==='app') renderSpContent(); }).catch(function(){});
+  api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='display'||spCat==='machine'||spCat==='scale'||spCat==='updates') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/display').then(function(d){ displayState=d||{}; if(spCat==='display') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/machine/info').then(function(i){ machineInfo=i||{}; if(spCat==='machine') renderSpContent(); }).catch(function(){});
   // the guideline picker offers recent shots, so they have to be there
@@ -4858,7 +4858,7 @@ function spSelect(id){ spCat=id;
   if(id==='scale') loadDevicesForDosing();
   if(id==='presence') loadPresence();
   if(id==='calib') loadCalib();
-  if(id==='skin') loadSkinInfo();
+  if(id==='updates') loadSkinInfo();
   renderSpNav(); renderSpContent(); }
 function row(nameKey,descKey,control){ return '<div class="set-row"><div class="set-info"><div class="set-name">'+t(nameKey)+'</div>'+(descKey?'<div class="set-desc">'+t(descKey)+'</div>':'')+'</div>'+control+'</div>'; }
 function sw(id,checked,onchg,disabled){ return '<label class="switch"><input type="checkbox" id="'+id+'"'+(checked?' checked':'')+(disabled?' disabled':'')+' onchange="'+onchg+'"><span class="track"></span></label>'; }
@@ -5076,20 +5076,21 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=maintCard('cleaning');
     h+=maintCard('descaling');
     h+=maintCard('airPurge');
-  } else if(spCat==='firmware'){
-    h+='<div class="sp-cat-title">'+t('catFirmware')+'</div>';
+  } else if(spCat==='updates'){
+    // Machine, app and skin are three things that go out of date, and asking
+    // which one is behind should not mean knowing which of three pages to open.
+    h+='<div class="sp-cat-title">'+t('catUpdates')+'</div>';
+    h+='<div class="ep-section-title">'+t('catFirmware')+'</div>';
     h+='<div id="fwBox"><div class="ls-empty">'+t('loading')+'</div></div>';
-  } else if(spCat==='app'){
-    h+='<div class="sp-cat-title">'+t('catApp')+'</div>';
+    h+='<div class="ep-section-title" style="margin-top:22px">'+t('catApp')+'</div>';
     h+=row('autoUpdChk','autoUpdChkDesc',sw('setAutoUpd',gwSettings.automaticUpdateCheck!==false,'setAutoUpdateCheck(this.checked)'));
-    h+='<div id="appBox" style="margin-top:16px"><div class="ls-empty">'+t('loading')+'</div></div>';
+    h+='<div id="appBox" style="margin-top:12px"><div class="ls-empty">'+t('loading')+'</div></div>';
+    h+='<div class="ep-section-title" style="margin-top:22px">'+t('catSkin')+'</div>';
+    h+='<div id="skinBox"><div class="ls-empty">'+t('loading')+'</div></div>';
   } else if(spCat==='phone'){
     h+='<div class="sp-cat-title">'+t('catPhone')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+escapeHtml(t('phoneIntro'))+'</div>';
     h+='<div id="phoneQrBox"><div class="ls-empty">'+t('loading')+'</div></div>';
-  } else if(spCat==='skin'){
-    h+='<div class="sp-cat-title">'+t('catSkin')+'</div>';
-    h+='<div id="skinBox"><div class="ls-empty">'+t('loading')+'</div></div>';
   } else if(spCat==='ai'){
     h+='<div class="sp-cat-title">'+t('catAI')+'</div>';
     var prov=aiProvider();
@@ -5114,10 +5115,8 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
   }
   box.innerHTML=h;
   if(spCat==='plugins') loadPlugins();
-  if(spCat==='firmware') loadFirmware();
-  if(spCat==='app') renderAppUpdate();
+  if(spCat==='updates'){ loadFirmware(); renderAppUpdate(); renderSkinBox(); }
   if(spCat==='phone') renderPhoneQrBox();
-  if(spCat==='skin') renderSkinBox();
 }
 function opt(val,label,cur){ return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+label+'</option>'; }
 function dosingOptions(){
@@ -5496,10 +5495,10 @@ function loadSkinInfo(){
   if(skinRunningVer===null){ skinRunningVer='';
     fetch('skin-manifest.json?_='+Date.now()).then(function(r){ return r.json(); })
       .then(function(m){ skinRunningVer=String((m&&m.version)||'');
-        if(spOpen()&&spCat==='skin') renderSkinBox(); }).catch(function(){}); }
+        if(spOpen()&&spCat==='updates') renderSkinBox(); }).catch(function(){}); }
   api('GET','/api/v1/webui/skins/'+encodeURIComponent(SKIN_ID))
     .then(function(x){ if(x) skinInfo=x; }).catch(function(){})
-    .then(function(){ if(spOpen()&&spCat==='skin') renderSkinBox(); loadSkinNews(); }); }
+    .then(function(){ if(spOpen()&&spCat==='updates') renderSkinBox(); loadSkinNews(); }); }
 // A tablet at a machine is not always on a network, so the last history it saw
 // is kept and shown while a fresher one is asked for.
 function loadSkinNews(force){
@@ -5507,10 +5506,10 @@ function loadSkinNews(force){
   if(!force){
     var c=lsGet('aurora_skinnews');
     if(c&&c.repo===repo&&c.list&&c.list.length){ skinNews=c.list;
-      if(Date.now()-(c.at||0)<SKIN_NEWS_TTL){ if(spOpen()&&spCat==='skin') renderSkinBox(); return; } } }
+      if(Date.now()-(c.at||0)<SKIN_NEWS_TTL){ if(spOpen()&&spCat==='updates') renderSkinBox(); return; } } }
   if(_skinNewsState==='loading') return;
   _skinNewsState='loading';
-  if(spOpen()&&spCat==='skin') renderSkinBox();
+  if(spOpen()&&spCat==='updates') renderSkinBox();
   fetch('https://api.github.com/repos/'+repo+'/releases?per_page=20',
         {headers:{Accept:'application/vnd.github+json'}})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -5521,7 +5520,7 @@ function loadSkinNews(force){
       _skinNewsState='';
       lsSet('aurora_skinnews',{repo:repo,at:Date.now(),list:skinNews}); })
     .catch(function(){ _skinNewsState=(skinNews&&skinNews.length)?'':'err'; })
-    .then(function(){ if(spOpen()&&spCat==='skin') renderSkinBox(); }); }
+    .then(function(){ if(spOpen()&&spCat==='updates') renderSkinBox(); }); }
 function skinCheckUpdate(){
   if(_skinChecking) return;
   _skinChecking=true; renderSkinBox();
