@@ -1139,6 +1139,8 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .pl-star.on{color:var(--amber);opacity:1}
 .pl-note{margin-top:10px}
 .pl-note textarea{min-height:64px}
+.pl-vizmark{margin-top:10px;font-size:11px;font-weight:700;color:var(--ink-mute)}
+#phoneShell .pl-vizmark{color:rgba(255,255,255,.72)}
 .pl-acts{display:flex;gap:8px;margin-top:10px}
 .pl-acts .m-btn{flex:1;min-width:0}
 .pl-ai{margin-top:6px}
@@ -2472,6 +2474,14 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <button class="m-btn primary mb-analyze" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
       <div class="set-desc" style="margin-top:10px" data-i18n="aiKeyNote"></div>
     </div>
+    <div class="mb-card" id="phVizBox" style="margin-top:14px">
+      <div class="mb-sec-h" data-i18n="phVizTitle">Visualizer account</div>
+      <div class="set-desc" style="margin-bottom:10px" data-i18n="phVizWhy"></div>
+      <div class="field"><label data-i18n="phVizUser">Username</label><input id="phVizU" autocomplete="username"></div>
+      <div class="field"><label data-i18n="phVizPass">Password</label><input id="phVizP" type="password" autocomplete="current-password"></div>
+      <button class="m-btn primary mb-analyze" onclick="phVizSave()" data-i18n="phVizCheck">Check and save</button>
+      <div class="set-desc" id="phVizStat" style="margin-top:10px"></div>
+    </div>
     <div class="mb-card" style="margin-top:14px">
       <button class="m-btn mb-analyze" onclick="phoneShowTablet()" data-i18n="phTabletView">Show the tablet screen</button>
       <div class="set-desc" style="margin-top:10px" data-i18n="phTabletViewNote"></div>
@@ -2637,6 +2647,13 @@ var I18N={
     phoneHostNote:'Only needed if the address above cannot be reached — type this tablet\'s Wi-Fi address.',
     phTabletView:'Show the tablet screen',
     phTabletViewNote:'Switches this phone back to the full screen and remembers it. Reach the phone app again from the address with ?phone=1.',
+    phVizTitle:'Visualizer account', phVizUser:'Username', phVizPass:'Password',
+    phVizWhy:'Kept on this phone. Used only when the machine cannot be reached, to read the shots that were uploaded from it.',
+    phVizCheck:'Check and save', phVizChecking:'Checking\u2026',
+    phVizSaved:'Signed in as {n}', phVizBad:'Visualizer did not accept that',
+    phVizNoNet:'Could not reach Visualizer', phVizCleared:'Account removed',
+    phVizLoading:'Reading your shots from Visualizer\u2026',
+    phVizRead:'From Visualizer \u00b7 read only',
     phNoNetH:"Can't reach the machine",
     phNoNetS:'This phone has to be on the same network as the machine. Trying {h}',
     phNetRetry:'Try again', phNetBack:'Connected',
@@ -2897,6 +2914,13 @@ var I18N={
     phoneHostNote:'위 주소로 접속이 안 될 때만 쓰세요 — 이 태블릿의 Wi-Fi 주소를 적습니다.',
     phTabletView:'태블릿 화면으로 보기',
     phTabletViewNote:'이 폰을 큰 화면으로 되돌리고 그 선택을 기억합니다. 폰 화면은 주소 뒤에 ?phone=1 을 붙이면 다시 열립니다.',
+    phVizTitle:'Visualizer 계정', phVizUser:'아이디', phVizPass:'비밀번호',
+    phVizWhy:'이 폰에만 저장됩니다. 머신에 닿지 않을 때, 올려둔 샷을 읽는 데만 씁니다.',
+    phVizCheck:'확인 후 저장', phVizChecking:'확인 중…',
+    phVizSaved:'{n} 로 로그인됨', phVizBad:'Visualizer가 거부했습니다',
+    phVizNoNet:'Visualizer에 닿지 않습니다', phVizCleared:'계정을 지웠습니다',
+    phVizLoading:'Visualizer에서 샷을 읽는 중…',
+    phVizRead:'Visualizer 에서 가져옴 · 읽기 전용',
     phNoNetH:'머신에 닿지 않습니다',
     phNoNetS:'이 폰이 머신과 같은 네트워크에 있어야 합니다. 시도 중 {h}',
     phNetRetry:'다시 시도', phNetBack:'연결됐습니다',
@@ -11952,6 +11976,71 @@ function vizBusy(on){ var b=document.getElementById('vizGo'); if(b){ b.disabled=
 // Visualizer serves every number as a string, and uses -1 for "no goal here".
 function vizNums(a,n){ var o=[],i,v; for(i=0;i<n;i++){ v=parseFloat(a&&a[i]); o.push(isFinite(v)?v:0); } return o; }
 function vizGoal(a,n){ var o=vizNums(a,n),i; for(i=0;i<o.length;i++) if(o[i]<0) o[i]=0; return o; }
+// ── Visualizer, read straight from the phone ───────────────────────────────
+// visualizer.coffee answers a browser directly: allow-origin * with the
+// Authorization header allowed on preflight. So a phone carried out of reach of
+// the machine can still read the shots that were uploaded from it, without the
+// gateway in the middle.
+//
+// Read only, on purpose. An edit made here would be an edit the gateway never
+// hears about, and the next thing it syncs would quietly undo it.
+function vizCreds(){
+  try{ var v=JSON.parse(localStorage.getItem('aurora_viz')||'null');
+    return (v&&v.u&&v.p)?v:null; }catch(_){ return null; } }
+function vizSetCreds(u,p){
+  try{ if(u&&p) localStorage.setItem('aurora_viz',JSON.stringify({u:u,p:p}));
+    else localStorage.removeItem('aurora_viz'); }catch(_){} }
+function vizAuth(){
+  var c=vizCreds(); if(!c) return null;
+  // btoa only takes latin1; a password with anything else has to be bytes first
+  try{ return 'Basic '+btoa(unescape(encodeURIComponent(c.u+':'+c.p))); }
+  catch(_){ return null; } }
+function vizApi(path){
+  var h={'Accept':'application/json'}, a=vizAuth(); if(a) h['Authorization']=a;
+  return fetch(VIZ_API+path,{headers:h}).then(function(r){
+    if(r.status===401||r.status===403) throw new Error('auth');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json(); }); }
+function vizMe(){ return vizApi('/me'); }
+function vizMyShots(n){
+  return vizApi('/shots?sort=updated_at&items='+(n||30)+'&page=1')
+    .then(function(r){ return Array.isArray(r)?r:((r&&r.data)||(r&&r.shots)||[]); }); }
+// The list answers with rather less than a gateway shot, and not always under
+// the same names. Whatever is there is put where the phone already looks for it.
+function vizPick(o){ for(var i=1;i<arguments.length;i++){
+    var v=o&&o[arguments[i]]; if(v!==undefined&&v!==null&&v!=='') return v; } return null; }
+function vizNum(v){ var n=parseFloat(v); return isFinite(n)?n:null; }
+function vizToShot(v){
+  var st=(v&&v.app&&v.app.data&&v.app.data.settings)||{};
+  var secs=vizNum(vizPick(v,'start_time','timestamp','clock'));
+  var when=secs?new Date(secs*1000).toISOString()
+    :(vizPick(v,'created_at','updated_at')||new Date().toISOString());
+  return { id:'viz:'+v.id, _vizId:String(v.id), _viz:true,
+    timestamp:when, createdAt:when,
+    workflow:{ profile:{ title:vizPick(v,'profile_title')||'' },
+      context:{ coffeeName:vizPick(v,'bean_type','bean_brand')||'',
+        coffeeRoaster:vizPick(v,'bean_brand')||'' } },
+    annotations:{
+      actualDoseWeight:vizNum(vizPick(v,'bean_weight')||st.bean_weight),
+      actualYield:vizNum(vizPick(v,'drink_weight')||st.drink_weight),
+      enjoyment:vizNum(vizPick(v,'espresso_enjoyment')||st.espresso_enjoyment),
+      espressoNotes:vizPick(v,'espresso_notes')||st.espresso_notes||'' } }; }
+// The curve comes from the same shape the import already reads.
+function vizMeasurements(v){
+  var tf=(v&&v.timeframe)||[], d=(v&&v.data)||{};
+  var n=Math.min(tf.length,(d.espresso_pressure||[]).length);
+  if(n<2) return [];
+  var t0=Date.now()-Math.round((parseFloat(tf[n-1])||0)*1000), out=[];
+  function at(a,i){ var x=a&&a[i]; x=parseFloat(x); return isFinite(x)?x:0; }
+  for(var i=0;i<n;i++){
+    out.push({ machine:{ timestamp:new Date(t0+Math.round((parseFloat(tf[i])||0)*1000)).toISOString(),
+        pressure:at(d.espresso_pressure,i), flow:at(d.espresso_flow,i),
+        targetPressure:at(d.espresso_pressure_goal,i), targetFlow:at(d.espresso_flow_goal,i),
+        groupTemperature:at(d.espresso_temperature_basket,i),
+        mixTemperature:at(d.espresso_temperature_mix,i),
+        targetGroupTemperature:at(d.espresso_temperature_goal,i) },
+      scale:{ weight:at(d.espresso_weight,i), weightFlow:at(d.espresso_flow_weight,i) } }); }
+  return out; }
 function vizGet(path){ return fetch(VIZ_API+path,{headers:{'Accept':'application/json'}}).then(function(r){
   if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
 function vizShowShot(v){
@@ -13490,6 +13579,25 @@ function csSecureCheck(){
   if(!ok) note.textContent=t('csNoSecure')+' '+window.location.origin; }
 // A key is not part of describing a coffee. It is how this phone is set up, it
 // is asked for once, and it belongs where the rest of that would be.
+function phVizFill(){
+  var c=vizCreds(), u=document.getElementById('phVizU'), p=document.getElementById('phVizP');
+  if(u) u.value=(c&&c.u)||''; if(p) p.value=(c&&c.p)||'';
+  phVizStat(c?t('phVizSaved').replace('{n}',c.u):''); }
+function phVizStat(msg,bad){
+  var e=document.getElementById('phVizStat'); if(!e) return;
+  e.textContent=msg||''; e.style.color=bad?'#fecaca':''; }
+function phVizSave(){
+  var u=(document.getElementById('phVizU')||{}).value||'';
+  var p=(document.getElementById('phVizP')||{}).value||'';
+  u=u.trim();
+  if(!u||!p){ vizSetCreds(null,null); phVizStat(t('phVizCleared')); return; }
+  vizSetCreds(u,p);
+  phVizStat(t('phVizChecking'));
+  vizMe().then(function(){ phVizStat(t('phVizSaved').replace('{n}',u)); },
+    function(e){
+      var bad=(e&&e.message)==='auth';
+      if(bad) vizSetCreds(null,null);
+      phVizStat(bad?t('phVizBad'):t('phVizNoNet'),true); }); }
 function initPhoneSet(){ mbSyncKeyBox(); }
 function initPhoneCam(){
   // whatever the machine is already pointed at, so it can be corrected
@@ -13647,6 +13755,7 @@ function phoneGo(tab){
   // Only the page being looked at asks the machine anything.
   if(tab==='status'){ phStatusPoll(true); psWaterOpen(); psTankStart(); }
   else { phStatusPoll(false); psTankStop(); }
+  if(tab==='set') phVizFill();
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
     if(tab==='bean') initPhoneBean();
     else if(tab==='cam') initPhoneCam();
@@ -13875,12 +13984,25 @@ function psTankFrame(){
   g.strokeStyle='rgba(255,255,255,.42)'; g.lineWidth=1.5; g.stroke(); }
 // -- The shots, on the phone ---------------------------------------
 var _phLog=[], _phOpen=null;
+var _phVizMode=false;
 function phLoadLog(){
   var box=document.getElementById('phLogBody'); if(!box) return;
   box.innerHTML='<div class="ls-empty">'+escapeHtml(t('loading'))+'</div>';
   api('GET','/api/v1/shots?limit=25').then(function(r){
+    _phVizMode=false;
     _phLog=(r&&(r.items||r.shots))||[]; renderPhoneLog(); })
-    .catch(function(){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>'; }); }
+    .catch(function(){
+      // The machine is what this page is about, so it is asked first. Only when
+      // it cannot be reached is the copy on Visualizer worth showing, and only
+      // if an account was given for it.
+      if(!vizCreds()){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>'; return; }
+      box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phVizLoading'))+'</div>';
+      vizMyShots(25).then(function(list){
+        _phVizMode=true; _phOpen=null;
+        _phLog=list.map(vizToShot); renderPhoneLog(); },
+        function(e){
+          var m=((e&&e.message)==='auth')?t('phVizBad'):t('phOffline');
+          box.innerHTML='<div class="ls-empty">'+escapeHtml(m)+'</div>'; }); }); }
 // The two things worth doing to a shot after it has been pulled: say what it
 // was like, and ask what it says. Both where the shot is already open.
 var _phAi=null, _phAiBusy=false;
@@ -13925,6 +14047,15 @@ function phDrawOpen(){
   var cv=document.getElementById('phCanvas'); if(!cv) return;
   if(slFull[_phOpen]) return drawShotMeasurements(cv,slFull[_phOpen],false);
   var row=phShotRow(_phOpen); if(!row) return;
+  if(row._viz){
+    var want=_phOpen;
+    vizApi('/shots/'+encodeURIComponent(row._vizId)).then(function(v){
+      var full={ id:row.id, workflow:row.workflow, annotations:row.annotations,
+        measurements:vizMeasurements(v) };
+      slFull[row.id]=full;
+      var c2=document.getElementById('phCanvas');
+      if(c2&&_phOpen===want) drawShotMeasurements(c2,full,false); }).catch(function(){});
+    return; }
   var want=_phOpen;
   withFullShots([row]).then(function(f){
     var c2=document.getElementById('phCanvas');
@@ -13976,10 +14107,12 @@ function renderPhoneLog(){
       +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
       +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
         +'<div class="pl-canvas"><canvas id="phCanvas"></canvas></div>'
-        +tasteCardHtml(sh.id,tasteOf(sh),'ph')
-        +'<div class="field pl-note"><label>'+escapeHtml(t('notesLabel'))+'</label>'
+        +(sh._viz?('<div class="pl-vizmark">'+escapeHtml(t('phVizRead'))+'</div>')
+          :tasteCardHtml(sh.id,tasteOf(sh),'ph')
+        +(sh._viz?(a.espressoNotes?('<div class="pl-sub" style="margin-top:10px">'+escapeHtml(a.espressoNotes)+'</div>'):'')
+          :('<div class="field pl-note"><label>'+escapeHtml(t('notesLabel'))+'</label>'
           +'<textarea rows="2" placeholder="'+escapeAttr(t('phNotePh'))+'"'
-          +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(tasteNoteOf(sh))+'</textarea></div>'
+          +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(tasteNoteOf(sh))+'</textarea></div>'))
         +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>'):'')
         +(_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi)+'</div>'):'')
         // A reading that is on screen is a reason to ask for another one, not a
@@ -13991,7 +14124,7 @@ function renderPhoneLog(){
           +'<button type="button" class="m-btn mb-analyze"'+(_phAiBusy?' disabled aria-busy="true"':'')
             +' onclick="event.stopPropagation();phAiRun(\''+sh.id+'\')">\u2728 '
             +escapeHtml(t(_phAi?'aiRerun':'aiRun'))+'</button>'
-        +'</div>'
+        +'</div>')
         +'</div>'):'')
       +'</div>'; }).join('')+'</div>';
   phDrawOpen(); }
