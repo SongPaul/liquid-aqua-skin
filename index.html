@@ -3013,14 +3013,56 @@ var _lang='en';
 // screen on its own. What it can do is settle the vocabulary: those 159 are
 // baked in below as the words a translation has to use, and the AI fills the
 // rest around them.
-// The words Decent uses for these are kept beside the skin rather than inside
-// it: they are read once, when a translation is actually being made, and never
-// on the way to a screen.
+// Decent's own translation sheet travels with the skin as the file they publish,
+// not as an extract of it. It is read once, when a translation is actually being
+// made, and never on the way to a screen -- so a megazyte and a half of it costs
+// nothing until somebody asks for a language. Shipping the sheet rather than a
+// summary of it means a phrase added to this skin later is matched against the
+// official wording too, with nothing to regenerate.
+var GLOSS_COLS={fr:'fr',es:'es',de:'de',it:'it',nl:'nl',pt:'pt',da:'da',sv:'sv',
+  nb:'no',zh:'zh-hans',zt:'zh-hant',ar:'ar',he:'he'};
+function csvRows(text){
+  var rows=[], row=[], cur='', q=false, i=0;
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+  while(i<text.length){
+    var c=text.charAt(i);
+    if(q){
+      if(c==='\"'){ if(text.charAt(i+1)==='\"'){ cur+='\"'; i+=2; continue; } q=false; i++; continue; }
+      cur+=c; i++; continue; }
+    if(c==='\"'){ q=true; i++; continue; }
+    if(c===','){ row.push(cur); cur=''; i++; continue; }
+    if(c==='\r'){ i++; continue; }
+    if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; i++; continue; }
+    cur+=c; i++; }
+  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+  return rows; }
+// The sheet is keyed on the English phrase, so the two are compared with the
+// punctuation and casing that differ between a label and a sentence taken off.
+function glossNorm(x){ return String(x==null?'':x).replace(/\s+/g,' ').trim().replace(/:$/,'').trim().toLowerCase(); }
+function buildGloss(rows){
+  var hdr=rows[0]||[], idx={};
+  Object.keys(GLOSS_COLS).forEach(function(code){
+    var i=hdr.indexOf(GLOSS_COLS[code]); if(i>=0) idx[code]=i; });
+  var by={};
+  for(var r=1;r<rows.length;r++){
+    var row=rows[r]; if(!row||!row[0]) continue;
+    var k=glossNorm(row[0]); if(k&&!by[k]) by[k]=row; }
+  var out={};
+  function put(flatKey,text){
+    var row=by[glossNorm(text)]; if(!row) return;
+    Object.keys(idx).forEach(function(code){
+      var w=String(row[idx[code]]||'').trim(); if(!w) return;
+      (out[code]||(out[code]={}))[flatKey]=w; }); }
+  Object.keys(I18N.en).forEach(function(key){
+    var v=I18N.en[key];
+    if(typeof v==='string') put(key,v);
+    else if(Array.isArray(v)) v.forEach(function(x,i){ put(key+'#'+i,String(x)); }); });
+  return out; }
 var I18N_GLOSS={}, _glossT=null;
 function loadGloss(){
   if(_glossT) return _glossT;
-  _glossT=fetch('de1-terms.json').then(function(r){ return r.ok?r.json():null; })
-    .then(function(j){ if(j&&typeof j==='object') I18N_GLOSS=j; return I18N_GLOSS; })
+  _glossT=fetch('de1-translations.csv').then(function(r){ return r.ok?r.text():null; })
+    .then(function(txt){ if(txt) I18N_GLOSS=buildGloss(csvRows(txt)); return I18N_GLOSS; })
     .catch(function(){ return I18N_GLOSS; });
   return _glossT; }
 var I18N_LANGS=[['en','English'],['ko','\ud55c\uad6d\uc5b4'],['fr','Fran\u00e7ais'],['es','Espa\u00f1ol'],
@@ -3074,7 +3116,7 @@ function aiTranslateLang(lang,onStep){
     var part=chunks[ci], obj={}, hint={};
     part.forEach(function(p){
       obj[p[0]]=p[1];
-      var g=gloss[p[0].split('#')[0]]; if(g) hint[p[0]]=g; });
+      var g=gloss[p[0]]; if(g) hint[p[0]]=g; });
     var prompt='You are translating the interface of an espresso machine app into '+name+'.\n'
       +'Return ONLY a JSON object with exactly the same keys as the input, each value the '+name+' translation.\n'
       +'Rules:\n'
