@@ -3137,7 +3137,7 @@ function onMachineState(ms,prev){
   // The tank chip reads the machine state, so it has to be redrawn when that
   // changes and not only when a new water level arrives.
   if(MAINT[ms.state]) maintTrack(ms.state,ms.substate||'');
-  if(ms.state!==prev&&(MAINT[ms.state]||MAINT[prev])&&spOpen()&&spCat==='maint') renderSpContent();
+  if(ms.state!==prev&&(MAINT[ms.state]||MAINT[prev])&&spOpen()&&spCat==='machine') renderSpContent();
   if(ms.state!==prev){ updateWaterUI();
     if(ms.state==='needsWater') toast(t('needsWaterToast'),'err'); }
   var inEspresso=(ms.state==='espresso');
@@ -4832,14 +4832,9 @@ function setAiProvider(v){ prefs.aiProvider=(AI_PROVIDERS.indexOf(v)>=0)?v:'gemi
 // ── Settings full page ──────────────────────────────────────────────
 var SP_CATS=[
   {id:'general', ic:'⚙', key:'catGeneral'},
-  {id:'display', ic:'🔆', key:'catDisplay'},
   {id:'machine', ic:'☕', key:'catMachine'},
   {id:'scale',   ic:'⚖️', key:'catScale'},
-  {id:'maint',   ic:'🧽', key:'catMaint'},
-  {id:'de1',     ic:'🎛', key:'catDe1'},
-  {id:'presence',ic:'🛌', key:'catPresence'},
   {id:'phone',   ic:'📱', key:'catPhone'},
-  {id:'calib',   ic:'📐', key:'catCalib'},
   {id:'updates', ic:'⬆', key:'catUpdates'},
   {id:'ai',      ic:'✨', key:'catAI'},
   {id:'plugins', ic:'🧩', key:'plugins'}
@@ -4848,8 +4843,8 @@ var spCat='general', gwSettings={}, displayState={}, machineInfo={};
 function openSettingsPage(){ document.getElementById('settingsPage').classList.add('show'); renderSpNav();
   _spMsg=null; paintSpStatus();
   // preload gateway settings + display + machine info
-  api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='display'||spCat==='machine'||spCat==='scale'||spCat==='updates') renderSpContent(); }).catch(function(){});
-  api('GET','/api/v1/display').then(function(d){ displayState=d||{}; if(spCat==='display') renderSpContent(); }).catch(function(){});
+  api('GET','/api/v1/settings').then(function(s){ gwSettings=s||{}; if(spCat==='general'||spCat==='machine'||spCat==='scale'||spCat==='updates') renderSpContent(); }).catch(function(){});
+  api('GET','/api/v1/display').then(function(d){ displayState=d||{}; if(spCat==='general') renderSpContent(); }).catch(function(){});
   api('GET','/api/v1/machine/info').then(function(i){ machineInfo=i||{}; if(spCat==='machine') renderSpContent(); }).catch(function(){});
   // the guideline picker offers recent shots, so they have to be there
   if(!shotList.length) loadShotList();
@@ -4867,10 +4862,8 @@ function renderSpNav(){ var nav=document.getElementById('spNav'); nav.innerHTML=
   SP_CATS.forEach(function(c){ var b=document.createElement('button'); b.className='sp-nav-item'+(c.id===spCat?' active':'');
     b.innerHTML='<span class="ic">'+c.ic+'</span><span>'+t(c.key)+'</span>'; b.onclick=function(){ spSelect(c.id); }; nav.appendChild(b); }); }
 function spSelect(id){ spCat=id;
-  if(id==='de1') loadDe1Settings();
+  if(id==='machine'){ loadDe1Settings(); loadPresence(); loadCalib(); }
   if(id==='scale') loadDevicesForDosing();
-  if(id==='presence') loadPresence();
-  if(id==='calib') loadCalib();
   if(id==='updates') loadSkinInfo();
   renderSpNav(); renderSpContent(); }
 // Which part of a category was last looked at, kept per category so coming back
@@ -4909,7 +4902,7 @@ function sw(id,checked,onchg,disabled){ return '<label class="switch"><input typ
 // here would be written straight back to the machine.
 var de1Settings={}, presence={}, calib={};
 function loadDe1Settings(){ api('GET','/api/v1/machine/settings')
-  .then(function(x){ de1Settings=x||{}; if(spOpen()&&spCat==='de1') renderSpContent(); }).catch(function(){}); }
+  .then(function(x){ de1Settings=x||{}; if(spOpen()&&spCat==='machine') renderSpContent(); }).catch(function(){}); }
 // GET answers usb as a boolean, POST takes the word, and an absent value is
 // the machine's factory state rather than "off".
 function usbOn(){ var v=de1Settings.usb; return !(v===false||v==='disable'); }
@@ -4921,7 +4914,7 @@ function setDe1(key,v){
     .then(function(){ spSaved(); })
     .catch(function(e){ spFailed(e); loadDe1Settings(); }); }
 function loadPresence(){ api('GET','/api/v1/presence/settings')
-  .then(function(x){ presence=x||{}; if(spOpen()&&spCat==='presence') renderSpContent(); }).catch(function(){}); }
+  .then(function(x){ presence=x||{}; if(spOpen()&&spCat==='machine') renderSpContent(); }).catch(function(){}); }
 function setPresenceOn(on){ presence.userPresenceEnabled=on;
   api('POST','/api/v1/presence/settings',{userPresenceEnabled:on})
     .then(function(){ spSaved(); }).catch(function(e){ spFailed(e); loadPresence(); }); }
@@ -4943,7 +4936,7 @@ function numRow(key,desc,field,min,max,step,unit,store,setter,dflt){
 var CALIB_TARGETS=['flow','pressure','temperature'];
 function loadCalib(){ CALIB_TARGETS.forEach(function(tg){
     api('GET','/api/v1/machine/calibration/'+tg).then(function(x){ calib[tg]=x||{};
-      if(spOpen()&&spCat==='calib') renderSpContent(); }).catch(function(){ calib[tg]={err:true}; }); }); }
+      if(spOpen()&&spCat==='machine') renderSpContent(); }).catch(function(){ calib[tg]={err:true}; }); }); }
 function calibRows(){
   var h='';
   CALIB_TARGETS.forEach(function(tg){
@@ -5004,11 +4997,14 @@ function maintTrack(st,sub){
   var prev=_maintAt[st]||0, next=def.at(sub,prev);
   if(next===prev) return;
   _maintAt[st]=next; _maintRan[st]=true;
-  if(spOpen()&&spCat==='maint') renderSpContent(); }
+  if(spOpen()&&spCat==='machine') renderSpContent(); }
 function spOpen(){ var el=document.getElementById('settingsPage'); return !!el&&el.classList.contains('show'); }
 function renderSpContent(){ var box=document.getElementById('spContent'); if(!box) return; var h='';
   if(spCat==='general'){
     h+='<div class="sp-cat-title">'+t('catGeneral')+'</div>';
+    // Each part is built into h in turn and lifted out at the end, so the rows
+    // below are the same rows they always were.
+    var _hTop=h; h='';
     h+=row('language','','<select class="set-select" onchange="setLang(this.value)">'+opt('auto','Auto',prefs.lang)+opt('en','English',prefs.lang)+opt('ko','한국어',prefs.lang)+'</select>');
     h+=row('tempUnit','','<select class="set-select" onchange="setUnit(\'temp\',this.value)">'+opt('C','°C',prefs.tempUnit)+opt('F','°F',prefs.tempUnit)+'</select>');
     h+=row('weightUnit','','<select class="set-select" onchange="setUnit(\'weight\',this.value)">'+opt('g','g',prefs.weightUnit)+opt('oz','oz',prefs.weightUnit)+'</select>');
@@ -5020,8 +5016,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     // is nothing to go back to, so nothing is offered.
     if(canExitToDashboard())
       h+=row('exitDash','exitDashDesc','<button class="m-btn tinted" onclick="exitToDashboard()">'+escapeHtml(t('exitDashBtn'))+'</button>');
-  } else if(spCat==='display'){
-    h+='<div class="sp-cat-title">'+t('catDisplay')+'</div>';
+    var pGeneral=h; h='';
     var br=(displayState.brightness!=null?displayState.brightness:100);
     var brSupported=!displayState.platformSupported||displayState.platformSupported.brightness!==false;
     h+=row('brightness','brightnessDesc','<div class="opt-ctrl"><input type="range" class="slider" min="0" max="100" step="1" value="'+br+'"'+(brSupported?'':' disabled')+' oninput="setBrightness(this.value,true)" onchange="setBrightness(this.value,false)"><span class="opt-val" id="brVal">'+br+'</span></div>');
@@ -5037,6 +5032,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
       h+='<div class="set-desc" style="margin:0 0 4px;color:var(--accent);font-weight:700">'+escapeHtml(now)+'</div>';
       if(guideFollowsProfile()) h+='<div class="set-desc" style="margin:0 0 14px">'+escapeHtml(t('guideNominal'))+'</div>';
       else h+='<div class="set-desc" style="margin:0 0 14px">'+escapeHtml(t('guideWhichDesc'))+'</div>'; }
+    var pScreen=h; h='';
     h+=row('camStream','camStreamDesc',sw('setCam',!!prefs.cam,'setCamOn(this.checked)'));
     if(prefs.cam){
       h+='<div class="set-row" style="display:block"><div class="set-info" style="margin-bottom:8px">'
@@ -5051,10 +5047,12 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
       var cz=Math.round((prefs.camZoom||1)*100);
       h+=row('camZoom','camZoomDesc','<div class="opt-ctrl"><input type="range" class="slider" min="100" max="300" step="5" value="'+cz+'" oninput="setCamZoom(this.value/100,true)" onchange="setCamZoom(this.value/100,false)"><span class="opt-val" id="camZoomVal">'+cz+'%</span></div>');
       h+=row('camMirror','camMirrorDesc',sw('setCamMirror',!!prefs.camMirror,'setCamMirror(this.checked)')); }
+    var pCam=h; h=pScreen;
     h+=row('fx','fxDesc',sw('setFx',!!prefs.fx,'setFx(this.checked)'));
     h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
     var sb=prefs.sleepBrightness||20;
     h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
+    h=_hTop+spTabsHtml('general',[[t('catGeneral'),pGeneral],[t('catDisplay'),h],[t('camStream'),pCam]]);
   } else if(spCat==='machine'){
     h+='<div class="sp-cat-title">'+t('catMachine')+'</div>';
     var rl=Math.round(state.water.refill||0);
@@ -5078,7 +5076,24 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
       +infoCell(t('model'),machineInfo.model||'—')+infoCell(t('serial'),machineInfo.serialNumber||'—')
       +infoCell(t('firmware'),machineInfo.version||'—')+infoCell('GHC',machineInfo.GHC?'Yes':'No')
       +infoCell(t('rkDetected'),rkDet)+'</div>';
-    h+=spTabsHtml('machine',[[t('tank'),tankPane],[t('flowCal'),flowPane],[t('machineInfo'),infoPane]]);
+    // The DE1's own settings, the sleep timer, the sensor calibrations and the
+    // cleaning cycles were four entries in the list. They are all the machine.
+    var de1Pane='<div class="set-desc" style="margin-bottom:12px">'+t('de1Desc')+'</div>'
+      +row('usbCharger','usbChargerDesc',sw('setUsb',usbOn(),'setDe1(\'usb\',this.checked?\'enable\':\'disable\')'))
+      +numRow('fan','fanDesc','fan',0,100,1,'\u00b0C')
+      +numRow('tankTemp','tankTempDesc','tankTemp',10,40,1,'\u00b0C')
+      +row('steamPurge','steamPurgeDesc',
+        '<select class="set-select" onchange="setDe1(\'steamPurgeMode\',this.value)">'
+        +opt('0',t('purgeNormal'),String(purgeMode()))+opt('1',t('purgeTwoTap'),String(purgeMode()))+'</select>');
+    var presPane='<div class="set-desc" style="margin-bottom:12px">'+t('presenceDesc')+'</div>'
+      +row('presenceOn','presenceOnDesc',sw('setPresence',!!presence.userPresenceEnabled,'setPresenceOn(this.checked)'))
+      +numRow('sleepAfter','sleepAfterDesc','sleepTimeoutMinutes',1,120,1,t('minShort'),presence,'setPresenceNum',30);
+    var calibPane='<div class="set-warn">'+t('calibWarn')+'</div>'+calibRows();
+    var maintPane='<div class="set-desc" style="margin-bottom:12px">'+t('maintDesc')+'</div>'
+      +maintCard('cleaning')+maintCard('descaling')+maintCard('airPurge');
+    h+=spTabsHtml('machine',[[t('tank'),tankPane],[t('flowCal'),flowPane],
+      [t('catDe1'),de1Pane],[t('catPresence'),presPane],[t('catCalib'),calibPane],
+      [t('catMaint'),maintPane],[t('machineInfo'),infoPane]]);
   } else if(spCat==='scale'){
     h+='<div class="sp-cat-title">'+t('catScale')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('scaleDesc')+'</div>';
@@ -5087,30 +5102,6 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('scalePower','scalePowerDesc','<select class="set-select" onchange="setScalePowerMode(this.value)">'
       +opt('disabled',t('spmNothing'),spm)+opt('displayOff',t('spmDisplayOff'),spm)+opt('disconnect',t('spmDisconnect'),spm)+'</select>');
     h+='<div id="dosingBlock">'+dosingBlockHtml()+'</div>';
-  } else if(spCat==='de1'){
-    h+='<div class="sp-cat-title">'+t('catDe1')+'</div>';
-    h+='<div class="set-desc" style="margin-bottom:12px">'+t('de1Desc')+'</div>';
-    h+=row('usbCharger','usbChargerDesc',sw('setUsb',usbOn(),'setDe1(\'usb\',this.checked?\'enable\':\'disable\')'));
-    h+=numRow('fan','fanDesc','fan',0,100,1,'\u00b0C');
-    h+=numRow('tankTemp','tankTempDesc','tankTemp',10,40,1,'\u00b0C');
-    h+=row('steamPurge','steamPurgeDesc',
-      '<select class="set-select" onchange="setDe1(\'steamPurgeMode\',this.value)">'
-      +opt('0',t('purgeNormal'),String(purgeMode()))+opt('1',t('purgeTwoTap'),String(purgeMode()))+'</select>');
-  } else if(spCat==='presence'){
-    h+='<div class="sp-cat-title">'+t('catPresence')+'</div>';
-    h+='<div class="set-desc" style="margin-bottom:12px">'+t('presenceDesc')+'</div>';
-    h+=row('presenceOn','presenceOnDesc',sw('setPresence',!!presence.userPresenceEnabled,'setPresenceOn(this.checked)'));
-    h+=numRow('sleepAfter','sleepAfterDesc','sleepTimeoutMinutes',1,120,1,t('minShort'),presence,'setPresenceNum',30);
-  } else if(spCat==='calib'){
-    h+='<div class="sp-cat-title">'+t('catCalib')+'</div>';
-    h+='<div class="set-warn">'+t('calibWarn')+'</div>';
-    h+=calibRows();
-  } else if(spCat==='maint'){
-    h+='<div class="sp-cat-title">'+t('catMaint')+'</div>';
-    h+='<div class="set-desc" style="margin-bottom:12px">'+t('maintDesc')+'</div>';
-    h+=maintCard('cleaning');
-    h+=maintCard('descaling');
-    h+=maintCard('airPurge');
   } else if(spCat==='updates'){
     // Machine, app and skin are three things that go out of date, and asking
     // which one is behind should not mean knowing which of three pages to open.
