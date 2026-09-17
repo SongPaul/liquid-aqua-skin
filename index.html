@@ -1145,6 +1145,10 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
   background:transparent;color:rgba(255,255,255,.78);font:700 13px/1 inherit;cursor:pointer}
 .ph-src button.on{background:rgba(255,255,255,.92);color:#3b1d72;
   box-shadow:0 6px 16px rgba(20,10,54,.26)}
+.ph-home{display:flex;align-items:center;gap:13px}
+.ph-home-ico{width:52px;height:52px;border-radius:13px;flex:none;
+  box-shadow:0 6px 18px rgba(20,10,54,.3)}
+.ph-home .mb-sec-h{margin-bottom:3px}
 .pl-flat{cursor:default}
 .pl-end{padding:6px 0 2px;text-align:center;font-size:12px;color:var(--ink-mute)}
 #phoneShell .pl-end{color:rgba(255,255,255,.7)}
@@ -2498,6 +2502,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <button class="m-btn primary mb-analyze" onclick="phVizSave()" data-i18n="phVizCheck">Check and save</button>
       <div class="set-desc" id="phVizStat" style="margin-top:10px"></div>
     </div>
+    <div class="mb-card" id="phHomeBox" style="margin-top:14px"></div>
     <div class="mb-card" style="margin-top:14px">
       <button class="m-btn mb-analyze" onclick="phoneShowTablet()" data-i18n="phTabletView">Show the tablet screen</button>
       <div class="set-desc" style="margin-top:10px" data-i18n="phTabletViewNote"></div>
@@ -2661,6 +2666,13 @@ var I18N={
     phoneCopy:'Copy the address', phoneCopied:'Address copied',
     phoneHomeTip:'Add it to the home screen and it opens like an app, without the browser bars.',
     phoneHostNote:'Only needed if the address above cannot be reached — type this tablet\'s Wi-Fi address.',
+    phHomeTitle:'Add to the home screen', phHomeInstall:'Install',
+    phHomeWhy:'Opens straight from the home screen, without hunting for the address again.',
+    phHomeIos:'Tap the share button at the bottom of Safari, then \u201cAdd to Home Screen\u201d.',
+    phHomeAndroid:'Open the \u22ee menu at the top right of Chrome, then \u201cAdd to Home screen\u201d.',
+    phHomeOther:'Look for \u201cAdd to Home screen\u201d in the browser\u2019s menu.',
+    phHomeReady:'This browser can add it for you.',
+    phHomeAlready:'Already opened from the home screen.',
     phTabletView:'Show the tablet screen',
     phTabletViewNote:'Switches this phone back to the full screen and remembers it. Reach the phone app again from the address with ?phone=1.',
     phVizTitle:'Visualizer account', phVizUser:'Username', phVizPass:'Password',
@@ -2937,6 +2949,13 @@ var I18N={
     phoneCopy:'주소 복사', phoneCopied:'주소를 복사했습니다',
     phoneHomeTip:'홈 화면에 추가하면 주소창 없이 앱처럼 열립니다.',
     phoneHostNote:'위 주소로 접속이 안 될 때만 쓰세요 — 이 태블릿의 Wi-Fi 주소를 적습니다.',
+    phHomeTitle:'홈 화면에 추가', phHomeInstall:'추가하기',
+    phHomeWhy:'홈 화면에서 바로 열립니다. 주소를 다시 찾지 않아도 됩니다.',
+    phHomeIos:'Safari 아래 공유 버튼을 누르고 “홈 화면에 추가”를 고르세요.',
+    phHomeAndroid:'Chrome 오른쪽 위 ⋮ 메뉴에서 “홈 화면에 추가”를 고르세요.',
+    phHomeOther:'브라우저 메뉴에서 “홈 화면에 추가”를 찾으세요.',
+    phHomeReady:'이 브라우저는 바로 추가해 줄 수 있습니다.',
+    phHomeAlready:'이미 홈 화면에서 열렸습니다.',
     phTabletView:'태블릿 화면으로 보기',
     phTabletViewNote:'이 폰을 큰 화면으로 되돌리고 그 선택을 기억합니다. 폰 화면은 주소 뒤에 ?phone=1 을 붙이면 다시 열립니다.',
     phVizTitle:'Visualizer 계정', phVizUser:'아이디', phVizPass:'비밀번호',
@@ -13803,6 +13822,7 @@ function phoneShowTablet(){
 // the meta tags in the head and the touch icon; everywhere else reads the
 // manifest. Both are built here because the skin is one file and cannot ship
 // either as a file of its own.
+var _phIcon=null, _phInstall=null;
 function phoneHomeIcon(){
   try{
     var n=192, c=document.createElement('canvas'); c.width=c.height=n;
@@ -13819,6 +13839,7 @@ function phoneHomeIcon(){
       g.stroke(); });
     g.globalAlpha=1;
     var icon=c.toDataURL('image/png');
+    _phIcon=icon;
     var l=document.createElement('link'); l.rel='apple-touch-icon'; l.href=icon; document.head.appendChild(l);
     var dir=window.location.pathname.replace(/[^/]*$/,'');
     var mf={ name:'Liquid Aqua', short_name:'Aqua',
@@ -13830,6 +13851,42 @@ function phoneHomeIcon(){
     var m=document.createElement('link'); m.rel='manifest'; m.href=URL.createObjectURL(b);
     document.head.appendChild(m);
   }catch(_){} }
+// A browser that means to offer an install hands the offer over first; it is
+// kept so the page can make it at a moment of its own choosing.
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault(); _phInstall=e; phHomeCard(); });
+window.addEventListener('appinstalled',function(){ _phInstall=null; phHomeCard(); });
+function phStandalone(){
+  try{
+    if(navigator.standalone===true) return true;
+    return !!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+  }catch(_){ return false; } }
+function phPlatform(){
+  var ua=navigator.userAgent||'';
+  // an iPad reports itself as a Mac, and is told apart by having a touchscreen
+  if(/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&(navigator.maxTouchPoints||0)>1)) return 'ios';
+  if(/Android/.test(ua)) return 'android';
+  return 'other'; }
+function phHomeCard(){
+  var box=document.getElementById('phHomeBox'); if(!box) return;
+  var icon=_phIcon?('<img class="ph-home-ico" src="'+_phIcon+'" alt="">'):'';
+  if(phStandalone()){
+    box.innerHTML='<div class="ph-home">'+icon+'<div><div class="mb-sec-h" data-i18n="phHomeTitle">'
+      +escapeHtml(t('phHomeTitle'))+'</div>'
+      +'<div class="set-desc">'+escapeHtml(t('phHomeAlready'))+'</div></div></div>';
+    return; }
+  var how=t(_phInstall?'phHomeReady':('phHome'+({ios:'Ios',android:'Android'}[phPlatform()]||'Other')));
+  box.innerHTML='<div class="ph-home">'+icon
+    +'<div><div class="mb-sec-h">'+escapeHtml(t('phHomeTitle'))+'</div>'
+    +'<div class="set-desc">'+escapeHtml(t('phHomeWhy'))+'</div></div></div>'
+    +'<div class="set-desc" style="margin-top:10px">'+escapeHtml(how)+'</div>'
+    +(_phInstall?('<button class="m-btn primary mb-analyze" style="margin-top:12px"'
+      +' onclick="phHomeInstall()">'+escapeHtml(t('phHomeInstall'))+'</button>'):''); }
+function phHomeInstall(){
+  if(!_phInstall) return;
+  var e=_phInstall; _phInstall=null;
+  try{ e.prompt(); }catch(_){}
+  phHomeCard(); }
 // Reaching the gateway is the one thing every page here depends on, so it is
 // asked once at the start and kept under watch -- rarely while it answers, more
 // often while it does not, so a phone that walks back into range says so.
@@ -13882,7 +13939,7 @@ function phoneGo(tab){
   // Only the page being looked at asks the machine anything.
   if(tab==='status'){ phStatusPoll(true); psWaterOpen(); psTankStart(); }
   else { phStatusPoll(false); psTankStop(); }
-  if(tab==='set') phVizFill();
+  if(tab==='set'){ phVizFill(); phHomeCard(); }
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
     if(tab==='bean') initPhoneBean();
     else if(tab==='cam') initPhoneCam();
