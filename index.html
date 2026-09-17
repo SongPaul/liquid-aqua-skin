@@ -1012,22 +1012,53 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 /* The phone's document is shorter than its screen, and html carries the light
    canvas colour, so the page paints its own ground rather than letting that
    show through under a dark theme. */
-#phoneShell{padding:14px 14px 34px;min-height:100vh;background-attachment:fixed;
+#phoneShell{padding:14px 14px calc(86px + env(safe-area-inset-bottom,0px));min-height:100vh;background-attachment:fixed;
   background:radial-gradient(circle at 18% 12%,rgba(139,92,246,.30),transparent 46%),
              radial-gradient(circle at 88% 22%,rgba(56,189,248,.26),transparent 48%),
              radial-gradient(circle at 76% 88%,rgba(236,72,153,.22),transparent 48%),
              linear-gradient(160deg,#e8ecff,#f5edff)}
-/* Two jobs, one page. The nav is the only thing that knows there are two. */
-.ph-nav{display:flex;gap:8px;max-width:520px;margin:0 auto 14px;padding:5px;border-radius:100px;
+/* Several jobs, one page. The bar stays under the thumb rather than scrolling
+   away with the content, which is where a phone expects to find it. */
+.ph-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+  background:var(--mb-card);border-top:1px solid var(--glass-line);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.ph-tab{flex:1;min-height:52px;border:0;border-radius:14px;background:transparent;
+  font-family:var(--font);font-size:11px;font-weight:800;color:var(--ink-mute);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  -webkit-appearance:none;transition:color .15s,background-color .15s}
+.ph-tab .ic{font-size:19px;line-height:1}
+.ph-tab.on{background-color:var(--ctl-face);color:var(--accent)}
+#camSetupPage,#mobilePage,#phStatusPage,#phLogPage{max-width:520px;margin:0 auto}
+/* What the machine is doing, read from across the room. */
+.ps-state{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--r-md);
   background:var(--mb-card);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
-.ph-tab{flex:1;min-height:44px;border:0;border-radius:100px;background:transparent;
-  font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink-mute);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:7px;-webkit-appearance:none;
-  transition:color .15s,background-color .15s}
-.ph-tab .ic{font-size:15px;line-height:1}
-.ph-tab.on{background-color:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(99,102,241,.4)}
-body.night .ph-tab.on{background-color:var(--accent);color:#fff}
-#camSetupPage,#mobilePage{max-width:520px;margin:0 auto}
+.ps-dot{width:12px;height:12px;border-radius:50%;background:var(--ink-mute);flex:none;
+  box-shadow:0 0 0 4px rgba(139,136,168,.18)}
+.ps-state.run .ps-dot{background:var(--green);box-shadow:0 0 0 4px rgba(16,185,129,.22)}
+.ps-state.warn .ps-dot{background:var(--amber);box-shadow:0 0 0 4px rgba(245,158,11,.22)}
+.ps-state.off .ps-dot{background:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.22)}
+.ps-name{font-size:16px;font-weight:800;color:var(--ink);flex:1;min-width:0}
+.ps-clock{font-size:22px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.ps-cell{background:var(--mb-card);border:1px solid var(--glass-line);border-radius:var(--r-md);
+  box-shadow:var(--shadow);padding:13px 14px}
+.ps-k{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
+.ps-v{font-size:21px;font-weight:800;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums}
+.ps-v small{font-size:12px;font-weight:700;color:var(--ink-mute);margin-left:3px}
+/* The shots, as a phone would list them. */
+.pl-list{display:flex;flex-direction:column;gap:9px}
+.pl-item{background:var(--mb-card);border:1px solid var(--glass-line);border-radius:var(--r-md);
+  box-shadow:var(--shadow);padding:13px 14px;cursor:pointer}
+.pl-top{display:flex;align-items:baseline;gap:8px}
+.pl-when{font-size:12px;font-weight:700;color:var(--ink-mute);white-space:nowrap}
+.pl-prof{font-size:14px;font-weight:800;color:var(--ink);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-rate{font-size:12px;font-weight:800;color:var(--amber);white-space:nowrap}
+.pl-sub{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
+.pl-open{margin-top:12px}
+.pl-canvas{height:150px;border-radius:12px;background:var(--field);border:1px solid var(--edge);padding:6px}
+.pl-canvas canvas{width:100%;height:100%;display:block}
 body.night #phoneShell{background-attachment:fixed;
   background:radial-gradient(circle at 18% 12%,rgba(99,102,241,.26),transparent 46%),
              radial-gradient(circle at 88% 22%,rgba(56,189,248,.18),transparent 48%),
@@ -2038,7 +2069,20 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 
 <!-- ── The phone: one page, one nav, whichever job was asked for ── -->
 <div id="phoneShell" style="display:none">
-  <div class="ph-nav" id="phNav"></div>
+<div id="phStatusPage" style="display:none">
+  <div class="mb-wrap">
+    <div class="mb-head"><div class="mb-title"><span>☕ </span><span data-i18n="phTabStatus">Machine</span></div>
+      <div class="mb-sub" id="phStatusSub"></div></div>
+    <div id="phStatusBody"></div>
+  </div>
+</div>
+<div id="phLogPage" style="display:none">
+  <div class="mb-wrap">
+    <div class="mb-head"><div class="mb-title"><span>◷ </span><span data-i18n="phTabLog">Shots</span></div>
+      <div class="mb-sub" data-i18n="phLogSub">The last shots this machine pulled.</div></div>
+    <div id="phLogBody"></div>
+  </div>
+</div>
 <div id="camSetupPage" style="display:none">
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>📷 </span><span data-i18n="camSetupTitle">Camera for the machine</span></div>
@@ -2124,6 +2168,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     </div>
   </div>
 </div>
+  <nav class="ph-nav" id="phNav"></nav>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2244,7 +2289,11 @@ var I18N={
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
-    phTabBean:'Beans', phTabCam:'Camera',
+    phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera',
+    phLogSub:'The last shots this machine pulled.', phLogEmpty:'No shots recorded yet',
+    phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
+    phStIdle:'Ready', phStEspresso:'Pulling a shot', phStSteam:'Steaming', phStWater:'Hot water',
+    phStFlush:'Flushing', phStSleep:'Asleep', phStNoWater:'Out of water', phStOther:'Busy',
     mbShootLead:'Photograph the bag', mbShootHint:'Front and back, and whichever label carries the roast date. Up to five.',
     mbSecBean:'The coffee', mbSecOrigin:'Where it came from', mbSecNotes:'Everything else on the bag',
     scanFound:'Not on the bag, found by search: {n} \u2014 worth checking',
@@ -2450,7 +2499,11 @@ var I18N={
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
-    phTabBean:'원두 등록', phTabCam:'카메라',
+    phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라',
+    phLogSub:'이 머신이 최근에 내린 샷입니다.', phLogEmpty:'아직 기록된 샷이 없습니다',
+    phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
+    phStIdle:'준비됨', phStEspresso:'추출 중', phStSteam:'스팀 중', phStWater:'온수',
+    phStFlush:'플러시 중', phStSleep:'절전', phStNoWater:'물 부족', phStOther:'동작 중',
     mbShootLead:'봉투를 촬영하세요', mbShootHint:'앞뒤면과 로스팅일이 있는 라벨까지. 최대 5장.',
     mbSecBean:'원두', mbSecOrigin:'어디에서 왔는가', mbSecNotes:'봉투에 적힐 나머지',
     scanFound:'봉투에 없어 검색으로 찾은 항목: {n} \u2014 확인해 주세요',
@@ -12363,7 +12416,9 @@ function mbShowTarget(){
 // The phone had two pages behind two QR codes, and a person holding it has one
 // phone. It is one page now: the link still says which job was asked for, and
 // the other is a tap away rather than another code to find.
-var PHONE_TABS=[['bean','\u2728','phTabBean'],['cam','\ud83d\udcf7','phTabCam']];
+var PHONE_TABS=[['status','\u2615','phTabStatus'],['log','\u25f7','phTabLog'],
+                ['bean','\u2728','phTabBean'],['cam','\ud83d\udcf7','phTabCam']];
+var PHONE_PANES={status:'phStatusPage',log:'phLogPage',bean:'mobilePage',cam:'camSetupPage'};
 var phoneTab='', _phoneReady={};
 function bootPhone(tab){
   loadPrefs(); // picks up language + applies i18n
@@ -12391,12 +12446,99 @@ function renderPhoneNav(){
 function phoneGo(tab){
   if(phoneTab===tab) return;
   phoneTab=tab;
-  document.getElementById('mobilePage').style.display=(tab==='bean')?'block':'none';
-  document.getElementById('camSetupPage').style.display=(tab==='cam')?'block':'none';
+  for(var k in PHONE_PANES){
+    var el=document.getElementById(PHONE_PANES[k]); if(el) el.style.display=(k===tab)?'block':'none'; }
   renderPhoneNav();
+  // Only the page being looked at asks the machine anything.
+  if(tab==='status') phStatusPoll(true); else phStatusPoll(false);
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
-    if(tab==='bean') initPhoneBean(); else initPhoneCam(); }
+    if(tab==='bean') initPhoneBean();
+    else if(tab==='cam') initPhoneCam();
+    else if(tab==='log') initPhoneLog(); }
   try{ window.scrollTo(0,0); }catch(_){} }
+// -- What the machine is doing -------------------------------------
+// The tablet learns this from a socket it keeps open all day. A phone is
+// picked up for a minute, so it asks instead, and only while it is being
+// looked at: every two seconds, or every second through a shot.
+var PH_STATES={idle:'phStIdle',espresso:'phStEspresso',steam:'phStSteam',hotWater:'phStWater',
+  flush:'phStFlush',sleeping:'phStSleep',needsWater:'phStNoWater'};
+var PH_RUN={espresso:1,steam:1,hotWater:1,flush:1};
+var _phSnap=null, _phTimer=null, _phShotAt=null, _phFail=false;
+function phStatusPoll(on){
+  if(_phTimer){ clearTimeout(_phTimer); _phTimer=null; }
+  if(!on) return;
+  var tick=function(){
+    api('GET','/api/v1/machine/state',null,6000).then(function(r){
+      _phSnap=r||null; _phFail=false; }).catch(function(){ _phFail=true; })
+      .then(function(){
+        if(phoneTab!=='status') return;
+        renderPhoneStatus();
+        var st=phSnapState();
+        _phTimer=setTimeout(tick,PH_RUN[st]?1000:2500); }); };
+  tick(); }
+function phSnapState(){ var st=(_phSnap&&_phSnap.state)||{}; return String(st.state||'idle'); }
+function initPhoneLog(){ phLoadLog(); }
+function phNum(v,d){ var n=parseFloat(v); return isFinite(n)?n.toFixed(d==null?1:d):null; }
+function renderPhoneStatus(){
+  var box=document.getElementById('phStatusBody'); if(!box) return;
+  var sub=document.getElementById('phStatusSub');
+  if(_phFail&&!_phSnap){
+    box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>';
+    if(sub) sub.textContent=''; return; }
+  var d=_phSnap||{}, st=phSnapState(), run=!!PH_RUN[st];
+  var cls=(st==='needsWater')?'warn':(st==='sleeping')?'off':(run?'run':'');
+  if(sub) sub.textContent=_phFail?t('phStale'):'';
+  // A shot has no clock of its own here, so one is kept from when it started.
+  if(run&&st==='espresso'){ if(!_phShotAt) _phShotAt=Date.now(); }
+  else _phShotAt=null;
+  var secs=_phShotAt?Math.floor((Date.now()-_phShotAt)/1000):0;
+  var clock=_phShotAt?('<span class="ps-clock">'+Math.floor(secs/60)+':'+('0'+(secs%60)).slice(-2)+'</span>'):'';
+  function cell(k,v,u){ return '<div class="ps-cell"><div class="ps-k">'+escapeHtml(k)+'</div>'
+    +'<div class="ps-v">'+escapeHtml(v==null?'\u2014':String(v))+(u&&v!=null?'<small>'+escapeHtml(u)+'</small>':'')+'</div></div>'; }
+  var h='<div class="ps-state '+cls+'"><span class="ps-dot"></span>'
+    +'<span class="ps-name">'+escapeHtml(t(PH_STATES[st]||'phStOther'))+'</span>'+clock+'</div>';
+  h+='<div class="ps-grid">'
+    +cell(t('tempBasket'),phNum(d.groupTemperature),'\u00b0C')
+    +cell(t('tempMix'),phNum(d.mixTemperature),'\u00b0C')
+    +cell(t('pressure'),phNum(d.pressure),'bar')
+    +cell(t('flow'),phNum(d.flow),'ml/s')
+    +'</div>';
+  box.innerHTML=h; }
+// -- The shots, on the phone ---------------------------------------
+var _phLog=[], _phOpen=null;
+function phLoadLog(){
+  var box=document.getElementById('phLogBody'); if(!box) return;
+  box.innerHTML='<div class="ls-empty">'+escapeHtml(t('loading'))+'</div>';
+  api('GET','/api/v1/shots?limit=25').then(function(r){
+    _phLog=(r&&(r.items||r.shots))||[]; renderPhoneLog(); })
+    .catch(function(){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>'; }); }
+function phLogToggle(id){
+  _phOpen=(_phOpen===id)?null:id;
+  renderPhoneLog();
+  if(!_phOpen) return;
+  var row=_phLog.filter(function(x){ return x.id===_phOpen; })[0]; if(!row) return;
+  withFullShots([row]).then(function(full){
+    var sh=full[0]; if(!sh||_phOpen!==id) return;
+    var cv=document.getElementById('phCanvas'); if(cv) drawShotMeasurements(cv,sh,false); }); }
+function renderPhoneLog(){
+  var box=document.getElementById('phLogBody'); if(!box) return;
+  if(!_phLog.length){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phLogEmpty'))+'</div>'; return; }
+  box.innerHTML='<div class="pl-list">'+_phLog.map(function(sh){
+    var pr=(sh.workflow&&sh.workflow.profile)||{}, c=(sh.workflow&&sh.workflow.context)||{};
+    var a=sh.annotations||{};
+    var dose=parseFloat(a.actualDoseWeight!=null?a.actualDoseWeight:c.targetDoseWeight);
+    var yld=parseFloat(a.actualYield!=null?a.actualYield:c.targetYield);
+    var bits=[];
+    if(c.coffeeName) bits.push(c.coffeeName);
+    if(isFinite(dose)&&isFinite(yld)&&dose>0) bits.push(dose.toFixed(1)+'g \u2192 '+yld.toFixed(1)+'g  1:'+(yld/dose).toFixed(2));
+    var open=(_phOpen===sh.id);
+    return '<div class="pl-item" onclick="phLogToggle(\''+sh.id+'\')">'
+      +'<div class="pl-top"><span class="pl-prof">'+escapeHtml(pr.title||t('noProfile'))+'</span>'
+        +(a.enjoyment!=null?'<span class="pl-rate">\u2605 '+escapeHtml(String(a.enjoyment))+'</span>':'')
+        +'<span class="pl-when">'+escapeHtml(fmtShotWhen(sh))+'</span></div>'
+      +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
+      +(open?'<div class="pl-open"><div class="pl-canvas"><canvas id="phCanvas"></canvas></div></div>':'')
+      +'</div>'; }).join('')+'</div>'; }
 function initPhoneBean(){
   blendHost(false);
   var m=/[?&]bean=([^&]+)/.exec(window.location.search);
@@ -12418,7 +12560,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // The old links still say which job; either one lands on the same page.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootPhone('bean'); return; }
   if(/[?&]camsetup=1/.test(window.location.search)){ bootPhone('cam'); return; }
-  if(/[?&]phone=1/.test(window.location.search)){ bootPhone('bean'); return; }
+  if(/[?&]phone=1/.test(window.location.search)){ bootPhone('status'); return; }
   bindDoseGestures(); thermoInit();
   fitStage(); tickHdrClock(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); loadGrinderBurrs(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
