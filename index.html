@@ -2479,6 +2479,7 @@ var I18N={
     geminiName:'Gemini API key', geminiPh:'Paste your Gemini API key — reads bean labels, stored on this device only', geminiGet:'Get a key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
     plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
     catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
+    foundInName:'In the name', foundInNotes:'In the notes',
     piBtn:'Import', piTitle:'Import profiles',
     piHint:'Reads .tcl and .json files. A whole folder can be picked at once.',
     piPickFiles:'Choose files', piPickFolder:'Choose a folder',
@@ -2728,6 +2729,7 @@ var I18N={
     geminiName:'Gemini API 키', geminiPh:'Gemini API 키 붙여넣기 — 원두 라벨 읽기에 사용, 이 기기에만 저장', geminiGet:'키 발급받기', language:'언어', tempUnit:'온도', weightUnit:'무게',
     plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
     catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
+    foundInName:'이름에서 찾음', foundInNotes:'메모에서 찾음',
     piBtn:'가져오기', piTitle:'프로파일 가져오기',
     piHint:'.tcl 과 .json 파일을 읽습니다. 폴더를 통째로 고를 수도 있습니다.',
     piPickFiles:'파일 선택', piPickFolder:'폴더 선택',
@@ -6714,6 +6716,28 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     it.onclick=function(){ epSelect(p); };
     list.appendChild(it); (epItemEls[p.id]=epItemEls[p.id]||[]).push(it);
     if(epCurveObserver) epCurveObserver.observe(cv); else drawSimCurve(cv,p.profile); }
+  // A search looks for a profile, so what matched its name comes first and the
+  // rest says where it did match. The notes are searched too, which is useful
+  // for a phrase and noise for a letter -- "q" finds every profile whose notes
+  // say quick or liquid, and the one actually called Q was lost among them.
+  // Favourites, recents and the alphabet are how a list is browsed, not how it
+  // is searched, so they stand aside while there is something typed.
+  var needle=epNeedle();
+  if(needle){
+    var byName=[], byElse=[];
+    shown.forEach(function(p){
+      var at=String(profTitle(p)).toLowerCase().indexOf(needle);
+      if(at>=0) byName.push({p:p,at:at}); else byElse.push({p:p,at:0}); });
+    // the nearer the front of the name, the more likely it is the one meant
+    byName.sort(function(a,b){ return a.at-b.at
+      ||String(profTitle(a.p)).localeCompare(String(profTitle(b.p))); });
+    byElse.sort(function(a,b){ return String(profTitle(a.p)).localeCompare(String(profTitle(b.p))); });
+    [[t('foundInName'),byName],[t('foundInNotes'),byElse]].forEach(function(sec){
+      if(!sec[1].length) return;
+      var hd=document.createElement('div'); hd.className='ep-group-head';
+      hd.textContent=sec[0]+' · '+sec[1].length; list.appendChild(hd);
+      sec[1].forEach(function(r){ addItem(r.p,splitTitle(profTitle(r.p))); }); });
+    return; }
   if(favList.length){ var fh=document.createElement('div'); fh.className='ep-group-head fav'; fh.textContent='★ '+t('favorites')+' · '+favList.length; list.appendChild(fh);
     favList.forEach(function(p){ addItem(p,splitTitle(profTitle(p))); }); }
   if(recent.length){ var rh=document.createElement('div'); rh.className='ep-group-head'; rh.textContent='↻ '+t('recentlyUsed')+' · '+recent.length; list.appendChild(rh);
