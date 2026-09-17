@@ -5779,6 +5779,7 @@ var CAR_STEP=206;
 // profile instead, which is the only way a profile you never starred can reach
 // the carousel at all.
 var carTag='';
+var carUnpin='';
 function carVisible(p){ return p.visibility!=='hidden'&&p.visibility!=='deleted'; }
 function carTagCounts(){
   var counts={};
@@ -5791,16 +5792,21 @@ function carListProfiles(){
       return carVisible(p)&&allTagsOf(p).indexOf(carTag)>=0; }); }
   else { list=allProfiles.filter(function(p){ return favIds[p.id]&&carVisible(p); });
     if(!list.length) list=allProfiles.filter(carVisible).slice(0,6); }
-  // A filter means what it says: a profile taken out of favourites leaves the
-  // favourites strip, or the star reads as a button that does nothing. The one
-  // exception is a shot in progress -- the strip is then a single cover, and it
-  // has to be the cover of what is actually pulling.
-  if(brewLocked()&&curProfileObj&&!list.some(function(p){ return p.id===curProfileObj.id; }))
+  // Whatever the filter says, the strip has to show what the machine is holding:
+  // the loaded cover is the one carrying the mark, and a mark on a cover that is
+  // not there reads as nothing being loaded at all. So it is pinned in front.
+  // A filter still means what it says, though -- taking the loaded profile out of
+  // favourites takes it out of the strip, or the star is a button that does
+  // nothing. That one is remembered by id and holds until the strip is asked a
+  // different question.
+  if(curProfileObj&&!list.some(function(p){ return p.id===curProfileObj.id; })
+     &&(brewLocked()||curProfileObj.id!==carUnpin))
     list=[curProfileObj].concat(list);
   return list;
 }
 function carSetTag(k){
   if(brewLocked()) return;
+  carUnpin='';
   carTag=(carTag===k)?'':k;
   buildCarousel(); }
 function buildCarousel(){
@@ -6007,8 +6013,8 @@ function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
   // would store a key that never matches anything again.
   if(!p.id||p.id==='current'){ toast(t('favNeedsSave'),'err'); return; }
   var name=splitTitle(profTitle(p)).name;
-  if(favIds[p.id]){ delete favIds[p.id]; toast(t('favRemoved').replace('{n}',name),'ok'); }
-  else { favIds[p.id]=true; toast(t('favAdded').replace('{n}',name),'ok'); }
+  if(favIds[p.id]){ delete favIds[p.id]; carUnpin=p.id; toast(t('favRemoved').replace('{n}',name),'ok'); }
+  else { favIds[p.id]=true; if(carUnpin===p.id) carUnpin=''; toast(t('favAdded').replace('{n}',name),'ok'); }
   saveFavs(); buildCarousel(); }
 
 // A profile write reaches the machine, and the machine is running frames from
@@ -6044,6 +6050,7 @@ function selectProfile(p,keepGuideSrc,withRecipe){
   // press just asked for, so it steps aside
   if(!keepGuideSrc&&chartReviewing&&guideFollowsProfile()) exitReview();
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
+  carUnpin='';
   syncRecipe();
   if(chartBackToEspresso()) drawChart();
   api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark();
