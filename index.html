@@ -1100,6 +1100,9 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .tc-word{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--ink-mute);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tc-row.set .tc-word{color:var(--ink)}
+/* The phone came here to add a bean, so a new one stays the default; opening
+   one it already has is the same form with a record behind it. */
+.mb-pick{margin:0 0 12px}
 .pl-rate-row{display:flex;align-items:center;gap:4px;margin-top:12px}
 .pl-rate-k{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
   letter-spacing:.05em;margin-right:6px}
@@ -1108,6 +1111,8 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .pl-star.on{color:var(--amber);opacity:1}
 .pl-note{margin-top:10px}
 .pl-note textarea{min-height:64px}
+.pl-acts{display:flex;gap:8px;margin-top:10px}
+.pl-acts .m-btn{flex:1;min-width:0}
 .pl-ai{margin-top:6px}
 .pl-ai .ai-verdict{font-size:14px;margin-top:8px}
 .pl-ai .ai-list{font-size:12px}
@@ -2172,6 +2177,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>✨ </span><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" id="mbSub">Photograph the bag — AI fills the details.</div></div>
+    <div class="field mb-pick"><label data-i18n="mbPickLbl">Bean</label>
+      <select id="mbPick" onchange="mbPickBean(this.value)"></select></div>
     <div class="mb-shoot">
       <div class="ico">📷</div>
       <div class="lead" data-i18n="mbShootLead">Photograph the bag</div>
@@ -2414,6 +2421,10 @@ var I18N={
     aiKeyNote:'The key is held on this device and sent straight to the service from here. Search grounding is used with Gemini only.',
     mbKeyLabelClaude:'Anthropic API key (stored on this phone)',
     vizUpdate:'Update on Visualizer', vizUpdated:'Sent to Visualizer',
+    vizUpload:'Upload to Visualizer', vizUploaded:'Uploaded to Visualizer',
+    vizUploadFailed:'Could not upload to Visualizer:',
+    vizNoCreds:'No Visualizer account is set in the plugin settings.',
+    aiRerun:'Read again', mbPickLbl:'Bean', mbNewBean:'New bean',
     vizUpdateFailed:'Could not update on Visualizer:',
     openaiPh:'OpenAI API key', openaiGet:'Get a key',
     mbKeyLabelOpenai:'OpenAI API key (stored on this phone)',
@@ -2639,6 +2650,10 @@ var I18N={
     aiKeyNote:'키는 이 기기에 보관되며 여기서 서비스로 바로 전송됩니다. 검색 보강은 Gemini에서만 사용됩니다.',
     mbKeyLabelClaude:'Anthropic API 키 (이 휴대폰에 저장됩니다)',
     vizUpdate:'Visualizer 업데이트', vizUpdated:'Visualizer에 반영했습니다',
+    vizUpload:'Visualizer 업로드', vizUploaded:'Visualizer에 올렸습니다',
+    vizUploadFailed:'Visualizer 업로드 실패:',
+    vizNoCreds:'플러그인 설정에 Visualizer 계정이 없습니다.',
+    aiRerun:'다시 분석', mbPickLbl:'원두', mbNewBean:'새 원두',
     vizUpdateFailed:'Visualizer 업데이트 실패:',
     openaiPh:'OpenAI API 키', openaiGet:'키 발급',
     mbKeyLabelOpenai:'OpenAI API 키 (이 휴대폰에 저장됩니다)',
@@ -8625,6 +8640,7 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
         : api('POST','/api/v1/beans',body,15000); })
     .then(function(saved){ return (saved&&saved.id)?saveBeanBatch(saved.id,v('mbRoastDate'),v('mbRoast'),null):null; })
     .then(function(){ st.textContent=t('mbSaved');
+      api('GET','/api/v1/beans').then(function(l){ beans=l||[]; mbRenderPick(); }).catch(function(){});
       aiImages=[]; renderAiThumbs(true); recResults=null; usageResults=null; usageStats=null; _usageFor=null;
       renderRecBox(); renderUsageBox(); renderBeanStats();
       document.getElementById('mbFields').style.display='none'; })
@@ -11352,8 +11368,8 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
     +'<div class="ep-save-bar">'
       +(have?'<button class="m-btn'+(isGuideShot(s.id)?' tinted':'')+'" onclick="useShotAsGuide(\''+s.id+'\')">'
         +escapeHtml(t(isGuideShot(s.id)?'guideUsing':'guideUse'))+'</button>':'')
-      +(shotVizId(s)?('<button class="m-btn" id="slVizBtn" onclick="saveAndSyncShot(\''+s.id+'\')">☁ '
-        +escapeHtml(t('vizUpdate'))+'</button>'):'')
+      +'<button class="m-btn" id="slVizBtn" onclick="saveAndSyncShot(\''+s.id+'\')">☁ '
+        +escapeHtml(t(shotVizId(s)?'vizUpdate':'vizUpload'))+'</button>'
       +'<button class="m-btn primary" onclick="saveShotLog(\''+s.id+'\')">'+t('saveLog')+'</button></div>';
   slSel=s; slSel._taste=tasteOf(s); _tcOpen=null; _tcCtx={mode:'tab',id:s.id};
   var cv=document.getElementById('slCurve'), tv=document.getElementById('slTempCurve');
@@ -11465,18 +11481,28 @@ function shotVizId(s){
   return (v==null||v==='')?null:String(v); }
 // Edits are pushed by saving them first: syncing before the record is written
 // would send Visualizer what it already has.
+function vizPush(sh){
+  var id=(sh&&sh.id)||sh, up=!!shotVizId(sh&&sh.id?sh:null);
+  return api('POST','/api/v1/plugins/'+VIZ_PLUGIN+'/'+(up?'forwardSyncNow':'upload'),{shotId:id},30000)
+    .then(function(r){
+      if(r&&r.ok===false) throw new Error((r.result&&(r.result.error||r.result.skipped))||t('vizFailed'));
+      if(r&&r.error) throw new Error(r.error);
+      // the record now carries the id the upload was given
+      delete slFull[id];
+      return r; }); }
+function vizErrText(e){
+  var msg=(e&&e.message)||String(e);
+  if(/40[34]|not found/i.test(msg)) msg=t('vizNoPlugin');
+  if(/no credentials/i.test(msg)) msg=t('vizNoCreds');
+  return msg; }
 function saveAndSyncShot(id){
   var btn=document.getElementById('slVizBtn');
   if(btn){ btn.disabled=true; btn.setAttribute('aria-busy','true'); }
+  var was=shotVizId(slSel);
   saveShotLog(id,true)
-    .then(function(){ return api('POST','/api/v1/plugins/'+VIZ_PLUGIN+'/forwardSyncNow',{shotId:id}); })
-    .then(function(r){
-      if(r&&r.ok===false) throw new Error((r.result&&(r.result.error||r.result.skipped))||t('vizFailed'));
-      toast(t('vizUpdated'),'ok'); })
-    .catch(function(e){
-      var msg=(e&&e.message)||String(e);
-      if(/40[34]|not found/i.test(msg)) msg=t('vizNoPlugin');
-      toast(t('vizUpdateFailed')+' '+msg,'err'); })
+    .then(function(){ return vizPush(slSel||id); })
+    .then(function(){ toast(t(was?'vizUpdated':'vizUploaded'),'ok'); loadShotList(id,true); })
+    .catch(function(e){ toast(t(was?'vizUpdateFailed':'vizUploadFailed')+' '+vizErrText(e),'err'); })
     .then(function(){ if(btn){ btn.disabled=false; btn.removeAttribute('aria-busy'); } }); }
 function saveShotLog(id,quiet){ var dose=parseFloat(document.getElementById('slDose').value)||null, yld=parseFloat(document.getElementById('slYield').value)||null;
   var tds=parseFloat(document.getElementById('slTds').value)||null, ey=parseFloat(document.getElementById('slEy').value)||null;
@@ -12637,6 +12663,37 @@ function mbFill(o){
   var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=!!bgBlend;
   bgBlendRender();
   var box=document.getElementById('mbFields'); if(box) box.style.display='block'; }
+function mbRenderPick(){
+  var sel=document.getElementById('mbPick'); if(!sel) return;
+  var list=(beans||[]).slice().sort(function(a,b){
+    return String((a.roaster||'')+(a.name||'')).localeCompare(String((b.roaster||'')+(b.name||''))); });
+  sel.innerHTML='<option value="">'+escapeHtml(t('mbNewBean'))+'</option>'
+    +list.map(function(b){ return '<option value="'+escapeAttr(b.id)+'"'+(b.id===mbBeanId?' selected':'')+'>'
+      +escapeHtml((b.roaster?b.roaster+' \u00b7 ':'')+(b.name||''))+'</option>'; }).join(''); }
+function mbPickBean(id){
+  mbBeanId=id||null;
+  mbBean=mbBeanId?((beans||[]).filter(function(b){ return b.id===mbBeanId; })[0]||null):null;
+  if(!mbBean) mbBeanId=null;
+  var ttl=document.getElementById('mbTitle'), lbl=document.getElementById('mbSaveLbl');
+  if(mbBean){
+    mbFill(mbBean);
+    if(ttl){ ttl.removeAttribute('data-i18n'); ttl.textContent=t('editBean'); }
+    if(lbl){ lbl.removeAttribute('data-i18n'); lbl.textContent=t('save'); }
+  } else {
+    mbClearFields();
+    if(ttl){ ttl.setAttribute('data-i18n','newBean'); ttl.textContent=t('newBean'); }
+    if(lbl){ lbl.setAttribute('data-i18n','addToGateway'); lbl.textContent=t('addToGateway'); }
+  }
+  mbShowTarget(); mbRenderPick();
+  var st=document.getElementById('mbStatus'); if(st) st.textContent='';
+  loadBeanBatches(); }
+function mbClearFields(){
+  ['mbRoaster','mbName','mbCountry','mbRegion','mbProcess','mbProducer','mbDecafProcess',
+   'mbVariety','mbAltitude','mbNotes','mbRoastDate','mbRoast'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value=''; });
+  bgBlend=null; var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=false;
+  bgBlendRender();
+  var box=document.getElementById('mbFields'); if(box) box.style.display='none'; }
 function mbShowTarget(){
   var el=document.getElementById('mbTarget'); if(!el) return;
   if(!mbBean){ el.style.display='none'; return; }
@@ -12825,6 +12882,28 @@ function phNote(id,v){
   an.extras.lqNote=v; an.espressoNotes=tasteCompose(tv,v);
   clearTimeout(_phNoteT);
   _phNoteT=setTimeout(function(){ phAnnPut(id,tasteAnn(tv,v)); },700); }
+// Redrawing the list throws the canvas away with it, so whatever is open is
+// drawn again afterwards -- otherwise asking for a reading blanked the graph
+// the reading was about.
+function phDrawOpen(){
+  if(!_phOpen) return;
+  var cv=document.getElementById('phCanvas'); if(!cv) return;
+  if(slFull[_phOpen]) return drawShotMeasurements(cv,slFull[_phOpen],false);
+  var row=phShotRow(_phOpen); if(!row) return;
+  var want=_phOpen;
+  withFullShots([row]).then(function(f){
+    var c2=document.getElementById('phCanvas');
+    if(c2&&f&&f[0]&&_phOpen===want) drawShotMeasurements(c2,f[0],false); }); }
+function phVizPush(id){
+  if(_phVizBusy) return;
+  var row=phShotRow(id); if(!row) return;
+  var was=!!shotVizId(row);
+  _phVizBusy=true; renderPhoneLog();
+  vizPush(row)
+    .then(function(){ toast(t(was?'vizUpdated':'vizUploaded'),'ok'); return phLoadLog(); })
+    .catch(function(e){ toast(t(was?'vizUpdateFailed':'vizUploadFailed')+' '+vizErrText(e),'err'); })
+    .then(function(){ _phVizBusy=false; renderPhoneLog(); }); }
+var _phVizBusy=false;
 function phAiRun(id){
   if(_phAiBusy) return;
   var row=phShotRow(id); if(!row) return;
@@ -12842,12 +12921,7 @@ function phLogToggle(id){
   _phOpen=(_phOpen===id)?null:id;
   _tcOpen=null; _tcCtx={mode:'ph',id:_phOpen};
   _phAi=_phOpen?loadShotAi([{id:_phOpen}]):null;
-  renderPhoneLog();
-  if(!_phOpen) return;
-  var row=_phLog.filter(function(x){ return x.id===_phOpen; })[0]; if(!row) return;
-  withFullShots([row]).then(function(full){
-    var sh=full[0]; if(!sh||_phOpen!==id) return;
-    var cv=document.getElementById('phCanvas'); if(cv) drawShotMeasurements(cv,sh,false); }); }
+  renderPhoneLog(); }
 function renderPhoneLog(){
   var box=document.getElementById('phLogBody'); if(!box) return;
   if(!_phLog.length){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phLogEmpty'))+'</div>'; return; }
@@ -12871,13 +12945,21 @@ function renderPhoneLog(){
         +'<div class="field pl-note"><label>'+escapeHtml(t('notesLabel'))+'</label>'
           +'<textarea rows="2" placeholder="'+escapeAttr(t('phNotePh'))+'"'
           +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(tasteNoteOf(sh))+'</textarea></div>'
-        +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>')
-          :_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi)+'</div>')
-          :('<button type="button" class="m-btn mb-analyze" style="margin-top:10px"'
+        +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>'):'')
+        +(_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi)+'</div>'):'')
+        // A reading that is on screen is a reason to ask for another one, not a
+        // reason to take the button away.
+        +'<div class="pl-acts">'
+          +'<button type="button" class="m-btn"'+(_phVizBusy?' disabled aria-busy="true"':'')
+            +' onclick="event.stopPropagation();phVizPush(\''+sh.id+'\')">\u2601 '
+            +escapeHtml(t(shotVizId(sh)?'vizUpdate':'vizUpload'))+'</button>'
+          +'<button type="button" class="m-btn mb-analyze"'+(_phAiBusy?' disabled aria-busy="true"':'')
             +' onclick="event.stopPropagation();phAiRun(\''+sh.id+'\')">\u2728 '
-            +escapeHtml(t('aiRun'))+'</button>'))
+            +escapeHtml(t(_phAi?'aiRerun':'aiRun'))+'</button>'
+        +'</div>'
         +'</div>'):'')
-      +'</div>'; }).join('')+'</div>'; }
+      +'</div>'; }).join('')+'</div>';
+  phDrawOpen(); }
 function initPhoneBean(){
   blendHost(false);
   var m=/[?&]bean=([^&]+)/.exec(window.location.search);
@@ -12886,12 +12968,7 @@ function initPhoneBean(){
   loadProfiles(); // the profile suggestion needs a catalogue to choose from
   Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
     .then(function(r){ beans=r[0]||[]; // so a repeat purchase can be offered as a batch
-      if(!mbBeanId) return;
-      mbBean=beans.filter(function(b){ return b.id===mbBeanId; })[0]||null;
-      if(!mbBean){ mbBeanId=null; return; }
-      mbShowTarget(); mbFill(mbBean);
-      var lbl=document.getElementById('mbSaveLbl'); if(lbl) lbl.textContent=t('save');
-      var ttl=document.getElementById('mbTitle'); if(ttl){ ttl.textContent=t('editBean'); ttl.removeAttribute('data-i18n'); } });
+      mbPickBean(mbBeanId||''); });
 }
 document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
