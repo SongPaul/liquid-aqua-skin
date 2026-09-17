@@ -13,6 +13,7 @@
 
 :root{
   --accent:#6366f1; --accent2:#8b5cf6; --accent3:#ec4899;
+  --mb-card:rgba(255,255,255,.88);
   --hot:#f97316; --steam:#38bdf8; --green:#10b981; --red:#ef4444; --amber:#f59e0b;
   --ink:#1e1b3a; --ink-soft:#4b4869; --ink-mute:#8b88a8;
   --glass:rgba(255,255,255,.55); --glass-hi:rgba(255,255,255,.8); --glass-line:rgba(255,255,255,.7);
@@ -48,6 +49,7 @@ body.night{--ink:#e8e6f5; --ink-soft:#b8b4d8; --ink-mute:#7d7aa0;
   --ctl-sheen:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.02));
   --ctl-lift:inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.20), 0 6px 16px rgba(0,0,0,.20);
   --ctl-well:inset 0 1px 3px rgba(0,0,0,.32), inset 0 0 0 1px rgba(255,255,255,.07);
+  --mb-card:rgba(30,27,54,.9);
   --ctl-on-face:rgba(255,255,255,.20); --ctl-on-lift:inset 0 1px 0 rgba(255,255,255,.30), 0 2px 8px rgba(0,0,0,.30);
   --ctl-tint:rgba(99,102,241,.78); --ctl-tint-stop:rgba(239,68,68,.78);
   --ctl-knob:#e9e6f7; --ctl-knob-lift:inset 0 0 0 1px rgba(255,255,255,.30), 0 1px 2px rgba(0,0,0,.35), 0 3px 8px rgba(0,0,0,.40);
@@ -1002,11 +1004,46 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .cs-way-n{flex:none;width:22px;height:22px;border-radius:100px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .cs-note{font-size:12px;font-weight:700;line-height:1.6;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:12px;padding:10px 12px;word-break:break-all}
 .cs-note[hidden]{display:none}
-.mb-actions .m-btn{flex:1;max-width:180px;padding:14px}
-.mb-analyze{width:100%;padding:15px;font-size:15px}
-.mb-fields{display:flex;flex-direction:column;gap:2px;background:#fff;border:1px solid var(--edge);border-radius:16px;padding:16px}
-#mobilePage .ai-thumb{width:64px;height:64px}
-.mb-key{background:#fff;border:1px solid var(--glass-line);border-radius:16px;padding:16px}
+.mb-actions .m-btn{flex:1;max-width:none;min-height:52px;font-size:14px}
+.mb-analyze{width:100%;min-height:54px;font-size:15px}
+/* The phone gets the same glass the tablet does, and the same one at night --
+   the panels here were a hard white with themed text on them, which at night
+   is white on white. */
+/* The phone's document is shorter than its screen, and html carries the light
+   canvas colour, so the page paints its own ground rather than letting that
+   show through under a dark theme. */
+#mobilePage{padding:18px 14px 34px;min-height:100vh;background-attachment:fixed;
+  background:radial-gradient(circle at 18% 12%,rgba(139,92,246,.30),transparent 46%),
+             radial-gradient(circle at 88% 22%,rgba(56,189,248,.26),transparent 48%),
+             radial-gradient(circle at 76% 88%,rgba(236,72,153,.22),transparent 48%),
+             linear-gradient(160deg,#e8ecff,#f5edff)}
+body.night #mobilePage{background-attachment:fixed;
+  background:radial-gradient(circle at 18% 12%,rgba(99,102,241,.26),transparent 46%),
+             radial-gradient(circle at 88% 22%,rgba(56,189,248,.18),transparent 48%),
+             radial-gradient(circle at 76% 88%,rgba(236,72,153,.16),transparent 48%),
+             linear-gradient(160deg,#0d0b1c,#140f26)}
+.mb-card{background:var(--mb-card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--glass-line);border-radius:var(--r-md);box-shadow:var(--shadow);padding:16px}
+.mb-fields{display:flex;flex-direction:column;gap:2px}
+/* Taking the picture is what this page is for, so it is the size of that. */
+.mb-shoot{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;
+  padding:20px 16px;border:1.5px dashed var(--ctl-edge);border-radius:var(--r-md);background:var(--glass-hi)}
+.mb-shoot .ico{font-size:32px;line-height:1}
+.mb-shoot .lead{font-size:14px;font-weight:800;color:var(--ink)}
+.mb-shoot .hint{font-size:12px;line-height:1.5;color:var(--ink-mute)}
+.mb-shoot .mb-actions{width:100%;margin-top:2px}
+/* A dozen fields in one column is a scroll with no landmarks. */
+.mb-sec+.mb-sec{margin-top:18px;padding-top:16px;border-top:1px solid var(--glass-line)}
+.mb-sec-h{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:9px}
+/* and the button that ends it stays where a thumb is */
+.mb-save{position:sticky;bottom:0;z-index:5;margin:16px -16px -16px;padding:14px 16px 16px;
+  background:var(--mb-card);border-top:1px solid var(--glass-line);
+  border-radius:0 0 var(--r-md) var(--r-md)}
+.mb-save .m-btn{margin:0}
+#mobilePage .ai-thumbs{justify-content:center}
+#mobilePage .ai-thumb{width:70px;height:70px;border-radius:12px}
+.mb-key{padding:16px}
 
 /* Shot log page */
 .sl-badge{width:44px;height:44px;border-radius:9px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--amber);flex-shrink:0;font-weight:700}
@@ -2021,37 +2058,49 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>✨ </span><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" id="mbSub">Photograph the bag — AI fills the details.</div></div>
-    <div class="ai-thumbs" id="mbThumbs" style="justify-content:center"></div>
-    <div class="mb-actions">
-      <button class="m-btn" onclick="document.getElementById('mbCam').click()" data-i18n="camera">📷 Camera</button>
-      <button class="m-btn" onclick="document.getElementById('mbFile').click()" data-i18n="attach">🖼 Attach</button>
+    <div class="mb-shoot">
+      <div class="ico">📷</div>
+      <div class="lead" data-i18n="mbShootLead">Photograph the bag</div>
+      <div class="hint" data-i18n="mbShootHint">Front and back, and any label with the roast date on it. Up to five.</div>
+      <div class="ai-thumbs" id="mbThumbs"></div>
+      <div class="mb-actions">
+        <button class="m-btn" onclick="document.getElementById('mbCam').click()" data-i18n="camera">📷 Camera</button>
+        <button class="m-btn" onclick="document.getElementById('mbFile').click()" data-i18n="attach">🖼 Attach</button>
+      </div>
       <input type="file" id="mbCam" accept="image/*" capture="environment" multiple style="display:none" onchange="onAiImages(this.files,true)">
       <input type="file" id="mbFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files,true)">
     </div>
     <button class="m-btn primary mb-analyze" id="mbAnalyzeBtn" onclick="mbAnalyze()" disabled data-i18n="analyze">Analyze</button>
     <div id="mbRec" class="rec-box"></div>
     <div class="mb-target" id="mbTarget" style="display:none"></div>
-    <div class="mb-fields" id="mbFields" style="display:none">
-      <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
-      <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
-      <div class="field"><label data-i18n="roastDate">Roast date</label><input id="mbRoastDate" type="date"></div>
-      <div class="field"><label data-i18n="roastLevel">Roast level</label><input id="mbRoast"></div>
-      <div class="field"><label class="bean-check"><input type="checkbox" id="mbIsBlend" onchange="bgBlendToggle(this.checked)"> <span data-i18n="isBlend">Blend</span></label></div>
-      <div id="mbBlendBox"></div>
-      <div id="mbSoloOrigin">
-      <div class="field"><label data-i18n="origin">Origin</label><input id="mbCountry"></div>
-      <div class="field"><label data-i18n="region">Region</label><input id="mbRegion"></div>
-      <div class="field"><label data-i18n="process">Process</label><input id="mbProcess"></div>
-      <div class="field"><label data-i18n="producer">Producer</label><input id="mbProducer"></div>
-      <div class="field"><label data-i18n="variety">Variety</label><input id="mbVariety" placeholder="Heirloom, SL28"></div>
-      <div class="field"><label data-i18n="altitude">Altitude (m)</label><input id="mbAltitude" placeholder="1800-2200"></div>
-      <div class="field"><label data-i18n="decafProcess">Decaf process</label><input id="mbDecafProcess" placeholder="Swiss Water"></div>
+    <div class="mb-fields mb-card" id="mbFields" style="display:none">
+      <div class="mb-sec">
+        <div class="mb-sec-h" data-i18n="mbSecBean">The coffee</div>
+        <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
+        <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
+        <div class="field-row"><div class="field"><label data-i18n="roastDate">Roast date</label><input id="mbRoastDate" type="date"></div>
+          <div class="field"><label data-i18n="roastLevel">Roast level</label><input id="mbRoast"></div></div>
+        <div class="field"><label class="bean-check"><input type="checkbox" id="mbIsBlend" onchange="bgBlendToggle(this.checked)"> <span data-i18n="isBlend">Blend</span></label></div>
+        <div id="mbBlendBox"></div>
       </div>
-      <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="6"></textarea></div>
-      <button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()"><span id="mbSaveLbl" data-i18n="addToGateway">Add to gateway</span></button>
+      <div class="mb-sec" id="mbSoloOrigin">
+        <div class="mb-sec-h" data-i18n="mbSecOrigin">Where it came from</div>
+        <div class="field-row"><div class="field"><label data-i18n="origin">Origin</label><input id="mbCountry"></div>
+          <div class="field"><label data-i18n="region">Region</label><input id="mbRegion"></div></div>
+        <div class="field-row"><div class="field"><label data-i18n="process">Process</label><input id="mbProcess"></div>
+          <div class="field"><label data-i18n="producer">Producer</label><input id="mbProducer"></div></div>
+        <div class="field-row"><div class="field"><label data-i18n="variety">Variety</label><input id="mbVariety" placeholder="Heirloom, SL28"></div>
+          <div class="field"><label data-i18n="altitude">Altitude (m)</label><input id="mbAltitude" placeholder="1800-2200"></div></div>
+        <div class="field"><label data-i18n="decafProcess">Decaf process</label><input id="mbDecafProcess" placeholder="Swiss Water"></div>
+      </div>
+      <div class="mb-sec">
+        <div class="mb-sec-h" data-i18n="mbSecNotes">Everything else on the bag</div>
+        <div class="field"><label data-i18n="notes">Notes</label><textarea id="mbNotes" rows="5"></textarea></div>
+      </div>
+      <div class="mb-save"><button class="m-btn primary mb-analyze" id="mbSaveBtn" onclick="mbSave()"><span id="mbSaveLbl" data-i18n="addToGateway">Add to gateway</span></button></div>
     </div>
     <div class="ai-status" id="mbStatus" style="text-align:center"></div>
-    <div class="mb-key" id="mbKeyBox" style="display:none">
+    <div class="mb-key mb-card" id="mbKeyBox" style="display:none">
       <div class="field"><label data-i18n="aiProvider">Model</label>
         <select id="mbProvider" onchange="mbSetProvider(this.value)">
           <option value="gemini">Gemini</option><option value="claude">Claude</option><option value="openai">GPT</option></select></div>
@@ -2179,6 +2228,8 @@ var I18N={
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
+    mbShootLead:'Photograph the bag', mbShootHint:'Front and back, and whichever label carries the roast date. Up to five.',
+    mbSecBean:'The coffee', mbSecOrigin:'Where it came from', mbSecNotes:'Everything else on the bag',
     scanFound:'Not on the bag, found by search: {n} \u2014 worth checking',
     sf_processing:'process', sf_altitude:'altitude', sf_variety:'variety', sf_producer:'producer', sf_region:'region',
     recipeFromLast:'Recipe brought back from this profile\u2019s last shot ({n})',
@@ -2382,6 +2433,8 @@ var I18N={
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
+    mbShootLead:'봉투를 촬영하세요', mbShootHint:'앞뒤면과 로스팅일이 있는 라벨까지. 최대 5장.',
+    mbSecBean:'원두', mbSecOrigin:'어디에서 왔는가', mbSecNotes:'봉투에 적힐 나머지',
     scanFound:'봉투에 없어 검색으로 찾은 항목: {n} \u2014 확인해 주세요',
     sf_processing:'가공법', sf_altitude:'고도', sf_variety:'품종', sf_producer:'생산자', sf_region:'지역',
     recipeFromLast:'이 프로파일로 마지막에 내린 레시피를 가져왔습니다 ({n})',
@@ -12305,7 +12358,12 @@ function bootMobileBeanScan(){
   document.querySelector('.stage-wrap').style.display='none';
   document.getElementById('mobilePage').style.display='block';
   document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
-  if(prefs.night) document.body.classList.add('night');
+  // The phone keeps its own storage, so it rarely knows what the tablet is set
+  // to. Its own setting is a better guess than always-light.
+  var stored=lsGet('aurora_prefs');
+  var night=(stored&&typeof stored.night==='boolean')?stored.night
+    :!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if(night) document.body.classList.add('night');
   mbSyncKeyBox();
   if(!mbGetKey()) mbShowKeyBox();
   loadProfiles(); // the profile suggestion needs a catalogue to choose from
