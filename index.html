@@ -2302,6 +2302,7 @@ var I18N={
     phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
     phSinceSeen:'since the phone looked',
     phWake:'Wake the machine', phWaking:'Waking…', phWoke:'Waking the machine',
+    phSleep:'Send it to sleep', phSleeping:'Going to sleep…', phSlept:'Sent to sleep',
     phStIdle:'Ready', phStEspresso:'Pulling a shot', phStSteam:'Steaming', phStWater:'Hot water',
     phStFlush:'Flushing', phStSleep:'Asleep', phStNoWater:'Out of water', phStOther:'Busy',
     mbShootLead:'Photograph the bag', mbShootHint:'Front and back, and whichever label carries the roast date. Up to five.',
@@ -2514,6 +2515,7 @@ var I18N={
     phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
     phSinceSeen:'폰이 본 순간부터',
     phWake:'머신 깨우기', phWaking:'깨우는 중…', phWoke:'머신을 깨웁니다',
+    phSleep:'절전으로', phSleeping:'절전으로 전환 중…', phSlept:'절전으로 전환했습니다',
     phStIdle:'준비됨', phStEspresso:'추출 중', phStSteam:'스팀 중', phStWater:'온수',
     phStFlush:'플러시 중', phStSleep:'절전', phStNoWater:'물 부족', phStOther:'동작 중',
     mbShootLead:'봉투를 촬영하세요', mbShootHint:'앞뒤면과 로스팅일이 있는 라벨까지. 최대 5장.',
@@ -12489,14 +12491,17 @@ function phStatusPoll(on){
         _phTimer=setTimeout(tick,PH_RUN[st]?1000:2500); }); };
   tick(); }
 function phSnapState(){ var st=(_phSnap&&_phSnap.state)||{}; return String(st.state||'idle'); }
-var _phWaking=false;
-function phWake(){
-  if(_phWaking) return;
-  _phWaking=true; renderPhoneStatus();
-  api('PUT','/api/v1/machine/state/idle',null,10000)
-    .then(function(){ toast(t('phWoke'),'ok'); })
-    .catch(function(e){ toast(t('tWakeFailed')+' '+apiErrorText(e),'err'); })
-    .then(function(){ _phWaking=false;
+// Waking it and sending it to sleep are the same request with a different
+// destination, so they are the same call.
+var _phBusy='';
+function phMachineTo(target){
+  if(_phBusy) return;
+  var wake=(target==='idle');
+  _phBusy=target; renderPhoneStatus();
+  api('PUT','/api/v1/machine/state/'+target,null,10000)
+    .then(function(){ toast(t(wake?'phWoke':'phSlept'),'ok'); })
+    .catch(function(e){ toast(t(wake?'tWakeFailed':'tSleepFailed')+' '+apiErrorText(e),'err'); })
+    .then(function(){ _phBusy='';
       // ask again at once rather than waiting out the next tick
       if(phoneTab==='status') phStatusPoll(true); else renderPhoneStatus(); }); }
 function initPhoneLog(){ phLoadLog(); }
@@ -12520,11 +12525,17 @@ function renderPhoneStatus(){
     +'<div class="ps-v">'+escapeHtml(v==null?'\u2014':String(v))+(u&&v!=null?'<small>'+escapeHtml(u)+'</small>':'')+'</div></div>'; }
   var h='<div class="ps-state '+cls+'"><span class="ps-dot"></span>'
     +'<span class="ps-name">'+escapeHtml(t(PH_STATES[st]||'phStOther'))+'</span></div>';
-  // Waking it is the one thing worth walking back for, so it is the one thing
-  // the phone can do here -- and only while it is the thing to do.
-  if(st==='sleeping') h+='<button class="m-btn primary mb-analyze" id="phWakeBtn" style="margin-top:12px"'
-    +(_phWaking?' disabled aria-busy="true"':'')+' onclick="phWake()">'
-    +escapeHtml(_phWaking?t('phWaking'):('☀ '+t('phWake')))+'</button>';
+  // Waking it is what the phone is usually reached for; sending it to sleep is
+  // the same walk saved at the other end. Neither is offered mid action -- a
+  // machine that is running is not a machine to put to bed.
+  if(st==='sleeping')
+    h+='<button class="m-btn primary mb-analyze" id="phWakeBtn" style="margin-top:12px"'
+      +(_phBusy?' disabled aria-busy="true"':'')+' onclick="phMachineTo(\'idle\')">'
+      +escapeHtml(_phBusy?t('phWaking'):('☀ '+t('phWake')))+'</button>';
+  else if(!run)
+    h+='<button class="m-btn mb-analyze" id="phSleepBtn" style="margin-top:12px"'
+      +(_phBusy?' disabled aria-busy="true"':'')+' onclick="phMachineTo(\'sleeping\')">'
+      +escapeHtml(_phBusy?t('phSleeping'):('☽ '+t('phSleep')))+'</button>';
   if(run){
     h+='<div class="ps-focus"><div class="ps-big">'+Math.floor(secs/60)+':'+('0'+(secs%60)).slice(-2)+'</div>'
       +'<div class="ps-meta">'+escapeHtml(t(PH_STATES[st]||'phStOther'))
