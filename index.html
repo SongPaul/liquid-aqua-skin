@@ -1678,6 +1678,19 @@ body.night .set-warn{color:#fbbf24;background:rgba(245,158,11,.14);border-color:
 .sp-content::-webkit-scrollbar{width:6px}.sp-content::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
 .sp-content-inner{padding:22px 26px;max-width:640px}
 .sp-cat-title{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px;color:var(--ink)}
+/* A category with several parts to it puts them behind tabs rather than in one
+   long scroll. Every pane stays in the document -- the boxes inside are written
+   to by answers that arrive later, and a box that is not there loses them. */
+.sp-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 18px}
+.sp-tab{min-height:36px;padding:0 15px;border-radius:100px;border:1px solid var(--ctl-edge);
+  background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);
+  font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;
+  white-space:nowrap;-webkit-appearance:none;transition:all .15s}
+.sp-tab:hover{color:var(--ink)}
+.sp-tab.on{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);
+  box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
+.sp-pane{display:none}
+.sp-pane.on{display:block}
 .sp-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .sp-info-cell{background-color:var(--pane-face);background-image:var(--ctl-sheen);box-shadow:var(--pane-lift);border:1px solid transparent;border-radius:12px;padding:12px 14px}
 .sp-info-cell .k{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
@@ -4860,6 +4873,28 @@ function spSelect(id){ spCat=id;
   if(id==='calib') loadCalib();
   if(id==='updates') loadSkinInfo();
   renderSpNav(); renderSpContent(); }
+// Which part of a category was last looked at, kept per category so coming back
+// lands where it was left.
+var spPane={};
+function spTabsHtml(cat,secs){
+  var at=Math.max(0,Math.min(spPane[cat]||0,secs.length-1));
+  var h='<div class="sp-tabs" role="tablist">';
+  secs.forEach(function(sc,i){
+    h+='<button type="button" role="tab" class="sp-tab'+(i===at?' on':'')+'"'
+      +' aria-selected="'+(i===at)+'" onclick="spPaneGo(\''+cat+'\','+i+')">'
+      +escapeHtml(sc[0])+'</button>'; });
+  h+='</div>';
+  secs.forEach(function(sc,i){ h+='<div class="sp-pane'+(i===at?' on':'')+'">'+sc[1]+'</div>'; });
+  return h; }
+// Switching a tab only moves which pane is shown. Nothing is rebuilt, so a key
+// half typed into one pane is still there on the way back.
+function spPaneGo(cat,i){
+  spPane[cat]=i;
+  var root=document.getElementById('spContent'); if(!root) return;
+  var tabs=root.querySelectorAll('.sp-tab'), panes=root.querySelectorAll('.sp-pane');
+  for(var k=0;k<tabs.length;k++){ tabs[k].classList.toggle('on',k===i);
+    tabs[k].setAttribute('aria-selected',String(k===i)); }
+  for(var j=0;j<panes.length;j++) panes[j].classList.toggle('on',j===i); }
 function row(nameKey,descKey,control){ return '<div class="set-row"><div class="set-info"><div class="set-name">'+t(nameKey)+'</div>'+(descKey?'<div class="set-desc">'+t(descKey)+'</div>':'')+'</div>'+control+'</div>'; }
 function sw(id,checked,onchg,disabled){ return '<label class="switch"><input type="checkbox" id="'+id+'"'+(checked?' checked':'')+(disabled?' disabled':'')+' onchange="'+onchg+'"><span class="track"></span></label>'; }
 // Cleaning, descaling and the air purge are machine states, not endpoints of
@@ -5023,27 +5058,27 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
   } else if(spCat==='machine'){
     h+='<div class="sp-cat-title">'+t('catMachine')+'</div>';
     var rl=Math.round(state.water.refill||0);
-    h+=row('refillLevel','refillLevelDesc','<div class="opt-ctrl"><input type="range" class="slider" min="0" max="30" step="5" value="'+(Math.round(rl/5)*5)+'" oninput="document.getElementById(\'rlVal\').textContent=this.value" onchange="setRefillLevel(this.value)"><span class="opt-val" id="rlVal">'+rl+'</span></div>');
-    // ── Water tank calibration ──
     var wmm=state.water.current;
-    h+='<div class="set-desc" style="margin-top:8px">'+t('waterCalNow')+': <b>'
-      +(wmm!=null?(wmm.toFixed(1)+' mm  ·  '+Math.round(tankMl(wmm))+' ml'):'—')+'</b></div>';
-    // ── Flow calibration (gateway multipliers) ──
-    h+='<div class="ep-section-title" style="margin-top:20px">'+t('flowCal')+'</div>';
-    h+='<div class="set-desc" style="margin-bottom:6px">'+t('flowCalDesc')+'</div>';
-    h+=flowMultRow('weightFlowMultiplier',t('fcWeight'),0.1,1)+flowMultRow('volumeFlowMultiplier',t('fcVolume'),0.05,2)+flowMultRow('hotWaterFlowMultiplier',t('fcHotWater'),0.05,2);
-    // ── Refill kit ── skin toggle (ON = plumbed, always show full tank) above the gateway override.
+    // The refill kit decides whether the tank is read at all, so it belongs with
+    // the tank and not at the end of the flow multipliers, where it had ended up.
     var rkm=(prefs.refillKitFull===true?'on':(prefs.refillKitFull===false?'auto':(prefs.refillKitFull||'auto')));
     var det=refillKitDetected();
-    h+=row('refillKit','refillKitDesc','<select class="set-select" onchange="setRefillKitFull(this.value)">'
-      +opt('auto',t('rkAutoDetected').replace('{s}',det===null?t('rkUnknown'):t(det?'rkYes':'rkNo')),rkm)
-      +opt('on',t('rkOn'),rkm)+opt('off',t('rkOff'),rkm)+'</select>');
-    h+='<div class="ep-section-title" style="margin-top:20px">'+t('machineInfo')+'</div>';
+    var tankPane=row('refillLevel','refillLevelDesc','<div class="opt-ctrl"><input type="range" class="slider" min="0" max="30" step="5" value="'+(Math.round(rl/5)*5)+'" oninput="document.getElementById(\'rlVal\').textContent=this.value" onchange="setRefillLevel(this.value)"><span class="opt-val" id="rlVal">'+rl+'</span></div>')
+      +'<div class="set-desc" style="margin-top:8px">'+t('waterCalNow')+': <b>'
+      +(wmm!=null?(wmm.toFixed(1)+' mm  ·  '+Math.round(tankMl(wmm))+' ml'):'—')+'</b></div>'
+      +row('refillKit','refillKitDesc','<select class="set-select" onchange="setRefillKitFull(this.value)">'
+        +opt('auto',t('rkAutoDetected').replace('{s}',det===null?t('rkUnknown'):t(det?'rkYes':'rkNo')),rkm)
+        +opt('on',t('rkOn'),rkm)+opt('off',t('rkOff'),rkm)+'</select>');
+    var flowPane='<div class="set-desc" style="margin-bottom:6px">'+t('flowCalDesc')+'</div>'
+      +flowMultRow('weightFlowMultiplier',t('fcWeight'),0.1,1)
+      +flowMultRow('volumeFlowMultiplier',t('fcVolume'),0.05,2)
+      +flowMultRow('hotWaterFlowMultiplier',t('fcHotWater'),0.05,2);
     var rkDet=(machineInfo.extra&&machineInfo.extra.refillKit!=null)?(machineInfo.extra.refillKit?t('rkYes'):t('rkNo')):'—';
-    h+='<div class="sp-info-grid">'
+    var infoPane='<div class="sp-info-grid">'
       +infoCell(t('model'),machineInfo.model||'—')+infoCell(t('serial'),machineInfo.serialNumber||'—')
       +infoCell(t('firmware'),machineInfo.version||'—')+infoCell('GHC',machineInfo.GHC?'Yes':'No')
       +infoCell(t('rkDetected'),rkDet)+'</div>';
+    h+=spTabsHtml('machine',[[t('tank'),tankPane],[t('flowCal'),flowPane],[t('machineInfo'),infoPane]]);
   } else if(spCat==='scale'){
     h+='<div class="sp-cat-title">'+t('catScale')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('scaleDesc')+'</div>';
@@ -5080,13 +5115,11 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     // Machine, app and skin are three things that go out of date, and asking
     // which one is behind should not mean knowing which of three pages to open.
     h+='<div class="sp-cat-title">'+t('catUpdates')+'</div>';
-    h+='<div class="ep-section-title">'+t('catFirmware')+'</div>';
-    h+='<div id="fwBox"><div class="ls-empty">'+t('loading')+'</div></div>';
-    h+='<div class="ep-section-title" style="margin-top:22px">'+t('catApp')+'</div>';
-    h+=row('autoUpdChk','autoUpdChkDesc',sw('setAutoUpd',gwSettings.automaticUpdateCheck!==false,'setAutoUpdateCheck(this.checked)'));
-    h+='<div id="appBox" style="margin-top:12px"><div class="ls-empty">'+t('loading')+'</div></div>';
-    h+='<div class="ep-section-title" style="margin-top:22px">'+t('catSkin')+'</div>';
-    h+='<div id="skinBox"><div class="ls-empty">'+t('loading')+'</div></div>';
+    h+=spTabsHtml('updates',[
+      [t('catFirmware'),'<div id="fwBox"><div class="ls-empty">'+t('loading')+'</div></div>'],
+      [t('catApp'),row('autoUpdChk','autoUpdChkDesc',sw('setAutoUpd',gwSettings.automaticUpdateCheck!==false,'setAutoUpdateCheck(this.checked)'))
+        +'<div id="appBox" style="margin-top:12px"><div class="ls-empty">'+t('loading')+'</div></div>'],
+      [t('catSkin'),'<div id="skinBox"><div class="ls-empty">'+t('loading')+'</div></div>']]);
   } else if(spCat==='phone'){
     h+='<div class="sp-cat-title">'+t('catPhone')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+escapeHtml(t('phoneIntro'))+'</div>';
@@ -5094,7 +5127,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
   } else if(spCat==='ai'){
     h+='<div class="sp-cat-title">'+t('catAI')+'</div>';
     var prov=aiProvider();
-    h+=row('aiProvider','aiProviderDesc','<select class="set-select" onchange="setAiProvider(this.value)">'
+    var keyPane=row('aiProvider','aiProviderDesc','<select class="set-select" onchange="setAiProvider(this.value)">'
       +AI_PROVIDERS.map(function(k){ return opt(k,AI_NAMES[k],prov); }).join('')+'</select>');
     // Only the key of the provider in use is asked for; the other is kept, so
     // switching back does not mean typing it in again.
@@ -5103,11 +5136,11 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
       claude:{id:'setClaudeKey',save:'saveClaudeKey',ph:'claudePh',get:'claudeGet',val:prefs.claudeKey,url:'https://console.anthropic.com/settings/keys'},
       openai:{id:'setOpenaiKey',save:'saveOpenaiKey',ph:'openaiPh',get:'openaiGet',val:prefs.openaiKey,url:'https://platform.openai.com/api-keys'}};
     var ku=KEYUI[prov];
-    h+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="'+ku.id+'" placeholder="'+escapeAttr(t(ku.ph))+'" value="'+escapeAttr(ku.val||'')+'" oninput="'+ku.save+'(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="'+ku.url+'" target="_blank" style="color:var(--accent)">'+t(ku.get)+' ↗</a></div></div>';
-    h+='<div class="set-desc" style="margin-top:10px">'+t('aiKeyNote')+'</div>';
-    h+='<div class="ep-section-title" style="margin-top:22px">'+escapeHtml(t('aiMemory'))+'</div>';
-    h+='<div class="set-desc">'+escapeHtml(t('aiMemoryDesc'))+'</div>';
-    h+='<div id="aiFbBox">'+aiFbListHtml()+'</div>';
+    keyPane+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="'+ku.id+'" placeholder="'+escapeAttr(t(ku.ph))+'" value="'+escapeAttr(ku.val||'')+'" oninput="'+ku.save+'(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="'+ku.url+'" target="_blank" style="color:var(--accent)">'+t(ku.get)+' ↗</a></div></div>';
+    keyPane+='<div class="set-desc" style="margin-top:10px">'+t('aiKeyNote')+'</div>';
+    var memPane='<div class="set-desc">'+escapeHtml(t('aiMemoryDesc'))+'</div>'
+      +'<div id="aiFbBox">'+aiFbListHtml()+'</div>';
+    h+=spTabsHtml('ai',[[t('aiProvider'),keyPane],[t('aiMemory'),memPane]]);
   } else if(spCat==='plugins'){
     h+='<div class="sp-cat-title">'+t('plugins')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('pluginsDesc')+'</div>';
