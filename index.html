@@ -466,6 +466,13 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .car-tag.on{background-color:var(--accent);background-image:none;border-color:var(--accent);color:#fff}
 .car-tag.on span{opacity:.75}
 .car-tag:active{transform:scale(.93)}
+/* which pile the loaded profile is on. Browsing a pile it is not on marks
+   nothing in the strip, which is the truth; the row still says where it went. */
+.car-tag.holds{border-color:var(--green)}
+.car-tag.holds::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);
+  display:inline-block;margin-right:6px;vertical-align:middle;position:relative;top:-1px}
+.car-tag.holds.on{border-color:#fff}
+.car-tag.holds.on::before{background:#fff}
 body.night .car-tag{background-color:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
 body.night .car-tag.on{background-color:var(--accent);border-color:var(--accent);color:#fff}
 /* touch has no hover, so the feedback is the press itself */
@@ -5713,7 +5720,7 @@ function saveFavs(){ lsSet('aurora_favs',favIds); storeSave('favs',favIds); }
 function loadProfiles(){ return api('GET','/api/v1/profiles?includeHidden=true').then(function(data){ allProfiles=data||[];
   var stage=document.getElementById('carouselStage'); if(!stage) return;
   if(Object.keys(favIds).length===0){ allProfiles.filter(function(p){return p.isDefault;}).slice(0,5).forEach(function(p){ favIds[p.id]=true; }); saveFavs(); }
-  buildCarousel(); }).catch(function(){ var stage=document.getElementById('carouselStage');
+  carShowLoaded(); }).catch(function(){ var stage=document.getElementById('carouselStage');
     if(stage) stage.innerHTML='<div class="car-empty">'+t('connectToLoad')+'</div>'; }); }
 
 // ── Album carousel (favorites; center = focused profile) ────────────
@@ -5779,7 +5786,6 @@ var CAR_STEP=206;
 // profile instead, which is the only way a profile you never starred can reach
 // the carousel at all.
 var carTag='';
-var carUnpin='';
 function carVisible(p){ return p.visibility!=='hidden'&&p.visibility!=='deleted'; }
 function carTagCounts(){
   var counts={};
@@ -5799,21 +5805,39 @@ function carListProfiles(){
       return carVisible(p)&&allTagsOf(p).indexOf(carTag)>=0; }); }
   else { list=allProfiles.filter(function(p){ return favIds[p.id]&&carVisible(p); });
     if(!list.length) list=allProfiles.filter(carVisible).slice(0,6); }
-  // Whatever the filter says, the strip has to show what the machine is holding:
-  // the loaded cover is the one carrying the mark, and a mark on a cover that is
-  // not there reads as nothing being loaded at all. So it is pinned in front.
-  // A filter still means what it says, though -- taking the loaded profile out of
-  // favourites takes it out of the strip, or the star is a button that does
-  // nothing. That one is remembered by id and holds until the strip is asked a
-  // different question.
+  // The loaded cover has a pile of its own to sit in, picked when it was loaded,
+  // so it is not dropped into whichever pile is open -- there it would read as
+  // having been filed there, a profile nobody starred sitting under favourites.
+  // Two things leave it without a pile: a shot in progress, when the strip is a
+  // single cover and it has to be the one pulling, and a hidden profile, which
+  // no chip lists. Those are pinned in front.
   if(curProfileObj&&!list.some(function(p){ return p.id===curProfileObj.id; })
-     &&(brewLocked()||curProfileObj.id!==carUnpin))
+     &&(brewLocked()||!carVisible(curProfileObj)))
     list=[curProfileObj].concat(list);
   return list;
 }
+// The strip is a row of piles, and a profile that has just been loaded belongs
+// in the one it is actually on -- not in whichever pile happened to be open,
+// where it reads as having been filed there. Favourites is the pile a person
+// put it on by hand, so it wins; then what it is tagged as; then the pile of
+// things nothing has been said about.
+function carTagFor(p){
+  if(!p) return carTag;
+  if(favIds[p.id]) return '';
+  var roast=profileRoast(p); if(roast.length) return roast[0];
+  var ai=profileAiExtras(p); if(ai.length) return ai[0];
+  if(carUntagged(p)) return CAR_NOTAG;
+  var tags=allTagsOf(p);
+  return tags.length?tags[0]:''; }
+// Rebuild the strip around what is loaded. While a shot is running the strip is
+// a single cover and the pin below holds it, so nothing is moved.
+function carShowLoaded(){
+  if(!brewLocked()&&curProfileObj
+     &&!carItems.some(function(x){ return x.id===curProfileObj.id; }))
+    carTag=carTagFor(curProfileObj);
+  buildCarousel(); }
 function carSetTag(k){
   if(brewLocked()) return;
-  carUnpin='';
   carTag=(carTag===k)?'':k;
   buildCarousel(); }
 function buildCarousel(){
@@ -5858,9 +5882,10 @@ function buildCarTags(){
   var noneN=allProfiles.filter(carUntagged).length;
   if(noneN) chips.push([CAR_NOTAG, t('noTag'), noneN]);
   TAG_KEYS.forEach(function(k){ if(counts[k]) chips.push([k, t(k), counts[k]]); });
+  var home=curProfileObj?carTagFor(curProfileObj):null;
   chips.forEach(function(c){
     var b=document.createElement('button');
-    b.className='car-tag'+(carTag===c[0]?' on':'');
+    b.className='car-tag'+(carTag===c[0]?' on':'')+(home===c[0]?' holds':'');
     b.innerHTML=escapeHtml(c[1])+(c[2]?'<span>'+c[2]+'</span>':'');
     b.onclick=function(){ carSetTag(c[0]); };
     nav.appendChild(b); });
@@ -6025,8 +6050,8 @@ function toggleCurrentFav(){ var p=carItems[carIndex]; if(!p) return;
   // would store a key that never matches anything again.
   if(!p.id||p.id==='current'){ toast(t('favNeedsSave'),'err'); return; }
   var name=splitTitle(profTitle(p)).name;
-  if(favIds[p.id]){ delete favIds[p.id]; carUnpin=p.id; toast(t('favRemoved').replace('{n}',name),'ok'); }
-  else { favIds[p.id]=true; if(carUnpin===p.id) carUnpin=''; toast(t('favAdded').replace('{n}',name),'ok'); }
+  if(favIds[p.id]){ delete favIds[p.id]; toast(t('favRemoved').replace('{n}',name),'ok'); }
+  else { favIds[p.id]=true; toast(t('favAdded').replace('{n}',name),'ok'); }
   saveFavs(); buildCarousel(); }
 
 // A profile write reaches the machine, and the machine is running frames from
@@ -6062,7 +6087,6 @@ function selectProfile(p,keepGuideSrc,withRecipe){
   // press just asked for, so it steps aside
   if(!keepGuideSrc&&chartReviewing&&guideFollowsProfile()) exitReview();
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
-  carUnpin='';
   syncRecipe();
   if(chartBackToEspresso()) drawChart();
   api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark();
@@ -6070,7 +6094,7 @@ function selectProfile(p,keepGuideSrc,withRecipe){
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
 function refreshCarouselMark(){
-  if(curProfileObj&&!carItems.some(function(x){ return x.id===curProfileObj.id; })){ buildCarousel(); guideProfileChanged(); return; }
+  if(curProfileObj&&!carItems.some(function(x){ return x.id===curProfileObj.id; })){ carShowLoaded(); guideProfileChanged(); return; }
   var i=curProfileObj?carItems.findIndex(function(x){ return x.id===curProfileObj.id; }):-1;
   if(i>=0) carIndex=i;
   renderCarousel(); guideProfileChanged(); }
@@ -12331,7 +12355,7 @@ function loadWorkflow(){
   if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
     var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; });
     // the workflow's copy is the one that brews, temperature shifts and all
-    if(match){ match.profile=w.profile; curProfileObj=match; } if(carItems.length) buildCarousel(); guideProfileChanged();
+    if(match){ match.profile=w.profile; curProfileObj=match; } if(carItems.length) carShowLoaded(); guideProfileChanged();
     restoreBrewTemp(w.profile); }
   syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow'); });
 }
