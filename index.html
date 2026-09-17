@@ -661,7 +661,7 @@ body.page-swap .editpage{transition:none}
    are cut off -- 63% of them at 300, 29% here -- for 60px the editor spares */
 .ep-body{flex:1;display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px 28px 28px;min-height:0}
 .ep-col{display:flex;flex-direction:column;gap:10px;min-height:0}
-.ep-list{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:0}
+.ep-list{flex:1;padding:0 10px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:0}
 /* The search and the filters used to ride the list on a sticky position, so
    what was scrolling passed underneath them. They are their own panel now. */
 .ep-toolbar{flex:none;display:flex;flex-direction:column;gap:8px;padding:10px}
@@ -764,8 +764,12 @@ body.night .ep-kind.on,body.night .ep-tag.on{background:var(--accent);border-col
 body.night .ep-roast.on{background:#f97316;border-color:#f97316;color:#fff}
 body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on);border-color:transparent}
 .ep-list::-webkit-scrollbar{width:6px}.ep-list::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:3px}
-.ep-group-head{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:6px 4px 2px;position:sticky;top:0;background:var(--sheet);z-index:1}
-.ep-group-head:first-child{padding-top:0}
+/* A label sitting in the same seven pixels that separate two cards reads as
+   another row rather than the start of a group. The space above it belongs to
+   the break, the space below it to the group it names -- and when it sticks,
+   the padding is what a card slides under instead of touching the words. */
+.ep-group-head{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:18px 4px 9px;position:sticky;top:0;background:var(--sheet);z-index:3}
+.ep-group-head:first-child{padding-top:12px}
 #bgList .ep-item,#slList .ep-item{content-visibility:auto;contain-intrinsic-size:0 64px}
 .ep-item{background:var(--field);border:1px solid var(--edge);border-radius:12px;padding:7px 10px;cursor:pointer;transition:all .18s;display:flex;gap:10px;align-items:center}
 .ep-item:hover{transform:translateX(3px);box-shadow:var(--shadow)}
