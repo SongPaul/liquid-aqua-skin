@@ -1145,6 +1145,10 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
   background:transparent;color:rgba(255,255,255,.78);font:700 13px/1 inherit;cursor:pointer}
 .ph-src button.on{background:rgba(255,255,255,.92);color:#3b1d72;
   box-shadow:0 6px 16px rgba(20,10,54,.26)}
+.pl-flat{cursor:default}
+.pl-end{padding:6px 0 2px;text-align:center;font-size:12px;color:var(--ink-mute)}
+#phoneShell .pl-end{color:rgba(255,255,255,.7)}
+.pl-end .m-btn{width:100%}
 .pl-facts{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin-top:11px;font-size:12px}
 .pl-fk{color:var(--ink-mute);white-space:nowrap}
 .pl-fv{font-weight:600;overflow-wrap:anywhere}
@@ -2667,7 +2671,8 @@ var I18N={
     phVizLoading:'Reading your shots from Visualizer\u2026',
     phVizRead:'From Visualizer \u00b7 read only',
     phSrcDe1:'Machine', phSrcViz:'Visualizer',
-    phVizGot:'Read {n} shots\u2026',
+    phVizMoreBtn:'Read a few more', phVizGetting:'Reading\u2026',
+    phVizAll:'That is all of them',
     vizCopyLink:'Copy the link', vizLinkCopied:'Link copied',
     vfBean:'Coffee',
     vfDose:'Dose', vfYield:'Yield', vfDuration:'Time', vfGrinder:'Grinder',
@@ -2942,7 +2947,8 @@ var I18N={
     phVizLoading:'Visualizer에서 샷을 읽는 중…',
     phVizRead:'Visualizer 에서 가져옴 · 읽기 전용',
     phSrcDe1:'머신', phSrcViz:'Visualizer',
-    phVizGot:'{n}개 읽는 중…',
+    phVizMoreBtn:'좀 더 불러오기', phVizGetting:'불러오는 중…',
+    phVizAll:'여기까지입니다',
     vizCopyLink:'링크 복사', vizLinkCopied:'링크를 복사했습니다',
     vfBean:'원두',
     vfDose:'도스', vfYield:'추출량', vfDuration:'시간', vfGrinder:'그라인더',
@@ -12049,11 +12055,37 @@ function vizShotUrl(id){ return 'https://visualizer.coffee/shots/'+id; }
 function vizPick(o){ for(var i=1;i<arguments.length;i++){
     var v=o&&o[arguments[i]]; if(v!==undefined&&v!==null&&v!=='') return v; } return null; }
 function vizNum(v){ var n=parseFloat(v); return isFinite(n)?n:null; }
-function vizDetails(ids,want,mine,onStep){
-  var out=[], i=0;
-  function batch(){
-    if(out.length>=want||i>=ids.length) return Promise.resolve(out.slice(0,want));
-    var slice=ids.slice(i,i+6); i+=6;
+// Reading a shot costs a request, so the list is not read all at once. A feed
+// remembers where it got to; asking it for a few more picks up from there.
+var VIZ_PAGE=40, VIZ_MAX_PAGES=12;
+function vizFeed(){
+  return { ids:[], seen:{}, i:0, page:0, mine:null, asked:false, end:false }; }
+function vizFeedMore(f,n){
+  n=n||5;
+  var out=[];
+  function who(){
+    if(f.asked) return Promise.resolve();
+    f.asked=true;
+    return vizMe().then(function(m){ f.mine=(m&&(m.id||m.user_id))||null; },
+      function(e){ if((e&&e.message)==='auth') throw e; }); }
+  function page(){
+    if(f.end||f.page>=VIZ_MAX_PAGES){ f.end=true; return Promise.resolve(false); }
+    f.page++;
+    return vizApi('/shots?sort=updated_at&items='+VIZ_PAGE+'&page='+f.page).then(function(r){
+      var list=Array.isArray(r)?r:((r&&r.data)||(r&&r.shots)||[]);
+      var fresh=[];
+      list.forEach(function(x){
+        var id=x&&(x.id||x.shot_id);
+        // a page that answers with what the last one did would loop forever
+        if(!id||f.seen[id]) return;
+        f.seen[id]=1; fresh.push(id); });
+      if(!fresh.length){ f.end=true; return false; }
+      f.ids=f.ids.concat(fresh); return true; }); }
+  function fill(){
+    if(out.length>=n) return Promise.resolve(out);
+    if(f.i>=f.ids.length)
+      return page().then(function(got){ return got?fill():out; });
+    var slice=f.ids.slice(f.i,f.i+(n-out.length)); f.i+=slice.length;
     return Promise.all(slice.map(function(id){
       return vizApi('/shots/'+encodeURIComponent(id)).catch(function(){ return null; }); }))
       .then(function(rs){
@@ -12061,21 +12093,10 @@ function vizDetails(ids,want,mine,onStep){
           if(!v||!v.id) return;
           // Without an account the same list is the public feed, so a shot that
           // belongs to someone else is not this phone's to show.
-          if(mine&&v.user_id&&String(v.user_id)!==String(mine)) return;
+          if(f.mine&&v.user_id&&String(v.user_id)!==String(f.mine)) return;
           out.push(v); });
-        if(onStep) onStep(out.length);
-        return batch(); }); }
-  return batch(); }
-function vizMyShots(n,onStep){
-  n=n||20;
-  var mine=null;
-  return vizMe().then(function(me){ mine=(me&&(me.id||me.user_id))||null; },
-      function(e){ if((e&&e.message)==='auth') throw e; })
-    .then(function(){ return vizApi('/shots?sort=updated_at&items='+(n*2)+'&page=1'); })
-    .then(function(r){
-      var list=Array.isArray(r)?r:((r&&r.data)||(r&&r.shots)||[]);
-      var ids=list.map(function(x){ return x&&(x.id||x.shot_id); }).filter(Boolean);
-      return vizDetails(ids,n,mine,onStep); }); }
+        return fill(); }); }
+  return who().then(fill); }
 function vizWhen(v){
   var t=vizPick(v,'start_time','clock','timestamp','updated_at','created_at');
   if(t==null) return new Date().toISOString();
@@ -13695,7 +13716,7 @@ function phVizSave(){
   var u=(document.getElementById('phVizU')||{}).value||'';
   var p=(document.getElementById('phVizP')||{}).value||'';
   u=u.trim();
-  _phVizCache=null;
+  phVizReset();
   if(!u||!p){ vizSetCreds(null,null); phVizStat(t('phVizCleared')); return; }
   vizSetCreds(u,p);
   phVizStat(t('phVizChecking'));
@@ -14107,21 +14128,44 @@ function phSetSrc(k){
   var again=(_phSrc===k&&k==='viz');
   if(_phSrc===k&&!again) return;
   _phSrc=k; _phOpen=null;
-  if(again) _phVizCache=null;
+  if(again) phVizReset();
   phLoadLog(); }
-var _phVizCache=null;
+var _phVizCache=null, _phVizFeed=null, _phVizMore=false, _phVizEnd=false, _phVizObs=null;
+var VIZ_STEP=5;
+function phVizReset(){
+  _phVizCache=null; _phVizFeed=null; _phVizMore=false; _phVizEnd=false;
+  if(_phVizObs){ _phVizObs.disconnect(); _phVizObs=null; } }
 function phLoadViz(box){
   if(_phVizCache){ _phVizMode=true; _phLog=_phVizCache; renderPhoneLog(); return; }
   box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phVizLoading'))+'</div>';
-  vizMyShots(20,function(n){
-    var e=box.querySelector('.ls-empty');
-    if(e) e.textContent=t('phVizGot').replace('{n}',n); })
-    .then(function(list){
+  _phVizFeed=vizFeed(); _phVizEnd=false;
+  vizFeedMore(_phVizFeed,VIZ_STEP).then(function(list){
       _phVizMode=true; _phOpen=null;
+      if(!list.length) _phVizEnd=true;
       _phVizCache=list.map(vizToShot); _phLog=_phVizCache; renderPhoneLog(); },
     function(e){
       var m=((e&&e.message)==='auth')?t('phVizBad'):t('phVizNoNet');
       box.innerHTML='<div class="ls-empty">'+escapeHtml(m)+'</div>'; }); }
+// The bottom of the list asks for the next few by coming into view. It is a
+// button as well, so a browser without an observer -- or a list that ends up
+// shorter than the screen -- still has a way on.
+function phVizNext(){
+  if(!_phVizFeed||_phVizMore||_phVizEnd||!_phVizMode) return;
+  _phVizMore=true; renderPhoneLog();
+  vizFeedMore(_phVizFeed,VIZ_STEP).then(function(list){
+      _phVizMore=false;
+      if(!list.length){ _phVizEnd=true; renderPhoneLog(); return; }
+      _phVizCache=(_phVizCache||[]).concat(list.map(vizToShot));
+      _phLog=_phVizCache; renderPhoneLog(); },
+    function(){ _phVizMore=false; _phVizEnd=true; renderPhoneLog(); }); }
+function phVizWatch(){
+  if(_phVizObs){ _phVizObs.disconnect(); _phVizObs=null; }
+  if(!window.IntersectionObserver) return;
+  var s=document.getElementById('phVizEnd'); if(!s) return;
+  _phVizObs=new IntersectionObserver(function(es){
+    for(var i=0;i<es.length;i++) if(es[i].isIntersecting){ phVizNext(); return; } },
+    {rootMargin:'400px 0px'});
+  _phVizObs.observe(s); }
 function phLoadLog(){
   var box=document.getElementById('phLogBody'); if(!box) return;
   if(!vizCreds()) _phSrc='de1';
@@ -14176,21 +14220,22 @@ function phNote(id,v){
 // Redrawing the list throws the canvas away with it, so whatever is open is
 // drawn again afterwards -- otherwise asking for a reading blanked the graph
 // the reading was about.
+function phCanvasFor(id){
+  return document.querySelector('#phLogBody canvas.pl-cv[data-shot="'+id+'"]'); }
 function phDrawOpen(){
-  if(!_phOpen) return;
-  var cv=document.getElementById('phCanvas'); if(!cv) return;
-  if(slFull[_phOpen]) return drawShotMeasurements(cv,slFull[_phOpen],false);
-  var row=phShotRow(_phOpen); if(!row) return;
-  if(row._viz){
-    var full={ id:row.id, workflow:row.workflow, annotations:row.annotations,
-      measurements:vizMeasurements(row._vizRaw) };
-    slFull[row.id]=full;
-    if(full.measurements.length) drawShotMeasurements(cv,full,false);
-    return; }
-  var want=_phOpen;
-  withFullShots([row]).then(function(f){
-    var c2=document.getElementById('phCanvas');
-    if(c2&&f&&f[0]&&_phOpen===want) drawShotMeasurements(c2,f[0],false); }); }
+  [].forEach.call(document.querySelectorAll('#phLogBody canvas.pl-cv'),function(cv){
+    var id=cv.getAttribute('data-shot'), row=phShotRow(id);
+    if(!row) return;
+    if(slFull[id]) return drawShotMeasurements(cv,slFull[id],false);
+    if(row._viz){
+      var full={ id:row.id, workflow:row.workflow, annotations:row.annotations,
+        measurements:vizMeasurements(row._vizRaw) };
+      slFull[id]=full;
+      if(full.measurements.length) drawShotMeasurements(cv,full,false);
+      return; }
+    withFullShots([row]).then(function(f){
+      var c2=phCanvasFor(id);
+      if(c2&&f&&f[0]) drawShotMeasurements(c2,f[0],false); }); }); }
 function phVizPush(id){
   if(_phVizBusy) return;
   var row=phShotRow(id); if(!row) return;
@@ -14237,14 +14282,17 @@ function renderPhoneLog(){
     var bits=[];
     if(c.coffeeName) bits.push(c.coffeeName);
     if(isFinite(dose)&&isFinite(yld)&&dose>0) bits.push(dose.toFixed(1)+'g \u2192 '+yld.toFixed(1)+'g  1:'+(yld/dose).toFixed(2));
-    var open=(_phOpen===sh.id);
-    return '<div class="pl-item" onclick="phLogToggle(\''+sh.id+'\')">'
+    // Nothing on a Visualizer card is hidden and nothing on it can be edited,
+    // so there is nothing for a fold to save. It is open from the start.
+    var open=(sh._viz||_phOpen===sh.id);
+    return '<div class="pl-item'+(sh._viz?' pl-flat':'')+'"'
+      +(sh._viz?'':' onclick="phLogToggle(\''+sh.id+'\')"')+'>'
       +'<div class="pl-top"><span class="pl-prof">'+escapeHtml(pr.title||t('noProfile'))+'</span>'
         +(a.enjoyment!=null?'<span class="pl-rate">\u2605 '+escapeHtml(String(a.enjoyment))+'</span>':'')
         +'<span class="pl-when">'+escapeHtml(fmtShotWhen(sh))+'</span></div>'
       +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
       +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
-        +'<div class="pl-canvas"><canvas id="phCanvas"></canvas></div>'
+        +'<div class="pl-canvas"><canvas class="pl-cv" data-shot="'+escapeAttr(sh.id)+'"></canvas></div>'
         +(sh._viz?(vizFactsHtml(sh._vizRaw)
             +'<div class="pl-vizmark">'+escapeHtml(t('phVizRead'))+'</div>')
           :tasteCardHtml(sh.id,tasteOf(sh),'ph')
@@ -14270,8 +14318,15 @@ function renderPhoneLog(){
           +' onclick="event.stopPropagation();phCopyViz(\''+sh.id+'\')">\ud83d\udd17 '
           +escapeHtml(t('vizCopyLink'))+'</button></div>'):'')
         +'</div>'):'')
-      +'</div>'; }).join('')+'</div>';
-  phDrawOpen(); }
+      +'</div>'; }).join('')
+    +(_phVizMode?('<div id="phVizEnd" class="pl-end">'
+      +(_phVizEnd?escapeHtml(t('phVizAll'))
+        :('<button type="button" class="m-btn"'+(_phVizMore?' disabled aria-busy="true"':'')
+          +' onclick="phVizNext()">'+escapeHtml(t(_phVizMore?'phVizGetting':'phVizMoreBtn'))+'</button>'))
+      +'</div>'):'')
+    +'</div>';
+  phDrawOpen();
+  if(_phVizMode) phVizWatch(); }
 function initPhoneBean(){
   blendHost(false);
   var m=/[?&]bean=([^&]+)/.exec(window.location.search);
