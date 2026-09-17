@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Liquid Aqua">
 <title>Liquid Aqua</title>
 <style>
 /* Inter ships with the skin. The CDN stylesheet was render-blocking and
@@ -963,7 +967,10 @@ body.night .aip-out{background-color:rgba(99,102,241,.16);box-shadow:inset 0 1px
 .ai-qr canvas{border-radius:8px}
 .ai-qr-url{font-size:11px;color:var(--ink-mute);word-break:break-all;margin-top:8px}
 .qr-ask{font-size:12px;color:var(--ink-mute);text-align:center;line-height:1.5;padding:8px 4px}
-.qr-host{display:flex;gap:6px;margin-top:10px;align-items:center}
+.qr-host{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+/* the note is a line of its own; without the wrap it stole the row and left
+   the address field a sliver */
+.qr-host-note{order:-1}
 .qr-host input{flex:1;min-width:0;padding:7px 10px;border-radius:9px;border:1px solid var(--edge);background:#fff;font-family:var(--font);font-size:12px;color:var(--ink);-webkit-appearance:none}
 .qr-host .m-btn{padding:7px 12px;font-size:12px;flex:none}
 .qr-host-note{flex-basis:100%;font-size:11px;color:var(--ink-mute)}
@@ -2386,6 +2393,10 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <button class="m-btn primary mb-analyze" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
       <div class="set-desc" style="margin-top:10px" data-i18n="aiKeyNote"></div>
     </div>
+    <div class="mb-card" style="margin-top:14px">
+      <button class="m-btn mb-analyze" onclick="phoneShowTablet()" data-i18n="phTabletView">Show the tablet screen</button>
+      <div class="set-desc" style="margin-top:10px" data-i18n="phTabletViewNote"></div>
+    </div>
   </div>
 </div>
   <nav class="ph-nav" id="phNav"></nav>
@@ -2522,6 +2533,13 @@ var I18N={
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera', phTabSet:'Setup',
     phSetSub:'Kept on this phone, not on the machine.', phNotePh:'How it tasted',
+    catPhone:'Phone',
+    phoneIntro:'Open this address on a phone and it shows the phone app by itself — machine, shots, beans, camera.',
+    phoneCopy:'Copy the address', phoneCopied:'Address copied',
+    phoneHomeTip:'Add it to the home screen and it opens like an app, without the browser bars.',
+    phoneHostNote:'Only needed if the address above cannot be reached — type this tablet\'s Wi-Fi address.',
+    phTabletView:'Show the tablet screen',
+    phTabletViewNote:'Switches this phone back to the full screen and remembers it. Reach the phone app again from the address with ?phone=1.',
     psTankWait:'Waiting for the machine to report a level',
     psTankLow:'Low — refill the tank', psRefillAt:'refill mark at {n}%',
     psPlumbed:'Plumbed in', psTiltAsk:'Let the water follow the tilt',
@@ -2755,6 +2773,13 @@ var I18N={
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라', phTabSet:'설정',
     phSetSub:'이 폰에만 저장되며 머신에는 남지 않습니다.', phNotePh:'맛이 어때는지',
+    catPhone:'폰',
+    phoneIntro:'폰에서 이 주소를 열면 폰 화면이 알아서 뜹니다 — 머신, 샷 기록, 원두, 카메라.',
+    phoneCopy:'주소 복사', phoneCopied:'주소를 복사했습니다',
+    phoneHomeTip:'홈 화면에 추가하면 주소창 없이 앱처럼 열립니다.',
+    phoneHostNote:'위 주소로 접속이 안 될 때만 쓰세요 — 이 태블릿의 Wi-Fi 주소를 적습니다.',
+    phTabletView:'태블릿 화면으로 보기',
+    phTabletViewNote:'이 폰을 큰 화면으로 되돌리고 그 선택을 기억합니다. 폰 화면은 주소 뒤에 ?phone=1 을 붙이면 다시 열립니다.',
     psTankWait:'머신이 수위를 알려오기를 기다리는 중',
     psTankLow:'부족 — 물을 채워주세요', psRefillAt:'보충 기준선 {n}%',
     psPlumbed:'직수 연결', psTiltAsk:'기울기에 물이 반응하게',
@@ -4798,6 +4823,7 @@ var SP_CATS=[
   {id:'maint',   ic:'🧽', key:'catMaint'},
   {id:'de1',     ic:'🎛', key:'catDe1'},
   {id:'presence',ic:'🛌', key:'catPresence'},
+  {id:'phone',   ic:'📱', key:'catPhone'},
   {id:'calib',   ic:'📐', key:'catCalib'},
   {id:'firmware',ic:'⬆', key:'catFirmware'},
   {id:'app',     ic:'🔄', key:'catApp'},
@@ -5057,6 +5083,10 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div class="sp-cat-title">'+t('catApp')+'</div>';
     h+=row('autoUpdChk','autoUpdChkDesc',sw('setAutoUpd',gwSettings.automaticUpdateCheck!==false,'setAutoUpdateCheck(this.checked)'));
     h+='<div id="appBox" style="margin-top:16px"><div class="ls-empty">'+t('loading')+'</div></div>';
+  } else if(spCat==='phone'){
+    h+='<div class="sp-cat-title">'+t('catPhone')+'</div>';
+    h+='<div class="set-desc" style="margin-bottom:12px">'+escapeHtml(t('phoneIntro'))+'</div>';
+    h+='<div id="phoneQrBox"><div class="ls-empty">'+t('loading')+'</div></div>';
   } else if(spCat==='skin'){
     h+='<div class="sp-cat-title">'+t('catSkin')+'</div>';
     h+='<div id="skinBox"><div class="ls-empty">'+t('loading')+'</div></div>';
@@ -5086,6 +5116,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
   if(spCat==='plugins') loadPlugins();
   if(spCat==='firmware') loadFirmware();
   if(spCat==='app') renderAppUpdate();
+  if(spCat==='phone') renderPhoneQrBox();
   if(spCat==='skin') renderSkinBox();
 }
 function opt(val,label,cur){ return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+label+'</option>'; }
@@ -8708,13 +8739,25 @@ function isLocalHost(h){ return !h||h==='localhost'||h==='127.0.0.1'||h==='0.0.0
 // /api/v1/info only reports a Wi-Fi address, so an Ethernet or tethered host
 // returns nothing and the skin cannot discover the LAN address on its own. When
 // that happens the user types it once and it is remembered.
-function beanScanUrl(host){ var port=window.location.port||'';
+function phoneUrl(host,query){ var port=window.location.port||'';
   var hasPort=host.indexOf(':')>=0;
+  return 'http://'+host+((hasPort||!port)?'':(':'+port))+window.location.pathname
+    +(query?('?'+query):''); }
+function beanScanUrl(host){
   // A bean already open is the bean being scanned: the phone is reading its bag,
   // not somebody else's, so the code carries which one and the phone updates it.
   var open=(bgSel&&bgSel.type==='bean'&&bgSel.obj&&bgSel.obj.id)?bgSel.obj.id:'';
-  return 'http://'+host+((hasPort||!port)?'':(':'+port))+window.location.pathname
-    +'?beanscan=1'+(open?('&bean='+encodeURIComponent(open)):''); }
+  return phoneUrl(host,'beanscan=1'+(open?('&bean='+encodeURIComponent(open)):'')); }
+// The address has to be one the phone can reach, which is never localhost. The
+// gateway knows its Wi-Fi address; an Ethernet or tethered host has none to give
+// and the address is typed once instead.
+function resolveLanHost(done){
+  if(prefs.qrHost&&!isLocalHost(prefs.qrHost)){ done(prefs.qrHost); return; }
+  api('GET','/api/v1/info').then(function(info){
+    var ip=((info&&info.localIp)||'').trim();
+    if(ip&&!isLocalHost(ip)){ done(ip); return; }
+    done(isLocalHost(window.location.hostname)?null:window.location.host);
+  }).catch(function(){ done(isLocalHost(window.location.hostname)?null:window.location.host); }); }
 function setQrHost(v){ prefs.qrHost=(v||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''); savePrefs();
   var box=document.getElementById('aiQr'); if(box) box.style.display='none';
   togglePhoneQR(); }
@@ -8741,6 +8784,38 @@ function togglePhoneQR(){
   }
   api('GET','/api/v1/info').then(resolve).catch(function(){ resolve(null); });
 }
+// The phone page used to be reachable only through a code buried in the bean
+// editor, which also landed on the bean tab. It is a whole app now, so it gets
+// somewhere of its own to be found.
+function phoneAppUrl(host){ return phoneUrl(host,'phone=1'); }
+function renderPhoneQrBox(){
+  var box=document.getElementById('phoneQrBox'); if(!box) return;
+  function hostRow(note){
+    return '<div class="qr-host">'+(note?'<div class="qr-host-note">'+escapeHtml(note)+'</div>':'')
+      +'<input id="phoneQrHost" value="'+escapeAttr(prefs.qrHost||'')+'" placeholder="192.168.0.10" inputmode="url">'
+      +'<button class="m-btn" onclick="setPhoneQrHost(document.getElementById(\'phoneQrHost\').value)">'+t('apply')+'</button></div>'; }
+  resolveLanHost(function(host){
+    if(!host){ box.innerHTML='<div class="qr-ask">'+escapeHtml(t('qrNoLan'))+'</div>'+hostRow(''); return; }
+    var url=phoneAppUrl(host);
+    box.innerHTML='<div class="ai-qr" style="display:block"><div id="phoneQrCanvas"></div>'
+      +'<div class="ai-qr-url">'+escapeHtml(url)+'</div>'
+      +'<div class="qr-host" style="justify-content:center">'
+        +'<button class="m-btn" onclick="copyPhoneUrl(\''+escapeAttr(url)+'\')">'+escapeHtml(t('phoneCopy'))+'</button></div>'
+      +'</div>'
+      +'<div class="set-desc" style="margin-top:10px">'+escapeHtml(t('phoneHomeTip'))+'</div>'
+      +hostRow(t('phoneHostNote'));
+    var wrap=document.getElementById('phoneQrCanvas');
+    if(typeof qrcode==='undefined'){ wrap.innerHTML='<div style="font-size:12px;color:var(--red)">'+t('qrNoLib')+'</div>'; return; }
+    var cv=document.createElement('canvas'); wrap.appendChild(cv); drawQR(cv,url,220); }); }
+function setPhoneQrHost(v){
+  prefs.qrHost=(v||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''); savePrefs();
+  renderPhoneQrBox(); }
+function copyPhoneUrl(url){
+  var done=function(){ toast(t('phoneCopied'),'ok'); };
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(done,function(){ toast(url,'ok'); }); return; } }catch(_){}
+  toast(url,'ok'); }
+
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
   var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing'); document.getElementById('mbAnalyzeBtn').disabled=true;
@@ -12866,7 +12941,50 @@ var PHONE_TABS=[['status','\u2615','phTabStatus'],['log','\u25f7','phTabLog'],
                 ['set','\u2699','phTabSet']];
 var PHONE_PANES={status:'phStatusPage',log:'phLogPage',bean:'mobilePage',cam:'camSetupPage',set:'phSetPage'};
 var phoneTab='', _phoneReady={};
+// A phone that simply opened the gateway address used to get the 1280x800 stage
+// scaled down to nothing. Touch and a short side say phone; a DE1 tablet is
+// touch too, which is why the size is what decides.
+function phoneSized(){
+  try{ if(!window.matchMedia||!window.matchMedia('(pointer: coarse)').matches) return false; }catch(_){ return false; }
+  var w=window.innerWidth||0, h=window.innerHeight||0;
+  return !!w&&!!h&&Math.min(w,h)<600; }
+function viewForcedTablet(){ try{ return localStorage.getItem('aurora_view')==='tablet'; }catch(_){ return false; } }
+function phoneShowTablet(){
+  try{ localStorage.setItem('aurora_view','tablet'); }catch(_){}
+  window.location.href=window.location.pathname+'?tablet=1'; }
+// Kept on the home screen it opens like anything else on the phone. iOS reads
+// the meta tags in the head and the touch icon; everywhere else reads the
+// manifest. Both are built here because the skin is one file and cannot ship
+// either as a file of its own.
+function phoneHomeIcon(){
+  try{
+    var n=192, c=document.createElement('canvas'); c.width=c.height=n;
+    var g=c.getContext('2d'); if(!g) return;
+    var lg=g.createLinearGradient(0,0,n,n);
+    lg.addColorStop(0,'#38bdf8'); lg.addColorStop(.52,'#7c3aed'); lg.addColorStop(1,'#db2777');
+    g.fillStyle=lg; g.fillRect(0,0,n,n);
+    g.fillStyle='rgba(255,255,255,.95)';
+    g.beginPath(); g.moveTo(60,46); g.lineTo(132,46); g.lineTo(120,92); g.lineTo(72,92); g.closePath(); g.fill();
+    g.strokeStyle='rgba(255,255,255,.95)'; g.lineWidth=10; g.lineCap='round';
+    [124,152].forEach(function(y,i){
+      g.globalAlpha=i?0.5:1; g.beginPath();
+      for(var x=20;x<=172;x+=4){ var yy=y+Math.sin((x/24)+i*1.8)*8; if(x===20) g.moveTo(x,yy); else g.lineTo(x,yy); }
+      g.stroke(); });
+    g.globalAlpha=1;
+    var icon=c.toDataURL('image/png');
+    var l=document.createElement('link'); l.rel='apple-touch-icon'; l.href=icon; document.head.appendChild(l);
+    var dir=window.location.pathname.replace(/[^/]*$/,'');
+    var mf={ name:'Liquid Aqua', short_name:'Aqua',
+      start_url:window.location.origin+window.location.pathname+'?phone=1',
+      scope:window.location.origin+dir, display:'standalone',
+      background_color:'#312e81', theme_color:'#4f46e5',
+      icons:[{src:icon,sizes:'192x192',type:'image/png',purpose:'any maskable'}] };
+    var b=new Blob([JSON.stringify(mf)],{type:'application/manifest+json'});
+    var m=document.createElement('link'); m.rel='manifest'; m.href=URL.createObjectURL(b);
+    document.head.appendChild(m);
+  }catch(_){} }
 function bootPhone(tab){
+  phoneHomeIcon();
   loadPrefs(); // picks up language + applies i18n
   // loadPrefs reads the tablet's stored settings; the phone's own choice wins.
   try{ var pv=localStorage.getItem('aurora_aiprov'); if(AI_PROVIDERS.indexOf(pv)>=0) prefs.aiProvider=pv; }catch(_){}
@@ -13262,6 +13380,10 @@ document.addEventListener('DOMContentLoaded', function(){
   if(/[?&]beanscan=1/.test(window.location.search)){ bootPhone('bean'); return; }
   if(/[?&]camsetup=1/.test(window.location.search)){ bootPhone('cam'); return; }
   if(/[?&]phone=1/.test(window.location.search)){ bootPhone('status'); return; }
+  // ?tablet=1 is a person saying they meant the big screen; it is remembered so
+  // the choice is not made again on every visit.
+  if(/[?&]tablet=1/.test(window.location.search)){ try{ localStorage.setItem('aurora_view','tablet'); }catch(_){} }
+  else if(phoneSized()&&!viewForcedTablet()){ bootPhone('status'); return; }
   bindDoseGestures(); thermoInit();
   fitStage(); tickHdrClock(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); loadGrinderBurrs(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
