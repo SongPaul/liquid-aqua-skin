@@ -1078,6 +1078,8 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .pl-star{width:36px;height:36px;border:0;background:transparent;font-size:19px;line-height:1;
   color:var(--ink-mute);opacity:.35;cursor:pointer;-webkit-appearance:none;transition:opacity .12s,color .12s}
 .pl-star.on{color:var(--amber);opacity:1}
+.pl-note{margin-top:10px}
+.pl-note textarea{min-height:64px}
 .pl-ai{margin-top:6px}
 .pl-ai .ai-verdict{font-size:14px;margin-top:8px}
 .pl-ai .ai-list{font-size:12px}
@@ -2324,7 +2326,7 @@ var I18N={
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera', phTabSet:'Setup',
-    phSetSub:'Kept on this phone, not on the machine.',
+    phSetSub:'Kept on this phone, not on the machine.', phNotePh:'How it tasted',
     phLogSub:'The last shots this machine pulled.', phLogEmpty:'No shots recorded yet',
     phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
     phSinceSeen:'since the phone looked',
@@ -2538,7 +2540,7 @@ var I18N={
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라', phTabSet:'설정',
-    phSetSub:'이 폰에만 저장되며 머신에는 남지 않습니다.',
+    phSetSub:'이 폰에만 저장되며 머신에는 남지 않습니다.', phNotePh:'맛이 어때는지',
     phLogSub:'이 머신이 최근에 내린 샷입니다.', phLogEmpty:'아직 기록된 샷이 없습니다',
     phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
     phSinceSeen:'폰이 본 순간부터',
@@ -12612,15 +12614,34 @@ function phLoadLog(){
 // was like, and ask what it says. Both where the shot is already open.
 var _phAi=null, _phAiBusy=false;
 function phShotRow(id){ return _phLog.filter(function(x){ return x.id===id; })[0]||null; }
-function phRate(id,n){
+// The tablet writes the whole annotations object, so anything not carried over
+// is erased. Both writers here start from what the shot already has.
+function phAnnPut(id,patch,after){
   var row=phShotRow(id); if(!row) return;
   var ann=JSON.parse(JSON.stringify(row.annotations||{}));
-  if(ann.enjoyment===n) n=null;           // pressing the same star clears it
-  ann.enjoyment=n;
-  row.annotations=ann; renderPhoneLog();  // answer the tap now, reconcile after
+  for(var k in patch) ann[k]=patch[k];
+  row.annotations=ann;
+  if(slFull[id]) slFull[id].annotations=ann;
   api('PUT','/api/v1/shots/'+encodeURIComponent(id),{annotations:ann})
-    .then(function(){ if(slFull[id]) slFull[id].annotations=ann; })
+    .then(function(){ if(after) after(); })
     .catch(function(){ toast(t('saveFailed'),'err'); phLoadLog(); }); }
+function phRate(id,n){
+  var row=phShotRow(id); if(!row) return;
+  var cur=(row.annotations||{}).enjoyment;
+  if(cur===n) n=null;                     // pressing the same star clears it
+  phAnnPut(id,{enjoyment:n});
+  // Only the stars are redrawn: a note being typed beside them must not be
+  // pulled out from under the caret.
+  var box=document.getElementById('phStars');
+  if(box) box.outerHTML=phStarsHtml(id,(n==null?null:n)); }
+// Typing redraws nothing. The model is updated as it goes and the write waits
+// for a pause, so the field keeps the caret and the shot keeps the words.
+var _phNoteT=null;
+function phNote(id,v){
+  var row=phShotRow(id); if(!row) return;
+  (row.annotations=row.annotations||{}).espressoNotes=v;
+  clearTimeout(_phNoteT);
+  _phNoteT=setTimeout(function(){ phAnnPut(id,{espressoNotes:v||null}); },700); }
 function phAiRun(id){
   if(_phAiBusy) return;
   var row=phShotRow(id); if(!row) return;
@@ -12635,7 +12656,7 @@ function phAiRun(id){
     .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ _phAiBusy=false; renderPhoneLog(); }); }
 function phStarsHtml(id,n){
-  var h='<div class="pl-rate-row"><span class="pl-rate-k">'+escapeHtml(t('enjoyment'))+'</span>';
+  var h='<div class="pl-rate-row" id="phStars"><span class="pl-rate-k">'+escapeHtml(t('enjoyment'))+'</span>';
   for(var i=1;i<=5;i++)
     h+='<button type="button" class="pl-star'+((n!=null&&i<=n)?' on':'')+'"'
       +' onclick="event.stopPropagation();phRate(\''+id+'\','+i+')">\u2605</button>';
@@ -12669,6 +12690,9 @@ function renderPhoneLog(){
       +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
         +'<div class="pl-canvas"><canvas id="phCanvas"></canvas></div>'
         +phStarsHtml(sh.id,(a.enjoyment==null?null:parseInt(a.enjoyment,10)))
+        +'<div class="field pl-note"><label>'+escapeHtml(t('notesLabel'))+'</label>'
+          +'<textarea rows="2" placeholder="'+escapeAttr(t('phNotePh'))+'"'
+          +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(a.espressoNotes||'')+'</textarea></div>'
         +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>')
           :_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi)+'</div>')
           :('<button type="button" class="m-btn mb-analyze" style="margin-top:10px"'
