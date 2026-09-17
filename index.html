@@ -1149,6 +1149,7 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .ph-home-ico{width:52px;height:52px;border-radius:13px;flex:none;
   box-shadow:0 6px 18px rgba(20,10,54,.3)}
 .ph-home .mb-sec-h{margin-bottom:3px}
+.ph-home-url{margin-top:8px;font-size:11px;overflow-wrap:anywhere;opacity:.8}
 .pl-flat{cursor:default}
 .pl-end{padding:6px 0 2px;text-align:center;font-size:12px;color:var(--ink-mute)}
 #phoneShell .pl-end{color:rgba(255,255,255,.7)}
@@ -2668,6 +2669,7 @@ var I18N={
     phoneHomeTip:'Add it to the home screen and it opens like an app, without the browser bars.',
     phoneHostNote:'Only needed if the address above cannot be reached — type this tablet\'s Wi-Fi address.',
     phHomeTitle:'Add to the home screen', phHomeInstall:'Install',
+    phHomeAddr:'It will be saved as',
     phHomeWhy:'Opens straight from the home screen, without hunting for the address again.',
     phHomeIos:'Tap the share button at the bottom of Safari, then \u201cAdd to Home Screen\u201d.',
     phHomeAndroid:'Open the \u22ee menu at the top right of Chrome, then \u201cAdd to Home screen\u201d.',
@@ -2952,6 +2954,7 @@ var I18N={
     phoneHomeTip:'홈 화면에 추가하면 주소창 없이 앱처럼 열립니다.',
     phoneHostNote:'위 주소로 접속이 안 될 때만 쓰세요 — 이 태블릿의 Wi-Fi 주소를 적습니다.',
     phHomeTitle:'홈 화면에 추가', phHomeInstall:'추가하기',
+    phHomeAddr:'저장될 주소',
     phHomeWhy:'홈 화면에서 바로 열립니다. 주소를 다시 찾지 않아도 됩니다.',
     phHomeIos:'Safari 아래 공유 버튼을 누르고 “홈 화면에 추가”를 고르세요.',
     phHomeAndroid:'Chrome 오른쪽 위 ⋮ 메뉴에서 “홈 화면에 추가”를 고르세요.',
@@ -13844,16 +13847,43 @@ function phoneHomeIcon(){
     var icon=c.toDataURL('image/png');
     _phIcon=icon;
     var l=document.createElement('link'); l.rel='apple-touch-icon'; l.href=icon; document.head.appendChild(l);
-    var dir=window.location.pathname.replace(/[^/]*$/,'');
-    var mf={ name:'Liquid Aqua', short_name:'Aqua',
-      start_url:window.location.origin+window.location.pathname+'?phone=1',
-      scope:window.location.origin+dir, display:'standalone',
-      background_color:'#312e81', theme_color:'#4f46e5',
-      icons:[{src:icon,sizes:'192x192',type:'image/png',purpose:'any maskable'}] };
-    var b=new Blob([JSON.stringify(mf)],{type:'application/manifest+json'});
-    var m=document.createElement('link'); m.rel='manifest'; m.href=URL.createObjectURL(b);
-    document.head.appendChild(m);
+    phHomeTarget(function(url){
+      var dir=url.replace(/\?.*$/,'').replace(/[^/]*$/,'');
+      var mf={ name:'Liquid Aqua', short_name:'Aqua',
+        start_url:url, scope:dir, display:'standalone',
+        background_color:'#312e81', theme_color:'#4f46e5',
+        icons:[{src:icon,sizes:'192x192',type:'image/png',purpose:'any maskable'}] };
+      var b=new Blob([JSON.stringify(mf)],{type:'application/manifest+json'});
+      var old=document.querySelector('link[rel=manifest]');
+      if(old&&old.parentNode) old.parentNode.removeChild(old);
+      var m=document.createElement('link'); m.rel='manifest'; m.href=URL.createObjectURL(b);
+      document.head.appendChild(m);
+      phHomeCard(); });
   }catch(_){} }
+// The skin is served on a port of its own, and that port is handed out from a
+// range at startup -- it is not promised to be the same one next time. An icon
+// saved against it stops working the moment it moves, which is a dead address,
+// not a machine out of reach.
+//
+// The gateway's own port does not move and it serves the same files, so that is
+// what an icon is pointed at. It is tried first and only used if it answers;
+// whatever this page was reached by is the fall-back.
+var _phHomeUrl=null;
+function phHomeTarget(cb){
+  if(_phHomeUrl) return cb(_phHomeUrl);
+  var here=window.location.origin+window.location.pathname+'?phone=1';
+  function use(u){ _phHomeUrl=u; cb(u); }
+  if(/\/webui\/skin-assets\/[^/]+\//.test(window.location.pathname)) return use(here);
+  var stable=GATEWAY.http+'/api/v1/webui/skin-assets/'+encodeURIComponent(SKIN_ID)+'/index.html';
+  var ac=null,timer=null;
+  var o={method:'GET'};
+  if(typeof AbortController!=='undefined'){ ac=new AbortController(); o.signal=ac.signal;
+    timer=setTimeout(function(){ ac.abort(); },5000); }
+  fetch(stable,o).then(function(r){
+    if(timer) clearTimeout(timer);
+    var ct=(r.headers.get('content-type')||'').toLowerCase();
+    use((r.ok&&ct.indexOf('text/html')===0)?(stable+'?phone=1'):here); },
+    function(){ if(timer) clearTimeout(timer); use(here); }); }
 // A browser that means to offer an install hands the offer over first; it is
 // kept so the page can make it at a moment of its own choosing.
 window.addEventListener('beforeinstallprompt',function(e){
@@ -13883,6 +13913,8 @@ function phHomeCard(){
     +'<div><div class="mb-sec-h">'+escapeHtml(t('phHomeTitle'))+'</div>'
     +'<div class="set-desc">'+escapeHtml(t('phHomeWhy'))+'</div></div></div>'
     +'<div class="set-desc" style="margin-top:10px">'+escapeHtml(how)+'</div>'
+    +(_phHomeUrl?('<div class="set-desc ph-home-url">'
+      +escapeHtml(t('phHomeAddr'))+' '+escapeHtml(_phHomeUrl.replace(/\?.*$/,''))+'</div>'):'')
     +(_phInstall?('<button class="m-btn primary mb-analyze" style="margin-top:12px"'
       +' onclick="phHomeInstall()">'+escapeHtml(t('phHomeInstall'))+'</button>'):''); }
 function phHomeInstall(){
