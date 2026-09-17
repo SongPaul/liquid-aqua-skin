@@ -466,13 +466,6 @@ body.brewing .cc-hint.brewing{color:var(--accent);font-weight:800}
 .car-tag.on{background-color:var(--accent);background-image:none;border-color:var(--accent);color:#fff}
 .car-tag.on span{opacity:.75}
 .car-tag:active{transform:scale(.93)}
-/* which pile the loaded profile is on. Browsing a pile it is not on marks
-   nothing in the strip, which is the truth; the row still says where it went. */
-.car-tag.holds{border-color:var(--green)}
-.car-tag.holds::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);
-  display:inline-block;margin-right:6px;vertical-align:middle;position:relative;top:-1px}
-.car-tag.holds.on{border-color:#fff}
-.car-tag.holds.on::before{background:#fff}
 body.night .car-tag{background-color:rgba(255,255,255,.07);color:var(--ink);border-color:rgba(255,255,255,.12)}
 body.night .car-tag.on{background-color:var(--accent);border-color:var(--accent);color:#fff}
 /* touch has no hover, so the feedback is the press itself */
@@ -5889,10 +5882,9 @@ function buildCarTags(){
   var noneN=allProfiles.filter(carUntagged).length;
   if(noneN) chips.push([CAR_NOTAG, t('noTag'), noneN]);
   TAG_KEYS.forEach(function(k){ if(counts[k]) chips.push([k, t(k), counts[k]]); });
-  var home=curProfileObj?carTagFor(curProfileObj):null;
   chips.forEach(function(c){
     var b=document.createElement('button');
-    b.className='car-tag'+(carTag===c[0]?' on':'')+(home===c[0]?' holds':'');
+    b.className='car-tag'+(carTag===c[0]?' on':'');
     b.innerHTML=escapeHtml(c[1])+(c[2]?'<span>'+c[2]+'</span>':'');
     b.onclick=function(){ carSetTag(c[0]); };
     nav.appendChild(b); });
