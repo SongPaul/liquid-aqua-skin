@@ -1148,6 +1148,119 @@ body.night #phoneShell{background-attachment:fixed;
 #mobilePage .ai-thumb{width:70px;height:70px;border-radius:12px}
 .mb-key{padding:16px}
 
+/* ── Liquid glass, phone only ──────────────────────────────────────────
+   The phone is held up against whatever is behind it, so it is given a
+   ground of its own rather than the tablet's paper: one iridescent sheet,
+   fixed to the viewport, with every panel a pane of glass over it. Scoped
+   to #phoneShell so the tablet keeps its own skin.
+   The ground is deep in the middle of its range on purpose -- white text
+   has to hold on every part of it, including the brightest. */
+#phoneShell{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+#phoneShell,body.night #phoneShell{
+  background-attachment:fixed;
+  background:
+    /* the floating bar has to hold its own on whatever it happens to be over */
+    linear-gradient(to top,rgba(23,10,58,.46),transparent 24%),
+    radial-gradient(120% 82% at 8% 0%,rgba(56,189,248,.62),transparent 58%),
+    radial-gradient(105% 72% at 97% 10%,rgba(167,139,250,.62),transparent 60%),
+    radial-gradient(115% 78% at 82% 52%,rgba(232,121,249,.50),transparent 58%),
+    radial-gradient(125% 85% at 2% 72%,rgba(79,70,229,.72),transparent 60%),
+    radial-gradient(95% 62% at 55% 104%,rgba(190,24,93,.48),transparent 62%),
+    linear-gradient(152deg,#312e81,#5b21b6 30%,#701a75 60%,#1e40af);
+  /* one colour language inside the sheet: ink is light, edges are highlights */
+  --ink:#fff; --ink-soft:rgba(255,255,255,.88); --ink-mute:rgba(255,255,255,.72);
+  --glass:rgba(255,255,255,.15); --glass-hi:rgba(255,255,255,.28);
+  --glass-line:rgba(255,255,255,.40);
+  --mb-card:rgba(255,255,255,.15);
+  --sheet:rgba(255,255,255,.15);
+  --field:rgba(255,255,255,.16); --edge:rgba(255,255,255,.32);
+  --ctl-face:rgba(255,255,255,.18); --ctl-edge:rgba(255,255,255,.36);
+  --ctl-sheen:linear-gradient(160deg,rgba(255,255,255,.28),rgba(255,255,255,0));
+  --ctl-lift:0 8px 20px rgba(22,12,58,.22);
+  --shadow:0 12px 34px rgba(22,12,58,.26)}
+/* Night is the same sheet held further from the light: the same hues, deeper,
+   so the setting still means something on this page. */
+body.night #phoneShell{
+  background:
+    linear-gradient(to top,rgba(10,4,28,.58),transparent 26%),
+    radial-gradient(120% 82% at 8% 0%,rgba(14,116,144,.60),transparent 58%),
+    radial-gradient(105% 72% at 97% 10%,rgba(91,33,182,.70),transparent 60%),
+    radial-gradient(115% 78% at 82% 52%,rgba(134,25,143,.55),transparent 58%),
+    radial-gradient(125% 85% at 2% 72%,rgba(49,46,129,.78),transparent 60%),
+    radial-gradient(95% 62% at 55% 104%,rgba(112,26,117,.50),transparent 62%),
+    linear-gradient(152deg,#160f38,#2e1065 32%,#3b0764 62%,#0f214d)}
+body.night #phoneShell .mb-card,body.night #phoneShell .pl-item,
+body.night #phoneShell .ps-state,body.night #phoneShell .cs-way,
+body.night #phoneShell .rec-box:not(:empty),body.night #phoneShell .mb-head{
+  background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.26)}
+body.night #phoneShell .ph-nav{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28)}
+#phoneShell .mb-card,#phoneShell .pl-item,#phoneShell .ps-state,#phoneShell .cs-way,
+#phoneShell .rec-box:not(:empty),#phoneShell .mb-head{
+  background:rgba(255,255,255,.15);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid rgba(255,255,255,.38);border-radius:24px;
+  box-shadow:0 12px 34px rgba(22,12,58,.26),inset 0 1px 0 rgba(255,255,255,.5)}
+/* the title was a gradient clipped into the text, which on glass reads as a
+   smudge; on this ground the title is simply the brightest thing on it */
+#phoneShell .mb-head{text-align:left;margin-bottom:2px;padding:13px 17px}
+#phoneShell .mb-title{font-size:20px;background:none;-webkit-background-clip:border-box;
+  background-clip:border-box;-webkit-text-fill-color:#fff;color:#fff;
+  text-shadow:0 2px 10px rgba(30,14,70,.4)}
+#phoneShell .mb-sub{color:rgba(255,255,255,.80);text-shadow:0 1px 6px rgba(30,14,70,.3)}
+#phoneShell .mb-sec-h,#phoneShell .pl-rate-k,#phoneShell .tc-grp,#phoneShell .tc-t{
+  color:rgba(255,255,255,.72)}
+#phoneShell .mb-sec+.mb-sec{border-top-color:rgba(255,255,255,.22)}
+/* a bar that floats clear of the edge, the way the thumb expects to find it */
+#phoneShell .ph-nav{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  padding:6px;border-radius:26px;border:1px solid rgba(255,255,255,.42);border-top:1px solid rgba(255,255,255,.42);
+  background:rgba(255,255,255,.17);
+  -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+  box-shadow:0 14px 36px rgba(20,10,54,.34),inset 0 1px 0 rgba(255,255,255,.5)}
+#phoneShell .ph-tab{color:rgba(255,255,255,.78);border-radius:20px;min-height:50px;
+  text-shadow:0 1px 4px rgba(20,8,50,.5)}
+#phoneShell .ph-tab.on{background-color:rgba(255,255,255,.26);color:#fff}
+/* fields keep a pane of their own so what is typed stays legible on the sheet */
+#phoneShell .field input,#phoneShell .field select,#phoneShell .field textarea,
+#phoneShell input,#phoneShell select,#phoneShell textarea{
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34);
+  border-radius:14px;color:#fff}
+#phoneShell input::placeholder,#phoneShell textarea::placeholder{color:rgba(255,255,255,.58)}
+#phoneShell .field label{color:rgba(255,255,255,.76)}
+/* the native dropdown draws on its own surface, not on the sheet */
+#phoneShell select option{color:#1e1b3a;background:#fff}
+#phoneShell .m-btn{background-color:rgba(255,255,255,.18);
+  background-image:linear-gradient(160deg,rgba(255,255,255,.26),rgba(255,255,255,0));
+  border:1px solid rgba(255,255,255,.36);border-radius:16px;color:#fff;
+  box-shadow:0 8px 20px rgba(22,12,58,.2),inset 0 1px 0 rgba(255,255,255,.45)}
+#phoneShell .m-btn.primary{background-color:rgba(255,255,255,.92);background-image:none;
+  border-color:rgba(255,255,255,.92);color:#4c1d95;
+  box-shadow:0 10px 26px rgba(22,12,58,.3)}
+#phoneShell .m-btn:disabled{opacity:.45}
+/* a card inside a card: lighter, and no second blur to muddy the first */
+#phoneShell .tc{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);
+  border-radius:18px}
+#phoneShell .tc-pip{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);
+  color:rgba(255,255,255,.82)}
+#phoneShell .tc-pip.on{background:#fff;border-color:#fff;color:#4c1d95}
+#phoneShell .tc-head .tc-sum{color:#fff}
+#phoneShell .tc-head .tc-sum.none{color:rgba(255,255,255,.66)}
+#phoneShell .tc-word{color:rgba(255,255,255,.72)}
+#phoneShell .tc-row.set .tc-word{color:#fff}
+/* the curves are drawn in their own colours, so they get a dark pane to sit on */
+#phoneShell .pl-canvas{background:rgba(18,10,46,.38);border:1px solid rgba(255,255,255,.26);
+  border-radius:16px}
+#phoneShell .pl-when,#phoneShell .pl-sub{color:rgba(255,255,255,.76)}
+#phoneShell .pl-star{color:rgba(255,255,255,.55)}
+#phoneShell .mb-shoot{border-color:rgba(255,255,255,.34)}
+#phoneShell .mb-target{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34);
+  border-radius:16px;color:#fff}
+#phoneShell .mb-save{background:linear-gradient(to top,rgba(76,29,149,.34),rgba(76,29,149,0));
+  border-top:0}
+#phoneShell .ai-thumb{border-color:rgba(255,255,255,.34)}
+#phoneShell .ls-empty,#phoneShell .rec-wait,#phoneShell .set-desc,#phoneShell .ai-status{
+  color:rgba(255,255,255,.78)}
+#phoneShell .ps-dot{box-shadow:0 0 0 4px rgba(255,255,255,.14)}
+
 /* Shot log page */
 .sl-badge{width:44px;height:44px;border-radius:9px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--amber);flex-shrink:0;font-weight:700}
 .sl-detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
