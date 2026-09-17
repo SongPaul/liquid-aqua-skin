@@ -2486,6 +2486,7 @@ var I18N={
     piNoFiles:'No .tcl or .json files in what you picked', piReading:'Reading {n} files…',
     piNoSteps:'no steps in this format', piDup:'already in the library', piBad:'could not be read',
     piSame:'the same profile is already there', piSameAs:'already there as {n}',
+    piBack:'brings back a deleted one',
     piMerged:'{n} were already there under another name',
     piDupSel:'same profile picked twice',
     piGo:'Import {a}', piGoNone:'Nothing to import', piWorking:'Importing {n} of {t}…',
@@ -2738,6 +2739,7 @@ var I18N={
     piNoFiles:'고르신 것에 .tcl 이나 .json 파일이 없습니다', piReading:'{n}개 읽는 중…',
     piNoSteps:'스텝이 없는 형식', piDup:'이미 라이브러리에 있음', piBad:'읽을 수 없음',
     piSame:'같은 프로파일이 이미 있음', piSameAs:'이미 있음 — {n}',
+    piBack:'지운 것을 되살림',
     piMerged:'{n}개는 다른 이름으로 이미 있어 합쳤습니다',
     piDupSel:'같은 프로파일을 두 번 고름',
     piGo:'{a}개 가져오기', piGoNone:'가져올 것이 없습니다', piWorking:'가져오는 중 {n}/{t}…',
@@ -6864,12 +6866,16 @@ function openProfileImport(){
 function piRead(files){
   var list=[].slice.call(files||[]).filter(function(f){ return /\.(tcl|json)$/i.test(f.name); });
   if(!list.length){ toast(t('piNoFiles'),'err'); return; }
-  var have={}, sigs={};
+  // A profile thrown away is not in the way of a new one, but the gateway still
+  // holds its record and hands it back for the same content -- put away, not
+  // restored. So those are told apart: they come in as a profile coming back.
+  var have={}, sigs={}, gone={};
   (allProfiles||[]).forEach(function(x){
-    if(x.visibility==='deleted') return;   // a profile thrown away is not in the way
     var ti=String(((x.profile||{}).title||'')).trim();
+    var sg=profSig(x.profile);
+    if(x.visibility==='deleted'){ if(sg&&!gone[sg]) gone[sg]=ti; return; }
     have[ti.toLowerCase()]=true;
-    var sg=profSig(x.profile); if(sg&&!sigs[sg]) sigs[sg]=ti; });
+    if(sg&&!sigs[sg]) sigs[sg]=ti; });
   piRows=[];
   // Picking again before the last read finished would let the old readers write
   // their rows into the new list. Each pick carries a token and only the current
@@ -6904,8 +6910,9 @@ function piRead(files){
           var row={ i:i, file:f.name, title:title, profile:pr, steps:(pr.steps||[]).length };
           if(!row.steps){ row.skip='piNoSteps'; }
           else if(have[title.toLowerCase()]){ row.skip='piDup'; }
-          else { var same=sigs[profSig(pr)];
-            if(same){ row.skip='piSame'; row.sameAs=same; } }
+          else { var sg=profSig(pr), same=sigs[sg];
+            if(same){ row.skip='piSame'; row.sameAs=same; }
+            else if(gone[sg]) row.back=true; }
           row.on=!row.skip;
           piRows.push(row); });
       }catch(e){
@@ -6953,7 +6960,7 @@ function renderPiList(){
       +'<span class="pi-n">'+escapeHtml(r.title||r.file)+'</span>'
       +'<span class="pi-s">'+escapeHtml(r.skip
         ?(r.sameAs?t('piSameAs').replace('{n}',r.sameAs):t(r.skip))
-        :(r.steps+' '+t('stepsShort')))+'</span>'
+        :(r.back?t('piBack'):(r.steps+' '+t('stepsShort'))))+'</span>'
       +'</label>'; }).join('');
   var ok=piRows.filter(function(r){ return !r.skip; }).length;
   box.innerHTML+='<div class="pi-sum">'+escapeHtml(t('piSum')
@@ -6969,7 +6976,7 @@ function piRun(){
   var done=0, failed=0, merged=0;
   // What the library already had, so a record that comes back unchanged is
   // recognised as the gateway merging rather than a profile arriving.
-  var before={}; (allProfiles||[]).forEach(function(x){ before[x.id]=1; });
+  var before={}; (allProfiles||[]).forEach(function(x){ before[x.id]=x.visibility||'visible'; });
   function step(k){
     if(k>=todo.length){
       if(btn){ btn.removeAttribute('aria-busy'); }
@@ -6983,7 +6990,14 @@ function piRun(){
     if(btn) btn.textContent=t('piWorking').replace('{n}',k+1).replace('{t}',todo.length);
     api('POST','/api/v1/profiles',{ profile:todo[k].profile,
         metadata:{ comment:'imported from '+todo[k].file } },20000)
-      .then(function(r){ if(r&&r.id&&before[r.id]) merged++; else done++; })
+      .then(function(r){
+        if(!r||!r.id||before[r.id]===undefined){ done++; return; }
+        // The record was already there and still is: nothing arrived.
+        if(before[r.id]==='visible'&&(r.visibility||'visible')==='visible'){ merged++; return; }
+        // It was put away. Asking for it again is asking to have it back.
+        return api('PUT','/api/v1/profiles/'+encodeURIComponent(r.id)+'/visibility',
+            {visibility:'visible'},15000)
+          .then(function(){ done++; },function(){ failed++; }); })
       .catch(function(){ failed++; })
       .then(function(){ step(k+1); }); }
   step(0); }
