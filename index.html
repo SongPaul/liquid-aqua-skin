@@ -1072,6 +1072,34 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .pl-rate{font-size:12px;font-weight:800;color:var(--amber);white-space:nowrap}
 .pl-sub{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
 .pl-open{margin-top:12px}
+/* The tasting card. Seven lines that have to sit inside a phone shot and a
+   tablet side panel alike, so a line is one row high and the whole thing folds
+   away into the summary it produced. */
+.tc{margin-top:12px;border:1px solid var(--ctl-edge);border-radius:12px;overflow:hidden;
+  background:var(--ctl-face)}
+.tc-head{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;
+  background:transparent;font-family:var(--font);cursor:pointer;-webkit-appearance:none;text-align:left}
+.tc-head .tc-t{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
+  letter-spacing:.05em;flex:none}
+.tc-head .tc-sum{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-head .tc-sum.none{color:var(--ink-mute);font-weight:600}
+.tc-head .tc-car{flex:none;font-size:10px;color:var(--ink-mute)}
+.tc-body{padding:2px 10px 10px}
+.tc-grp{font-size:10px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
+  letter-spacing:.06em;margin:8px 0 3px}
+.tc-row{display:flex;align-items:center;gap:6px;min-height:30px}
+.tc-lbl{flex:none;width:86px;font-size:11px;font-weight:700;color:var(--ink)}
+.tc-pips{flex:none;display:flex;gap:3px}
+.tc-pip{width:26px;height:24px;border-radius:7px;border:1px solid var(--ctl-edge);
+  background:var(--ctl-face);font-family:var(--font);font-size:11px;font-weight:800;
+  color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;padding:0;transition:transform .1s}
+.tc-pip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tc-pip:active{transform:scale(.9)}
+.tc-two .tc-pip{width:auto;min-width:44px;padding:0 8px}
+.tc-word{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--ink-mute);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-row.set .tc-word{color:var(--ink)}
 .pl-rate-row{display:flex;align-items:center;gap:4px;margin-top:12px}
 .pl-rate-k{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
   letter-spacing:.05em;margin-right:6px}
@@ -2014,10 +2042,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <div class="field"><label>TDS %</label><input id="dyeTds" type="number" step="0.01" placeholder="optional"></div>
       <div class="field"><label>Extraction Yield %</label><input id="dyeEy" type="number" step="0.1" placeholder="auto"></div>
     </div>
-    <div class="field"><label>Enjoyment</label><div class="stars" id="dyeStars">
-      <span class="star" onclick="setDyeStar(1)">★</span><span class="star" onclick="setDyeStar(2)">★</span><span class="star" onclick="setDyeStar(3)">★</span><span class="star" onclick="setDyeStar(4)">★</span><span class="star" onclick="setDyeStar(5)">★</span>
-    </div></div>
-    <div class="field"><label>Notes</label><textarea id="dyeNotes" rows="2" placeholder="Tasting notes…"></textarea></div>
+    <div id="dyeTasteWrap"></div>
+    <div class="field" style="margin-top:10px"><label>Notes</label><textarea id="dyeNotes" rows="2" placeholder="Tasting notes…"></textarea></div>
     <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'dyeOverlay')">Skip</button><button class="m-btn primary" onclick="saveDye()">Save Log</button></div>
   </div></div>
 </div>
@@ -2238,6 +2264,17 @@ var I18N={
     geminiName:'Gemini API key', geminiPh:'Paste your Gemini API key — reads bean labels, stored on this device only', geminiGet:'Get a key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
     plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
     catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
+    tcTitle:'Tasting', tcNone:'Not tasted yet',
+    tcTaste:'Taste', tcFeel:'Feel', tcFin:'Finish & overall',
+    tcAcid:'Acidity', tcBitter:'Bitterness', tcSweet:'Sweetness',
+    tcBody:'Body', tcDry:'Dry finish', tcFinish:'Aftertaste', tcAgain:'Another one?',
+    tcL_acid:['None','Faint','Balanced','Strong','Harsh'],
+    tcL_bitter:['None','Faint','Balanced','Strong','Harsh'],
+    tcL_sweet:['None','Faint','There','Clear','Very sweet'],
+    tcL_body:['Watery','Light','Balanced','Heavy','Cloying'],
+    tcL_dry:['No','Yes'],
+    tcL_finish:['Gone at once','Short','Lingers a moment','Lingers well','Long and good'],
+    tcL_again:['No','Probably not','Maybe','Yes','Right away'],
     vizTitle:'Import from Visualizer', vizGo:'Import', vizBusy:'Fetching…',
     vizHint:'Paste a share code, a visualizer.coffee shot link, or a shot id.',
     vizPh:'share code or https://visualizer.coffee/shots/…',
@@ -2452,6 +2489,17 @@ var I18N={
     geminiName:'Gemini API 키', geminiPh:'Gemini API 키 붙여넣기 — 원두 라벨 읽기에 사용, 이 기기에만 저장', geminiGet:'키 발급받기', language:'언어', tempUnit:'온도', weightUnit:'무게',
     plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
     catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
+    tcTitle:'맛 평가', tcNone:'아직 평가 없음',
+    tcTaste:'맛', tcFeel:'감촉', tcFin:'여운과 총평',
+    tcAcid:'신맛', tcBitter:'쓴맛', tcSweet:'단맛',
+    tcBody:'무게감', tcDry:'혀가 마르는 느낌', tcFinish:'남는 맛', tcAgain:'또 마시고 싶은가',
+    tcL_acid:['없다','약하다','적당','강하다','거슬리다'],
+    tcL_bitter:['없다','약하다','적당','강하다','거슬리다'],
+    tcL_sweet:['없다','희미','있다','뚜렷','아주 달다'],
+    tcL_body:['물 같다','가볍다','적당','무겁다','텅텅하다'],
+    tcL_dry:['없다','있다'],
+    tcL_finish:['바로 사라짐','짧다','잠깐 남음','기분 좋게 남음','오래 좋게 남음'],
+    tcL_again:['아니오','글쌌','보통','좋다','당장 한 잔 더'],
     vizTitle:'Visualizer에서 가져오기', vizGo:'가져오기', vizBusy:'불러오는 중…',
     vizHint:'공유 코드, visualizer.coffee 샷 링크, 또는 샷 ID를 붙여넣으세요.',
     vizPh:'공유 코드 또는 https://visualizer.coffee/shots/…',
@@ -2677,7 +2725,7 @@ var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='htt
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
   connected:false, scaleWeight:null, scaleConnected:false, dosingWeight:null, dosingConnected:false, devices:[], shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
-  flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, dyeStars:0, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
+  flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], wflow:[], frame:[], steamTemp:[], waterTemp:[],
   groupTemp:[], mixTemp:[], targetGroup:[], targetMix:[], targetFlow:[], targetPressure:[],
@@ -11164,16 +11212,19 @@ function openGrindKeypad(){ var gr=currentGrinder();
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 
 // ── DYE (post-shot log) ─────────────────────────────────────────────
-function openDyeModal(){ state.dyeStars=0; document.querySelectorAll('#dyeStars .star').forEach(function(s){s.classList.remove('on');});
+function openDyeModal(){
+  state.dyeTaste=tasteOf(null); _tcOpen=null; _tcCtx={mode:'dye',id:'dye'};
+  document.getElementById('dyeTasteWrap').innerHTML=tasteCardHtml('dye',state.dyeTaste,'dye');
   document.getElementById('dyeDose').value=settings.doseIn.toFixed(1); document.getElementById('dyeYield').value=(state.scaleWeight&&state.scaleWeight>1)?state.scaleWeight.toFixed(1):settings.doseOut.toFixed(1);
   document.getElementById('dyeTds').value=''; document.getElementById('dyeEy').value=''; document.getElementById('dyeNotes').value='';
   document.getElementById('dyeOverlay').classList.add('show'); }
-function setDyeStar(n){ state.dyeStars=n; document.querySelectorAll('#dyeStars .star').forEach(function(s,i){ s.classList.toggle('on',i<n); }); }
 function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return; }
   var dose=parseFloat(document.getElementById('dyeDose').value)||null, yld=parseFloat(document.getElementById('dyeYield').value)||null;
   var tds=parseFloat(document.getElementById('dyeTds').value)||null; var ey=parseFloat(document.getElementById('dyeEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1)); // EY% = TDS*beverage/dose
-  var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey, enjoyment:state.dyeStars||null, espressoNotes:document.getElementById('dyeNotes').value||null };
+  var ta=tasteAnn(state.dyeTaste||{},document.getElementById('dyeNotes').value);
+  var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
+    enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
   api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast(t('tShotLogged'),'ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast(t('tLogFailed'),'err'); }); }
 
 // ── Shot Log history page ───────────────────────────────────────────
@@ -11294,9 +11345,9 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
       +'<div class="field"><label>'+t('actualYield')+'</label><input id="slYield" type="number" step="0.1" value="'+(an.actualYield!=null?an.actualYield:'')+'"></div></div>'
     +'<div class="field-row"><div class="field"><label>'+t('tdsPct')+'</label><input id="slTds" type="number" step="0.01" value="'+(an.drinkTds!=null?an.drinkTds:'')+'"></div>'
       +'<div class="field"><label>'+t('eyPct')+'</label><input id="slEy" type="number" step="0.1" value="'+(an.drinkEy!=null?an.drinkEy:'')+'"></div></div>'
-    +'<div class="field"><label>'+t('enjoyment')+'</label><div class="stars" id="slStars">'
-      +[1,2,3,4,5].map(function(n){ return '<span class="star'+(an.enjoyment>=n?' on':'')+'" onclick="setSlStar('+n+')">★</span>'; }).join('')+'</div></div>'
-    +'<div class="field"><label>'+t('notesLabel')+'</label><textarea id="slNotes" rows="2">'+escapeHtml(an.espressoNotes||'')+'</textarea></div>'
+    +tasteCardHtml(s.id,tasteOf(s),'tab')
+    +'<div class="field" style="margin-top:10px"><label>'+t('notesLabel')+'</label>'
+      +'<textarea id="slNotes" rows="2">'+escapeHtml(tasteNoteOf(s))+'</textarea></div>'
     +'</div>'
     +'<div class="ep-save-bar">'
       +(have?'<button class="m-btn'+(isGuideShot(s.id)?' tinted':'')+'" onclick="useShotAsGuide(\''+s.id+'\')">'
@@ -11304,13 +11355,94 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
       +(shotVizId(s)?('<button class="m-btn" id="slVizBtn" onclick="saveAndSyncShot(\''+s.id+'\')">☁ '
         +escapeHtml(t('vizUpdate'))+'</button>'):'')
       +'<button class="m-btn primary" onclick="saveShotLog(\''+s.id+'\')">'+t('saveLog')+'</button></div>';
-  slSel=s; slSel._stars=an.enjoyment||0;
+  slSel=s; slSel._taste=tasteOf(s); _tcOpen=null; _tcCtx={mode:'tab',id:s.id};
   var cv=document.getElementById('slCurve'), tv=document.getElementById('slTempCurve');
   if(cv){ if(have) drawShotMeasurements(cv,s,false); else drawSimCurve(cv,pr); }
   // nothing recorded means nothing to plot temperatures from
   if(tv){ tv.parentElement.style.display=have?'':'none'; if(have) drawShotMeasurements(tv,s,true); }
   _slScrub=null; if(have) wireShotScrub(); }
-function setSlStar(n){ if(slSel) slSel._stars=n; document.querySelectorAll('#slStars .star').forEach(function(el,i){ el.classList.toggle('on',i<n); }); }
+// ---- Tasting card ------------------------------------------------------
+// Seven questions, one tap each. A number on its own is not a taste, so every
+// level carries the word for it and the chosen word stays on the row.
+// The scores live in annotations.extras, which the gateway deep-merges rather
+// than replaces, so writing them leaves the Visualizer bookkeeping kept in the
+// same place untouched. Visualizer itself takes only a star and a note, so the
+// card is also written out as one line of words into the note it uploads.
+var TASTE_ITEMS=[
+  ['acid','tcTaste','tcAcid',5],['bitter','tcTaste','tcBitter',5],['sweet','tcTaste','tcSweet',5],
+  ['body','tcFeel','tcBody',5],['dry','tcFeel','tcDry',2],
+  ['finish','tcFin','tcFinish',5],['again','tcFin','tcAgain',5]];
+function tasteLevels(k){ var v=t('tcL_'+k); return Array.isArray(v)?v:[]; }
+function tasteOf(sh){
+  var an=(sh&&sh.annotations)||{}, v=(an.extras||{}).lqTaste||{}, out={};
+  TASTE_ITEMS.forEach(function(it){ var n=parseInt(v[it[0]],10); out[it[0]]=isFinite(n)?n:null; });
+  // A shot rated before this card carries one star, and the star is the
+  // question the card ends on.
+  if(out.again==null){ var e=parseInt(an.enjoyment,10); if(isFinite(e)) out.again=e; }
+  return out; }
+function tasteNoteOf(sh){
+  var an=(sh&&sh.annotations)||{}, ex=an.extras||{};
+  return ex.lqNote!=null?String(ex.lqNote):String(an.espressoNotes||''); }
+function tasteWords(v){
+  var out=[];
+  TASTE_ITEMS.forEach(function(it){ var n=v[it[0]]; if(!n) return;
+    out.push(t(it[2])+' '+(tasteLevels(it[0])[n-1]||n)); });
+  return out; }
+// The note the person wrote comes first; the card follows it as a line, because
+// that line is all Visualizer and every other reader will ever see of it.
+function tasteCompose(v,note){
+  var line=tasteWords(v).join(' \u00b7 '), n=String(note||'').trim();
+  return (n&&line)?(n+'\n'+line):(n||line||null); }
+function tasteAnn(v,note){
+  return { enjoyment:v.again||null, espressoNotes:tasteCompose(v,note),
+    extras:{ lqTaste:v, lqNote:String(note||'').trim()||null } }; }
+var _tcOpen=null;
+function tasteCardHtml(id,v,mode){
+  var words=tasteWords(v), open=(_tcOpen==null)?!words.length:_tcOpen;
+  var h='<div class="tc" id="tcBox_'+mode+'"><button type="button" class="tc-head"'
+    +' onclick="event.stopPropagation();tasteFold(\''+mode+'\')">'
+    +'<span class="tc-t">'+escapeHtml(t('tcTitle'))+'</span>'
+    +'<span class="tc-sum'+(words.length?'':' none')+'">'
+      +escapeHtml(words.length?words.join(' \u00b7 '):t('tcNone'))+'</span>'
+    +'<span class="tc-car">'+(open?'\u25b4':'\u25be')+'</span></button>';
+  if(!open) return h+'</div>';
+  h+='<div class="tc-body">';
+  var grp='';
+  TASTE_ITEMS.forEach(function(it){
+    if(it[1]!==grp){ grp=it[1]; h+='<div class="tc-grp">'+escapeHtml(t(grp))+'</div>'; }
+    var n=v[it[0]], lv=tasteLevels(it[0]);
+    h+='<div class="tc-row'+(n?' set':'')+(it[3]===2?' tc-two':'')+'">'
+      +'<span class="tc-lbl">'+escapeHtml(t(it[2]))+'</span><span class="tc-pips">';
+    for(var i=1;i<=it[3];i++)
+      h+='<button type="button" class="tc-pip'+(n===i?' on':'')+'"'
+        +' onclick="event.stopPropagation();tastePick(\''+mode+'\',\''+id+'\',\''+it[0]+'\','+i+')">'
+        +escapeHtml(it[3]===2?(lv[i-1]||String(i)):String(i))+'</button>';
+    // a two-way row carries its words on the buttons, so the column beside it
+    // would only say the same thing twice
+    h+='</span><span class="tc-word">'+escapeHtml((n&&it[3]>2)?(lv[n-1]||''):'')+'</span></div>'; });
+  return h+'</div></div>'; }
+function tasteFold(mode){
+  var box=document.getElementById('tcBox_'+mode); if(!box) return;
+  _tcOpen=!box.querySelector('.tc-body');
+  tasteRedraw(); }
+// Only the card is redrawn: a note being typed beside it must not be pulled out
+// from under the caret.
+var _tcCtx={mode:'tab',id:null};
+function tasteValue(mode,id){
+  if(mode==='ph') return tasteOf(phShotRow(id));
+  if(mode==='dye') return state.dyeTaste||(state.dyeTaste=tasteOf(null));
+  return (slSel&&(slSel._taste||(slSel._taste=tasteOf(slSel))))||tasteOf(null); }
+function tasteRedraw(){
+  var box=document.getElementById('tcBox_'+_tcCtx.mode); if(!box) return;
+  box.outerHTML=tasteCardHtml(_tcCtx.id,tasteValue(_tcCtx.mode,_tcCtx.id),_tcCtx.mode); }
+function tastePick(mode,id,k,n){
+  if(mode==='ph') return phTastePick(id,k,n);
+  var v=tasteValue(mode,id); if(!v) return;
+  v[k]=(v[k]===n)?null:n;
+  // The fold is decided once, when the card is put on screen. Deciding it again
+  // on every redraw shut the card on the first answer given to it.
+  _tcOpen=true;
+  _tcCtx={mode:mode,id:id}; tasteRedraw(); }
 // The shot's own record of what it was pulled with can be wrong -- the wrong
 // bean left loaded, a grind typed after the fact. PUT accepts a workflow patch
 // and merges the context, which the REST spec does not document, so it is sent
@@ -11349,7 +11481,9 @@ function saveAndSyncShot(id){
 function saveShotLog(id,quiet){ var dose=parseFloat(document.getElementById('slDose').value)||null, yld=parseFloat(document.getElementById('slYield').value)||null;
   var tds=parseFloat(document.getElementById('slTds').value)||null, ey=parseFloat(document.getElementById('slEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1));
-  var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey, enjoyment:(slSel&&slSel._stars)||null, espressoNotes:document.getElementById('slNotes').value||null };
+  var tv=(slSel&&slSel._taste)||{}, ta=tasteAnn(tv,document.getElementById('slNotes').value);
+  var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
+    enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
   var edits=shotContextEdits();
   return api('PUT','/api/v1/shots/'+id,{annotations:ann})
     .then(function(){ return edits?api('PUT','/api/v1/shots/'+id,{workflow:{context:edits}}):null; })
@@ -11884,7 +12018,10 @@ function shotDigestForAi(sh){
     seconds:st.seconds?Math.round(st.seconds*10)/10:null,
     peakBar:st.peakPressure?Math.round(st.peakPressure*10)/10:null,
     groupC:st.groupTemp?Math.round(st.groupTemp*10)/10:null,
-    tds:a.drinkTds, ey:a.drinkEy, rating:a.enjoyment, notes:a.espressoNotes||'',
+    tds:a.drinkTds, ey:a.drinkEy, rating:tasteOf(sh).again||null,
+    // what it actually tasted like, in the words the card was answered with
+    taste:tasteWords(tasteOf(sh)).join(' \u00b7 ')||null,
+    notes:tasteNoteOf(sh),
     curve:pts }; }
 // -- What the reader has been told it got right, and wrong ----------
 // The models this skin talks to are not trained by anything said here, so a
@@ -12661,29 +12798,33 @@ function phShotRow(id){ return _phLog.filter(function(x){ return x.id===id; })[0
 function phAnnPut(id,patch,after){
   var row=phShotRow(id); if(!row) return;
   var ann=JSON.parse(JSON.stringify(row.annotations||{}));
-  for(var k in patch) ann[k]=patch[k];
+  // extras is shared ground -- the Visualizer id lives there too, so a patch
+  // reaches into it rather than replacing it, the way the gateway does.
+  for(var k in patch){
+    if(k==='extras'&&patch[k]){ ann.extras=ann.extras||{};
+      for(var e in patch[k]) ann.extras[e]=patch[k][e]; }
+    else ann[k]=patch[k]; }
   row.annotations=ann;
   if(slFull[id]) slFull[id].annotations=ann;
   api('PUT','/api/v1/shots/'+encodeURIComponent(id),{annotations:ann})
     .then(function(){ if(after) after(); })
     .catch(function(){ toast(t('saveFailed'),'err'); phLoadLog(); }); }
-function phRate(id,n){
+function phTastePick(id,k,n){
   var row=phShotRow(id); if(!row) return;
-  var cur=(row.annotations||{}).enjoyment;
-  if(cur===n) n=null;                     // pressing the same star clears it
-  phAnnPut(id,{enjoyment:n});
-  // Only the stars are redrawn: a note being typed beside them must not be
-  // pulled out from under the caret.
-  var box=document.getElementById('phStars');
-  if(box) box.outerHTML=phStarsHtml(id,(n==null?null:n)); }
+  var v=tasteOf(row); v[k]=(v[k]===n)?null:n;
+  phAnnPut(id,tasteAnn(v,tasteNoteOf(row)));
+  _tcOpen=true; _tcCtx={mode:'ph',id:id}; tasteRedraw(); }
+
 // Typing redraws nothing. The model is updated as it goes and the write waits
 // for a pause, so the field keeps the caret and the shot keeps the words.
 var _phNoteT=null;
 function phNote(id,v){
   var row=phShotRow(id); if(!row) return;
-  (row.annotations=row.annotations||{}).espressoNotes=v;
+  var tv=tasteOf(row);
+  var an=row.annotations=row.annotations||{}; an.extras=an.extras||{};
+  an.extras.lqNote=v; an.espressoNotes=tasteCompose(tv,v);
   clearTimeout(_phNoteT);
-  _phNoteT=setTimeout(function(){ phAnnPut(id,{espressoNotes:v||null}); },700); }
+  _phNoteT=setTimeout(function(){ phAnnPut(id,tasteAnn(tv,v)); },700); }
 function phAiRun(id){
   if(_phAiBusy) return;
   var row=phShotRow(id); if(!row) return;
@@ -12697,14 +12838,9 @@ function phAiRun(id){
       else toast(t('aiNoResult'),'err'); })
     .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ _phAiBusy=false; renderPhoneLog(); }); }
-function phStarsHtml(id,n){
-  var h='<div class="pl-rate-row" id="phStars"><span class="pl-rate-k">'+escapeHtml(t('enjoyment'))+'</span>';
-  for(var i=1;i<=5;i++)
-    h+='<button type="button" class="pl-star'+((n!=null&&i<=n)?' on':'')+'"'
-      +' onclick="event.stopPropagation();phRate(\''+id+'\','+i+')">\u2605</button>';
-  return h+'</div>'; }
 function phLogToggle(id){
   _phOpen=(_phOpen===id)?null:id;
+  _tcOpen=null; _tcCtx={mode:'ph',id:_phOpen};
   _phAi=_phOpen?loadShotAi([{id:_phOpen}]):null;
   renderPhoneLog();
   if(!_phOpen) return;
@@ -12731,10 +12867,10 @@ function renderPhoneLog(){
       +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
       +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
         +'<div class="pl-canvas"><canvas id="phCanvas"></canvas></div>'
-        +phStarsHtml(sh.id,(a.enjoyment==null?null:parseInt(a.enjoyment,10)))
+        +tasteCardHtml(sh.id,tasteOf(sh),'ph')
         +'<div class="field pl-note"><label>'+escapeHtml(t('notesLabel'))+'</label>'
           +'<textarea rows="2" placeholder="'+escapeAttr(t('phNotePh'))+'"'
-          +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(a.espressoNotes||'')+'</textarea></div>'
+          +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(tasteNoteOf(sh))+'</textarea></div>'
         +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>')
           :_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi)+'</div>')
           :('<button type="button" class="m-btn mb-analyze" style="margin-top:10px"'
