@@ -1281,6 +1281,20 @@ body.night #phoneShell .ph-nav{background:rgba(255,255,255,.12);border-color:rgb
 #phoneShell .ls-empty,#phoneShell .rec-wait,#phoneShell .set-desc,#phoneShell .ai-status{
   color:rgba(255,255,255,.78)}
 #phoneShell .ps-dot{box-shadow:0 0 0 4px rgba(255,255,255,.14)}
+/* A phone is carried out of range of the machine it is talking to, and every
+   page but two answered that by looking empty. This says it once, on all of
+   them, and stays until it is not true. */
+#phoneShell .ph-net{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;
+  margin:0 0 12px;padding:11px 14px;border-radius:18px;
+  background:rgba(244,63,94,.26);border:1px solid rgba(255,255,255,.42);
+  -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
+  box-shadow:0 10px 26px rgba(22,12,58,.3),inset 0 1px 0 rgba(255,255,255,.45)}
+#phoneShell .ph-net[hidden]{display:none}
+#phoneShell .ph-net-txt{flex:1;min-width:0}
+#phoneShell .ph-net-h{font-size:13px;font-weight:800;color:#fff}
+#phoneShell .ph-net-s{font-size:11px;font-weight:600;line-height:1.5;color:rgba(255,255,255,.82);
+  margin-top:2px;word-break:break-all}
+#phoneShell .ph-net .m-btn{flex:none;min-height:34px;padding:0 12px;font-size:12px}
 /* The machine tab is the tank: the page fills to the level the machine reports,
    and the surface stays level while the phone does not. Behind everything and
    deaf to touch -- the reading is on a card, this is only the feel of it. */
@@ -2332,6 +2346,11 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 
 <!-- ── The phone: one page, one nav, whichever job was asked for ── -->
 <div id="phoneShell" style="display:none">
+<div class="ph-net" id="phNet" hidden>
+  <div class="ph-net-txt"><div class="ph-net-h" data-i18n="phNoNetH">Can't reach the machine</div>
+    <div class="ph-net-s" id="phNetSub"></div></div>
+  <button class="m-btn" onclick="phNetCheck(true)" data-i18n="phNetRetry">Try again</button>
+</div>
 <div id="phStatusPage" style="display:none">
   <canvas class="ps-tank" id="psTank"></canvas>
   <div class="mb-wrap">
@@ -2599,6 +2618,9 @@ var I18N={
     phoneHostNote:'Only needed if the address above cannot be reached — type this tablet\'s Wi-Fi address.',
     phTabletView:'Show the tablet screen',
     phTabletViewNote:'Switches this phone back to the full screen and remembers it. Reach the phone app again from the address with ?phone=1.',
+    phNoNetH:"Can't reach the machine",
+    phNoNetS:'This phone has to be on the same network as the machine. Trying {h}',
+    phNetRetry:'Try again', phNetBack:'Connected',
     psTankWait:'Waiting for the machine to report a level',
     psTankLow:'Low — refill the tank', psRefillAt:'refill mark at {n}%',
     psPlumbed:'Plumbed in', psTiltAsk:'Let the water follow the tilt',
@@ -2852,6 +2874,9 @@ var I18N={
     phoneHostNote:'위 주소로 접속이 안 될 때만 쓰세요 — 이 태블릿의 Wi-Fi 주소를 적습니다.',
     phTabletView:'태블릿 화면으로 보기',
     phTabletViewNote:'이 폰을 큰 화면으로 되돌리고 그 선택을 기억합니다. 폰 화면은 주소 뒤에 ?phone=1 을 붙이면 다시 열립니다.',
+    phNoNetH:'머신에 닿지 않습니다',
+    phNoNetS:'이 폰이 머신과 같은 네트워크에 있어야 합니다. 시도 중 {h}',
+    phNetRetry:'다시 시도', phNetBack:'연결됐습니다',
     psTankWait:'머신이 수위를 알려오기를 기다리는 중',
     psTankLow:'부족 — 물을 채워주세요', psRefillAt:'보충 기준선 {n}%',
     psPlumbed:'직수 연결', psTiltAsk:'기울기에 물이 반응하게',
@@ -13330,6 +13355,23 @@ function phoneHomeIcon(){
     var m=document.createElement('link'); m.rel='manifest'; m.href=URL.createObjectURL(b);
     document.head.appendChild(m);
   }catch(_){} }
+// Reaching the gateway is the one thing every page here depends on, so it is
+// asked once at the start and kept under watch -- rarely while it answers, more
+// often while it does not, so a phone that walks back into range says so.
+var _phNetOk=null, _phNetT=null;
+function phNetSet(ok){
+  var el=document.getElementById('phNet'); if(!el) return;
+  if(_phNetOk===false&&ok===true) toast(t('phNetBack'),'ok');
+  _phNetOk=ok; el.hidden=!!ok;
+  if(!ok){ var sub=document.getElementById('phNetSub');
+    if(sub) sub.textContent=t('phNoNetS').replace('{h}',GATEWAY.http); } }
+function phNetCheck(manual){
+  return api('GET','/api/v1/info',null,6000)
+    .then(function(){ phNetSet(true); return true; },
+          function(){ phNetSet(false); if(manual) toast(t('phNoNetH'),'err'); return false; }); }
+function phNetWatch(){
+  clearTimeout(_phNetT);
+  phNetCheck().then(function(ok){ _phNetT=setTimeout(phNetWatch,ok?30000:8000); }); }
 function bootPhone(tab){
   phoneHomeIcon();
   loadPrefs(); // picks up language + applies i18n
@@ -13345,7 +13387,8 @@ function bootPhone(tab){
     :!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
   if(night) document.body.classList.add('night');
   applyI18n();
-  phoneGo(tab||'bean'); }
+  phoneGo(tab||'bean');
+  phNetWatch(); }
 function renderPhoneNav(){
   var nav=document.getElementById('phNav'); if(!nav) return;
   nav.innerHTML=PHONE_TABS.map(function(c){
@@ -13719,7 +13762,10 @@ function initPhoneBean(){
   loadProfiles(); // the profile suggestion needs a catalogue to choose from
   Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
     .then(function(r){ beans=r[0]||[]; // so a repeat purchase can be offered as a batch
-      mbPickBean(mbBeanId||''); });
+      mbPickBean(mbBeanId||'');
+      // an empty catalogue here is either a new gateway or no gateway at all,
+      // and the bar above is what tells those apart
+      if(!beans.length) phNetCheck(); });
 }
 document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
