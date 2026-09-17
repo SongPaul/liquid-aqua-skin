@@ -1035,10 +1035,18 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
   background:var(--mb-card);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
 .ps-dot{width:12px;height:12px;border-radius:50%;background:var(--ink-mute);flex:none;
   box-shadow:0 0 0 4px rgba(139,136,168,.18)}
-.ps-state.run .ps-dot{background:var(--green);box-shadow:0 0 0 4px rgba(16,185,129,.22)}
+/* Grey reads as "no idea", which is the wrong thing to say about a machine
+   that is ready. Ready is green, working is the accent and moves, warming and
+   thirsty are amber, and asleep is the one that is genuinely at rest. */
+.ps-state.ready .ps-dot{background:var(--green);box-shadow:0 0 0 4px rgba(16,185,129,.22)}
+.ps-state.run .ps-dot{background:var(--accent);box-shadow:0 0 0 4px rgba(99,102,241,.26);
+  animation:psPulse 1.8s ease-in-out infinite}
 .ps-state.warn .ps-dot{background:var(--amber);box-shadow:0 0 0 4px rgba(245,158,11,.22)}
-.ps-state.off .ps-dot{background:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.22)}
+.ps-state.off .ps-dot{background:var(--ink-mute);box-shadow:0 0 0 4px rgba(139,136,168,.14);opacity:.75}
+@keyframes psPulse{0%,100%{box-shadow:0 0 0 3px rgba(99,102,241,.34)}
+  50%{box-shadow:0 0 0 9px rgba(99,102,241,0)}}
 .ps-name{font-size:16px;font-weight:800;color:var(--ink);flex:1;min-width:0}
+.ps-note{font-size:12px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* While something is running the card stops being a list of readings and
    becomes the one number worth seeing from across the room. */
 .ps-focus{margin-top:12px;padding:26px 16px 22px;border-radius:var(--r-md);text-align:center;
@@ -2303,7 +2311,7 @@ var I18N={
     phSinceSeen:'since the phone looked',
     phWake:'Wake the machine', phWaking:'Waking…', phWoke:'Waking the machine',
     phSleep:'Send it to sleep', phSleeping:'Going to sleep…', phSlept:'Sent to sleep',
-    phStIdle:'Ready', phStEspresso:'Pulling a shot', phStSteam:'Steaming', phStWater:'Hot water',
+    phStIdle:'Ready', phStWarming:'Coming up to temperature', phStEspresso:'Pulling a shot', phStSteam:'Steaming', phStWater:'Hot water',
     phStFlush:'Flushing', phStSleep:'Asleep', phStNoWater:'Out of water', phStOther:'Busy',
     mbShootLead:'Photograph the bag', mbShootHint:'Front and back, and whichever label carries the roast date. Up to five.',
     mbSecBean:'The coffee', mbSecOrigin:'Where it came from', mbSecNotes:'Everything else on the bag',
@@ -2516,7 +2524,7 @@ var I18N={
     phSinceSeen:'폰이 본 순간부터',
     phWake:'머신 깨우기', phWaking:'깨우는 중…', phWoke:'머신을 깨웁니다',
     phSleep:'절전으로', phSleeping:'절전으로 전환 중…', phSlept:'절전으로 전환했습니다',
-    phStIdle:'준비됨', phStEspresso:'추출 중', phStSteam:'스팀 중', phStWater:'온수',
+    phStIdle:'준비됨', phStWarming:'데우는 중', phStEspresso:'추출 중', phStSteam:'스팀 중', phStWater:'온수',
     phStFlush:'플러시 중', phStSleep:'절전', phStNoWater:'물 부족', phStOther:'동작 중',
     mbShootLead:'봉투를 촬영하세요', mbShootHint:'앞뒤면과 로스팅일이 있는 라벨까지. 최대 5장.',
     mbSecBean:'원두', mbSecOrigin:'어디에서 왔는가', mbSecNotes:'봉투에 적힐 나머지',
@@ -12513,7 +12521,14 @@ function renderPhoneStatus(){
     box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>';
     if(sub) sub.textContent=''; return; }
   var d=_phSnap||{}, st=phSnapState(), run=!!PH_RUN[st];
-  var cls=(st==='needsWater')?'warn':(st==='sleeping')?'off':(run?'run':'');
+  // Idle is not the same as ready: the machine sits at idle while it is still
+  // coming up to temperature, and a dot that cannot tell them apart is why
+  // this one was grey. The target it is heating towards says which it is.
+  var tgt=parseFloat(d.targetGroupTemperature), now=parseFloat(d.groupTemperature);
+  var short=(isFinite(tgt)&&tgt>0&&isFinite(now))?(tgt-now):null;
+  var warming=(!run&&st==='idle'&&short!=null&&short>2);
+  var label=warming?t('phStWarming'):t(PH_STATES[st]||'phStOther');
+  var cls=(st==='needsWater'||warming)?'warn':(st==='sleeping')?'off':(run?'run':(st==='idle'?'ready':''));
   if(sub) sub.textContent=_phFail?t('phStale'):'';
   // Nothing here carries a start time, so one is kept from when the phone first
   // saw it running -- and said to be that, rather than passed off as the whole.
@@ -12524,7 +12539,9 @@ function renderPhoneStatus(){
   function cell(k,v,u){ return '<div class="ps-cell"><div class="ps-k">'+escapeHtml(k)+'</div>'
     +'<div class="ps-v">'+escapeHtml(v==null?'\u2014':String(v))+(u&&v!=null?'<small>'+escapeHtml(u)+'</small>':'')+'</div></div>'; }
   var h='<div class="ps-state '+cls+'"><span class="ps-dot"></span>'
-    +'<span class="ps-name">'+escapeHtml(t(PH_STATES[st]||'phStOther'))+'</span></div>';
+    +'<span class="ps-name">'+escapeHtml(label)+'</span>'
+    +(warming?('<span class="ps-note">'+escapeHtml(now.toFixed(1)+' / '+tgt.toFixed(1)+'°C')+'</span>'):'')
+    +'</div>';
   // Waking it is what the phone is usually reached for; sending it to sleep is
   // the same walk saved at the other end. Neither is offered mid action -- a
   // machine that is running is not a machine to put to bed.
@@ -12538,7 +12555,7 @@ function renderPhoneStatus(){
       +escapeHtml(_phBusy?t('phSleeping'):('☽ '+t('phSleep')))+'</button>';
   if(run){
     h+='<div class="ps-focus"><div class="ps-big">'+Math.floor(secs/60)+':'+('0'+(secs%60)).slice(-2)+'</div>'
-      +'<div class="ps-meta">'+escapeHtml(t(PH_STATES[st]||'phStOther'))
+      +'<div class="ps-meta">'+escapeHtml(label)
       +(_phRunPartial?('  \u00b7  '+escapeHtml(t('phSinceSeen'))):'')+'</div></div>';
     // the readings that belong to the action being run, and no others
     var cells=(st==='steam')
