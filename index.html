@@ -1039,8 +1039,16 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .ps-state.warn .ps-dot{background:var(--amber);box-shadow:0 0 0 4px rgba(245,158,11,.22)}
 .ps-state.off .ps-dot{background:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.22)}
 .ps-name{font-size:16px;font-weight:800;color:var(--ink);flex:1;min-width:0}
-.ps-clock{font-size:22px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+/* While something is running the card stops being a list of readings and
+   becomes the one number worth seeing from across the room. */
+.ps-focus{margin-top:12px;padding:26px 16px 22px;border-radius:var(--r-md);text-align:center;
+  background:var(--mb-card);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
+.ps-big{font-size:64px;font-weight:800;line-height:1;color:var(--accent);
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ps-meta{font-size:13px;font-weight:700;color:var(--ink-mute);margin-top:8px}
 .ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.ps-grid.three{grid-template-columns:repeat(3,1fr)}
+.ps-grid.three .ps-v{font-size:18px}
 .ps-cell{background:var(--mb-card);border:1px solid var(--glass-line);border-radius:var(--r-md);
   box-shadow:var(--shadow);padding:13px 14px}
 .ps-k{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
@@ -2292,6 +2300,7 @@ var I18N={
     phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera',
     phLogSub:'The last shots this machine pulled.', phLogEmpty:'No shots recorded yet',
     phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
+    phSinceSeen:'since the phone looked',
     phWake:'Wake the machine', phWaking:'Waking…', phWoke:'Waking the machine',
     phStIdle:'Ready', phStEspresso:'Pulling a shot', phStSteam:'Steaming', phStWater:'Hot water',
     phStFlush:'Flushing', phStSleep:'Asleep', phStNoWater:'Out of water', phStOther:'Busy',
@@ -2503,6 +2512,7 @@ var I18N={
     phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라',
     phLogSub:'이 머신이 최근에 내린 샷입니다.', phLogEmpty:'아직 기록된 샷이 없습니다',
     phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
+    phSinceSeen:'폰이 본 순간부터',
     phWake:'머신 깨우기', phWaking:'깨우는 중…', phWoke:'머신을 깨웁니다',
     phStIdle:'준비됨', phStEspresso:'추출 중', phStSteam:'스팀 중', phStWater:'온수',
     phStFlush:'플러시 중', phStSleep:'절전', phStNoWater:'물 부족', phStOther:'동작 중',
@@ -12465,7 +12475,7 @@ function phoneGo(tab){
 var PH_STATES={idle:'phStIdle',espresso:'phStEspresso',steam:'phStSteam',hotWater:'phStWater',
   flush:'phStFlush',sleeping:'phStSleep',needsWater:'phStNoWater'};
 var PH_RUN={espresso:1,steam:1,hotWater:1,flush:1};
-var _phSnap=null, _phTimer=null, _phShotAt=null, _phFail=false;
+var _phSnap=null, _phTimer=null, _phRunAt=null, _phRunPartial=false, _phWasIdle=true, _phFail=false;
 function phStatusPoll(on){
   if(_phTimer){ clearTimeout(_phTimer); _phTimer=null; }
   if(!on) return;
@@ -12500,20 +12510,33 @@ function renderPhoneStatus(){
   var d=_phSnap||{}, st=phSnapState(), run=!!PH_RUN[st];
   var cls=(st==='needsWater')?'warn':(st==='sleeping')?'off':(run?'run':'');
   if(sub) sub.textContent=_phFail?t('phStale'):'';
-  // A shot has no clock of its own here, so one is kept from when it started.
-  if(run&&st==='espresso'){ if(!_phShotAt) _phShotAt=Date.now(); }
-  else _phShotAt=null;
-  var secs=_phShotAt?Math.floor((Date.now()-_phShotAt)/1000):0;
-  var clock=_phShotAt?('<span class="ps-clock">'+Math.floor(secs/60)+':'+('0'+(secs%60)).slice(-2)+'</span>'):'';
+  // Nothing here carries a start time, so one is kept from when the phone first
+  // saw it running -- and said to be that, rather than passed off as the whole.
+  if(run){ if(!_phRunAt){ _phRunAt=Date.now(); _phRunPartial=!_phWasIdle; } }
+  else { _phRunAt=null; _phRunPartial=false; }
+  _phWasIdle=!run;
+  var secs=_phRunAt?Math.floor((Date.now()-_phRunAt)/1000):0;
   function cell(k,v,u){ return '<div class="ps-cell"><div class="ps-k">'+escapeHtml(k)+'</div>'
     +'<div class="ps-v">'+escapeHtml(v==null?'\u2014':String(v))+(u&&v!=null?'<small>'+escapeHtml(u)+'</small>':'')+'</div></div>'; }
   var h='<div class="ps-state '+cls+'"><span class="ps-dot"></span>'
-    +'<span class="ps-name">'+escapeHtml(t(PH_STATES[st]||'phStOther'))+'</span>'+clock+'</div>';
+    +'<span class="ps-name">'+escapeHtml(t(PH_STATES[st]||'phStOther'))+'</span></div>';
   // Waking it is the one thing worth walking back for, so it is the one thing
   // the phone can do here -- and only while it is the thing to do.
   if(st==='sleeping') h+='<button class="m-btn primary mb-analyze" id="phWakeBtn" style="margin-top:12px"'
     +(_phWaking?' disabled aria-busy="true"':'')+' onclick="phWake()">'
     +escapeHtml(_phWaking?t('phWaking'):('☀ '+t('phWake')))+'</button>';
+  if(run){
+    h+='<div class="ps-focus"><div class="ps-big">'+Math.floor(secs/60)+':'+('0'+(secs%60)).slice(-2)+'</div>'
+      +'<div class="ps-meta">'+escapeHtml(t(PH_STATES[st]||'phStOther'))
+      +(_phRunPartial?('  \u00b7  '+escapeHtml(t('phSinceSeen'))):'')+'</div></div>';
+    // the readings that belong to the action being run, and no others
+    var cells=(st==='steam')
+      ? [[t('steam'),phNum(d.steamTemperature,0),'\u00b0C'],[t('pressure'),phNum(d.pressure),'bar'],[t('flow'),phNum(d.flow),'ml/s']]
+      : (st==='hotWater'||st==='flush')
+      ? [[t('flow'),phNum(d.flow),'ml/s'],[t('tempMix'),phNum(d.mixTemperature),'\u00b0C'],[t('pressure'),phNum(d.pressure),'bar']]
+      : [[t('pressure'),phNum(d.pressure),'bar'],[t('flow'),phNum(d.flow),'ml/s'],[t('tempBasket'),phNum(d.groupTemperature),'\u00b0C']];
+    h+='<div class="ps-grid three">'+cells.map(function(c){ return cell(c[0],c[1],c[2]); }).join('')+'</div>';
+    box.innerHTML=h; return; }
   h+='<div class="ps-grid">'
     +cell(t('tempBasket'),phNum(d.groupTemperature),'\u00b0C')
     +cell(t('tempMix'),phNum(d.mixTemperature),'\u00b0C')
