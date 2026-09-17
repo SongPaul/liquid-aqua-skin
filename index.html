@@ -967,6 +967,20 @@ body.night .aip-out{background-color:rgba(99,102,241,.16);box-shadow:inset 0 1px
 .ai-qr canvas{border-radius:8px}
 .ai-qr-url{font-size:11px;color:var(--ink-mute);word-break:break-all;margin-top:8px}
 .qr-ask{font-size:12px;color:var(--ink-mute);text-align:center;line-height:1.5;padding:8px 4px}
+.pi-pick{display:flex;gap:10px}
+.pi-pick .m-btn{flex:1}
+.pi-list{margin-top:14px;max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+.pi-list:empty{display:none}
+.pi-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;
+  border:1px solid var(--glass-line);background:var(--field)}
+.pi-row.no{opacity:.55}
+.pi-row input{flex:none;width:17px;height:17px;accent-color:var(--accent)}
+.pi-row .pi-n{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pi-row .pi-s{flex:none;font-size:11px;font-weight:700;color:var(--ink-mute)}
+.pi-row.no .pi-s{color:var(--amber)}
+.pi-row.bad .pi-s{color:var(--red)}
+.pi-sum{margin-top:10px;font-size:12px;font-weight:700;color:var(--ink-soft)}
 .qr-host{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
 /* the note is a line of its own; without the wrap it stole the row and left
    the address field a sliver */
@@ -2260,7 +2274,26 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div>
 </div>
 
-<!-- ── Plugin settings modal (schema-driven form) ──────────────── -->
+<!-- ── Profile import ─────────────────────────── -->
+<div class="overlay" id="piOverlay" onclick="closeModal(event,'piOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title">📥 <span data-i18n="piTitle">Import profiles</span></div><button class="modal-close" onclick="closeModal(null,'piOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="set-desc" data-i18n="piHint" style="margin-bottom:12px">Reads .tcl and .json files. A whole folder can be picked at once.</div>
+    <div class="pi-pick">
+      <button class="m-btn" onclick="document.getElementById('piFiles').click()" data-i18n="piPickFiles">Choose files</button>
+      <button class="m-btn" onclick="document.getElementById('piDir').click()" data-i18n="piPickFolder">Choose a folder</button>
+    </div>
+    <input type="file" id="piFiles" accept=".tcl,.json" multiple style="display:none" onchange="piRead(this.files)">
+    <input type="file" id="piDir" webkitdirectory directory multiple style="display:none" onchange="piRead(this.files)">
+    <div id="piList" class="pi-list"></div>
+    <div class="modal-actions">
+      <button class="m-btn" onclick="closeModal(null,'piOverlay')" data-i18n="cancel">Cancel</button>
+      <button class="m-btn primary" id="piGoBtn" onclick="piRun()" disabled>Import</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- ── Plugin settings modal (schema-driven form) ──────────── --> (schema-driven form) ──────────────── -->
 <div class="overlay" id="pluginCfgOverlay" onclick="closeModal(event,'pluginCfgOverlay')">
   <div class="modal"><div class="modal-head"><div class="modal-title" id="pluginCfgTitle">Plugin</div><button class="modal-close" onclick="closeModal(null,'pluginCfgOverlay')">×</button></div>
   <div class="modal-body">
@@ -2446,6 +2479,14 @@ var I18N={
     geminiName:'Gemini API key', geminiPh:'Paste your Gemini API key — reads bean labels, stored on this device only', geminiGet:'Get a key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
     plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
     catGeneral:'General', catDisplay:'Display', catMachine:'Machine', catFirmware:'Firmware', catAI:'AI',
+    piBtn:'Import', piTitle:'Import profiles',
+    piHint:'Reads .tcl and .json files. A whole folder can be picked at once.',
+    piPickFiles:'Choose files', piPickFolder:'Choose a folder',
+    piNoFiles:'No .tcl or .json files in what you picked',
+    piNoSteps:'no steps in this format', piDup:'already in the library', piBad:'could not be read',
+    piDupSel:'same profile picked twice',
+    piGo:'Import {a}', piGoNone:'Nothing to import', piWorking:'Importing {n} of {t}…',
+    piSum:'{a} ready · {b} skipped', piDone:'{n} imported', piFail:'{n} failed',
     catUpdates:'Updates',
     tcTitle:'Tasting', tcNone:'Not tasted yet',
     tcTaste:'Taste', tcFeel:'Feel', tcFin:'Finish & overall',
@@ -2687,6 +2728,14 @@ var I18N={
     geminiName:'Gemini API 키', geminiPh:'Gemini API 키 붙여넣기 — 원두 라벨 읽기에 사용, 이 기기에만 저장', geminiGet:'키 발급받기', language:'언어', tempUnit:'온도', weightUnit:'무게',
     plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
     catGeneral:'일반', catDisplay:'화면', catMachine:'머신', catFirmware:'펌웨어', catAI:'AI',
+    piBtn:'가져오기', piTitle:'프로파일 가져오기',
+    piHint:'.tcl 과 .json 파일을 읽습니다. 폴더를 통째로 고를 수도 있습니다.',
+    piPickFiles:'파일 선택', piPickFolder:'폴더 선택',
+    piNoFiles:'고르신 것에 .tcl 이나 .json 파일이 없습니다',
+    piNoSteps:'스텝이 없는 형식', piDup:'이미 라이브러리에 있음', piBad:'읽을 수 없음',
+    piDupSel:'같은 프로파일을 두 번 고름',
+    piGo:'{a}개 가져오기', piGoNone:'가져올 것이 없습니다', piWorking:'가져오는 중 {n}/{t}…',
+    piSum:'가져올 수 있음 {a}개 · 건너뜀 {b}개', piDone:'{n}개 가져왔습니다', piFail:'{n}개 실패',
     catUpdates:'업데이트',
     tcTitle:'맛 평가', tcNone:'아직 평가 없음',
     tcTaste:'맛', tcFeel:'감촉', tcFin:'여운과 총평',
@@ -6608,6 +6657,7 @@ function renderEpTools(){
     +escapeHtml(aiBusyFlag?t('aiClassifyingShort'):t('aiClassify'))+'</button>'
     +(allProfiles.some(function(p){ return aiTagsOf(p).length; })
       ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '')
+    +'<button class="ep-aibtn" onclick="openProfileImport()">📥 '+escapeHtml(t('piBtn'))+'</button>'
     +'<button class="ep-aibtn new" onclick="newProfile()">+ '+escapeHtml(t('newProfile'))+'</button>';
   bar.appendChild(ai);
   var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
@@ -6677,6 +6727,178 @@ function toggleFav(id){ if(favIds[id]) delete favIds[id]; else favIds[id]=true;
 // could only ever be a copy of one already on the machine. A new one is an
 // espresso with a single nine-bar step: enough to be valid, little enough that
 // whatever you meant to build is still ahead of you.
+// ── Reading profiles out of files ───────────────────────────────────────
+// Two formats arrive from a Decent install: the v2 json, which is already the
+// shape the gateway keeps, and the older tcl, which is a flat list of key/value
+// pairs with the steps inside advanced_shot.
+//
+// The tcl mapping was checked against a profile that exists in both formats --
+// D-Flow / default -- and three things in it cannot be guessed from the tcl
+// alone: exit_if is the switch (a step with exit_if 0 has no exit condition
+// even though exit_type and its threshold are still written out), flow and
+// pressure are both carried on every step whatever the pump is set to, and the
+// limiter is kept as an object even when its value is zero.
+function tclToks(s){
+  var out=[], i=0;
+  while(i<s.length){
+    var c=s.charAt(i);
+    if(c===' '||c==='\t'||c==='\n'||c==='\r'){ i++; continue; }
+    if(c==='{'){
+      var d=1, j=i+1;
+      while(j<s.length&&d){ var x=s.charAt(j); if(x==='{') d++; else if(x==='}') d--; j++; }
+      out.push(s.slice(i+1,j-1)); i=j;
+    } else {
+      var k=i;
+      while(k<s.length&&!/\s/.test(s.charAt(k))) k++;
+      out.push(s.slice(i,k)); i=k; } }
+  return out; }
+function tclTop(text){
+  var out={}, re=/^([a-z_0-9]+) /gm, m;
+  while((m=re.exec(text))){
+    var key=m[1]; if(out.hasOwnProperty(key)) continue;
+    var rest=text.slice(m.index+m[0].length);
+    // a value in braces can run over several lines -- notes usually do
+    if(rest.charAt(0)==='{'){ out[key]=tclToks(rest)[0]||''; }
+    else { var e=rest.search(/\r?\n/); out[key]=(e<0?rest:rest.slice(0,e)).trim(); } }
+  return out; }
+function tclNum(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
+var TCL_EXIT={pressure_over:['pressure','over'],pressure_under:['pressure','under'],
+  flow_over:['flow','over'],flow_under:['flow','under']};
+function tclStep(d){
+  var st={ name:d.name||'', temperature:tclNum(d.temperature), sensor:d.sensor||'coffee',
+    pump:d.pump||'flow', transition:d.transition||'fast',
+    seconds:tclNum(d.seconds), volume:tclNum(d.volume), weight:tclNum(d.weight),
+    pressure:tclNum(d.pressure), flow:tclNum(d.flow) };
+  st.exit=(d.exit_if==='1'&&TCL_EXIT[d.exit_type])
+    ? { type:TCL_EXIT[d.exit_type][0], condition:TCL_EXIT[d.exit_type][1],
+        value:tclNum(d['exit_'+d.exit_type]) } : null;
+  st.limiter=d.hasOwnProperty('max_flow_or_pressure')
+    ? { value:tclNum(d.max_flow_or_pressure),
+        range:d.max_flow_or_pressure_range!=null?tclNum(d.max_flow_or_pressure_range):0.6 } : null;
+  return st; }
+function tclProfile(text,fname){
+  var t=tclTop(text), steps=[];
+  var i=text.indexOf('advanced_shot ');
+  if(i>=0){ var j=text.indexOf('{',i);
+    if(j>=0){ var body=tclToks(text.slice(j))[0]||'';
+      tclToks(body).forEach(function(raw){
+        var tk=tclToks(raw), d={};
+        for(var k=0;k+1<tk.length;k+=2) d[tk[k]]=tk[k+1];
+        steps.push(tclStep(d)); }); } }
+  return { version:2,
+    title:(t.profile_title||fname.replace(/\.tcl$/i,'')).trim(),
+    author:t.author||'', notes:t.profile_notes||'',
+    beverage_type:t.beverage_type||'espresso',
+    steps:steps,
+    tank_temperature:tclNum(t.tank_desired_water_temperature),
+    target_weight:tclNum(t.final_desired_shot_weight_advanced||t.final_desired_shot_weight),
+    target_volume:tclNum(t.final_desired_shot_volume_advanced||t.final_desired_shot_volume),
+    target_volume_count_start:tclNum(t.final_desired_shot_volume_advanced_count_start
+      ||t.final_desired_shot_volume_count_start),
+    _legacyType:t.settings_profile_type||'' }; }
+// A json file is either one profile, one record with a profile inside it, or a
+// whole backup export -- all three turn up in a Decent folder.
+function jsonProfiles(text,fname){
+  var o=JSON.parse(text), list=Array.isArray(o)?o:[o];
+  return list.map(function(x){
+    var pr=(x&&x.profile&&x.profile.steps)?x.profile:x;
+    if(!pr||!Array.isArray(pr.steps)) throw new Error('steps');
+    if(!pr.title) pr.title=fname.replace(/\.json$/i,'');
+    if(pr.version==null) pr.version=2;
+    return pr; }); }
+// What a folder full of Decent profiles turns into: one row per profile, with
+// the ones that cannot come through saying why rather than failing silently.
+var piRows=[];
+function openProfileImport(){
+  piRows=[]; renderPiList();
+  document.getElementById('piFiles').value=''; document.getElementById('piDir').value='';
+  document.getElementById('piOverlay').classList.add('show'); }
+function piRead(files){
+  var list=[].slice.call(files||[]).filter(function(f){ return /\.(tcl|json)$/i.test(f.name); });
+  if(!list.length){ toast(t('piNoFiles'),'err'); return; }
+  var have={};
+  (allProfiles||[]).forEach(function(x){
+    have[String(((x.profile||{}).title||'')).trim().toLowerCase()]=true; });
+  piRows=[];
+  var left=list.length;
+  list.forEach(function(f,i){
+    var rd=new FileReader();
+    rd.onload=function(){
+      var txt=String(rd.result||'');
+      try{
+        var got=/\.json$/i.test(f.name)?jsonProfiles(txt,f.name):[tclProfile(txt,f.name)];
+        got.forEach(function(pr){
+          var title=String(pr.title||'').trim();
+          var row={ i:i, file:f.name, title:title, profile:pr, steps:(pr.steps||[]).length };
+          if(!row.steps){ row.skip='piNoSteps'; }
+          else if(have[title.toLowerCase()]){ row.skip='piDup'; }
+          row.on=!row.skip;
+          piRows.push(row); });
+      }catch(e){
+        piRows.push({ i:i, file:f.name, title:f.name, steps:0, skip:'piBad', on:false }); }
+      if(!--left) piDone(); };
+    rd.onerror=function(){
+      piRows.push({ i:i, file:f.name, title:f.name, steps:0, skip:'piBad', on:false });
+      if(!--left) piDone(); };
+    rd.readAsText(f); }); }
+// A Decent folder carries the same profile in both formats -- Adaptive 2 and
+// D-Flow / default are each a .tcl and a .json. Left alone that is two copies
+// of one profile, so within a pick the json wins and the rest stand down.
+function piDone(){
+  piRows.sort(function(a,b){ return a.i-b.i; });
+  var best={};
+  piRows.forEach(function(r){
+    if(r.skip) return;
+    var k=r.title.toLowerCase(); if(!k) return;
+    var cur=best[k];
+    if(!cur){ best[k]=r; return; }
+    var rJson=/\.json$/i.test(r.file), cJson=/\.json$/i.test(cur.file);
+    var win=(rJson&&!cJson)?r:cur, lose=(win===r)?cur:r;
+    best[k]=win; lose.skip='piDupSel'; lose.on=false; });
+  renderPiList(); }
+function piToggle(i,on){ if(piRows[i]) piRows[i].on=!!on; piSyncBtn(); }
+function piCount(){ return piRows.filter(function(r){ return r.on&&!r.skip; }).length; }
+function piSyncBtn(){
+  var b=document.getElementById('piGoBtn'); if(!b) return;
+  var n=piCount(); b.disabled=!n;
+  b.textContent=n?t('piGo').replace('{a}',n):t('piGoNone'); }
+function renderPiList(){
+  var box=document.getElementById('piList'); if(!box) return;
+  if(!piRows.length){ box.innerHTML=''; piSyncBtn(); return; }
+  box.innerHTML=piRows.map(function(r,i){
+    var cls='pi-row'+(r.skip?(r.skip==='piBad'?' bad no':' no'):'');
+    return '<label class="'+cls+'">'
+      +'<input type="checkbox"'+(r.on?' checked':'')+(r.skip?' disabled':'')
+        +' onchange="piToggle('+i+',this.checked)">'
+      +'<span class="pi-n">'+escapeHtml(r.title||r.file)+'</span>'
+      +'<span class="pi-s">'+escapeHtml(r.skip?t(r.skip):(r.steps+' '+t('stepsShort')))+'</span>'
+      +'</label>'; }).join('');
+  var ok=piRows.filter(function(r){ return !r.skip; }).length;
+  box.innerHTML+='<div class="pi-sum">'+escapeHtml(t('piSum')
+    .replace('{a}',ok).replace('{b}',piRows.length-ok))+'</div>';
+  piSyncBtn(); }
+// One at a time: a folder is 85 files and the gateway writes each to its own
+// record, so a burst of parallel posts buys nothing and hides which one failed.
+function piRun(){
+  var todo=piRows.filter(function(r){ return r.on&&!r.skip; });
+  if(!todo.length) return;
+  var btn=document.getElementById('piGoBtn');
+  if(btn){ btn.disabled=true; btn.setAttribute('aria-busy','true'); }
+  var done=0, failed=0;
+  function step(k){
+    if(k>=todo.length){
+      if(btn){ btn.removeAttribute('aria-busy'); }
+      toast(t('piDone').replace('{n}',done)+(failed?(' \u00b7 '+t('piFail').replace('{n}',failed)):''),
+        failed?'err':'ok');
+      closeModal(null,'piOverlay');
+      loadProfiles().then(function(){ renderEpList(); buildCarousel(); });
+      return; }
+    if(btn) btn.textContent=t('piWorking').replace('{n}',k+1).replace('{t}',todo.length);
+    api('POST','/api/v1/profiles',{ profile:todo[k].profile,
+        metadata:{ comment:'imported from '+todo[k].file } },20000)
+      .then(function(){ done++; }).catch(function(){ failed++; })
+      .then(function(){ step(k+1); }); }
+  step(0); }
 function newProfile(){
   editing={ id:'', isNew:true, metadata:{},
     profile:{ title:t('newProfileName'), author:'', notes:'', beverage_type:'espresso',
