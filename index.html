@@ -1012,16 +1012,29 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 /* The phone's document is shorter than its screen, and html carries the light
    canvas colour, so the page paints its own ground rather than letting that
    show through under a dark theme. */
-#mobilePage{padding:18px 14px 34px;min-height:100vh;background-attachment:fixed;
+#phoneShell{padding:14px 14px 34px;min-height:100vh;background-attachment:fixed;
   background:radial-gradient(circle at 18% 12%,rgba(139,92,246,.30),transparent 46%),
              radial-gradient(circle at 88% 22%,rgba(56,189,248,.26),transparent 48%),
              radial-gradient(circle at 76% 88%,rgba(236,72,153,.22),transparent 48%),
              linear-gradient(160deg,#e8ecff,#f5edff)}
-body.night #mobilePage{background-attachment:fixed;
+/* Two jobs, one page. The nav is the only thing that knows there are two. */
+.ph-nav{display:flex;gap:8px;max-width:520px;margin:0 auto 14px;padding:5px;border-radius:100px;
+  background:var(--mb-card);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
+.ph-tab{flex:1;min-height:44px;border:0;border-radius:100px;background:transparent;
+  font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink-mute);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;-webkit-appearance:none;
+  transition:color .15s,background-color .15s}
+.ph-tab .ic{font-size:15px;line-height:1}
+.ph-tab.on{background-color:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(99,102,241,.4)}
+body.night .ph-tab.on{background-color:var(--accent);color:#fff}
+#camSetupPage,#mobilePage{max-width:520px;margin:0 auto}
+body.night #phoneShell{background-attachment:fixed;
   background:radial-gradient(circle at 18% 12%,rgba(99,102,241,.26),transparent 46%),
              radial-gradient(circle at 88% 22%,rgba(56,189,248,.18),transparent 48%),
              radial-gradient(circle at 76% 88%,rgba(236,72,153,.16),transparent 48%),
              linear-gradient(160deg,#0d0b1c,#140f26)}
+/* the camera page was a white sheet too */
+.cs-way{background:var(--mb-card)}
 .mb-card{background:var(--mb-card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border:1px solid var(--glass-line);border-radius:var(--r-md);box-shadow:var(--shadow);padding:16px}
 .mb-fields{display:flex;flex-direction:column;gap:2px}
@@ -2023,7 +2036,9 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div></div>
 </div>
 
-<!-- ── Mobile bean-scan page (opened via QR on a phone) ─────────── -->
+<!-- ── The phone: one page, one nav, whichever job was asked for ── -->
+<div id="phoneShell" style="display:none">
+  <div class="ph-nav" id="phNav"></div>
 <div id="camSetupPage" style="display:none">
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>📷 </span><span data-i18n="camSetupTitle">Camera for the machine</span></div>
@@ -2108,6 +2123,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <button class="m-btn primary" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
     </div>
   </div>
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2228,6 +2244,7 @@ var I18N={
     pressureGoal:'Pressure Goal', flowGoal:'Flow Goal',
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
+    phTabBean:'Beans', phTabCam:'Camera',
     mbShootLead:'Photograph the bag', mbShootHint:'Front and back, and whichever label carries the roast date. Up to five.',
     mbSecBean:'The coffee', mbSecOrigin:'Where it came from', mbSecNotes:'Everything else on the bag',
     scanFound:'Not on the bag, found by search: {n} \u2014 worth checking',
@@ -2433,6 +2450,7 @@ var I18N={
     pressureGoal:'압력 목표', flowGoal:'유량 목표',
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
+    phTabBean:'원두 등록', phTabCam:'카메라',
     mbShootLead:'봉투를 촬영하세요', mbShootHint:'앞뒤면과 로스팅일이 있는 라벨까지. 최대 5장.',
     mbSecBean:'원두', mbSecOrigin:'어디에서 왔는가', mbSecNotes:'봉투에 적힐 나머지',
     scanFound:'봉투에 없어 검색으로 찾은 항목: {n} \u2014 확인해 주세요',
@@ -12319,13 +12337,7 @@ function csSecureCheck(){
   var ok=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   note.hidden=ok; if(btn) btn.disabled=!ok;
   if(!ok) note.textContent=t('csNoSecure')+' '+window.location.origin; }
-function bootCamSetup(){
-  loadPrefs();
-  document.querySelector('.stage-wrap').style.display='none';
-  document.getElementById('camSetupPage').style.display='block';
-  document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
-  if(prefs.night) document.body.classList.add('night');
-  applyI18n();
+function initPhoneCam(){
   // whatever the machine is already pointed at, so it can be corrected
   csSecureCheck();
   api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
@@ -12348,15 +12360,17 @@ function mbShowTarget(){
   if(!mbBean){ el.style.display='none'; return; }
   el.style.display='';
   el.textContent=t('mbUpdating').replace('{n}',(mbBean.roaster?mbBean.roaster+' · ':'')+(mbBean.name||'')); }
-function bootMobileBeanScan(){
+// The phone had two pages behind two QR codes, and a person holding it has one
+// phone. It is one page now: the link still says which job was asked for, and
+// the other is a tap away rather than another code to find.
+var PHONE_TABS=[['bean','\u2728','phTabBean'],['cam','\ud83d\udcf7','phTabCam']];
+var phoneTab='', _phoneReady={};
+function bootPhone(tab){
   loadPrefs(); // picks up language + applies i18n
   // loadPrefs reads the tablet's stored settings; the phone's own choice wins.
   try{ var pv=localStorage.getItem('aurora_aiprov'); if(AI_PROVIDERS.indexOf(pv)>=0) prefs.aiProvider=pv; }catch(_){}
-  blendHost(false);
-  var m=/[?&]bean=([^&]+)/.exec(window.location.search);
-  mbBeanId=m?decodeURIComponent(m[1]):null;
   document.querySelector('.stage-wrap').style.display='none';
-  document.getElementById('mobilePage').style.display='block';
+  document.getElementById('phoneShell').style.display='block';
   document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
   // The phone keeps its own storage, so it rarely knows what the tablet is set
   // to. Its own setting is a better guess than always-light.
@@ -12364,6 +12378,29 @@ function bootMobileBeanScan(){
   var night=(stored&&typeof stored.night==='boolean')?stored.night
     :!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
   if(night) document.body.classList.add('night');
+  applyI18n();
+  phoneGo(tab||'bean'); }
+function renderPhoneNav(){
+  var nav=document.getElementById('phNav'); if(!nav) return;
+  nav.innerHTML=PHONE_TABS.map(function(c){
+    return '<button type="button" class="ph-tab'+(phoneTab===c[0]?' on':'')+'"'
+      +' aria-pressed="'+(phoneTab===c[0])+'" onclick="phoneGo(\''+c[0]+'\')">'
+      +'<span class="ic">'+c[1]+'</span>'+escapeHtml(t(c[2]))+'</button>'; }).join(''); }
+// A job is set up the first time it is opened and not again: the camera keeps a
+// live connection and the bean form keeps what has been typed into it.
+function phoneGo(tab){
+  if(phoneTab===tab) return;
+  phoneTab=tab;
+  document.getElementById('mobilePage').style.display=(tab==='bean')?'block':'none';
+  document.getElementById('camSetupPage').style.display=(tab==='cam')?'block':'none';
+  renderPhoneNav();
+  if(!_phoneReady[tab]){ _phoneReady[tab]=true;
+    if(tab==='bean') initPhoneBean(); else initPhoneCam(); }
+  try{ window.scrollTo(0,0); }catch(_){} }
+function initPhoneBean(){
+  blendHost(false);
+  var m=/[?&]bean=([^&]+)/.exec(window.location.search);
+  mbBeanId=m?decodeURIComponent(m[1]):null;
   mbSyncKeyBox();
   if(!mbGetKey()) mbShowKeyBox();
   loadProfiles(); // the profile suggestion needs a catalogue to choose from
@@ -12378,8 +12415,10 @@ function bootMobileBeanScan(){
 }
 document.addEventListener('DOMContentLoaded', function(){
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
-  if(/[?&]beanscan=1/.test(window.location.search)){ bootMobileBeanScan(); return; }
-  if(/[?&]camsetup=1/.test(window.location.search)){ bootCamSetup(); return; }
+  // The old links still say which job; either one lands on the same page.
+  if(/[?&]beanscan=1/.test(window.location.search)){ bootPhone('bean'); return; }
+  if(/[?&]camsetup=1/.test(window.location.search)){ bootPhone('cam'); return; }
+  if(/[?&]phone=1/.test(window.location.search)){ bootPhone('bean'); return; }
   bindDoseGestures(); thermoInit();
   fitStage(); tickHdrClock(); loadFavs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); loadGrinderBurrs(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
