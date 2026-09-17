@@ -1139,6 +1139,12 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .pl-star.on{color:var(--amber);opacity:1}
 .pl-note{margin-top:10px}
 .pl-note textarea{min-height:64px}
+.ph-src{display:flex;gap:6px;padding:5px;border-radius:22px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3)}
+.ph-src button{flex:1;min-height:38px;padding:0 10px;border:0;border-radius:18px;
+  background:transparent;color:rgba(255,255,255,.78);font:700 13px/1 inherit;cursor:pointer}
+.ph-src button.on{background:rgba(255,255,255,.92);color:#3b1d72;
+  box-shadow:0 6px 16px rgba(20,10,54,.26)}
 .pl-vizmark{margin-top:10px;font-size:11px;font-weight:700;color:var(--ink-mute)}
 #phoneShell .pl-vizmark{color:rgba(255,255,255,.72)}
 .pl-acts{display:flex;gap:8px;margin-top:10px}
@@ -2379,6 +2385,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>◷ </span><span data-i18n="phTabLog">Shots</span></div>
       <div class="mb-sub" data-i18n="phLogSub">The last shots this machine pulled.</div></div>
+    <div id="phLogSrc" class="ph-src" style="display:none"></div>
     <div id="phLogBody"></div>
   </div>
 </div>
@@ -2654,6 +2661,8 @@ var I18N={
     phVizNoNet:'Could not reach Visualizer', phVizCleared:'Account removed',
     phVizLoading:'Reading your shots from Visualizer\u2026',
     phVizRead:'From Visualizer \u00b7 read only',
+    phSrcDe1:'Machine', phSrcViz:'Visualizer',
+    phLogSubViz:'Your shots on Visualizer, as they were uploaded.',
     phNoNetH:"Can't reach the machine",
     phNoNetS:'This phone has to be on the same network as the machine. Trying {h}',
     phNetRetry:'Try again', phNetBack:'Connected',
@@ -2921,6 +2930,8 @@ var I18N={
     phVizNoNet:'Visualizer에 닿지 않습니다', phVizCleared:'계정을 지웠습니다',
     phVizLoading:'Visualizer에서 샷을 읽는 중…',
     phVizRead:'Visualizer 에서 가져옴 · 읽기 전용',
+    phSrcDe1:'머신', phSrcViz:'Visualizer',
+    phLogSubViz:'Visualizer에 올라간 내 샷입니다.',
     phNoNetH:'머신에 닿지 않습니다',
     phNoNetS:'이 폰이 머신과 같은 네트워크에 있어야 합니다. 시도 중 {h}',
     phNetRetry:'다시 시도', phNetBack:'연결됐습니다',
@@ -13984,9 +13995,32 @@ function psTankFrame(){
   g.strokeStyle='rgba(255,255,255,.42)'; g.lineWidth=1.5; g.stroke(); }
 // -- The shots, on the phone ---------------------------------------
 var _phLog=[], _phOpen=null;
-var _phVizMode=false;
+var _phVizMode=false, _phSrc='de1';
+// The switch only exists once there is a second side to switch to, and it also
+// reports: a fall-back moves it, so the list never claims to be from the machine.
+function phSrcBar(){
+  var e=document.getElementById('phLogSrc'); if(!e) return;
+  if(!vizCreds()){ e.style.display='none'; return; }
+  e.style.display='';
+  e.innerHTML=['de1','viz'].map(function(k){
+    return '<button type="button" class="'+(_phSrc===k?'on':'')+'"'
+      +' onclick="phSetSrc(\''+k+'\')">'+escapeHtml(t(k==='de1'?'phSrcDe1':'phSrcViz'))+'</button>'; }).join('');
+  var sub=document.querySelector('#phLogPage .mb-sub');
+  if(sub) sub.textContent=t(_phSrc==='viz'?'phLogSubViz':'phLogSub'); }
+function phSetSrc(k){ if(_phSrc===k) return; _phSrc=k; _phOpen=null; phLoadLog(); }
+function phLoadViz(box){
+  box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phVizLoading'))+'</div>';
+  vizMyShots(25).then(function(list){
+    _phVizMode=true; _phOpen=null;
+    _phLog=list.map(vizToShot); renderPhoneLog(); },
+    function(e){
+      var m=((e&&e.message)==='auth')?t('phVizBad'):t('phVizNoNet');
+      box.innerHTML='<div class="ls-empty">'+escapeHtml(m)+'</div>'; }); }
 function phLoadLog(){
   var box=document.getElementById('phLogBody'); if(!box) return;
+  if(!vizCreds()) _phSrc='de1';
+  phSrcBar();
+  if(_phSrc==='viz') return phLoadViz(box);
   box.innerHTML='<div class="ls-empty">'+escapeHtml(t('loading'))+'</div>';
   api('GET','/api/v1/shots?limit=25').then(function(r){
     _phVizMode=false;
@@ -13996,13 +14030,7 @@ function phLoadLog(){
       // it cannot be reached is the copy on Visualizer worth showing, and only
       // if an account was given for it.
       if(!vizCreds()){ box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>'; return; }
-      box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phVizLoading'))+'</div>';
-      vizMyShots(25).then(function(list){
-        _phVizMode=true; _phOpen=null;
-        _phLog=list.map(vizToShot); renderPhoneLog(); },
-        function(e){
-          var m=((e&&e.message)==='auth')?t('phVizBad'):t('phOffline');
-          box.innerHTML='<div class="ls-empty">'+escapeHtml(m)+'</div>'; }); }); }
+      _phSrc='viz'; phSrcBar(); phLoadViz(box); }); }
 // The two things worth doing to a shot after it has been pulled: say what it
 // was like, and ask what it says. Both where the shot is already open.
 var _phAi=null, _phAiBusy=false;
@@ -14141,7 +14169,14 @@ function initPhoneBean(){
       // and the bar above is what tells those apart
       if(!beans.length) phNetCheck(); });
 }
+// A copy of the page, so a phone that has been here once can open it again out
+// of reach of the gateway. Browsers only allow this over https or on localhost;
+// on a plain http gateway the call is simply refused and nothing changes.
+function swBoot(){
+  if(!window.isSecureContext||!navigator.serviceWorker) return;
+  try{ navigator.serviceWorker.register('sw.js').catch(function(){}); }catch(_){} }
 document.addEventListener('DOMContentLoaded', function(){
+  swBoot();
   // Phone hand-off: minimal bean-scan page, talks to this host's gateway.
   // The old links still say which job; either one lands on the same page.
   if(/[?&]beanscan=1/.test(window.location.search)){ bootPhone('bean'); return; }
