@@ -2483,7 +2483,7 @@ var I18N={
     piBtn:'Import', piTitle:'Import profiles',
     piHint:'Reads .tcl and .json files. A whole folder can be picked at once.',
     piPickFiles:'Choose files', piPickFolder:'Choose a folder',
-    piNoFiles:'No .tcl or .json files in what you picked',
+    piNoFiles:'No .tcl or .json files in what you picked', piReading:'Reading {n} files…',
     piNoSteps:'no steps in this format', piDup:'already in the library', piBad:'could not be read',
     piDupSel:'same profile picked twice',
     piGo:'Import {a}', piGoNone:'Nothing to import', piWorking:'Importing {n} of {t}…',
@@ -2733,7 +2733,7 @@ var I18N={
     piBtn:'가져오기', piTitle:'프로파일 가져오기',
     piHint:'.tcl 과 .json 파일을 읽습니다. 폴더를 통째로 고를 수도 있습니다.',
     piPickFiles:'파일 선택', piPickFolder:'폴더 선택',
-    piNoFiles:'고르신 것에 .tcl 이나 .json 파일이 없습니다',
+    piNoFiles:'고르신 것에 .tcl 이나 .json 파일이 없습니다', piReading:'{n}개 읽는 중…',
     piNoSteps:'스텝이 없는 형식', piDup:'이미 라이브러리에 있음', piBad:'읽을 수 없음',
     piDupSel:'같은 프로파일을 두 번 고름',
     piGo:'{a}개 가져오기', piGoNone:'가져올 것이 없습니다', piWorking:'가져오는 중 {n}/{t}…',
@@ -6833,6 +6833,8 @@ function jsonProfiles(text,fname){
 // What a folder full of Decent profiles turns into: one row per profile, with
 // the ones that cannot come through saying why rather than failing silently.
 var piRows=[];
+piReadTokInit();
+function piReadTokInit(){ if(typeof piRead==='function') piRead._tok=0; }
 function openProfileImport(){
   piRows=[]; renderPiList();
   document.getElementById('piFiles').value=''; document.getElementById('piDir').value='';
@@ -6844,10 +6846,31 @@ function piRead(files){
   (allProfiles||[]).forEach(function(x){
     have[String(((x.profile||{}).title||'')).trim().toLowerCase()]=true; });
   piRows=[];
-  var left=list.length;
+  // Picking again before the last read finished would let the old readers write
+  // their rows into the new list. Each pick carries a token and only the current
+  // one is listened to.
+  var tok=++piRead._tok;
+  // A reader that answers neither way leaves the list empty for ever, and an
+  // empty list looks exactly like a button that does nothing. Every file is
+  // accounted for once, whichever way it ends, and the count is on screen while
+  // it happens.
+  var left=list.length, settled={};
+  var box=document.getElementById('piList');
+  if(box) box.innerHTML='<div class="pi-sum">'+escapeHtml(t('piReading').replace('{n}',list.length))+'</div>';
+  function settle(i){
+    if(tok!==piRead._tok) return false;
+    if(settled[i]) return false;
+    settled[i]=1; if(!--left) piDone(); return true; }
+  var guard=setTimeout(function(){
+    if(tok!==piRead._tok) return;
+    list.forEach(function(f,i){
+      if(settled[i]) return;
+      piRows.push({ i:i, file:f.name, title:f.name, steps:0, skip:'piBad', on:false });
+      settle(i); }); },15000);
   list.forEach(function(f,i){
     var rd=new FileReader();
     rd.onload=function(){
+      if(tok!==piRead._tok) return;
       var txt=String(rd.result||'');
       try{
         var got=/\.json$/i.test(f.name)?jsonProfiles(txt,f.name):[tclProfile(txt,f.name)];
@@ -6860,15 +6883,21 @@ function piRead(files){
           piRows.push(row); });
       }catch(e){
         piRows.push({ i:i, file:f.name, title:f.name, steps:0, skip:'piBad', on:false }); }
-      if(!--left) piDone(); };
-    rd.onerror=function(){
+      settle(i); };
+    rd.onerror=rd.onabort=function(){
+      if(tok!==piRead._tok) return;
       piRows.push({ i:i, file:f.name, title:f.name, steps:0, skip:'piBad', on:false });
-      if(!--left) piDone(); };
-    rd.readAsText(f); }); }
+      settle(i); };
+    try{ rd.readAsText(f); }
+    catch(e){
+      piRows.push({ i:i, file:f.name, title:f.name, steps:0, skip:'piBad', on:false });
+      settle(i); } });
+  piRead._guard=guard; }
 // A Decent folder carries the same profile in both formats -- Adaptive 2 and
 // D-Flow / default are each a .tcl and a .json. Left alone that is two copies
 // of one profile, so within a pick the json wins and the rest stand down.
 function piDone(){
+  if(piRead._guard){ clearTimeout(piRead._guard); piRead._guard=null; }
   piRows.sort(function(a,b){ return a.i-b.i; });
   var best={};
   piRows.forEach(function(r){
