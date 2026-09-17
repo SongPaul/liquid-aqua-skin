@@ -2292,6 +2292,7 @@ var I18N={
     phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera',
     phLogSub:'The last shots this machine pulled.', phLogEmpty:'No shots recorded yet',
     phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
+    phWake:'Wake the machine', phWaking:'Waking…', phWoke:'Waking the machine',
     phStIdle:'Ready', phStEspresso:'Pulling a shot', phStSteam:'Steaming', phStWater:'Hot water',
     phStFlush:'Flushing', phStSleep:'Asleep', phStNoWater:'Out of water', phStOther:'Busy',
     mbShootLead:'Photograph the bag', mbShootHint:'Front and back, and whichever label carries the roast date. Up to five.',
@@ -2502,6 +2503,7 @@ var I18N={
     phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라',
     phLogSub:'이 머신이 최근에 내린 샷입니다.', phLogEmpty:'아직 기록된 샷이 없습니다',
     phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
+    phWake:'머신 깨우기', phWaking:'깨우는 중…', phWoke:'머신을 깨웁니다',
     phStIdle:'준비됨', phStEspresso:'추출 중', phStSteam:'스팀 중', phStWater:'온수',
     phStFlush:'플러시 중', phStSleep:'절전', phStNoWater:'물 부족', phStOther:'동작 중',
     mbShootLead:'봉투를 촬영하세요', mbShootHint:'앞뒤면과 로스팅일이 있는 라벨까지. 최대 5장.',
@@ -12477,6 +12479,16 @@ function phStatusPoll(on){
         _phTimer=setTimeout(tick,PH_RUN[st]?1000:2500); }); };
   tick(); }
 function phSnapState(){ var st=(_phSnap&&_phSnap.state)||{}; return String(st.state||'idle'); }
+var _phWaking=false;
+function phWake(){
+  if(_phWaking) return;
+  _phWaking=true; renderPhoneStatus();
+  api('PUT','/api/v1/machine/state/idle',null,10000)
+    .then(function(){ toast(t('phWoke'),'ok'); })
+    .catch(function(e){ toast(t('tWakeFailed')+' '+apiErrorText(e),'err'); })
+    .then(function(){ _phWaking=false;
+      // ask again at once rather than waiting out the next tick
+      if(phoneTab==='status') phStatusPoll(true); else renderPhoneStatus(); }); }
 function initPhoneLog(){ phLoadLog(); }
 function phNum(v,d){ var n=parseFloat(v); return isFinite(n)?n.toFixed(d==null?1:d):null; }
 function renderPhoneStatus(){
@@ -12497,6 +12509,11 @@ function renderPhoneStatus(){
     +'<div class="ps-v">'+escapeHtml(v==null?'\u2014':String(v))+(u&&v!=null?'<small>'+escapeHtml(u)+'</small>':'')+'</div></div>'; }
   var h='<div class="ps-state '+cls+'"><span class="ps-dot"></span>'
     +'<span class="ps-name">'+escapeHtml(t(PH_STATES[st]||'phStOther'))+'</span>'+clock+'</div>';
+  // Waking it is the one thing worth walking back for, so it is the one thing
+  // the phone can do here -- and only while it is the thing to do.
+  if(st==='sleeping') h+='<button class="m-btn primary mb-analyze" id="phWakeBtn" style="margin-top:12px"'
+    +(_phWaking?' disabled aria-busy="true"':'')+' onclick="phWake()">'
+    +escapeHtml(_phWaking?t('phWaking'):('☀ '+t('phWake')))+'</button>';
   h+='<div class="ps-grid">'
     +cell(t('tempBasket'),phNum(d.groupTemperature),'\u00b0C')
     +cell(t('tempMix'),phNum(d.mixTemperature),'\u00b0C')
