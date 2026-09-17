@@ -1260,6 +1260,25 @@ body.night #phoneShell .ph-nav{background:rgba(255,255,255,.12);border-color:rgb
 #phoneShell .ls-empty,#phoneShell .rec-wait,#phoneShell .set-desc,#phoneShell .ai-status{
   color:rgba(255,255,255,.78)}
 #phoneShell .ps-dot{box-shadow:0 0 0 4px rgba(255,255,255,.14)}
+/* The machine tab is the tank: the page fills to the level the machine reports,
+   and the surface stays level while the phone does not. Behind everything and
+   deaf to touch -- the reading is on a card, this is only the feel of it. */
+#phStatusPage .ps-tank{position:fixed;inset:0;width:100%;height:100%;z-index:0;
+  pointer-events:none;display:block}
+#phStatusPage .mb-wrap{position:relative;z-index:1}
+#phoneShell .ps-tankcard{margin-top:12px}
+#phoneShell .ps-tank-top{display:flex;align-items:baseline;gap:10px}
+#phoneShell .ps-tank-k{flex:1;min-width:0;font-size:11px;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:rgba(255,255,255,.72)}
+#phoneShell .ps-tank-v{font-size:30px;font-weight:800;line-height:1;color:#fff}
+#phoneShell .ps-tank-v small{font-size:14px;font-weight:700;margin-left:2px;opacity:.72}
+#phoneShell .ps-tank-sub{font-size:12px;font-weight:700;color:rgba(255,255,255,.76);margin-top:5px}
+#phoneShell .ps-tank-sub.low{color:#fecaca}
+#phoneShell .ps-tank-bar{height:6px;border-radius:100px;margin-top:9px;overflow:hidden;
+  background:rgba(255,255,255,.18)}
+#phoneShell .ps-tank-bar i{display:block;height:100%;border-radius:100px;background:#fff;
+  transition:width .6s ease}
+#phoneShell .ps-tilt{margin-top:11px;min-height:38px;font-size:12px}
 /* Accent is an indigo picked to stand out on paper. On this sheet it is the
    sheet, so anything that used it to mean "this is the important line" says it
    with brightness instead. */
@@ -2261,6 +2280,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <!-- ── The phone: one page, one nav, whichever job was asked for ── -->
 <div id="phoneShell" style="display:none">
 <div id="phStatusPage" style="display:none">
+  <canvas class="ps-tank" id="psTank"></canvas>
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>☕ </span><span data-i18n="phTabStatus">Machine</span></div>
       <div class="mb-sub" id="phStatusSub"></div></div>
@@ -2502,6 +2522,10 @@ var I18N={
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera', phTabSet:'Setup',
     phSetSub:'Kept on this phone, not on the machine.', phNotePh:'How it tasted',
+    psTankWait:'Waiting for the machine to report a level',
+    psTankLow:'Low — refill the tank', psRefillAt:'refill mark at {n}%',
+    psPlumbed:'Plumbed in', psTiltAsk:'Let the water follow the tilt',
+    psTiltNo:'This phone will not report its tilt.',
     phLogSub:'The last shots this machine pulled.', phLogEmpty:'No shots recorded yet',
     phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
     phSinceSeen:'since the phone looked',
@@ -2731,6 +2755,10 @@ var I18N={
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라', phTabSet:'설정',
     phSetSub:'이 폰에만 저장되며 머신에는 남지 않습니다.', phNotePh:'맛이 어때는지',
+    psTankWait:'머신이 수위를 알려오기를 기다리는 중',
+    psTankLow:'부족 — 물을 채워주세요', psRefillAt:'보충 기준선 {n}%',
+    psPlumbed:'직수 연결', psTiltAsk:'기울기에 물이 반응하게',
+    psTiltNo:'이 폰은 기울기를 알려주지 않습니다.',
     phLogSub:'이 머신이 최근에 내린 샷입니다.', phLogEmpty:'아직 기록된 샷이 없습니다',
     phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
     phSinceSeen:'폰이 본 순간부터',
@@ -12868,7 +12896,8 @@ function phoneGo(tab){
     var el=document.getElementById(PHONE_PANES[k]); if(el) el.style.display=(k===tab)?'block':'none'; }
   renderPhoneNav();
   // Only the page being looked at asks the machine anything.
-  if(tab==='status') phStatusPoll(true); else phStatusPoll(false);
+  if(tab==='status'){ phStatusPoll(true); psWaterOpen(); psTankStart(); }
+  else { phStatusPoll(false); psTankStop(); }
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
     if(tab==='bean') initPhoneBean();
     else if(tab==='cam') initPhoneCam();
@@ -12967,8 +12996,134 @@ function renderPhoneStatus(){
     +cell(t('tempMix'),phNum(d.mixTemperature),'\u00b0C')
     +cell(t('pressure'),phNum(d.pressure),'bar')
     +cell(t('flow'),phNum(d.flow),'ml/s')
-    +'</div>';
+    +'</div>'
+    +psTankCardHtml();
   box.innerHTML=h; }
+// The page behind is the feel of it; this is the reading.
+function psTankCardHtml(){
+  var pct=psPct(), low=psLow();
+  var ml=(pct==null)?null:Math.round(tankMl(_psWater.current));
+  var refill=(pct==null||plumbed())?null:Math.round(tankPercent(_psWater.refill));
+  var sub=plumbed()?t('psPlumbed')
+    :(pct==null)?t('psTankWait')
+    :(ml+' ml'+(refill!=null?('  \u00b7  '+t('psRefillAt').replace('{n}',refill)):''));
+  return '<div class="mb-card ps-tankcard">'
+    +'<div class="ps-tank-top"><span class="ps-tank-k">'+escapeHtml(t('tank'))+'</span>'
+      +'<span class="ps-tank-v">'+(pct==null?'\u2014':Math.round(pct))
+      +(pct==null?'':'<small>%</small>')+'</span></div>'
+    +'<div class="ps-tank-bar"><i style="width:'+(pct==null?0:Math.round(pct))+'%"></i></div>'
+    +'<div class="ps-tank-sub'+(low?' low':'')+'">'
+      +escapeHtml(low?t('psTankLow'):sub)+'</div>'
+    +(psTiltNeedsAsk()
+      ? '<button type="button" class="m-btn ps-tilt" onclick="psTiltAsk()">'
+        +escapeHtml(t('psTiltAsk'))+'</button>' : '')
+    +'</div>'; }
+// -- The tank behind the machine tab -------------------------------
+// Water level arrives on a socket and nowhere else, so the phone opens that one
+// socket while it is on this page. Until the first message there is no level to
+// draw and none is claimed.
+var _psWater={seen:false,current:0,refill:0};
+function psWaterOpen(){
+  if(psWaterOpen._on) return; psWaterOpen._on=true;
+  openWs('water','/ws/v1/machine/waterLevels',function(m){
+    _psWater.seen=true;
+    _psWater.current=m.currentLevel||0; _psWater.refill=m.refillLevel||0;
+    renderPhoneStatus(); }); }
+function psPct(){ return _psWater.seen?tankPercent(_psWater.current):null; }
+function psLow(){
+  if(!_psWater.seen||plumbed()) return false;
+  var pct=tankPercent(_psWater.current);
+  return _psWater.current<=_psWater.refill||pct<15; }
+// The phone is held at whatever angle suits the hand. Water is not: the surface
+// is drawn level in the world, which means turning it against the device.
+// iOS will not report an angle until it has been asked for one out loud, so the
+// card carries the asking and the drawing works without it either way.
+var _psTilt={on:false,now:0,want:0,asked:false,waited:false};
+function psTiltSupported(){ return typeof window.DeviceOrientationEvent!=='undefined'; }
+// The permission call exists on browsers that do not need it, so its presence
+// says nothing. What says something is readings not arriving: the listener goes
+// on first, and only if nothing has come by the time the page has settled is
+// there anything to ask for -- once.
+function psTiltNeedsAsk(){
+  return psTiltSupported()&&typeof DeviceOrientationEvent.requestPermission==='function'
+    &&!_psTilt.on&&!_psTilt.asked&&_psTilt.waited; }
+function psTiltHandler(e){
+  var g=e.gamma, b=e.beta;
+  if(g==null&&b==null) return;
+  _psTilt.on=true;
+  // Face-up is 90 on beta; past vertical the sign of gamma flips, which would
+  // throw the surface over. Clamped to what a held phone actually does.
+  var a=Math.max(-24,Math.min(24,(g||0)));
+  _psTilt.want=a; }
+function psTiltAttach(){
+  if(psTiltAttach._on) return; psTiltAttach._on=true;
+  window.addEventListener('deviceorientation',psTiltHandler,true);
+  setTimeout(function(){ _psTilt.waited=true;
+    if(psTiltNeedsAsk()) renderPhoneStatus(); },1400); }
+function psTiltAsk(){
+  _psTilt.asked=true;
+  if(!psTiltSupported()){ toast(t('psTiltNo'),'err'); renderPhoneStatus(); return; }
+  if(typeof DeviceOrientationEvent.requestPermission==='function'){
+    DeviceOrientationEvent.requestPermission().then(function(r){
+      if(r==='granted'){ psTiltAttach(); _psTilt.on=true; }
+      else toast(t('psTiltNo'),'err');
+      renderPhoneStatus(); }).catch(function(){ toast(t('psTiltNo'),'err'); renderPhoneStatus(); });
+    return; }
+  psTiltAttach(); renderPhoneStatus(); }
+var _psRaf=0, _psT=0, _psShown=0, _psColor=null;
+function psTankStop(){ if(_psRaf) cancelAnimationFrame(_psRaf); _psRaf=0; }
+function psTankStart(){
+  if(_psRaf) return;
+  psTiltAttach();
+  var step=function(){ _psRaf=requestAnimationFrame(step); psTankFrame(); };
+  _psRaf=requestAnimationFrame(step); }
+function psTankFrame(){
+  var cv=document.getElementById('psTank'); if(!cv) return;
+  var w=cv.clientWidth, h=cv.clientHeight; if(!w||!h) return;
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
+  var g=cv.getContext('2d'); if(!g) return;
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,w,h);
+  _psT+=1/60;
+  // the level eases, so a refill rises rather than jumps
+  var pct=psPct(); var want=(pct==null?0:pct)/100;
+  _psShown+=(want-_psShown)*0.06;
+  if(_psShown<0.004&&want<0.004) return;
+  _psTilt.now+=(_psTilt.want-_psTilt.now)*0.12;
+  // The tablet tints its tank chip by temperature. A chip can carry that; a
+  // whole page cannot -- 92 degrees is normal, and a page of red is not. Here
+  // the water is water, and only running out changes its colour.
+  var target=psLow()?[248,113,113]:[56,189,248];
+  if(!_psColor) _psColor=target.slice();
+  else for(var i=0;i<3;i++) _psColor[i]+=(target[i]-_psColor[i])*0.04;
+  var c=[Math.round(_psColor[0]),Math.round(_psColor[1]),Math.round(_psColor[2])];
+  var baseY=h*(1-_psShown);
+  // Positive gamma is the right edge going down, and water goes downhill: the
+  // surface has to turn against the screen, not with it.
+  var slope=-Math.tan(_psTilt.now*Math.PI/180);
+  function surface(x,amp,len,phase){
+    return baseY+slope*(x-w/2)+Math.sin((x/len)+phase)*amp; }
+  function band(amp,len,phase,alpha,extra){
+    g.beginPath();
+    g.moveTo(0,surface(0,amp,len,phase)+extra);
+    for(var x=0;x<=w;x+=6) g.lineTo(x,surface(x,amp,len,phase)+extra);
+    g.lineTo(w,h+80); g.lineTo(0,h+80); g.closePath();
+    var top=Math.max(0,Math.min(h,baseY-40));
+    var grad=g.createLinearGradient(0,top,0,h);
+    grad.addColorStop(0,'rgba('+c[0]+','+c[1]+','+c[2]+','+alpha+')');
+    grad.addColorStop(1,'rgba('+c[0]+','+c[1]+','+c[2]+','+(alpha*0.45).toFixed(3)+')');
+    g.fillStyle=grad; g.fill(); }
+  // light enough that the sheet underneath still shows through it
+  band(9,140,_psT*0.9,0.10,10);
+  band(7,95,-_psT*1.35+2.1,0.13,4);
+  band(5,180,_psT*0.55+4.2,0.17,0);
+  // a bright line on the water itself, which is what makes it read as a surface
+  g.beginPath();
+  g.moveTo(0,surface(0,5,180,_psT*0.55+4.2));
+  for(var x2=0;x2<=w;x2+=6) g.lineTo(x2,surface(x2,5,180,_psT*0.55+4.2));
+  g.strokeStyle='rgba(255,255,255,.42)'; g.lineWidth=1.5; g.stroke(); }
 // -- The shots, on the phone ---------------------------------------
 var _phLog=[], _phOpen=null;
 function phLoadLog(){
