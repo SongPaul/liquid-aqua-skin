@@ -5839,7 +5839,14 @@ function carShowLoaded(){
 function carSetTag(k){
   if(brewLocked()) return;
   carTag=(carTag===k)?'':k;
-  buildCarousel(); }
+  buildCarousel();
+  // Opening a pile is choosing from it. The cover in the middle is what the next
+  // shot pulls, and it only became that by swiping -- so the first cover of a
+  // pile could not be reached at all without passing it and coming back, and a
+  // pile you had just opened told you nothing about what was loaded. This is the
+  // same debounced load the strip uses: flicking across chips settles into one
+  // upload, and a pile already holding what is loaded writes nothing.
+  loadCentered(); }
 function buildCarousel(){
   applyBrewLock(brewLocked());
   carItems=carListProfiles();
