@@ -1764,12 +1764,15 @@ body.night .set-warn{color:#fbbf24;background:rgba(245,158,11,.14);border-color:
   box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
 .sp-pane{display:none}
 .sp-pane.on{display:block}
-.sc-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 0}
-.sc-col{display:flex;flex-direction:column;gap:6px;min-width:0}
-.sc-col-h{font-size:13px;font-weight:800}
-.sc-col-d{margin-bottom:4px}
-.sc-pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;
-  padding:9px 12px;border-radius:12px;border:1px solid var(--glass-line);
+.sc-cols{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:14px 0;align-items:start}
+.sc-list{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sc-col-h{font-size:13px;font-weight:800;align-self:end}
+.sc-col-d{margin:0 0 4px}
+/* every row the same height, with or without a note, so the two columns line
+   up entry by entry and not merely at the top */
+.sc-pick{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  gap:2px;width:100%;min-height:52px;
+  padding:8px 12px;border-radius:12px;border:1px solid var(--glass-line);
   background:var(--glass-hi);color:inherit;font:inherit;text-align:left;cursor:pointer}
 .sc-pick.on{border-color:var(--accent);background:var(--ctl-face);color:var(--accent)}
 .sc-pick[disabled]{opacity:.45;cursor:default}
@@ -5648,7 +5651,11 @@ function brewScaleId(){
   var held=scaleDevices().filter(function(d){ return d.connectionRole==='primary'; })[0];
   if(held) return held.id;
   return (gwSettings&&gwSettings.preferredScaleId)||''; }
-function scaleColumn(side){
+function scaleColHead(side){
+  return '<div class="sc-col-h">'+escapeHtml(t(side==='brew'?'scaleBrew':'dosingScale'))+'</div>'; }
+function scaleColDesc(side){
+  return '<div class="set-desc sc-col-d">'+escapeHtml(t(side==='brew'?'scaleBrewDesc':'dosingScaleDesc'))+'</div>'; }
+function scaleColList(side){
   var mine=(side==='brew')?brewScaleId():dosingId();
   var theirs=(side==='brew')?dosingId():brewScaleId();
   var list=scaleDevices().slice();
@@ -5656,9 +5663,7 @@ function scaleColumn(side){
   if(mine&&!list.some(function(d){ return d.id===mine; }))
     list.push({id:mine,name:t('dosingAway'),_away:true});
   var busy=(state.shotRunning||_dosingScanning);
-  var h='<div class="sc-col"><div class="sc-col-h">'+escapeHtml(t(side==='brew'?'scaleBrew':'dosingScale'))+'</div>'
-    +'<div class="set-desc sc-col-d">'+escapeHtml(t(side==='brew'?'scaleBrewDesc':'dosingScaleDesc'))+'</div>';
-  h+=scaleChoice(side,'',t('dosingNone'),mine==='',false,busy);
+  var h='<div class="sc-list">'+scaleChoice(side,'',t('dosingNone'),mine==='',false,busy);
   list.forEach(function(d){
     var taken=(theirs&&d.id===theirs);
     var note=d._away?'':(taken?t('scaleTaken'):'');
@@ -5691,7 +5696,10 @@ function setBrewScale(id){
     .then(function(){ loadDevicesForDosing(); }); }
 function dosingBlockHtml(){
   if(!dosingSupported()) return '';
-  return '<div class="sc-cols">'+scaleColumn('brew')+scaleColumn('dosing')+'</div>'
+  return '<div class="sc-cols">'
+      +scaleColHead('brew')+scaleColHead('dosing')
+      +scaleColDesc('brew')+scaleColDesc('dosing')
+      +scaleColList('brew')+scaleColList('dosing')+'</div>'
     +row('dosingFind','dosingFindDesc','<button class="m-btn" id="dosingScanBtn"'
       +((_dosingScanning||state.shotRunning)?' disabled':'')
       +' onclick="dosingScan()">'+escapeHtml(t(_dosingScanning?'dosingScanning':'dosingFind'))+'</button>')
