@@ -3460,7 +3460,10 @@ function initWebSockets(){
     updateShotBtn(); });
   openWs('display','/ws/v1/display',function(d){ if(d&&d.brightness!==undefined) displayState=d; });
   openWs('update','/ws/v1/update',function(m){
-    if(m&&m.error){ toast(String(m.error),'err'); if(m.url&&appUpdate) appUpdate.releaseUrl=m.url; return; }
+    if(m&&m.error){
+      if(m.url&&appUpdate) appUpdate.releaseUrl=m.url;
+      appUpdateError(String(m.error));
+      return; }
     onAppUpdate(m); });
   api('GET','/api/v1/display').then(function(d){ if(d) displayState=d; }).catch(function(){});
   probeDosingSupport();
@@ -5907,7 +5910,17 @@ function fetchAppUpdate(){ if(_appFetched) return; _appFetched=true;
 function appSend(cmd){ var ws=sockets.update;
   if(!ws||ws.readyState!==1){ toast(t('appNoState'),'err'); return false; }
   try{ ws.send(JSON.stringify({command:cmd})); return true; }catch(_){ toast(t('appNoState'),'err'); return false; } }
-function appCheck(){ appSend('check'); }
+// The gateway looks for a new version by itself when it starts. Nobody asked
+// for that, so its failure is not worth interrupting anyone over -- the update
+// page says so in place, and that is where someone who cares is looking. A
+// check somebody pressed is a different thing and still answers out loud.
+var _appAskedCheck=false;
+function appCheck(){ _appAskedCheck=true; appSend('check'); }
+function appUpdateError(msg){
+  if(!appUpdate) appUpdate={phase:'error'};
+  appUpdate.phase='error'; appUpdate.error=msg;
+  if(_appAskedCheck){ _appAskedCheck=false; toast(msg,'err'); }
+  if(spOpen()&&spCat==='updates') renderAppUpdate(); }
 function appOpenRelease(){ var u=appUpdate&&appUpdate.releaseUrl; if(u) window.open(u,'_blank'); }
 // Only Android can install from here. Everywhere else the release page is the
 // honest answer, so the button says so rather than failing on the press.
