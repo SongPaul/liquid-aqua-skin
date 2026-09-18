@@ -562,12 +562,20 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-live{font-size:10px;font-weight:800;line-height:14px;color:var(--accent2);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:0 6px;cursor:pointer;white-space:nowrap}
 .dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid transparent;background-color:transparent;transition:background .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
-.rc-mode{display:flex;flex-direction:column;gap:9px;padding:2px 0}
+/* One column. Two was tried: at half the card's width the labels broke across
+   three lines and the milk row and buttons were cut off, which is worse than a
+   short scroll. */
+.rc-mode{display:flex;flex-direction:column;gap:4px;padding:2px 0;overflow-y:auto}
+.rc-mode>.preset-bar{margin:0;padding:0}
+.rc-mode .preset-chip{min-height:30px}
+.rc-mode-acts{flex-wrap:wrap}
 .rc-mode-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .rc-mode-t{font-size:14px;font-weight:800}
-.rc-back{min-height:34px;padding:0 12px;font-size:12px}
+.rc-back{min-height:30px;padding:0 12px;font-size:12px}
 .rc-mode-acts{display:flex;justify-content:flex-end;gap:8px}
-.rc-mode .opt-row{padding:5px 0}
+.rc-mode .opt-row{padding:3px 0}
+.rc-mode .opt-label{font-size:11px}
+.rc-mode .opt-label .hint{display:none}
 .rc-milk-ctrl{display:flex;align-items:center;gap:7px}
 .rc-milk-ctrl .dose-num{min-height:38px;min-width:76px}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
@@ -2122,8 +2130,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
               <span class="dose-live" id="milkLive" hidden onclick="milkFromScale()">—</span>
             </div>
           </div>
-          <div class="rc-mode-acts"><button class="m-btn" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLog"></span></button></div>
-          <div class="rc-mode-acts"><button class="m-btn primary" onclick="saveSteam()"><span data-i18n="saveOptions"></span></button></div>
+          <div class="rc-mode-acts"><button class="m-btn" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLog"></span></button><button class="m-btn primary" onclick="saveSteam()"><span data-i18n="saveOptions"></span></button></div>
         </div>
         <div class="rc-mode" id="recipeFlush" style="display:none">
           <div class="rc-mode-head"><span class="rc-mode-t"><span data-i18n="flushOptions"></span></span><button class="m-btn rc-back" onclick="setRecipeMode('espresso')">← <span data-i18n="rcBackShot"></span></button></div>
@@ -2590,6 +2597,7 @@ var I18N={
     hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 = off', hSteamDur:'max steaming seconds', hSteamFlow:'steam flow rate',
     hFlushTemp:'flush water temperature', hFlushDur:'flush seconds', hFlushFlow:'flush flow rate',
     hWaterTemp:'hot water temperature', hWaterVol:'target millilitres', hWaterDur:'max seconds', hWaterFlow:'flow rate',
+    presetApplied:'Preset \u201c{n}\u201d applied',
     rcBackShot:'Shot',
     milkLbl:'Milk', milkHint:'weighed on the dosing scale',
     milkLog:'Record on the last shot',
@@ -2905,6 +2913,7 @@ var I18N={
     hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 은 꺼짐', hSteamDur:'최대 스팀 초', hSteamFlow:'스팀 유량',
     hFlushTemp:'플러시 물 온도', hFlushDur:'플러시 초', hFlushFlow:'플러시 유량',
     hWaterTemp:'온수 온도', hWaterVol:'목표 밀리리터', hWaterDur:'최대 초', hWaterFlow:'유량',
+    presetApplied:'프리셋 “{n}” 을 적용했습니다',
     rcBackShot:'샷',
     milkLbl:'우유', milkHint:'도징 저울로 재서',
     milkLog:'마지막 샷에 기록',
@@ -4637,8 +4646,36 @@ function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…');
 // and a modal over it said the same thing while hiding it.
 var RECIPE_PANES={espresso:'recipeNormal',steam:'recipeSteam',flush:'recipeFlush',water:'recipeWater'};
 var recipeMode='espresso';
+// The panes are different lengths, and a longer one pushed the cards beneath
+// it off the bottom of a stage that does not scroll. The shot card sets the
+// height and the others live inside it.
+var _recipeH=0, _beanLend=0;
+function lockRecipeHeight(){
+  var n=document.getElementById('recipeNormal');
+  if(!n||n.style.display==='none') return;
+  var h=Math.round(n.getBoundingClientRect().height);
+  if(h<60) return;
+  // The shot card sets the floor, but the column usually ends short of the
+  // stage: that slack is height a longer pane may take without pushing the
+  // cards under it off the bottom.
+  // The column is already full -- the cards under this one reach the bottom of
+  // the stage exactly -- so a longer pane has to be given room rather than take
+  // it. The bean card is about the shot; while a mode card is open it steps
+  // aside and lends its height, and the column ends where it always did.
+  var bean=document.querySelector('.bean-info'), lend=0;
+  if(bean){ var br=bean.getBoundingClientRect();
+    if(br.height>0) lend=Math.round(br.height)+10; }
+  if(lend) _beanLend=lend;
+  var want=h+(_beanLend||0);
+  if(want===_recipeH) return;
+  _recipeH=want;
+  var list=document.querySelectorAll('#recipeSteam,#recipeFlush,#recipeWater');
+  for(var i=0;i<list.length;i++) list[i].style.height=_recipeH+'px'; }
 function setRecipeMode(m){
   if(!RECIPE_PANES[m]) m='espresso';
+  if(m!=='espresso') lockRecipeHeight();
+  var bean=document.querySelector('.bean-info');
+  if(bean) bean.style.display=(m==='espresso')?'':'none';
   recipeMode=m;
   Object.keys(RECIPE_PANES).forEach(function(k){
     var el=document.getElementById(RECIPE_PANES[k]);
@@ -4716,9 +4753,14 @@ function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); 
   if(presets[kind].length<3){ var add=document.createElement('button'); add.className='preset-chip'; add.style.borderStyle='dashed'; add.textContent='+ Save current';
     add.onclick=function(){ addPreset(kind); }; wrap.appendChild(add); }
 }
-function applyPreset(kind,ps){ if(kind==='steam'){ set('steamTemp',ps.temp,'steamTempV'); set('steamDur',ps.dur,'steamDurV'); set('steamFlow',ps.flow,'steamFlowV',1); }
-  else if(kind==='water'){ set('waterTemp',ps.temp,'waterTempV'); set('waterVol',ps.vol,'waterVolV'); set('waterDur',ps.dur,'waterDurV'); set('waterFlow',ps.flow,'waterFlowV',1); }
-  else { set('flushTemp',ps.temp,'flushTempV'); set('flushDur',ps.dur,'flushDurV'); set('flushFlow',ps.flow,'flushFlowV',1); } syncAux(); toast('Preset "'+ps.n+'" applied','ok'); }
+function applyPreset(kind,ps){
+  if(kind==='steam'){ set('steamTemp',ps.temp,'steamTempV'); set('steamDur',ps.dur,'steamDurV'); set('steamFlow',ps.flow,'steamFlowV',1);
+    settings.steamTemp=+ps.temp; settings.steamDur=+ps.dur; settings.steamFlow=+ps.flow; }
+  else if(kind==='water'){ set('waterTemp',ps.temp,'waterTempV'); set('waterVol',ps.vol,'waterVolV'); set('waterDur',ps.dur,'waterDurV'); set('waterFlow',ps.flow,'waterFlowV',1);
+    settings.waterTemp=+ps.temp; settings.waterVol=+ps.vol; settings.waterDur=+ps.dur; settings.waterFlow=+ps.flow; }
+  else { set('flushTemp',ps.temp,'flushTempV'); set('flushDur',ps.dur,'flushDurV'); set('flushFlow',ps.flow,'flushFlowV',1);
+    settings.flushTemp=+ps.temp; settings.flushDur=+ps.dur; settings.flushFlow=+ps.flow; }
+  syncAux(); toast(t('presetApplied').replace('{n}',ps.n),'ok'); }
 function addPreset(kind){ var name=prompt('Preset name?',(kind==='steam'?'Steam ':kind==='water'?'Water ':'Flush ')+(presets[kind].length+1)); if(!name) return;
   if(kind==='steam') presets.steam.push({n:name,temp:+document.getElementById('steamTemp').value,dur:+document.getElementById('steamDur').value,flow:+document.getElementById('steamFlow').value});
   else if(kind==='water') presets.water.push({n:name,temp:+document.getElementById('waterTemp').value,vol:+document.getElementById('waterVol').value,dur:+document.getElementById('waterDur').value,flow:+document.getElementById('waterFlow').value});
@@ -4728,7 +4770,8 @@ function syncSteamModal(){ set('steamTemp',settings.steamTemp,'steamTempV'); set
 function syncWaterModal(){ set('waterTemp',settings.waterTemp,'waterTempV'); set('waterVol',settings.waterVol,'waterVolV'); set('waterDur',settings.waterDur,'waterDurV'); set('waterFlow',settings.waterFlow,'waterFlowV',1); }
 function syncFlushModal(){ set('flushTemp',settings.flushTemp,'flushTempV'); set('flushDur',settings.flushDur,'flushDurV'); set('flushFlow',settings.flushFlow,'flushFlowV',1); }
 function set(id,v,vid,dec){ document.getElementById(id).value=v; document.getElementById(vid).textContent=dec?(+v).toFixed(1):v; }
-function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v; }
+function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v;
+  if(settings[key]!==undefined){ settings[key]=v; syncAux(); } }
 function saveSteam(){ settings.steamTemp=+document.getElementById('steamTemp').value; settings.steamDur=+document.getElementById('steamDur').value; settings.steamFlow=+document.getElementById('steamFlow').value;
   api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast(t('tSteamSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
 function saveFlush(){ settings.flushTemp=+document.getElementById('flushTemp').value; settings.flushDur=+document.getElementById('flushDur').value; settings.flushFlow=+document.getElementById('flushFlow').value;
