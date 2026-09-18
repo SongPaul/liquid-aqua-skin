@@ -240,6 +240,8 @@ header>*{position:relative;z-index:1}
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-mute);flex-shrink:0;transition:background .2s}
 .conn-line.up .status-dot{background:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.22)}
 .conn-toggle.ing .conn-line .status-dot{background:var(--amber);animation:blink .8s infinite}
+.conn-line.ing{color:var(--amber)}
+.conn-line.ing .status-dot{background:var(--amber)!important;transition:none;animation:blink .8s infinite}
 @keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .hdr-group{display:flex;align-items:center;justify-content:flex-end;flex:1 1 0;gap:9px}
@@ -2918,7 +2920,7 @@ var I18N={
     dosingScanFound:'{n} more scale(s) found', dosingScanNone:'Nothing new turned up',
     dosingScanFailed:'The search failed:',
     dosingScale:'Dosing scale', dosingScaleDesc:'A second scale to weigh the dose on. It is held open for this skin only, is never used to weigh a shot, and is let go when the app closes.',
-    dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
+    dosingPicked:'Using \u201c{n}\u201d as the dosing scale', dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
     dosingReading:'Dosing reading',
     dosingTareHint:'The \u2696 beside the dose on the main screen zeroes it too, without coming in here.', dosingWaiting:'Waiting for the scale', dosingWaitBrew:'Waiting for the brewing scale first', dosingTare:'Zero',
     dosingHeld:'Dosing scale connected', dosingHoldFailed:'Could not hold the dosing scale',
@@ -3242,7 +3244,7 @@ var I18N={
     dosingScanFound:'저울 {n}대를 찾았습니다', dosingScanNone:'새로 찾은 저울이 없습니다',
     dosingScanFailed:'찾기에 실패했습니다:',
     dosingScale:'도징 저울', dosingScaleDesc:'도징 무게를 재는 두 번째 저울입니다. 이 스킨을 위해서만 잡아 두며, 추출 계량에는 쓰이지 않고 앱을 닫으면 놓습니다.',
-    dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
+    dosingPicked:'“{n}” 을 도징 저울로 잡았습니다', dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
     dosingReading:'도징 측정값',
     dosingTareHint:'메인 화면 도스 옆의 ⚖ 를 눌러도 영점이 잡힙니다. 여기까지 들어오지 않아도 됩니다.', dosingWaiting:'저울을 기다리는 중', dosingWaitBrew:'추출 저울을 먼저 기다리는 중', dosingTare:'영점',
     dosingHeld:'도징 저울을 연결했습니다', dosingHoldFailed:'도징 저울을 잡지 못했습니다',
@@ -3619,7 +3621,16 @@ function parkSockets(on){
     if(on){ _wsParked[name]=true;
       try{ if(sockets[name]) sockets[name].close(); }catch(_){} }
     else if(_wsParked[name]){ _wsParked[name]=false;
-      if(_wsOpen[name]) _wsOpen[name](); } }); }
+      if(_wsOpen[name]) _wsOpen[name](); } });
+  if(on) forgetDosingReading();
+  else if(typeof loadDevicesForDosing==='function') loadDevicesForDosing(); }
+function forgetDosingReading(){
+  if(!state.dosingConnected&&state.dosingWeight===null) return;
+  state.dosingConnected=false; state.dosingWeight=null;
+  syncDoseTake(); syncRecipe();
+  if(typeof renderDosingRow==='function') renderDosingRow();
+  if(typeof renderMilkRow==='function') renderMilkRow();
+  if(typeof syncConnDosing==='function') syncConnDosing(); }
 function initWebSockets(){
   openWs('machine','/ws/v1/machine/snapshot',function(s){
     // The socket can deliver a burst of frames at once. Spacing samples by
@@ -4148,6 +4159,14 @@ function syncConnDosing(){
   var row=document.getElementById('connDosingRow'); if(!row) return;
   var id=dosingId(), d=id?deviceById(id):null;
   var held=!!(d&&d.connectionRole==='auxiliary');
+  // Looking, holding, reading -- three states, and the one worth seeing from
+  // across the kitchen is the first: it says the skin is doing something about
+  // the scale that is switched on and not connected.
+  if(_dosingScanning){
+    row.hidden=false;
+    row.className='conn-line ing';
+    document.getElementById('lblDosing').textContent=t('dosingScanning');
+    return; }
   row.hidden=!held;
   if(!held) return;
   row.className='conn-line'+(state.dosingConnected?' up':' down');
@@ -4605,7 +4624,7 @@ function confirmDosingHold(id,announce){
       renderDosingRow();
       toast(t('dosingUnsupported'),'err');
       return; }
-    reopenDosingWs();
+    reopenDosingWs(); syncConnDosing();
     if(announce) toast(t('dosingHeld'),'ok'); }); }
 function releaseDosingScale(id){
   return api('PUT','/api/v1/devices/disconnect',{deviceId:id}).catch(function(){}); }
@@ -6146,22 +6165,39 @@ function dosingBlockHtml(){
 // nothing -- otherwise the scale being looked for could be taken for the
 // brewing one, which is the opposite of what is wanted here.
 var _dosingScanning=false;
-var _dosingAutoScanAt=0;
+var _dosingAutoScanAt=0, _dosingDiscoverAt=0;
+function dosingPickable(){
+  var brew=brewScaleId(), pref=(gwSettings&&gwSettings.preferredScaleId)||'';
+  return scaleDevices().filter(function(d){
+    if(d.id===brew||(pref&&d.id===pref)) return false;
+    return d.connectionRole!=='primary'; }); }
+function autoPickDosing(){
+  var c=dosingPickable();
+  if(c.length!==1) return;
+  prefs.dosingScaleId=c[0].id; savePrefs();
+  _dosingHoldAt=0; _dosingWaitAt=0;
+  toast(t('dosingPicked').replace('{n}',c[0].name||c[0].id),'ok'); }
 function maybeAutoScanDosing(){
   if(!dosingSupported()) return;
-  var id=dosingId(); if(!id) return;
-  if(deviceById(id)) return;
   if(state.shotRunning||_dosingScanning) return;
   if(brewScalePending()) return;
-  if(Date.now()-_dosingAutoScanAt<90000) return;
-  _dosingAutoScanAt=Date.now();
-  _dosingScanning=true; renderDosingRow();
+  var id=dosingId();
+  if(id&&deviceById(id)) return;
+  // Nothing chosen yet is a hunt rather than a reunion: it needs the brewing
+  // scale actually up, and it is worth far less often.
+  if(!id&&!state.scaleConnected) return;
+  var gap=id?90000:600000;
+  if(Date.now()-(id?_dosingAutoScanAt:_dosingDiscoverAt)<gap) return;
+  if(id) _dosingAutoScanAt=Date.now(); else _dosingDiscoverAt=Date.now();
+  _dosingScanning=true; renderDosingRow(); syncConnDosing();
   api('GET','/api/v1/devices/scan?connect=false',null,60000)
     .then(function(list){ if(Array.isArray(list)) state.devices=list; },function(){})
-    .then(function(){ _dosingScanning=false; renderDosingRow(); syncDosing(); }); }
+    .then(function(){ _dosingScanning=false;
+      if(!dosingId()) autoPickDosing();
+      renderDosingRow(); syncConnDosing(); syncDosing(); }); }
 function dosingScan(){
   if(_dosingScanning||state.shotRunning) return;
-  _dosingScanning=true; renderDosingRow();
+  _dosingScanning=true; renderDosingRow(); syncConnDosing();
   var before=scaleDevices().length;
   api('GET','/api/v1/devices/scan?connect=false',null,60000)
     .then(function(list){
@@ -6171,7 +6207,7 @@ function dosingScan(){
         ? t('dosingScanFound').replace('{n}',found-before)
         : t('dosingScanNone'), 'ok'); },
       function(e){ toast(t('dosingScanFailed')+' '+apiErrorText(e),'err'); })
-    .then(function(){ _dosingScanning=false; renderDosingRow(); syncDosing(); }); }
+    .then(function(){ _dosingScanning=false; renderDosingRow(); syncConnDosing(); syncDosing(); }); }
 // Only the dosing rows are redrawn: rebuilding the whole page would drop the
 // select the user is in the middle of using.
 function renderDosingRow(){
