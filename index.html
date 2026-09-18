@@ -2752,6 +2752,10 @@ var I18N={
     curveTitle:'Pressure & flow curve', addStep:'Add step', tempShort:'temp',
     tempLabel:'Temp °C', exitTitle:'Exit condition', exitOver:'over', exitUnder:'under', noLimit:'no limit', volLimit:'Volume limit', wtLimit:'Weight limit', exitDesc:'Leave this step the moment the reading crosses the line, even if its time is not up. This is what ends a shot early while every number on screen still looks right.',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
+    dosingFind:'Look for scales', dosingScanning:'Looking\u2026',
+    dosingFindDesc:'The gateway stops looking once it has a scale, so one switched on later is not noticed. This looks again without connecting anything.',
+    dosingScanFound:'{n} more scale(s) found', dosingScanNone:'Nothing new turned up',
+    dosingScanFailed:'The search failed:',
     dosingScale:'Dosing scale', dosingScaleDesc:'A second scale to weigh the dose on. It is held open for this skin only, is never used to weigh a shot, and is let go when the app closes.',
     dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
     dosingReading:'Dosing reading', dosingWaiting:'Waiting for the scale', dosingTare:'Zero',
@@ -3048,6 +3052,10 @@ var I18N={
     curveTitle:'압력 · 유량 곡선', addStep:'스텝 추가', tempShort:'온도',
     tempLabel:'온도 °C', exitTitle:'조건부 넘김', exitOver:'이상', exitUnder:'이하', noLimit:'제한 없음', volLimit:'부피 제한', wtLimit:'무게 제한', exitDesc:'측정값이 이 선을 넘는 순간, 시간이 남아도 다음 스텝으로 넘어갑니다. 화면의 숫자는 전부 정상인데 샷이 일찍 끝나는 원인이 이것입니다.',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
+    dosingFind:'저울 찾기', dosingScanning:'찾는 중…',
+    dosingFindDesc:'게이트웨이는 저울을 하나 잡으면 더 찾지 않습니다. 나중에 켜는 저울은 그래서 보이지 않습니다. 여기서 다시 찾습니다 — 어느 것도 연결하지 않습니다.',
+    dosingScanFound:'저울 {n}대를 찾았습니다', dosingScanNone:'새로 찾은 저울이 없습니다',
+    dosingScanFailed:'찾기에 실패했습니다:',
     dosingScale:'도징 저울', dosingScaleDesc:'도징 무게를 재는 두 번째 저울입니다. 이 스킨을 위해서만 잡아 두며, 추출 계량에는 쓰이지 않고 앱을 닫으면 놓습니다.',
     dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
     dosingReading:'도징 측정값', dosingWaiting:'저울을 기다리는 중', dosingTare:'영점',
@@ -5617,7 +5625,28 @@ function dosingStatusRow(){
 function dosingBlockHtml(){
   if(!dosingSupported()) return '';
   return row('dosingScale','dosingScaleDesc','<select class="set-select" id="dosingSel" onchange="setDosingScale(this.value)">'+dosingOptions()+'</select>')
+    +row('dosingFind','dosingFindDesc','<button class="m-btn" id="dosingScanBtn"'
+      +((_dosingScanning||state.shotRunning)?' disabled':'')
+      +' onclick="dosingScan()">'+escapeHtml(t(_dosingScanning?'dosingScanning':'dosingFind'))+'</button>')
     +'<div id="dosingRow">'+dosingStatusRow()+'</div>'; }
+// The gateway stops hunting for scales once it has one, so a second scale
+// switched on later is never noticed. Asking it to look is a scan that connects
+// nothing -- otherwise the scale being looked for could be taken for the
+// brewing one, which is the opposite of what is wanted here.
+var _dosingScanning=false;
+function dosingScan(){
+  if(_dosingScanning||state.shotRunning) return;
+  _dosingScanning=true; renderDosingRow();
+  var before=scaleDevices().length;
+  api('GET','/api/v1/devices/scan?connect=false',null,60000)
+    .then(function(list){
+      if(Array.isArray(list)) state.devices=list;
+      var found=scaleDevices().length;
+      toast((found>before)
+        ? t('dosingScanFound').replace('{n}',found-before)
+        : t('dosingScanNone'), 'ok'); },
+      function(e){ toast(t('dosingScanFailed')+' '+apiErrorText(e),'err'); })
+    .then(function(){ _dosingScanning=false; renderDosingRow(); syncDosing(); }); }
 // Only the dosing rows are redrawn: rebuilding the whole page would drop the
 // select the user is in the middle of using.
 function renderDosingRow(){
