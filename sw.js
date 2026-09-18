@@ -4,7 +4,7 @@
  * stale shot or a stale water level would be worse than an honest failure, and
  * the page already knows how to say it cannot reach the machine.
  */
-var VER = '1.153.1';
+var VER = '1.154.0';
 var CACHE = 'liquid-aqua-' + VER;
 var CORE = ['index.html', 'skin-manifest.json', 'inter-latin.woff2', 'inter-latin-ext.woff2'];
 

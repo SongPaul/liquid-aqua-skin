@@ -3346,7 +3346,7 @@ window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requ
 var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='http://'+h+':8080'; return {http:b,ws:b.replace('http','ws')}; })();
 
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
-  connected:false, scaleWeight:null, scaleConnected:false, dosingWeight:null, dosingConnected:false, devices:[], shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null,
+  connected:false, scaleWeight:null, scaleConnected:false, dosingWeight:null, dosingConnected:false, devices:[], shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null, shotPourEnd:null,
   flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], wflow:[], frame:[], steamTemp:[], waterTemp:[],
@@ -3580,6 +3580,12 @@ function onMachineState(ms,prev){
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
   // espresso state ends (after pouringDone returns to idle).
   if(extracting&&!state.shotRunning){ startTimer(); resetChart('espresso'); }
+  // The pour ending is what the log measures to, so it is what the timer stops
+  // at. Only pouringDone says so: the machine dips through preparingForShot
+  // between profile steps, and freezing there would stop the clock mid shot.
+  if(state.shotRunning&&inEspresso){
+    if(extracting) state.shotPourEnd=null;
+    else if(sub==='pouringDone'&&!state.shotPourEnd){ state.shotPourEnd=Date.now(); tick(); } }
   if(!inEspresso&&state.shotActive){ stopTimer(); setTimeout(afterShot,1500); }
   // The machine drops back through preparingForShot for a frame or two as a
   // profile steps from one frame to the next. That is not the shot ending, and
@@ -3956,9 +3962,10 @@ function updateConnUI(s){ var btn=document.getElementById('btnConnect');
   document.getElementById('lblScale').textContent=state.scaleName||'Scale'; }
 
 // ── Timer & chart ───────────────────────────────────────────────────
-function startTimer(){ state.shotStart=Date.now(); if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
+function startTimer(){ state.shotStart=Date.now(); state.shotPourEnd=null; if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
 function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
-function tick(){ if(!state.shotStart) return; var s=Math.floor((Date.now()-state.shotStart)/1000);
+function tick(){ if(!state.shotStart) return;
+  var s=Math.floor(((state.shotPourEnd||Date.now())-state.shotStart)/1000);
   var txt=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
   document.getElementById('timerBig').textContent=txt;
   var m=document.getElementById('monTimer'); if(m) m.textContent=txt; }
