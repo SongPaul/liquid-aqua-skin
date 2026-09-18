@@ -586,6 +586,8 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .rc-mode-head .rc-save{min-height:24px;height:24px;padding:0 10px;font-size:12px;
   line-height:1;flex:none;border-radius:100px}
 .rc-sw{transform:scale(.7);transform-origin:center;flex:none}
+.rc-sw-wrap{display:inline-flex;align-items:center;gap:1px;flex:none;cursor:default}
+.rc-sw-l{font-size:9px;font-weight:700;color:var(--ink-mute);white-space:nowrap}
 .rc-milklog{min-height:20px;padding:0 7px;font-size:10px;border-radius:8px}
 .rc-mode .dose-fn{margin-top:3px}
 .rc-mode-head{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;min-width:0}
@@ -2140,7 +2142,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div id="recipeLive" style="display:none"></div>
         </div>
         <div class="rc-mode" id="recipeSteam" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t" title="">💨</span><div class="preset-chips" id="steamPresets"></div><span class="dose-fn rc-milkfn" id="milkFn"><span class="dose-ico" id="milkIco" hidden>⚖</span><span class="dose-live" id="milkLive" hidden onclick="milkFromScale()">—</span><button class="m-btn rc-milklog" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLogShort"></span></button></span><button class="m-btn rc-save" onclick="saveSteam()" title="">✓</button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="steamOptions">💨</span><div class="preset-chips" id="steamPresets"></div><span class="dose-fn rc-milkfn" id="milkFn"><span class="dose-ico" id="milkIco" hidden>⚖</span><span class="dose-live" id="milkLive" hidden onclick="milkFromScale()">—</span><button class="m-btn rc-milklog" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLogShort"></span></button></span><button class="m-btn rc-save" onclick="saveSteam()" data-i18n-title="saveOptions">✓</button></div>
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="oTargetTemp"></span><span class="lu">°</span></div>
@@ -2169,7 +2171,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </div>
         </div>
         <div class="rc-mode" id="recipeFlush" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t" title="">🚿</span><div class="preset-chips" id="flushPresets"></div><button class="m-btn rc-save" onclick="saveFlush()" title="">✓</button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="flushOptions">🚿</span><div class="preset-chips" id="flushPresets"></div><button class="m-btn rc-save" onclick="saveFlush()" data-i18n-title="saveOptions">✓</button></div>
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span><span class="lu">°</span></div>
@@ -2192,7 +2194,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </div>
         </div>
         <div class="rc-mode" id="recipeWater" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t" title="">💧</span><div class="preset-chips" id="waterPresets"></div><label class="switch rc-sw" title="" id="waterStopRow"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label><button class="m-btn rc-save" onclick="saveWater()" title="">✓</button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="waterOptions">💧</span><div class="preset-chips" id="waterPresets"></div><span class="rc-sw-wrap" id="waterStopRow"><span class="rc-sw-l" data-i18n="stopAtWeight"></span><label class="switch rc-sw"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></span><button class="m-btn rc-save" onclick="saveWater()" data-i18n-title="saveOptions">✓</button></div>
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span><span class="lu">°</span></div>
@@ -3480,6 +3482,7 @@ function applyI18n(){ _lang=resolveLang(prefs.lang||'auto'); document.documentEl
   document.documentElement.dir=I18N_RTL[_lang]?'rtl':'ltr';
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.setAttribute('placeholder',t(el.getAttribute('data-i18n-ph'))); });
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.setAttribute('title',t(el.getAttribute('data-i18n-title'))); });
   // the reading doubles as the tare control, so its name lives in the tooltip
   var wt=document.getElementById('weightTap');
   if(wt){ wt.title=t('tare'); wt.setAttribute('aria-label',t('tare')); }
@@ -4762,13 +4765,13 @@ function lockRecipeHeight(){
   if(!n||n.style.display==='none') return;
   var h=Math.round(n.getBoundingClientRect().height);
   if(h<60) return;
-  // The shot card sets the floor, but the column usually ends short of the
-  // stage: that slack is height a longer pane may take without pushing the
-  // cards under it off the bottom.
+  // The shot card is what a mode pane may not exceed, not what it must be:
+  // held to its exact height the panes carried twenty empty pixels, and the
+  // bean card under them -- the one that grows -- went without.
   if(h===_recipeH) return;
   _recipeH=h;
   var list=document.querySelectorAll('#recipeSteam,#recipeFlush,#recipeWater');
-  for(var i=0;i<list.length;i++) list[i].style.height=_recipeH+'px'; }
+  for(var i=0;i<list.length;i++){ list[i].style.height=''; list[i].style.maxHeight=_recipeH+'px'; } }
 function setRecipeMode(m){
   if(!RECIPE_PANES[m]) m='espresso';
   if(m!=='espresso') lockRecipeHeight();
@@ -4801,16 +4804,18 @@ function openWaterModal(){ syncWaterModal(); renderPresets('water');
 // gateway does that only outside full mode and only with a scale, so when
 // either is missing the control says which one rather than lying about it.
 function syncWaterStop(){
-  var sw=document.getElementById('waterStopSw'), hint=document.getElementById('waterStopHint');
-  if(!sw||!hint) return;
+  var sw=document.getElementById('waterStopSw');
+  if(!sw) return;
+  var hint=document.getElementById('waterStopHint');
   var full=(gwSettings.gatewayMode==='full');
   var on=(gwSettings.stopHotWaterAtWeight!==false);
   var usable=!full&&state.scaleConnected;
   sw.checked=usable&&on;
   sw.disabled=!usable;
-  hint.textContent=full?t('stopNeedsTracking'):(!state.scaleConnected?t('stopNeedsScale'):t('stopAtWeightHint'));
+  var why=full?t('stopNeedsTracking'):(!state.scaleConnected?t('stopNeedsScale'):t('stopAtWeightHint'));
+  if(hint) hint.textContent=why;
   var row=document.getElementById('waterStopRow');
-  if(row) row.style.opacity=usable?'':'0.5'; }
+  if(row){ row.style.opacity=usable?'':'0.5'; row.title=t('stopAtWeight')+' \u2014 '+why; } }
 // The machine's own shot settings, as last reported.
 // Settings are a page of switches, and a toast for each one stacks notices over
 // the thing being changed. They report here instead: a line in the page's own
