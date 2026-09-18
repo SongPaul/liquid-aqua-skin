@@ -1031,6 +1031,12 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
 .cs-way-n{flex:none;width:22px;height:22px;border-radius:100px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .cs-note{font-size:12px;font-weight:700;line-height:1.6;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:12px;padding:10px 12px;word-break:break-all}
 .cs-note[hidden]{display:none}
+/* the warning colour is for the thing that is wrong; these are just help */
+.cs-tips{font-size:12px;line-height:1.6;color:var(--ink-mute);background:var(--glass-hi);
+  border:1px solid var(--glass-line);border-radius:12px;padding:10px 12px;overflow-wrap:anywhere}
+.cs-tips[hidden]{display:none}
+#phoneShell .cs-tips{color:rgba(255,255,255,.84);background:rgba(255,255,255,.13);
+  border-color:rgba(255,255,255,.28)}
 .mb-actions .m-btn{flex:1;max-width:none;min-height:52px;font-size:14px}
 .mb-analyze{width:100%;min-height:54px;font-size:15px}
 /* The phone gets the same glass the tablet does, and the same one at night --
@@ -1150,6 +1156,9 @@ body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7
   box-shadow:0 6px 18px rgba(20,10,54,.3)}
 .ph-home .mb-sec-h{margin-bottom:3px}
 .ph-home-url{margin-top:8px;font-size:11px;overflow-wrap:anywhere;opacity:.8}
+.cs-tip{margin-top:6px}
+.cs-tip:first-child{margin-top:0}
+.cs-tip::before{content:"\00b7 ";opacity:.7}
 .pl-flat{cursor:default}
 .pl-end{padding:6px 0 2px;text-align:center;font-size:12px;color:var(--ink-mute)}
 #phoneShell .pl-end{color:rgba(255,255,255,.7)}
@@ -2427,7 +2436,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 
     <div class="cs-way">
       <div class="cs-way-h"><span class="cs-way-n">2</span><span data-i18n="csUrlTitle">An IP-camera app's address</span></div>
-      <div class="mb-sub" data-i18n="csUrlDesc">Needs an app on the phone -- IP Webcam, DroidCam -- but no browser setting. Start the app, then type the address it shows with /video on the end.</div>
+      <div class="mb-sub" id="csUrlDesc" data-i18n="csUrlDesc">Needs an app on the phone -- IP Webcam, DroidCam -- but no browser setting. Start the app, then type the address it shows with /video on the end.</div>
+      <div class="cs-tips" id="csIosTips" hidden></div>
       <div class="field"><label data-i18n="camUrlName">Stream address</label>
         <input id="csUrl" placeholder="http://192.168.0.20:8080/video" inputmode="url" autocapitalize="off" autocorrect="off"></div>
       <div class="mb-actions"><button class="m-btn" id="csSaveBtn" onclick="csSave()" data-i18n="camSetupSave">Send to the machine</button></div>
@@ -2647,6 +2657,10 @@ var I18N={
     csWaiting:'Waiting for the machine\u2026', csLiveOn:'Live \u2014 the machine has the picture',
     csLiveStopped:'Stopped', csLiveFailed:'The connection failed',
     csDenied:'Camera permission was refused', csNoCamera:'No camera could be opened',
+    csUrlDescIos:'On an iPhone an app makes the phone a camera server \u2014 IP Camera Lite (free) or SimpleIPCamera. Start it and type in the address it shows.',
+    csIosMjpeg:'It has to be the MJPEG address, not the RTSP one. It usually ends in /video.mjpg or /videofeed.',
+    csIosAuth:'Turn the app\u2019s login off \u2014 IP Camera Lite starts at admin/admin. A stream behind a password never appears here.',
+    csIosAwake:'Leave the app in front, auto-lock off, phone on a charger. iOS puts a backgrounded app to sleep and the picture stops.',
     csNoSecureIos:'On an iPhone no browser opens a camera on a plain http:// page \u2014 not Chrome, not Safari, and there is no setting anywhere that changes it. Use way 2 below, which works.',
     csNoSecure:'This browser gives no camera to a plain http:// page. In Chrome open chrome://flags/#unsafely-treat-insecure-origin-as-secure, add the address below, set it to Enabled and restart Chrome, then come back here. Or use way 2, which needs no browser setting:',
     camError:'The stream could not be reached',
@@ -2933,6 +2947,10 @@ var I18N={
     csWaiting:'머신 응답 기다리는 중…', csLiveOn:'연결됨 — 머신에 화면이 나옵니다',
     csLiveStopped:'중지했습니다', csLiveFailed:'연결에 실패했습니다',
     csDenied:'카메라 권한이 거부됐습니다', csNoCamera:'카메라를 열지 못했습니다',
+    csUrlDescIos:'아이폰은 앱이 폰을 카메라 서버로 만들어 줍니다 — IP Camera Lite(무료) 나 SimpleIPCamera. 앱을 실행한 뒤 그 앱이 보여주는 주소를 넣으세요.',
+    csIosMjpeg:'RTSP 주소 말고 MJPEG 주소여야 합니다. 보통 /video.mjpg 나 /videofeed 로 끝납니다.',
+    csIosAuth:'앱의 로그인을 꺼주세요 — IP Camera Lite 는 처음에 admin/admin 입니다. 비밀번호가 걸린 영상은 여기에 뜨지 않습니다.',
+    csIosAwake:'앱을 화면 앞에 둔 채로, 자동 잠금을 끄고 충전기에 꽂아 두세요. 아이폰은 뒤로 넘어간 앱을 재워 영상이 끊깁니다.',
     csNoSecureIos:'아이폰에서는 어느 브라우저도 http:// 페이지에 카메라를 열어주지 않습니다. 크롬이든 사파리든 바꿀 수 있는 설정이 없습니다. 아래 2번 방법을 쓰세요 — 그쪽은 됩니다.',
     csNoSecure:'브라우저가 http:// 페이지에는 카메라를 주지 않습니다. 크롬에서 chrome://flags/#unsafely-treat-insecure-origin-as-secure 를 열어 아래 주소를 등록하고 Enabled로 바꾼 뒤 크롬을 재시작하고 다시 오세요. 브라우저 설정 없이 쓰려면 아래 2번 방법을 쓰시면 됩니다:',
     camError:'스트림에 연결하지 못했습니다',
@@ -13760,9 +13778,25 @@ function phVizSave(){
       if(bad) vizSetCreds(null,null);
       phVizStat(bad?t('phVizBad'):t('phVizNoNet'),true); }); }
 function initPhoneSet(){ mbSyncKeyBox(); }
+// The apps that do this, and the things that stop them working, are not the
+// same on an iPhone as on an Android phone. Naming the Android two to someone
+// holding an iPhone is naming nothing.
+var CS_IOS_TIPS=['csIosMjpeg','csIosAuth','csIosAwake'];
+function csWayTwo(){
+  var tips=document.getElementById('csIosTips'), desc=document.getElementById('csUrlDesc');
+  var url=document.getElementById('csUrl');
+  if(!tips) return;
+  var ios=(phPlatform()==='ios');
+  tips.hidden=!ios;
+  if(desc) desc.textContent=t(ios?'csUrlDescIos':'csUrlDesc');
+  if(url) url.placeholder='http://192.168.0.20:8080/video'+(ios?'.mjpg':'');
+  if(!ios) return;
+  tips.hidden=false;
+  tips.innerHTML=CS_IOS_TIPS.map(function(k){
+    return '<div class="cs-tip">'+escapeHtml(t(k))+'</div>'; }).join(''); }
 function initPhoneCam(){
   // whatever the machine is already pointed at, so it can be corrected
-  csSecureCheck();
+  csSecureCheck(); csWayTwo();
   api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
     var url=(typeof v==='string'?v:(v&&v.value)||'');
     if(url) document.getElementById('csUrl').value=url; }).catch(function(){}); }
@@ -13993,6 +14027,8 @@ function phoneGo(tab){
   if(tab==='status'){ phStatusPoll(true); psWaterOpen(); psTankStart(); }
   else { phStatusPoll(false); psTankStop(); }
   if(tab==='set'){ phVizFill(); phHomeCard(); }
+  // the description is data-i18n, so a language change puts the other one back
+  if(tab==='cam') csWayTwo();
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
     if(tab==='bean') initPhoneBean();
     else if(tab==='cam') initPhoneCam();
