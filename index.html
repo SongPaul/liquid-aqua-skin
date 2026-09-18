@@ -2782,7 +2782,8 @@ var I18N={
     dosingScanFailed:'The search failed:',
     dosingScale:'Dosing scale', dosingScaleDesc:'A second scale to weigh the dose on. It is held open for this skin only, is never used to weigh a shot, and is let go when the app closes.',
     dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
-    dosingReading:'Dosing reading', dosingWaiting:'Waiting for the scale', dosingTare:'Zero',
+    dosingReading:'Dosing reading',
+    dosingTareHint:'The \u2696 beside the dose on the main screen zeroes it too, without coming in here.', dosingWaiting:'Waiting for the scale', dosingTare:'Zero',
     dosingHeld:'Dosing scale connected', dosingHoldFailed:'Could not hold the dosing scale',
     dosingUnsupported:'This gateway is too old for a second scale. Update Decaid.',
     favTag:'Favourites', noTag:'No tag', loadingCenter:'Loading this one…',
@@ -3087,7 +3088,8 @@ var I18N={
     dosingScanFailed:'찾기에 실패했습니다:',
     dosingScale:'도징 저울', dosingScaleDesc:'도징 무게를 재는 두 번째 저울입니다. 이 스킨을 위해서만 잡아 두며, 추출 계량에는 쓰이지 않고 앱을 닫으면 놓습니다.',
     dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
-    dosingReading:'도징 측정값', dosingWaiting:'저울을 기다리는 중', dosingTare:'영점',
+    dosingReading:'도징 측정값',
+    dosingTareHint:'메인 화면 도스 옆의 ⚖ 를 눌러도 영점이 잡힙니다. 여기까지 들어오지 않아도 됩니다.', dosingWaiting:'저울을 기다리는 중', dosingTare:'영점',
     dosingHeld:'도징 저울을 연결했습니다', dosingHoldFailed:'도징 저울을 잡지 못했습니다',
     dosingUnsupported:'이 게이트웨이는 두 번째 저울을 지원하지 않습니다. Decaid를 업데이트하세요.',
     favTag:'즐겨찾기', noTag:'태그 없음', loadingCenter:'이것을 불러오는 중…',
@@ -5658,7 +5660,8 @@ function dosingStatusRow(){
     ? convWeight(state.dosingWeight).toFixed(1)+weightUnitLabel()
     : t('dosingWaiting');
   return '<div class="set-row"><div class="set-info"><div class="set-name">'+t('dosingReading')+'</div>'
-    +'<div class="set-desc">'+escapeHtml(val)+'</div></div>'
+    +'<div class="set-desc">'+escapeHtml(val)+'</div>'
+    +'<div class="set-desc">'+escapeHtml(t('dosingTareHint'))+'</div></div>'
     +'<button class="m-btn"'+(state.dosingConnected?'':' disabled')+' onclick="tareDosingScale()">'+t('dosingTare')+'</button></div>'; }
 // Nothing is drawn on a gateway that cannot hold a second scale: an empty
 // picker is worse than no picker.
