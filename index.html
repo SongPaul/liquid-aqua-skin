@@ -2504,6 +2504,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           <option value="gemini">Gemini</option><option value="claude">Claude</option><option value="openai">GPT</option></select></div>
       <div class="field"><label id="mbKeyLbl" data-i18n="mbKeyLabel">Gemini API key (stored on this phone)</label><input type="password" id="mbKey" placeholder="AIza…"></div>
       <button class="m-btn primary mb-analyze" onclick="mbSaveKey()" data-i18n="mbSaveKey">Save key</button>
+      <button class="m-btn mb-analyze" id="mbKeyBtn" onclick="mbKeyCheck()" style="margin-top:8px" data-i18n="keyCheck">Check the key</button>
+      <div class="set-desc" id="mbKeyStat" style="margin-top:8px"></div>
       <div class="set-desc" style="margin-top:10px" data-i18n="aiKeyNote"></div>
     </div>
     <div class="mb-card" id="phVizBox" style="margin-top:14px">
@@ -2789,6 +2791,11 @@ var I18N={
     aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
     aiClassifyFailed:'Classification failed:', aiNeedKey:'Set a {n} API key in Settings',
     aiScanFailed:'{n} could not read it \u2014 {e}',
+    keyCheck:'Check the key', keyChecking:'Checking\u2026',
+    keyOk:'{n} accepted it \u2014 {c} models in reach',
+    keyRefused:'{n} refused this key', keyNoNet:'Could not reach {n}',
+    keyErr:'{n} answered with an error \u2014 {e}',
+    keyEmpty:'No key to check', keyTimeout:'No answer in time',
     actEspresso:'Espresso', actWater:'Hot water',
     monAuto:'Full-screen monitor', monAutoDesc:'Which actions open the monitor by themselves. Tap the graph to open it at any time.',
     stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
@@ -3080,6 +3087,11 @@ var I18N={
     aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
     aiClassifyFailed:'분류 실패:', aiNeedKey:'설정에서 {n} API 키를 입력하세요',
     aiScanFailed:'{n} 읽기 실패 — {e}',
+    keyCheck:'키 확인', keyChecking:'확인 중…',
+    keyOk:'{n} 에서 확인됨 — 모델 {c}개',
+    keyRefused:'{n} 가 이 키를 거부했습니다', keyNoNet:'{n} 에 닿지 않습니다',
+    keyErr:'{n} 가 오류를 돌려줍니다 — {e}',
+    keyEmpty:'확인할 키가 없습니다', keyTimeout:'응답이 없습니다',
     actEspresso:'에스프레소', actWater:'온수',
     monAuto:'전체화면 모니터', monAutoDesc:'어떤 동작에서 모니터를 자동으로 열지 선택합니다. 그래프를 누르면 언제든 열 수 있습니다.',
     stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
@@ -5551,6 +5563,9 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
       openai:{id:'setOpenaiKey',save:'saveOpenaiKey',ph:'openaiPh',get:'openaiGet',val:prefs.openaiKey,url:'https://platform.openai.com/api-keys'}};
     var ku=KEYUI[prov];
     keyPane+='<div class="set-row" style="display:block"><div class="field" style="margin:0"><input type="password" id="'+ku.id+'" placeholder="'+escapeAttr(t(ku.ph))+'" value="'+escapeAttr(ku.val||'')+'" oninput="'+ku.save+'(this.value)"></div><div class="set-desc" style="margin-top:7px;text-align:right"><a href="'+ku.url+'" target="_blank" style="color:var(--accent)">'+t(ku.get)+' ↗</a></div></div>';
+    keyPane+='<div class="set-row" style="display:block"><button class="m-btn" id="aiKeyBtn"'
+      +' onclick="spKeyCheck(\''+prov+'\',\''+ku.id+'\')">'+escapeHtml(t('keyCheck'))+'</button>'
+      +'<div class="set-desc" id="aiKeyStat" style="margin-top:8px"></div></div>';
     keyPane+='<div class="set-desc" style="margin-top:10px">'+t('aiKeyNote')+'</div>';
     var memPane='<div class="set-desc">'+escapeHtml(t('aiMemoryDesc'))+'</div>'
       +'<div id="aiFbBox">'+aiFbListHtml()+'</div>';
@@ -5565,6 +5580,16 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
   if(spCat==='updates'){ loadFirmware(); renderAppUpdate(); renderSkinBox(); }
   if(spCat==='phone') renderPhoneQrBox();
 }
+function spKeyCheck(prov,inputId){
+  var el=document.getElementById(inputId), stat=document.getElementById('aiKeyStat');
+  var btn=document.getElementById('aiKeyBtn');
+  if(!stat) return;
+  stat.style.color=''; stat.textContent=t('keyChecking');
+  if(btn){ btn.disabled=true; btn.setAttribute('aria-busy','true'); }
+  function done(){ if(btn){ btn.disabled=false; btn.removeAttribute('aria-busy'); } }
+  aiKeyCheck(prov,el&&el.value).then(function(r){
+      stat.textContent=tAi('keyOk').replace('{c}',r.models); done(); },
+    function(e){ stat.textContent=aiKeyMsg(e); stat.style.color='var(--red)'; done(); }); }
 function opt(val,label,cur){ return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+label+'</option>'; }
 function dosingOptions(){
   var cur=dosingId(), h=opt('',t('dosingNone'),cur), seen=false;
@@ -9099,6 +9124,49 @@ var AI_PROVIDERS=['gemini','claude','openai'];
 var AI_NAMES={gemini:'Gemini',claude:'Claude',openai:'GPT'};
 function aiProvider(){ return AI_PROVIDERS.indexOf(prefs.aiProvider)>=0?prefs.aiProvider:'gemini'; }
 function aiName(){ return AI_NAMES[aiProvider()]; }
+// Whether a key works is knowable before anything is asked of it, and knowable
+// for nothing: every provider will list what the key is allowed to see. A key
+// that has only been typed in is not yet an answer, and the page that saves it
+// is the right place to find that out -- not the bean label an hour later.
+var CLAUDE_MODELS_API='https://api.anthropic.com/v1/models';
+function aiKeyCheck(p,key){
+  key=String(key||'').trim();
+  var url, o={};
+  if(!key){ var ee=new Error('empty'); ee.kind='empty'; return Promise.reject(ee); }
+  if(p==='gemini') url=GEMINI_API+'/models?key='+encodeURIComponent(key);
+  else if(p==='openai'){ url=OPENAI_MODELS_API; o.headers={'Authorization':'Bearer '+key}; }
+  else { url=CLAUDE_MODELS_API;
+    o.headers={'x-api-key':key,'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'}; }
+  var ac=null,timer=null;
+  if(typeof AbortController!=='undefined'){ ac=new AbortController(); o.signal=ac.signal;
+    timer=setTimeout(function(){ ac.abort(); },15000); }
+  function fail(kind,detail){ var e=new Error(kind); e.kind=kind; e.detail=detail||''; return e; }
+  return fetch(url,o).then(function(r){
+      if(timer) clearTimeout(timer);
+      if(r.status===401||r.status===403) return r.text().then(function(txt){
+        throw fail('auth',aiErrText(txt)); },function(){ throw fail('auth'); });
+      if(!r.ok) return r.text().then(function(txt){
+        throw fail('http','HTTP '+r.status+(aiErrText(txt)?(' \u00b7 '+aiErrText(txt)):'')); },
+        function(){ throw fail('http','HTTP '+r.status); });
+      return r.json(); },
+    function(e){ if(timer) clearTimeout(timer);
+      throw fail((e&&e.name==='AbortError')?'timeout':'net'); })
+    .then(function(j){
+      var list=(j&&(j.models||j.data))||[];
+      return { models:list.length }; }); }
+function aiErrText(txt){
+  try{ var j=JSON.parse(txt);
+    return String((j&&j.error&&(j.error.message||j.error.type))||(j&&j.message)||'').slice(0,120); }
+  catch(_){ return String(txt||'').trim().slice(0,120); } }
+function aiKeyMsg(e){
+  var k=(e&&e.kind)||'';
+  if(k==='empty') return t('keyEmpty');
+  if(k==='auth') return tAi('keyRefused')+((e.detail)?(' \u00b7 '+e.detail):'');
+  if(k==='timeout') return t('keyTimeout');
+  if(k==='net') return tAi('keyNoNet');
+  // an error from the far end is the far end's, not the key's
+  return tAi('keyErr').replace('{e}',(e&&e.detail)||'error'); }
 // The lines that name the service read it from the setting rather than assuming.
 function tAi(k){ return t(k).replace('{n}',aiName()); }
 function aiKeyFor(p){
@@ -9664,9 +9732,22 @@ function mbShowKeyBox(){
   var st=document.getElementById('mbStatus'); if(st) st.textContent=tAi('mbNeedKey');
   if(typeof phoneGo==='function') phoneGo('set');
   mbSyncKeyBox(); }
+function mbKeyCheck(){
+  var el=document.getElementById('mbKey'), stat=document.getElementById('mbKeyStat');
+  var btn=document.getElementById('mbKeyBtn');
+  if(!stat) return;
+  // the box is hidden once a key is saved, so an empty field means the saved one
+  var v=(el&&el.value.trim())||mbGetKey();
+  stat.style.color=''; stat.textContent=t('keyChecking');
+  if(btn){ btn.disabled=true; btn.setAttribute('aria-busy','true'); }
+  function done(){ if(btn){ btn.disabled=false; btn.removeAttribute('aria-busy'); } }
+  aiKeyCheck(aiProvider(),v).then(function(r){
+      stat.textContent=tAi('keyOk').replace('{c}',r.models); done(); },
+    function(e){ stat.textContent=aiKeyMsg(e); stat.style.color='#fecaca'; done(); }); }
 function mbSaveKey(){ var v=document.getElementById('mbKey').value.trim(); if(!v) return;
   try{ localStorage.setItem(mbStoreKey(aiProvider()),v); }catch(_){}
-  document.getElementById('mbKeyBox').style.display='none'; document.getElementById('mbStatus').textContent=t('mbKeySaved'); }
+  document.getElementById('mbStatus').textContent=t('mbKeySaved');
+  mbKeyCheck(); }
 
 // ── QR code (qrcode-generator by Kazuhiko Arase, MIT) ──────────────
 //---------------------------------------------------------------------
