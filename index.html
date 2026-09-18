@@ -549,6 +549,10 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-adj{display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0}
 .dose-num{font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
 .dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:3px;min-height:14px;line-height:14px;display:flex;align-items:center;justify-content:center;gap:5px}
+.dose-lbl .lu,.dose-lbl .dose-live{text-transform:none}
+/* once the mark is something to press, the row is a control and gets the room
+   a control needs -- rather than a press target reaching into its neighbours */
+.dose-lbl.has-tare{min-height:34px}
 .dose-lbl .lu{font-weight:800;color:var(--accent);opacity:.6}
 /* Only drawn while a dosing scale is reporting. Press it to take the reading into the dose, which is the same thing holding the dose does. */
 .dose-live{font-size:10px;font-weight:800;line-height:14px;color:var(--accent2);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:0 6px;cursor:pointer;white-space:nowrap}
@@ -565,8 +569,8 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
 /* a mark that does something needs somewhere to press, not just somewhere to
    look; the row is 14px tall, so the target grows without moving the text */
-.dose-ico.tap{cursor:pointer;opacity:1;border-radius:10px;padding:10px 11px;margin:-10px -5px;
-  border:1px solid transparent;transition:background .15s}
+.dose-ico.tap{cursor:pointer;opacity:1;font-size:14px;border-radius:10px;padding:9px 11px;margin:0;
+  border:1px solid var(--ctl-edge);background-color:var(--ctl-face);transition:background .15s}
 .dose-ico.tap:hover{background-color:var(--ctl-face)}
 .recipe .grind-val:hover{background:transparent}
 .dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
@@ -4334,6 +4338,10 @@ function syncDoseTake(){ var i=document.getElementById('doseIco'); if(!i) return
   i.classList.toggle('tap',tarable);
   i.onclick=tarable?function(e){ e.stopPropagation(); tareDosingScale(); }:null;
   i.title=tarable?t('doseTareHint'):'';
+  var lbl=i.parentNode; if(lbl) lbl.classList.toggle('has-tare',tarable);
+  // "Dose g 12g" says gram twice. The reading carries the unit while it is
+  // there; the bare one comes back when it is not.
+  var u=document.getElementById('doseInUnit'); if(u) u.hidden=tarable;
   var el=document.getElementById('doseIn');
   if(el) el.title=live?t('doseHoldHint'):''; }
 // tap types it, hold takes it off the scale -- the same two gestures the steam,
