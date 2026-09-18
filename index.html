@@ -554,6 +554,14 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-live{font-size:10px;font-weight:800;line-height:14px;color:var(--accent2);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:0 6px;cursor:pointer;white-space:nowrap}
 .dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid transparent;background-color:transparent;transition:background .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
+.rc-mode{display:flex;flex-direction:column;gap:9px;padding:2px 0}
+.rc-mode-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rc-mode-t{font-size:14px;font-weight:800}
+.rc-back{min-height:34px;padding:0 12px;font-size:12px}
+.rc-mode-acts{display:flex;justify-content:flex-end;gap:8px}
+.rc-mode .opt-row{padding:5px 0}
+.rc-milk-ctrl{display:flex;align-items:center;gap:7px}
+.rc-milk-ctrl .dose-num{min-height:38px;min-width:76px}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
 /* a mark that does something needs somewhere to press, not just somewhere to
    look; the row is 14px tall, so the target grows without moving the text */
@@ -2086,8 +2094,45 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </div>
         </div>
         </div>
-        </div>
         <div id="recipeLive" style="display:none"></div>
+        </div>
+        <div class="rc-mode" id="recipeSteam" style="display:none">
+          <div class="rc-mode-head"><span class="rc-mode-t"><span data-i18n="steamOptions"></span></span><button class="m-btn rc-back" onclick="setRecipeMode('espresso')">← <span data-i18n="rcBackShot"></span></button></div>
+    <div class="preset-bar"><span class="preset-lbl" data-i18n="presets"></span><div class="preset-chips" id="steamPresets"></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="oTargetTemp"></span><span class="hint" data-i18n="hSteamTemp"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamTemp" min="0" max="165" step="1" oninput="optChange('steamTemp',this.value)"><span class="opt-val"><span id="steamTempV">150</span>°</span></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="oDuration"></span><span class="hint" data-i18n="hSteamDur"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamDur" min="0" max="120" step="1" oninput="optChange('steamDur',this.value)"><span class="opt-val"><span id="steamDurV">50</span>s</span></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="flow"></span><span class="hint" data-i18n="hSteamFlow"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamFlow" min="0" max="2.5" step="0.1" oninput="optChange('steamFlow',this.value)"><span class="opt-val"><span id="steamFlowV">0.8</span></span></div></div>
+          <div class="opt-row rc-milk" id="milkRow">
+            <div class="opt-label"><span data-i18n="milkLbl"></span><span class="hint" data-i18n="milkHint"></span></div>
+            <div class="opt-ctrl rc-milk-ctrl">
+              <button class="ms-btn" onclick="adjustMilk(-10)">−</button>
+              <div class="dose-num tap" id="milkNum" onclick="openMilkKeypad()"><span id="milkVal">—</span></div>
+              <button class="ms-btn" onclick="adjustMilk(10)">+</button>
+              <span class="dose-ico" id="milkIco" hidden>⚖</span>
+              <span class="dose-live" id="milkLive" hidden onclick="milkFromScale()">—</span>
+            </div>
+          </div>
+          <div class="rc-mode-acts"><button class="m-btn" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLog"></span></button></div>
+          <div class="rc-mode-acts"><button class="m-btn primary" onclick="saveSteam()"><span data-i18n="saveOptions"></span></button></div>
+        </div>
+        <div class="rc-mode" id="recipeFlush" style="display:none">
+          <div class="rc-mode-head"><span class="rc-mode-t"><span data-i18n="flushOptions"></span></span><button class="m-btn rc-back" onclick="setRecipeMode('espresso')">← <span data-i18n="rcBackShot"></span></button></div>
+    <div class="preset-bar"><span class="preset-lbl" data-i18n="presets"></span><div class="preset-chips" id="flushPresets"></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="oTemp"></span><span class="hint" data-i18n="hFlushTemp"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushTemp" min="60" max="95" step="1" oninput="optChange('flushTemp',this.value)"><span class="opt-val"><span id="flushTempV">88</span>°</span></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="oDuration"></span><span class="hint" data-i18n="hFlushDur"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushDur" min="1" max="20" step="1" oninput="optChange('flushDur',this.value)"><span class="opt-val"><span id="flushDurV">10</span>s</span></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="flow"></span><span class="hint" data-i18n="hFlushFlow"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushFlow" min="1" max="10" step="0.5" oninput="optChange('flushFlow',this.value)"><span class="opt-val"><span id="flushFlowV">6.0</span></span></div></div>
+          <div class="rc-mode-acts"><button class="m-btn primary" onclick="saveFlush()"><span data-i18n="saveOptions"></span></button></div>
+        </div>
+        <div class="rc-mode" id="recipeWater" style="display:none">
+          <div class="rc-mode-head"><span class="rc-mode-t"><span data-i18n="waterOptions"></span></span><button class="m-btn rc-back" onclick="setRecipeMode('espresso')">← <span data-i18n="rcBackShot"></span></button></div>
+    <div class="preset-bar"><span class="preset-lbl" data-i18n="presets"></span><div class="preset-chips" id="waterPresets"></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="oTemp"></span><span class="hint" data-i18n="hWaterTemp"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterTemp" min="20" max="100" step="1" oninput="optChange('waterTemp',this.value)"><span class="opt-val"><span id="waterTempV">75</span>°</span></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="volume"></span><span class="hint" data-i18n="hWaterVol"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterVol" min="0" max="500" step="5" oninput="optChange('waterVol',this.value)"><span class="opt-val"><span id="waterVolV">200</span>ml</span></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="oDuration"></span><span class="hint" data-i18n="hWaterDur"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterDur" min="0" max="120" step="1" oninput="optChange('waterDur',this.value)"><span class="opt-val"><span id="waterDurV">30</span>s</span></div></div>
+    <div class="opt-row"><div class="opt-label"><span data-i18n="flow"></span><span class="hint" data-i18n="hWaterFlow"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterFlow" min="1" max="10" step="0.5" oninput="optChange('waterFlow',this.value)"><span class="opt-val"><span id="waterFlowV">10.0</span></span></div></div>
+    <div class="opt-row" id="waterStopRow"><div class="opt-label"><span data-i18n="stopAtWeight">Stop at weight</span><span class="hint" id="waterStopHint"></span></div><div class="opt-ctrl"><label class="switch"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></div></div>
+          <div class="rc-mode-acts"><button class="m-btn primary" onclick="saveWater()"><span data-i18n="saveOptions"></span></button></div>
+        </div>
       </div>
 
     <div class="bean-info glass">
@@ -2218,42 +2263,10 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 </div>
 
 <!-- ── Steam modal ─────────────────────────────────────────────── -->
-<div class="overlay" id="steamOverlay" onclick="closeModal(event,'steamOverlay')">
-  <div class="modal"><div class="modal-head"><div class="modal-title">💨 Steam Options</div><button class="modal-close" onclick="closeModal(null,'steamOverlay')">×</button></div>
-  <div class="modal-body">
-    <div class="preset-bar"><span class="preset-lbl">Presets</span><div class="preset-chips" id="steamPresets"></div></div>
-    <div class="opt-row"><div class="opt-label">Target Temperature<span class="hint">135–160 °C · 0 = off</span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamTemp" min="0" max="165" step="1" oninput="optChange('steamTemp',this.value)"><span class="opt-val"><span id="steamTempV">150</span>°</span></div></div>
-    <div class="opt-row"><div class="opt-label">Duration<span class="hint">max steaming seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamDur" min="0" max="120" step="1" oninput="optChange('steamDur',this.value)"><span class="opt-val"><span id="steamDurV">50</span>s</span></div></div>
-    <div class="opt-row"><div class="opt-label">'+t('flow')+'<span class="hint">steam flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamFlow" min="0" max="2.5" step="0.1" oninput="optChange('steamFlow',this.value)"><span class="opt-val"><span id="steamFlowV">0.8</span></span></div></div>
-    <div class="modal-actions" id="steamActions"><button class="m-btn" onclick="closeModal(null,'steamOverlay')">Close</button><button class="m-btn primary" onclick="saveSteam()">Save Options</button></div>
-  </div></div>
-</div>
 
 <!-- ── Flush modal ─────────────────────────────────────────────── -->
-<div class="overlay" id="flushOverlay" onclick="closeModal(event,'flushOverlay')">
-  <div class="modal"><div class="modal-head"><div class="modal-title">🚿 Flush Options</div><button class="modal-close" onclick="closeModal(null,'flushOverlay')">×</button></div>
-  <div class="modal-body">
-    <div class="preset-bar"><span class="preset-lbl">Presets</span><div class="preset-chips" id="flushPresets"></div></div>
-    <div class="opt-row"><div class="opt-label">Temperature<span class="hint">flush water temperature</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushTemp" min="60" max="95" step="1" oninput="optChange('flushTemp',this.value)"><span class="opt-val"><span id="flushTempV">88</span>°</span></div></div>
-    <div class="opt-row"><div class="opt-label">Duration<span class="hint">flush seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushDur" min="1" max="20" step="1" oninput="optChange('flushDur',this.value)"><span class="opt-val"><span id="flushDurV">10</span>s</span></div></div>
-    <div class="opt-row"><div class="opt-label">'+t('flow')+'<span class="hint">flush flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushFlow" min="1" max="10" step="0.5" oninput="optChange('flushFlow',this.value)"><span class="opt-val"><span id="flushFlowV">6.0</span></span></div></div>
-    <div class="modal-actions" id="flushActions"><button class="m-btn" onclick="closeModal(null,'flushOverlay')">Close</button><button class="m-btn primary" onclick="saveFlush()">Save Options</button></div>
-  </div></div>
-</div>
 
 <!-- ── Hot Water modal ─────────────────────────────────────────── -->
-<div class="overlay" id="waterOverlay" onclick="closeModal(event,'waterOverlay')">
-  <div class="modal"><div class="modal-head"><div class="modal-title">💧 Hot Water Options</div><button class="modal-close" onclick="closeModal(null,'waterOverlay')">×</button></div>
-  <div class="modal-body">
-    <div class="preset-bar"><span class="preset-lbl">Presets</span><div class="preset-chips" id="waterPresets"></div></div>
-    <div class="opt-row"><div class="opt-label">Temperature<span class="hint">hot water temperature</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterTemp" min="20" max="100" step="1" oninput="optChange('waterTemp',this.value)"><span class="opt-val"><span id="waterTempV">75</span>°</span></div></div>
-    <div class="opt-row"><div class="opt-label">Volume<span class="hint">target milliliters</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterVol" min="0" max="500" step="5" oninput="optChange('waterVol',this.value)"><span class="opt-val"><span id="waterVolV">200</span>ml</span></div></div>
-    <div class="opt-row"><div class="opt-label">Duration<span class="hint">max seconds</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterDur" min="0" max="120" step="1" oninput="optChange('waterDur',this.value)"><span class="opt-val"><span id="waterDurV">30</span>s</span></div></div>
-    <div class="opt-row"><div class="opt-label">'+t('flow')+'<span class="hint">flow rate</span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterFlow" min="1" max="10" step="0.5" oninput="optChange('waterFlow',this.value)"><span class="opt-val"><span id="waterFlowV">10.0</span></span></div></div>
-    <div class="opt-row" id="waterStopRow"><div class="opt-label"><span data-i18n="stopAtWeight">Stop at weight</span><span class="hint" id="waterStopHint"></span></div><div class="opt-ctrl"><label class="switch"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></div></div>
-    <div class="modal-actions" id="waterActions"><button class="m-btn" onclick="closeModal(null,'waterOverlay')">Close</button><button class="m-btn primary" onclick="saveWater()">Save Options</button></div>
-  </div></div>
-</div>
 
 <!-- ── Bean / Grinder modal ────────────────────────────────────── -->
 <div class="overlay" id="beanOverlay" onclick="closeModal(event,'beanOverlay')">
@@ -2563,6 +2576,16 @@ var I18N={
     machine:'Machine', scale:'Scale', group:'Group', mix:'Mix', tank:'Tank',
     doseFromScaleOk:'Dose taken from the scale',
     doseNoScale:'The scale has not sent a reading',
+    oTargetTemp:'Target temperature', oTemp:'Temperature', oDuration:'Duration',
+    hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 = off', hSteamDur:'max steaming seconds', hSteamFlow:'steam flow rate',
+    hFlushTemp:'flush water temperature', hFlushDur:'flush seconds', hFlushFlow:'flush flow rate',
+    hWaterTemp:'hot water temperature', hWaterVol:'target millilitres', hWaterDur:'max seconds', hWaterFlow:'flow rate',
+    rcBackShot:'Shot',
+    milkLbl:'Milk', milkHint:'weighed on the dosing scale',
+    milkLog:'Record on the last shot',
+    milkConfirm:'Record {v}g of milk on the shot pulled at {w}?',
+    milkNoteKey:'Milk', milkNote:'Milk {v}g',
+    milkLogged:'Recorded on the {w} shot', milkFailed:'Could not record it:',
     doseHoldHint:'Tap to type it, hold to take it off the scale',
     doseTareHint:'Zero the dosing scale',
     tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
@@ -2868,6 +2891,16 @@ var I18N={
     machine:'머신', scale:'저울', group:'그룹', mix:'믹스', tank:'물탱크',
     doseFromScaleOk:'저울값을 도징으로 넣었습니다',
     doseNoScale:'저울이 값을 보내지 않습니다',
+    oTargetTemp:'목표 온도', oTemp:'온도', oDuration:'시간',
+    hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 은 꺼짐', hSteamDur:'최대 스팀 초', hSteamFlow:'스팀 유량',
+    hFlushTemp:'플러시 물 온도', hFlushDur:'플러시 초', hFlushFlow:'플러시 유량',
+    hWaterTemp:'온수 온도', hWaterVol:'목표 밀리리터', hWaterDur:'최대 초', hWaterFlow:'유량',
+    rcBackShot:'샷',
+    milkLbl:'우유', milkHint:'도징 저울로 재서',
+    milkLog:'마지막 샷에 기록',
+    milkConfirm:'{w} 에 내린 샷에 우유 {v}g 을 기록할까요?',
+    milkNoteKey:'우유', milkNote:'우유 {v}g',
+    milkLogged:'{w} 샷에 기록했습니다', milkFailed:'기록하지 못했습니다:',
     doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
     doseTareHint:'누르면 도징 저울 영점',
     tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
@@ -3601,6 +3634,7 @@ function onMachineState(ms,prev){
   // treating it as one restarted the timer and wiped the graph mid pour. Once
   // extraction has begun the shot runs until the espresso state itself ends.
   state.shotRunning=extracting||(state.shotRunning&&inEspresso);
+  if(ms.state!==prev) syncRecipeMode(ms,prev);
   state.shotActive=inEspresso;
   // Steam session lifecycle (records flow/pressure/steam temp; no DYE)
   if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
@@ -4375,8 +4409,8 @@ function closeWs(name){
 function dosingFrame(m){
   if(m.status){ state.dosingConnected=(m.status==='connected');
     if(!state.dosingConnected) state.dosingWeight=null;
-    syncDoseTake(); syncRecipe(); renderDosingRow(); return; }
-  if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); renderDosingRow(); } }
+    syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); return; }
+  if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); } }
 // Opening the socket is what makes the reading appear, so it is opened only
 // once the gateway is actually holding the scale -- otherwise the socket would
 // be answered with "disconnected" and retried every two seconds for nothing.
@@ -4440,6 +4474,51 @@ function setDosingScale(id){
   state.dosingConnected=false; state.dosingWeight=null; syncDoseTake(); syncRecipe();
   var done=prev?releaseDosingScale(prev):Promise.resolve();
   done.then(function(){ if(id) return holdDosingScale(id,true); renderDosingRow(); }); }
+// Milk is weighed the way a dose is, on the same second scale, and it is the
+// one number about a latte the machine never learns by itself.
+var milkG=null;
+function milkRound(v){ return Math.max(0,Math.round(v)); }
+function setMilk(v){
+  milkG=(v===null||v===''||!isFinite(v))?null:milkRound(parseFloat(v));
+  renderMilkRow(); }
+function adjustMilk(d){ setMilk((milkG||0)+d); }
+function openMilkKeypad(){
+  openKeypadFor({ value:(milkG||0), dp:0, unit:'g', title:t('milkLbl'),
+    min:0, max:2000, onOk:function(v){ setMilk(v); } }); }
+function milkFromScale(){
+  if(!dosingHasReading()){ toast(t('doseNoScale'),'err'); return; }
+  setMilk(state.dosingWeight); }
+function renderMilkRow(){
+  var v=document.getElementById('milkVal'); if(!v) return;
+  v.textContent=(milkG==null)?'\u2014':(milkG+'g');
+  var live=dosingHasReading();
+  var ico=document.getElementById('milkIco'), pill=document.getElementById('milkLive');
+  if(ico){ ico.hidden=!live;
+    ico.classList.toggle('tap',live);
+    ico.onclick=live?function(e){ e.stopPropagation(); tareDosingScale(); }:null;
+    ico.title=live?t('doseTareHint'):''; }
+  if(pill){ pill.hidden=!live;
+    pill.textContent=live?(Math.round(state.dosingWeight)+'g'):'\u2014'; }
+  var b=document.getElementById('milkLogBtn'); if(b) b.disabled=(milkG==null); }
+// The shot it belongs to is the one just pulled, but "just" is a guess, so the
+// guess is shown and confirmed rather than acted on quietly.
+function milkToShot(){
+  if(milkG==null) return;
+  var sum=lastShotSummary;
+  if(!sum){ toast(t('noShotsYet'),'err'); return; }
+  var when=fmtShotWhen(sum);
+  if(!confirm(t('milkConfirm').replace('{v}',milkG).replace('{w}',when))) return;
+  var id=sum.id;
+  api('GET','/api/v1/shots/'+encodeURIComponent(id)).then(function(sh){
+    var a=(sh&&sh.annotations)||{};
+    var line=t('milkNote').replace('{v}',milkG);
+    var notes=String(a.espressoNotes||'').split('\n')
+      .filter(function(x){ return !/^\s*$/.test(x)&&x.indexOf(t('milkNoteKey'))!==0; });
+    notes.push(line);
+    return api('PUT','/api/v1/shots/'+encodeURIComponent(id),
+      {annotations:{espressoNotes:notes.join('\n'),extras:{lqMilk:milkG}}}); })
+    .then(function(){ toast(t('milkLogged').replace('{w}',when),'ok'); loadLastShot(); },
+      function(e){ toast(t('milkFailed')+' '+apiErrorText(e),'err'); }); }
 function tareDosingScale(){
   var id=dosingId();
   if(!id||!state.dosingConnected){ toast(t('doseNoScale'),'err'); return; }
@@ -4538,15 +4617,38 @@ function wakeLocalOnly(){ endSleepUI(); }
 function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast(t('tScanFailed'),'err');}); }
 
 // ── Steam/Flush modals ──────────────────────────────────────────────
-function openSteamModal(){ syncSteamModal(); renderPresets('steam'); document.getElementById('steamOverlay').classList.add('show'); }
-function openFlushModal(){ syncFlushModal(); renderPresets('flush'); document.getElementById('flushOverlay').classList.add('show'); }
+// Steam, flush and hot water each had a modal of their own. They are panes of
+// the recipe card now: the card already says what the machine is about to do,
+// and a modal over it said the same thing while hiding it.
+var RECIPE_PANES={espresso:'recipeNormal',steam:'recipeSteam',flush:'recipeFlush',water:'recipeWater'};
+var recipeMode='espresso';
+function setRecipeMode(m){
+  if(!RECIPE_PANES[m]) m='espresso';
+  recipeMode=m;
+  Object.keys(RECIPE_PANES).forEach(function(k){
+    var el=document.getElementById(RECIPE_PANES[k]);
+    if(el) el.style.display=(k===m)?'':'none'; });
+  if(m==='steam'){ syncSteamModal(); renderPresets('steam'); renderMilkRow(); }
+  else if(m==='flush'){ syncFlushModal(); renderPresets('flush'); }
+  else if(m==='water'){ syncWaterModal(); renderPresets('water'); syncWaterStop(); } }
+// The machine moving into steam is the same statement as somebody pressing
+// steam, so the card follows it -- and returns to the shot when that ends,
+// but only if it is still showing the mode that just finished.
+function recipeModeForState(st){
+  return st==='steam'?'steam':st==='hotWater'?'water':st==='flush'?'flush':null; }
+function syncRecipeMode(ms,prev){
+  var now=recipeModeForState(ms.state), was=recipeModeForState(prev);
+  if(now&&now!==recipeMode) setRecipeMode(now);
+  else if(!now&&was&&recipeMode===was) setRecipeMode('espresso'); }
+function openSteamModal(){ setRecipeMode('steam'); }
+function openFlushModal(){ setRecipeMode('flush'); }
 function openWaterModal(){ syncWaterModal(); renderPresets('water');
   // read on open rather than cached: another skin or the app itself may
   // have changed it since, and it is the setting that decides whether the
   // volume above is a target or only the machine's own backstop
   api('GET','/api/v1/settings').then(function(x){ gwSettings=x||gwSettings; syncWaterStop(); }).catch(function(){});
   syncWaterStop();
-  document.getElementById('waterOverlay').classList.add('show'); }
+  setRecipeMode('water'); }
 // Hot water stops on the scale at the volume above, read as grams. The
 // gateway does that only outside full mode and only with a scale, so when
 // either is missing the control says which one rather than lying about it.
@@ -4613,11 +4715,11 @@ function syncFlushModal(){ set('flushTemp',settings.flushTemp,'flushTempV'); set
 function set(id,v,vid,dec){ document.getElementById(id).value=v; document.getElementById(vid).textContent=dec?(+v).toFixed(1):v; }
 function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v; }
 function saveSteam(){ settings.steamTemp=+document.getElementById('steamTemp').value; settings.steamDur=+document.getElementById('steamDur').value; settings.steamFlow=+document.getElementById('steamFlow').value;
-  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast(t('tSteamSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); closeModal(null,'steamOverlay'); }
+  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast(t('tSteamSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
 function saveFlush(){ settings.flushTemp=+document.getElementById('flushTemp').value; settings.flushDur=+document.getElementById('flushDur').value; settings.flushFlow=+document.getElementById('flushFlow').value;
-  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){ syncAux(); toast(t('tFlushSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); closeModal(null,'flushOverlay'); }
+  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){ syncAux(); toast(t('tFlushSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
 function saveWater(){ settings.waterTemp=+document.getElementById('waterTemp').value; settings.waterVol=+document.getElementById('waterVol').value; settings.waterDur=+document.getElementById('waterDur').value; settings.waterFlow=+document.getElementById('waterFlow').value;
-  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){ syncAux(); toast(t('tWaterSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); closeModal(null,'waterOverlay'); }
+  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){ syncAux(); toast(t('tWaterSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
 
 // Steam, flush and hot water each have their own stored numbers. The recipe card
 // shows what they are set to, and while one of them is running it swaps to
