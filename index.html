@@ -1764,6 +1764,17 @@ body.night .set-warn{color:#fbbf24;background:rgba(245,158,11,.14);border-color:
   box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
 .sp-pane{display:none}
 .sp-pane.on{display:block}
+.sc-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 0}
+.sc-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sc-col-h{font-size:13px;font-weight:800}
+.sc-col-d{margin-bottom:4px}
+.sc-pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;
+  padding:9px 12px;border-radius:12px;border:1px solid var(--glass-line);
+  background:var(--glass-hi);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.sc-pick.on{border-color:var(--accent);background:var(--ctl-face);color:var(--accent)}
+.sc-pick[disabled]{opacity:.45;cursor:default}
+.sc-pick-n{font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.sc-pick-s{font-size:11px;opacity:.75}
 .sp-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .sp-info-cell{background-color:var(--pane-face);background-image:var(--ctl-sheen);box-shadow:var(--pane-lift);border:1px solid transparent;border-radius:12px;padding:12px 14px}
 .sp-info-cell .k{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
@@ -2752,6 +2763,10 @@ var I18N={
     curveTitle:'Pressure & flow curve', addStep:'Add step', tempShort:'temp',
     tempLabel:'Temp °C', exitTitle:'Exit condition', exitOver:'over', exitUnder:'under', noLimit:'no limit', volLimit:'Volume limit', wtLimit:'Weight limit', exitDesc:'Leave this step the moment the reading crosses the line, even if its time is not up. This is what ends a shot early while every number on screen still looks right.',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
+    scaleBrew:'Brewing scale',
+    scaleBrewDesc:'The scale a shot is weighed on. The gateway reconnects to it by itself.',
+    scaleTaken:'taken by the other side', scaleBrewSet:'Brewing scale changed',
+    scaleBrewCleared:'No brewing scale', scaleBrewFailed:'Could not change it:',
     dosingFind:'Look for scales', dosingScanning:'Looking\u2026',
     dosingFindDesc:'The gateway stops looking once it has a scale, so one switched on later is not noticed. This looks again without connecting anything.',
     dosingScanFound:'{n} more scale(s) found', dosingScanNone:'Nothing new turned up',
@@ -3052,6 +3067,10 @@ var I18N={
     curveTitle:'압력 · 유량 곡선', addStep:'스텝 추가', tempShort:'온도',
     tempLabel:'온도 °C', exitTitle:'조건부 넘김', exitOver:'이상', exitUnder:'이하', noLimit:'제한 없음', volLimit:'부피 제한', wtLimit:'무게 제한', exitDesc:'측정값이 이 선을 넘는 순간, 시간이 남아도 다음 스텝으로 넘어갑니다. 화면의 숫자는 전부 정상인데 샷이 일찍 끝나는 원인이 이것입니다.',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
+    scaleBrew:'추출 저울',
+    scaleBrewDesc:'샷을 재는 저울입니다. 게이트웨이가 알아서 다시 연결합니다.',
+    scaleTaken:'반대쪽이 쓰는 중', scaleBrewSet:'추출 저울을 바꿨습니다',
+    scaleBrewCleared:'추출 저울 없음', scaleBrewFailed:'바꾸지 못했습니다:',
     dosingFind:'저울 찾기', dosingScanning:'찾는 중…',
     dosingFindDesc:'게이트웨이는 저울을 하나 잡으면 더 찾지 않습니다. 나중에 켜는 저울은 그래서 보이지 않습니다. 여기서 다시 찾습니다 — 어느 것도 연결하지 않습니다.',
     dosingScanFound:'저울 {n}대를 찾았습니다', dosingScanNone:'새로 찾은 저울이 없습니다',
@@ -5622,9 +5641,57 @@ function dosingStatusRow(){
     +'<button class="m-btn"'+(state.dosingConnected?'':' disabled')+' onclick="tareDosingScale()">'+t('dosingTare')+'</button></div>'; }
 // Nothing is drawn on a gateway that cannot hold a second scale: an empty
 // picker is worse than no picker.
+// Two jobs, two columns. Which scale does which is the whole question, and a
+// picker apiece says it better than one picker and a rule to remember: the
+// scale taken by the other side is visibly spoken for rather than missing.
+function brewScaleId(){
+  var held=scaleDevices().filter(function(d){ return d.connectionRole==='primary'; })[0];
+  if(held) return held.id;
+  return (gwSettings&&gwSettings.preferredScaleId)||''; }
+function scaleColumn(side){
+  var mine=(side==='brew')?brewScaleId():dosingId();
+  var theirs=(side==='brew')?dosingId():brewScaleId();
+  var list=scaleDevices().slice();
+  // a chosen scale out of range keeps its place, so it need not be chosen again
+  if(mine&&!list.some(function(d){ return d.id===mine; }))
+    list.push({id:mine,name:t('dosingAway'),_away:true});
+  var busy=(state.shotRunning||_dosingScanning);
+  var h='<div class="sc-col"><div class="sc-col-h">'+escapeHtml(t(side==='brew'?'scaleBrew':'dosingScale'))+'</div>'
+    +'<div class="set-desc sc-col-d">'+escapeHtml(t(side==='brew'?'scaleBrewDesc':'dosingScaleDesc'))+'</div>';
+  h+=scaleChoice(side,'',t('dosingNone'),mine==='',false,busy);
+  list.forEach(function(d){
+    var taken=(theirs&&d.id===theirs);
+    var note=d._away?'':(taken?t('scaleTaken'):'');
+    h+=scaleChoice(side,d.id,d.name,mine===d.id,taken,busy,note); });
+  return h+'</div>'; }
+function scaleChoice(side,id,label,on,taken,busy,note){
+  var dis=(taken||busy)&&!on;
+  return '<button type="button" class="sc-pick'+(on?' on':'')+'"'+(dis?' disabled':'')
+    +' onclick="pickScale(\''+side+'\',\''+escapeAttr(id)+'\')">'
+    +'<span class="sc-pick-n">'+escapeHtml(label)+'</span>'
+    +(note?('<span class="sc-pick-s">'+escapeHtml(note)+'</span>'):'')+'</button>'; }
+function pickScale(side,id){
+  if(state.shotRunning) return;
+  if(side==='dosing') return setDosingScale(id);
+  return setBrewScale(id); }
+// Changing what a shot is weighed on is not a preference to be forgotten at the
+// next restart, so the choice is written down as well as acted on.
+function setBrewScale(id){
+  var prev=brewScaleId();
+  if(id===prev) return;
+  if(id&&id===dosingId()) return;
+  var done=prev?api('PUT','/api/v1/devices/disconnect',{deviceId:prev}).catch(function(){}):Promise.resolve();
+  done.then(function(){
+      return api('POST','/api/v1/settings',{preferredScaleId:id||null}).catch(function(){}); })
+    .then(function(){
+      if(!id) return null;
+      return api('PUT','/api/v1/devices/connect',{deviceId:id,connectionRole:'primary'},20000); })
+    .then(function(){ toast(t(id?'scaleBrewSet':'scaleBrewCleared'),'ok'); },
+      function(e){ toast(t('scaleBrewFailed')+' '+apiErrorText(e),'err'); })
+    .then(function(){ loadDevicesForDosing(); }); }
 function dosingBlockHtml(){
   if(!dosingSupported()) return '';
-  return row('dosingScale','dosingScaleDesc','<select class="set-select" id="dosingSel" onchange="setDosingScale(this.value)">'+dosingOptions()+'</select>')
+  return '<div class="sc-cols">'+scaleColumn('brew')+scaleColumn('dosing')+'</div>'
     +row('dosingFind','dosingFindDesc','<button class="m-btn" id="dosingScanBtn"'
       +((_dosingScanning||state.shotRunning)?' disabled':'')
       +' onclick="dosingScan()">'+escapeHtml(t(_dosingScanning?'dosingScanning':'dosingFind'))+'</button>')
@@ -5651,11 +5718,6 @@ function dosingScan(){
 // select the user is in the middle of using.
 function renderDosingRow(){
   var block=document.getElementById('dosingBlock'); if(!block) return;
-  var sel=document.getElementById('dosingSel');
-  if(sel&&document.activeElement===sel){
-    var rowEl=document.getElementById('dosingRow');
-    if(rowEl) rowEl.innerHTML=dosingStatusRow();
-    return; }
   block.innerHTML=dosingBlockHtml(); }
 function infoCell(k,v){ return '<div class="sp-info-cell"><div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(String(v))+'</div></div>'; }
 // Display settings
