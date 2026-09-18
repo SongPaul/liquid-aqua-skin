@@ -211,6 +211,8 @@ header>*{position:relative;z-index:1}
 .act-btn .ab-head{display:flex;align-items:center;gap:5px;white-space:nowrap}
 .act-btn .ab-name{font-size:13px;font-weight:700;line-height:1.1}
 .act-btn .ab-preset{font-size:11px;font-weight:700;line-height:1.1;color:var(--ink-mute)}
+/* which mode the card is showing, marked on the button that shows it */
+.act-btn.on{border-color:var(--accent);box-shadow:var(--ctl-lift),0 0 0 1px var(--accent)}
 .act-btn.active .ab-preset{color:rgba(255,255,255,.9)}
 .act-btn .ab-sum{font-size:10px;font-weight:700;line-height:1.1;color:var(--ink-mute);white-space:nowrap}
 .act-btn.active .ab-sum{color:rgba(255,255,255,.82)}
@@ -562,16 +564,34 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-live{font-size:10px;font-weight:800;line-height:14px;color:var(--accent2);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:0 6px;cursor:pointer;white-space:nowrap}
 .dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid transparent;background-color:transparent;transition:background .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
-/* One column. Two was tried: at half the card's width the labels broke across
-   three lines and the milk row and buttons were cut off, which is worse than a
-   short scroll. */
-.rc-mode{display:flex;flex-direction:column;gap:4px;padding:2px 0;overflow-y:auto}
-.rc-mode>.preset-bar{margin:0;padding:0}
-.rc-mode .preset-chip{min-height:30px}
-.rc-mode-acts{flex-wrap:wrap}
-.rc-mode-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.rc-mode-t{font-size:14px;font-weight:800}
-.rc-back{min-height:30px;padding:0 12px;font-size:12px}
+/* Built from the shot card's own block, so it lands at the shot card's height
+   instead of being cut to it. */
+.rc-mode{display:flex;flex-direction:column;gap:5px;padding:0}
+/* A mode pane carries a head the shot card does not, so its figures give back
+   the few pixels that costs. Same block, a size down. */
+.rc-mode .rc-grid{gap:5px 14px}
+.rc-mode .dose-num,.rc-mode .rv{font-size:19px;min-height:32px;padding:2px 4px}
+.rc-mode .dose-cap{font-size:9px;margin-bottom:1px;min-height:11px;line-height:11px}
+.rc-mode .dose-adj{gap:6px}
+.rc-mode .ms-btn{min-height:30px;min-width:30px}
+/* the big tare target belongs on the shot card's dose, where the row is the
+   only thing in it; in a mode pane it shares a block and stays small */
+.rc-mode .dose-fn{margin-top:1px;gap:5px}
+.rc-mode .dose-fn .dose-ico.tap{padding:4px 7px;font-size:12px;border-radius:8px}
+.rc-mode .dose-fn .dose-live{font-size:10px}
+.rc-mode .preset-chips{flex:1;justify-content:flex-end;gap:5px}
+.rc-mode .preset-chips{flex:1;min-width:0;flex-wrap:nowrap;overflow:hidden;justify-content:flex-start}
+.rc-mode .preset-chip{min-height:24px;padding:0 9px;font-size:10px;white-space:nowrap}
+/* the tick sits with the preset chips, so it is a chip's size */
+.rc-mode-head .rc-save{min-height:24px;height:24px;padding:0 10px;font-size:12px;
+  line-height:1;flex:none;border-radius:100px}
+.rc-sw{transform:scale(.7);transform-origin:center;flex:none}
+.rc-milklog{min-height:20px;padding:0 7px;font-size:10px;border-radius:8px}
+.rc-mode .dose-fn{margin-top:3px}
+.rc-mode-head{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;min-width:0}
+.rc-mode-head .m-btn{min-height:24px}
+.rc-milkfn{flex:none;margin:0}
+.rc-mode-t{font-size:15px;flex:none;line-height:1}
 .rc-mode-acts{display:flex;justify-content:flex-end;gap:8px}
 .rc-mode .opt-row{padding:3px 0}
 .rc-mode .opt-label{font-size:11px}
@@ -1679,6 +1699,11 @@ body.night .ep-grid .gname{color:var(--ink)}
 .preset-chips{display:flex;gap:8px;flex-wrap:wrap}
 .preset-chip{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .18s}
 .preset-chip:hover{border-color:var(--accent);color:var(--accent)}
+.preset-chip.on{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.preset-chip .pc-name{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0}
+.preset-chip .pc-edit{display:none}
+.preset-chip.on .pc-edit{display:inline}
+.ps-modal{max-width:420px}
 .preset-chip .pc-save{font-size:11px;color:var(--ink-mute);border:none;background:none;cursor:pointer;padding:0 2px}
 .preset-chip .pc-save:hover{color:var(--accent)}
 .opt-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(139,92,246,.1)}
@@ -1940,8 +1965,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       </button></div>
 
     <div class="hdr-aux">
-      <button class="act-btn start" id="btnShot" onclick="toggleShot()" disabled>
-        <span class="ico" id="shotIco">▶</span><span id="shotLbl" data-i18n="actEspresso">Espresso</span>
+      <button class="act-btn start" id="btnShot" disabled>
+        <span class="ico" id="shotIco">☕</span><span id="shotLbl" data-i18n="actEspresso">Espresso</span>
       </button>
       <button class="act-btn steam" id="btnSteam" disabled>
         <span class="ab-txt">
@@ -2115,40 +2140,85 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div id="recipeLive" style="display:none"></div>
         </div>
         <div class="rc-mode" id="recipeSteam" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t"><span data-i18n="steamOptions"></span></span><button class="m-btn rc-back" onclick="setRecipeMode('espresso')">← <span data-i18n="rcBackShot"></span></button></div>
-    <div class="preset-bar"><span class="preset-lbl" data-i18n="presets"></span><div class="preset-chips" id="steamPresets"></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="oTargetTemp"></span><span class="hint" data-i18n="hSteamTemp"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamTemp" min="0" max="165" step="1" oninput="optChange('steamTemp',this.value)"><span class="opt-val"><span id="steamTempV">150</span>°</span></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="oDuration"></span><span class="hint" data-i18n="hSteamDur"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamDur" min="0" max="120" step="1" oninput="optChange('steamDur',this.value)"><span class="opt-val"><span id="steamDurV">50</span>s</span></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="flow"></span><span class="hint" data-i18n="hSteamFlow"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="steamFlow" min="0" max="2.5" step="0.1" oninput="optChange('steamFlow',this.value)"><span class="opt-val"><span id="steamFlowV">0.8</span></span></div></div>
-          <div class="opt-row rc-milk" id="milkRow">
-            <div class="opt-label"><span data-i18n="milkLbl"></span><span class="hint" data-i18n="milkHint"></span></div>
-            <div class="opt-ctrl rc-milk-ctrl">
-              <button class="ms-btn" onclick="adjustMilk(-10)">−</button>
-              <div class="dose-num tap" id="milkNum" onclick="openMilkKeypad()"><span id="milkVal">—</span></div>
-              <button class="ms-btn" onclick="adjustMilk(10)">+</button>
-              <span class="dose-ico" id="milkIco" hidden>⚖</span>
-              <span class="dose-live" id="milkLive" hidden onclick="milkFromScale()">—</span>
+          <div class="rc-mode-head"><span class="rc-mode-t" title="">💨</span><div class="preset-chips" id="steamPresets"></div><span class="dose-fn rc-milkfn" id="milkFn"><span class="dose-ico" id="milkIco" hidden>⚖</span><span class="dose-live" id="milkLive" hidden onclick="milkFromScale()">—</span><button class="m-btn rc-milklog" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLogShort"></span></button></span><button class="m-btn rc-save" onclick="saveSteam()" title="">✓</button></div>
+          <div class="rg-main rc-grid">
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="oTargetTemp"></span><span class="lu">°</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('steamTemp',-1)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('steamTemp')"><span id="steamTempV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('steamTemp',1)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="oDuration"></span><span class="lu">s</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('steamDur',-1)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('steamDur')"><span id="steamDurV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('steamDur',1)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="flow"></span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('steamFlow',-0.1)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('steamFlow')"><span id="steamFlowV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('steamFlow',0.1)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="milkLbl"></span><span class="lu">g</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="adjustMilk(-10)">−</button>
+                <div class="dose-num tap" onclick="openMilkKeypad()"><span id="milkVal">—</span></div>
+                <button class="ms-btn" onclick="adjustMilk(10)">+</button></div>
             </div>
           </div>
-          <div class="rc-mode-acts"><button class="m-btn" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLog"></span></button><button class="m-btn primary" onclick="saveSteam()"><span data-i18n="saveOptions"></span></button></div>
         </div>
         <div class="rc-mode" id="recipeFlush" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t"><span data-i18n="flushOptions"></span></span><button class="m-btn rc-back" onclick="setRecipeMode('espresso')">← <span data-i18n="rcBackShot"></span></button></div>
-    <div class="preset-bar"><span class="preset-lbl" data-i18n="presets"></span><div class="preset-chips" id="flushPresets"></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="oTemp"></span><span class="hint" data-i18n="hFlushTemp"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushTemp" min="60" max="95" step="1" oninput="optChange('flushTemp',this.value)"><span class="opt-val"><span id="flushTempV">88</span>°</span></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="oDuration"></span><span class="hint" data-i18n="hFlushDur"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushDur" min="1" max="20" step="1" oninput="optChange('flushDur',this.value)"><span class="opt-val"><span id="flushDurV">10</span>s</span></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="flow"></span><span class="hint" data-i18n="hFlushFlow"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="flushFlow" min="1" max="10" step="0.5" oninput="optChange('flushFlow',this.value)"><span class="opt-val"><span id="flushFlowV">6.0</span></span></div></div>
-          <div class="rc-mode-acts"><button class="m-btn primary" onclick="saveFlush()"><span data-i18n="saveOptions"></span></button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" title="">🚿</span><div class="preset-chips" id="flushPresets"></div><button class="m-btn rc-save" onclick="saveFlush()" title="">✓</button></div>
+          <div class="rg-main rc-grid">
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span><span class="lu">°</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('flushTemp',-1)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('flushTemp')"><span id="flushTempV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('flushTemp',1)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="oDuration"></span><span class="lu">s</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('flushDur',-1)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('flushDur')"><span id="flushDurV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('flushDur',1)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="flow"></span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('flushFlow',-0.5)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('flushFlow')"><span id="flushFlowV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('flushFlow',0.5)">+</button></div>
+            </div>
+          </div>
         </div>
         <div class="rc-mode" id="recipeWater" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t"><span data-i18n="waterOptions"></span></span><button class="m-btn rc-back" onclick="setRecipeMode('espresso')">← <span data-i18n="rcBackShot"></span></button></div>
-    <div class="preset-bar"><span class="preset-lbl" data-i18n="presets"></span><div class="preset-chips" id="waterPresets"></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="oTemp"></span><span class="hint" data-i18n="hWaterTemp"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterTemp" min="20" max="100" step="1" oninput="optChange('waterTemp',this.value)"><span class="opt-val"><span id="waterTempV">75</span>°</span></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="volume"></span><span class="hint" data-i18n="hWaterVol"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterVol" min="0" max="500" step="5" oninput="optChange('waterVol',this.value)"><span class="opt-val"><span id="waterVolV">200</span>ml</span></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="oDuration"></span><span class="hint" data-i18n="hWaterDur"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterDur" min="0" max="120" step="1" oninput="optChange('waterDur',this.value)"><span class="opt-val"><span id="waterDurV">30</span>s</span></div></div>
-    <div class="opt-row"><div class="opt-label"><span data-i18n="flow"></span><span class="hint" data-i18n="hWaterFlow"></span></div><div class="opt-ctrl"><input type="range" class="slider" id="waterFlow" min="1" max="10" step="0.5" oninput="optChange('waterFlow',this.value)"><span class="opt-val"><span id="waterFlowV">10.0</span></span></div></div>
-    <div class="opt-row" id="waterStopRow"><div class="opt-label"><span data-i18n="stopAtWeight">Stop at weight</span><span class="hint" id="waterStopHint"></span></div><div class="opt-ctrl"><label class="switch"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></div></div>
-          <div class="rc-mode-acts"><button class="m-btn primary" onclick="saveWater()"><span data-i18n="saveOptions"></span></button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" title="">💧</span><div class="preset-chips" id="waterPresets"></div><label class="switch rc-sw" title="" id="waterStopRow"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label><button class="m-btn rc-save" onclick="saveWater()" title="">✓</button></div>
+          <div class="rg-main rc-grid">
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span><span class="lu">°</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterTemp',-1)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('waterTemp')"><span id="waterTempV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('waterTemp',1)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="volume"></span><span class="lu">ml</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterVol',-5)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('waterVol')"><span id="waterVolV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('waterVol',5)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="oDuration"></span><span class="lu">s</span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterDur',-1)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('waterDur')"><span id="waterDurV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('waterDur',1)">+</button></div>
+            </div>
+            <div class="dose-block">
+              <div class="dose-lbl dose-cap"><span data-i18n="flow"></span></div>
+              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterFlow',-0.5)">−</button>
+                <div class="dose-num tap" onclick="auxKeypad('waterFlow')"><span id="waterFlowV">0</span></div>
+                <button class="ms-btn" onclick="auxAdj('waterFlow',0.5)">+</button></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2284,6 +2354,22 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <!-- ── Flush modal ─────────────────────────────────────────────── -->
 
 <!-- ── Hot Water modal ─────────────────────────────────────────── -->
+
+<!-- Preset editor -->
+<div class="overlay" id="presetOverlay" onclick="closeModal(event,'presetOverlay')">
+  <div class="modal ps-modal"><div class="modal-head"><div class="modal-title" data-i18n="presetEdit"></div><button class="modal-close" onclick="closeModal(null,'presetOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="field"><label data-i18n="presetName"></label><input id="psName" maxlength="24"></div>
+    <div class="set-row"><div class="set-info"><div class="set-name" data-i18n="presetSaved"></div><div class="set-desc" id="psWas"></div></div></div>
+    <div class="set-row"><div class="set-info"><div class="set-name" data-i18n="presetNow"></div><div class="set-desc" id="psNow"></div></div>
+      <button class="m-btn" onclick="psOverwrite()"><span data-i18n="presetTakeNow"></span></button></div>
+    <div class="modal-actions">
+      <button class="m-btn danger" onclick="psDelete()"><span data-i18n="delete"></span></button>
+      <button class="m-btn" onclick="closeModal(null,'presetOverlay')"><span data-i18n="close"></span></button>
+      <button class="m-btn primary" onclick="psRename()"><span data-i18n="save"></span></button>
+    </div>
+  </div></div>
+</div>
 
 <!-- ── Bean / Grinder modal ────────────────────────────────────── -->
 <div class="overlay" id="beanOverlay" onclick="closeModal(event,'beanOverlay')">
@@ -2597,10 +2683,14 @@ var I18N={
     hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 = off', hSteamDur:'max steaming seconds', hSteamFlow:'steam flow rate',
     hFlushTemp:'flush water temperature', hFlushDur:'flush seconds', hFlushFlow:'flush flow rate',
     hWaterTemp:'hot water temperature', hWaterVol:'target millilitres', hWaterDur:'max seconds', hWaterFlow:'flow rate',
-    presetApplied:'Preset \u201c{n}\u201d applied',
+    presetEdit:'Edit preset', presetName:'Name', presetSaved:'Saved as',
+    presetNow:'Current numbers', presetTakeNow:'Take these',
+    presetRenamed:'Renamed', presetUpdated:'Preset updated', presetDeleted:'Preset deleted',
+    presetDelConfirm:'Delete the preset \u201c{n}\u201d?', presetNameAsk:'Preset name?',
+    presetApplied:'Preset \u201c{n}\u201d applied', presetSaveCur:'Save the current numbers as a preset',
     rcBackShot:'Shot',
     milkLbl:'Milk', milkHint:'weighed on the dosing scale',
-    milkLog:'Record on the last shot',
+    milkLog:'Record on the last shot', milkLogShort:'\u2192 Shot',
     milkConfirm:'Record {v}g of milk on the shot pulled at {w}?',
     milkNoteKey:'Milk', milkNote:'Milk {v}g',
     milkLogged:'Recorded on the {w} shot', milkFailed:'Could not record it:',
@@ -2913,10 +3003,14 @@ var I18N={
     hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 은 꺼짐', hSteamDur:'최대 스팀 초', hSteamFlow:'스팀 유량',
     hFlushTemp:'플러시 물 온도', hFlushDur:'플러시 초', hFlushFlow:'플러시 유량',
     hWaterTemp:'온수 온도', hWaterVol:'목표 밀리리터', hWaterDur:'최대 초', hWaterFlow:'유량',
-    presetApplied:'프리셋 “{n}” 을 적용했습니다',
+    presetEdit:'프리셋 편집', presetName:'이름', presetSaved:'저장된 값',
+    presetNow:'지금 값', presetTakeNow:'이 값으로',
+    presetRenamed:'이름을 바꿨습니다', presetUpdated:'프리셋을 갱신했습니다', presetDeleted:'프리셋을 지웠습니다',
+    presetDelConfirm:'프리셋 “{n}” 을 지울까요?', presetNameAsk:'프리셋 이름?',
+    presetApplied:'프리셋 “{n}” 을 적용했습니다', presetSaveCur:'지금 값을 프리셋으로 저장',
     rcBackShot:'샷',
     milkLbl:'우유', milkHint:'도징 저울로 재서',
-    milkLog:'마지막 샷에 기록',
+    milkLog:'마지막 샷에 기록', milkLogShort:'샷에 →',
     milkConfirm:'{w} 에 내린 샷에 우유 {v}g 을 기록할까요?',
     milkNoteKey:'우유', milkNote:'우유 {v}g',
     milkLogged:'{w} 샷에 기록했습니다', milkFailed:'기록하지 못했습니다:',
@@ -3574,13 +3668,18 @@ function applyActionMode(){
   // No GHC -> our buttons perform the ACTION; long-press opens settings.
   var steam=document.getElementById('btnSteam'), flush=document.getElementById('btnFlush'), water=document.getElementById('btnWater');
   var ah=document.getElementById('auxHint');
-  // GHC owns starting the shot from the physical buttons — hide our Start button.
-  document.getElementById('btnShot').style.display=state.ghc?'none':'';
-  clearBtn(steam); clearBtn(flush); clearBtn(water);
+  // Espresso is one of the four modes the card can show, so its button is the
+  // way back to it -- which means it is wanted even where the GHC owns starting
+  // a shot, and there it does nothing else.
+  var shot=document.getElementById('btnShot');
+  shot.style.display='';
+  clearBtn(steam); clearBtn(flush); clearBtn(water); clearBtn(shot);
   if(state.ghc){
+    shot.onclick=function(){ setRecipeMode('espresso'); };
     steam.onclick=openSteamModal; flush.onclick=openFlushModal; water.onclick=openWaterModal;
     ah.textContent='';
   } else {
+    bindActionLongPress(shot, function(){ toggleShot(); }, function(){ setRecipeMode('espresso'); });
     bindActionLongPress(steam, function(){ doSteamAction(); }, openSteamModal);
     bindActionLongPress(flush, function(){ doFlushAction(); }, openFlushModal);
     bindActionLongPress(water, function(){ doWaterAction(); }, openWaterModal);
@@ -4003,14 +4102,18 @@ function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.cu
 function fillHeight(pct){ return (Math.max(0,Math.min(pct,100))*0.9)+'%'; }
 function updateShotBtn(){ var st=state.machine.state;
   var btn=document.getElementById('btnShot'),ico=document.getElementById('shotIco'),lbl=document.getElementById('shotLbl');
-  btn.disabled=!state.connected;
-  if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent=t('stop'); } else { btn.className='act-btn start'; ico.textContent='▶'; lbl.textContent=t('actEspresso'); }
+  btn.disabled=state.ghc?false:!state.connected;
+  if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent=t('stop'); } else { btn.className='act-btn start'; ico.textContent='☕'; lbl.textContent=t('actEspresso'); }
   var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),water=document.getElementById('btnWater'),sleep=document.getElementById('btnSleep');
   steam.disabled=!state.connected; flush.disabled=!state.connected; water.disabled=!state.connected; sleep.disabled=!state.connected;
   var wt=document.getElementById('weightTap');
   if(wt) wt.classList.toggle('off',!state.scaleConnected);
   syncDoseTake();
   // reflect running state with an 'active' color (only meaningful when GHC-less / actions)
+  btn.classList.toggle('on', recipeMode==='espresso');
+  steam.classList.toggle('on', recipeMode==='steam');
+  flush.classList.toggle('on', recipeMode==='flush');
+  water.classList.toggle('on', recipeMode==='water');
   steam.classList.toggle('active', st==='steam');
   flush.classList.toggle('active', st==='flush');
   water.classList.toggle('active', st==='hotWater');
@@ -4514,7 +4617,7 @@ function milkFromScale(){
   setMilk(state.dosingWeight); }
 function renderMilkRow(){
   var v=document.getElementById('milkVal'); if(!v) return;
-  v.textContent=(milkG==null)?'\u2014':(milkG+'g');
+  v.textContent=(milkG==null)?'\u2014':String(milkG);
   var live=dosingHasReading();
   var ico=document.getElementById('milkIco'), pill=document.getElementById('milkLive');
   if(ico){ ico.hidden=!live;
@@ -4523,6 +4626,10 @@ function renderMilkRow(){
     ico.title=live?t('doseTareHint'):''; }
   if(pill){ pill.hidden=!live;
     pill.textContent=live?(Math.round(state.dosingWeight)+'g'):'\u2014'; }
+  var fn=document.getElementById('milkFn'); if(fn) fn.classList.toggle('off',!live);
+  var box=document.getElementById('milkFn');
+  var lu=box&&box.parentNode?box.parentNode.querySelector('.lu'):null;
+  if(lu) lu.hidden=live;
   var b=document.getElementById('milkLogBtn'); if(b) b.disabled=(milkG==null); }
 // The shot it belongs to is the one just pulled, but "just" is a guess, so the
 // guess is shown and confirmed rather than acted on quietly.
@@ -4649,7 +4756,7 @@ var recipeMode='espresso';
 // The panes are different lengths, and a longer one pushed the cards beneath
 // it off the bottom of a stage that does not scroll. The shot card sets the
 // height and the others live inside it.
-var _recipeH=0, _beanLend=0;
+var _recipeH=0;
 function lockRecipeHeight(){
   var n=document.getElementById('recipeNormal');
   if(!n||n.style.display==='none') return;
@@ -4658,24 +4765,13 @@ function lockRecipeHeight(){
   // The shot card sets the floor, but the column usually ends short of the
   // stage: that slack is height a longer pane may take without pushing the
   // cards under it off the bottom.
-  // The column is already full -- the cards under this one reach the bottom of
-  // the stage exactly -- so a longer pane has to be given room rather than take
-  // it. The bean card is about the shot; while a mode card is open it steps
-  // aside and lends its height, and the column ends where it always did.
-  var bean=document.querySelector('.bean-info'), lend=0;
-  if(bean){ var br=bean.getBoundingClientRect();
-    if(br.height>0) lend=Math.round(br.height)+10; }
-  if(lend) _beanLend=lend;
-  var want=h+(_beanLend||0);
-  if(want===_recipeH) return;
-  _recipeH=want;
+  if(h===_recipeH) return;
+  _recipeH=h;
   var list=document.querySelectorAll('#recipeSteam,#recipeFlush,#recipeWater');
   for(var i=0;i<list.length;i++) list[i].style.height=_recipeH+'px'; }
 function setRecipeMode(m){
   if(!RECIPE_PANES[m]) m='espresso';
   if(m!=='espresso') lockRecipeHeight();
-  var bean=document.querySelector('.bean-info');
-  if(bean) bean.style.display=(m==='espresso')?'':'none';
   recipeMode=m;
   Object.keys(RECIPE_PANES).forEach(function(k){
     var el=document.getElementById(RECIPE_PANES[k]);
@@ -4745,38 +4841,122 @@ function loadPresets(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prese
   if(!presets.flush.length) presets.flush=[{n:'Quick',temp:88,dur:5,flow:6},{n:'Deep',temp:92,dur:12,flow:6.5}];
   if(!presets.water.length) presets.water=[{n:'Tea',temp:95,vol:250,dur:40,flow:10},{n:'Americano',temp:80,vol:120,dur:20,flow:8}]; }
 function savePresets(){ lsSet('aurora_presets',presets); storeSave('presets',presets); }
+// Pressing a preset changed the numbers and left the chip looking untouched,
+// so nothing on screen said which one was in force.
+function presetOn(kind,ps){
+  if(kind==='steam') return auxClose(ps.temp,settings.steamTemp)&&auxClose(ps.dur,settings.steamDur)&&auxClose(ps.flow,settings.steamFlow,0.051);
+  if(kind==='flush') return auxClose(ps.temp,settings.flushTemp)&&auxClose(ps.dur,settings.flushDur)&&auxClose(ps.flow,settings.flushFlow,0.051);
+  return auxClose(ps.temp,settings.waterTemp)&&auxClose(ps.vol,settings.waterVol)&&auxClose(ps.dur,settings.waterDur)&&auxClose(ps.flow,settings.waterFlow,0.051); }
+function syncPresetChips(kind){
+  var kinds=kind?[kind]:['steam','flush','water'];
+  kinds.forEach(function(k){
+    var wrap=document.getElementById(k+'Presets'); if(!wrap) return;
+    var chips=wrap.querySelectorAll('.preset-chip[data-i]');
+    for(var i=0;i<chips.length;i++){
+      var ps=(presets[k]||[])[+chips[i].getAttribute('data-i')];
+      chips[i].classList.toggle('on',!!(ps&&presetOn(k,ps))); } }); }
 function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); wrap.innerHTML='';
-  presets[kind].forEach(function(ps,i){ var chip=document.createElement('button'); chip.className='preset-chip';
-    chip.innerHTML='<span>'+escapeHtml(ps.n)+'</span>';
-    chip.onclick=function(){ applyPreset(kind,ps); };
+  presets[kind].forEach(function(ps,i){ var chip=document.createElement('div'); chip.className='preset-chip';
+    chip.setAttribute('data-i',i);
+    var name=document.createElement('button'); name.className='pc-name';
+    name.textContent=ps.n;
+    name.onclick=function(){ applyPreset(kind,ps); };
+    chip.appendChild(name);
+    var pen=document.createElement('button'); pen.className='pc-save pc-edit';
+    pen.textContent='\u270e'; pen.title=t('presetEdit');
+    pen.onclick=function(e){ e.stopPropagation(); openPresetEdit(kind,i); };
+    chip.appendChild(pen);
     wrap.appendChild(chip); });
-  if(presets[kind].length<3){ var add=document.createElement('button'); add.className='preset-chip'; add.style.borderStyle='dashed'; add.textContent='+ Save current';
+  syncPresetChips(kind);
+  if(presets[kind].length<3){ var add=document.createElement('button'); add.className='preset-chip pc-add'; add.style.borderStyle='dashed'; add.textContent='+'; add.title=t('presetSaveCur');
     add.onclick=function(){ addPreset(kind); }; wrap.appendChild(add); }
 }
 function applyPreset(kind,ps){
-  if(kind==='steam'){ set('steamTemp',ps.temp,'steamTempV'); set('steamDur',ps.dur,'steamDurV'); set('steamFlow',ps.flow,'steamFlowV',1);
-    settings.steamTemp=+ps.temp; settings.steamDur=+ps.dur; settings.steamFlow=+ps.flow; }
-  else if(kind==='water'){ set('waterTemp',ps.temp,'waterTempV'); set('waterVol',ps.vol,'waterVolV'); set('waterDur',ps.dur,'waterDurV'); set('waterFlow',ps.flow,'waterFlowV',1);
-    settings.waterTemp=+ps.temp; settings.waterVol=+ps.vol; settings.waterDur=+ps.dur; settings.waterFlow=+ps.flow; }
-  else { set('flushTemp',ps.temp,'flushTempV'); set('flushDur',ps.dur,'flushDurV'); set('flushFlow',ps.flow,'flushFlowV',1);
-    settings.flushTemp=+ps.temp; settings.flushDur=+ps.dur; settings.flushFlow=+ps.flow; }
-  syncAux(); toast(t('presetApplied').replace('{n}',ps.n),'ok'); }
-function addPreset(kind){ var name=prompt('Preset name?',(kind==='steam'?'Steam ':kind==='water'?'Water ':'Flush ')+(presets[kind].length+1)); if(!name) return;
-  if(kind==='steam') presets.steam.push({n:name,temp:+document.getElementById('steamTemp').value,dur:+document.getElementById('steamDur').value,flow:+document.getElementById('steamFlow').value});
-  else if(kind==='water') presets.water.push({n:name,temp:+document.getElementById('waterTemp').value,vol:+document.getElementById('waterVol').value,dur:+document.getElementById('waterDur').value,flow:+document.getElementById('waterFlow').value});
-  else presets.flush.push({n:name,temp:+document.getElementById('flushTemp').value,dur:+document.getElementById('flushDur').value,flow:+document.getElementById('flushFlow').value});
+  if(kind==='steam'){ auxSet('steamTemp',ps.temp); auxSet('steamDur',ps.dur); auxSet('steamFlow',ps.flow); }
+  else if(kind==='water'){ auxSet('waterTemp',ps.temp); auxSet('waterVol',ps.vol); auxSet('waterDur',ps.dur); auxSet('waterFlow',ps.flow); }
+  else { auxSet('flushTemp',ps.temp); auxSet('flushDur',ps.dur); auxSet('flushFlow',ps.flow); }
+  toast(t('presetApplied').replace('{n}',ps.n),'ok'); }
+// ── editing one ──────────────────────────────────────────────────────────
+var _psEdit=null;
+function openPresetEdit(kind,i){
+  var ps=(presets[kind]||[])[i]; if(!ps) return;
+  _psEdit={kind:kind,i:i};
+  var el=document.getElementById('psName'); if(el) el.value=ps.n;
+  var now=document.getElementById('psNow');
+  if(now) now.textContent=auxSummary(kind);
+  var was=document.getElementById('psWas');
+  if(was) was.textContent=presetSummary(kind,ps);
+  document.getElementById('presetOverlay').classList.add('show'); }
+function presetSummary(kind,ps){
+  if(kind==='water') return ps.temp+'\u00b0 \u00b7 '+ps.dur+'s \u00b7 '+(ps.vol>0?(ps.vol+'ml \u00b7 '):'')+(+ps.flow).toFixed(1)+' ml/s';
+  return ps.temp+'\u00b0 \u00b7 '+ps.dur+'s \u00b7 '+(+ps.flow).toFixed(1)+' ml/s'; }
+function psRename(){
+  if(!_psEdit) return;
+  var v=(document.getElementById('psName').value||'').trim();
+  if(!v) return;
+  presets[_psEdit.kind][_psEdit.i].n=v;
+  psDone(t('presetRenamed')); }
+// Taking the current numbers is the whole point of a preset one has outgrown.
+function psOverwrite(){
+  if(!_psEdit) return;
+  var k=_psEdit.kind, ps=presets[k][_psEdit.i];
+  var v=(document.getElementById('psName').value||'').trim(); if(v) ps.n=v;
+  if(k==='steam'){ ps.temp=settings.steamTemp; ps.dur=settings.steamDur; ps.flow=settings.steamFlow; }
+  else if(k==='water'){ ps.temp=settings.waterTemp; ps.vol=settings.waterVol; ps.dur=settings.waterDur; ps.flow=settings.waterFlow; }
+  else { ps.temp=settings.flushTemp; ps.dur=settings.flushDur; ps.flow=settings.flushFlow; }
+  psDone(t('presetUpdated')); }
+function psDelete(){
+  if(!_psEdit) return;
+  if(!confirm(t('presetDelConfirm').replace('{n}',presets[_psEdit.kind][_psEdit.i].n))) return;
+  presets[_psEdit.kind].splice(_psEdit.i,1);
+  psDone(t('presetDeleted')); }
+function psDone(msg){
+  var kind=_psEdit.kind;
+  savePresets(); renderPresets(kind); syncAux();
+  closeModal(null,'presetOverlay'); _psEdit=null;
+  toast(msg,'ok'); }
+function addPreset(kind){ var name=prompt(t('presetNameAsk'),(kind==='steam'?'Steam ':kind==='water'?'Water ':'Flush ')+(presets[kind].length+1)); if(!name) return;
+  if(kind==='steam') presets.steam.push({n:name,temp:settings.steamTemp,dur:settings.steamDur,flow:settings.steamFlow});
+  else if(kind==='water') presets.water.push({n:name,temp:settings.waterTemp,vol:settings.waterVol,dur:settings.waterDur,flow:settings.waterFlow});
+  else presets.flush.push({n:name,temp:settings.flushTemp,dur:settings.flushDur,flow:settings.flushFlow});
   savePresets(); renderPresets(kind); toast(t('tPresetSaved'),'ok'); }
-function syncSteamModal(){ set('steamTemp',settings.steamTemp,'steamTempV'); set('steamDur',settings.steamDur,'steamDurV'); set('steamFlow',settings.steamFlow,'steamFlowV',1); }
-function syncWaterModal(){ set('waterTemp',settings.waterTemp,'waterTempV'); set('waterVol',settings.waterVol,'waterVolV'); set('waterDur',settings.waterDur,'waterDurV'); set('waterFlow',settings.waterFlow,'waterFlowV',1); }
-function syncFlushModal(){ set('flushTemp',settings.flushTemp,'flushTempV'); set('flushDur',settings.flushDur,'flushDurV'); set('flushFlow',settings.flushFlow,'flushFlowV',1); }
-function set(id,v,vid,dec){ document.getElementById(id).value=v; document.getElementById(vid).textContent=dec?(+v).toFixed(1):v; }
+function syncSteamModal(){ ['steamTemp','steamDur','steamFlow'].forEach(auxShow); }
+function syncWaterModal(){ ['waterTemp','waterVol','waterDur','waterFlow'].forEach(auxShow); }
+function syncFlushModal(){ ['flushTemp','flushDur','flushFlow'].forEach(auxShow); }
+var AUX_NUM={
+  steamTemp:{min:0,max:165,dp:0}, steamDur:{min:0,max:120,dp:0}, steamFlow:{min:0,max:2.5,dp:1},
+  flushTemp:{min:60,max:95,dp:0},  flushDur:{min:1,max:20,dp:0},  flushFlow:{min:1,max:10,dp:1},
+  waterTemp:{min:20,max:100,dp:0}, waterVol:{min:0,max:500,dp:0},
+  waterDur:{min:0,max:120,dp:0},   waterFlow:{min:1,max:10,dp:1}};
+function auxShow(key){
+  var c=AUX_NUM[key], el=document.getElementById(key+'V');
+  if(el&&c) el.textContent=(+settings[key]).toFixed(c.dp); }
+function auxSet(key,v){
+  var c=AUX_NUM[key]; if(!c) return;
+  v=Math.max(c.min,Math.min(c.max,parseFloat(v)));
+  if(!isFinite(v)) return;
+  settings[key]=parseFloat(v.toFixed(c.dp));
+  auxShow(key); syncAux(); syncPresetChips(key.replace(/[A-Z].*$/,'')); }
+function auxAdj(key,d){ auxSet(key,(+settings[key]||0)+d); }
+function auxKeypad(key){
+  var c=AUX_NUM[key]; if(!c) return;
+  openKeypadFor({ value:(+settings[key]||0), dp:c.dp, min:c.min, max:c.max,
+    title:t(AUX_TITLE[key]||''), unit:(AUX_UNIT[key]||''),
+    onOk:function(v){ auxSet(key,v); } }); }
+var AUX_TITLE={steamTemp:'oTargetTemp',steamDur:'oDuration',steamFlow:'flow',
+  flushTemp:'oTemp',flushDur:'oDuration',flushFlow:'flow',
+  waterTemp:'oTemp',waterVol:'volume',waterDur:'oDuration',waterFlow:'flow'};
+var AUX_UNIT={steamTemp:'\u00b0',steamDur:'s',flushTemp:'\u00b0',flushDur:'s',
+  waterTemp:'\u00b0',waterVol:'ml',waterDur:'s'};
+function set(id,v,vid,dec){ var el=document.getElementById(id); if(el) el.value=v;
+  var t2=document.getElementById(vid); if(t2) t2.textContent=dec?(+v).toFixed(1):v; }
 function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v;
   if(settings[key]!==undefined){ settings[key]=v; syncAux(); } }
-function saveSteam(){ settings.steamTemp=+document.getElementById('steamTemp').value; settings.steamDur=+document.getElementById('steamDur').value; settings.steamFlow=+document.getElementById('steamFlow').value;
+function saveSteam(){
   api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast(t('tSteamSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
-function saveFlush(){ settings.flushTemp=+document.getElementById('flushTemp').value; settings.flushDur=+document.getElementById('flushDur').value; settings.flushFlow=+document.getElementById('flushFlow').value;
+function saveFlush(){
   api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){ syncAux(); toast(t('tFlushSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
-function saveWater(){ settings.waterTemp=+document.getElementById('waterTemp').value; settings.waterVol=+document.getElementById('waterVol').value; settings.waterDur=+document.getElementById('waterDur').value; settings.waterFlow=+document.getElementById('waterFlow').value;
+function saveWater(){
   api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){ syncAux(); toast(t('tWaterSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
 
 // Steam, flush and hot water each have their own stored numbers. The recipe card
