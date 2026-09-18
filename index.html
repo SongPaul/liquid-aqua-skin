@@ -4579,11 +4579,19 @@ function closeWs(name){
   _wsParked[name]=true;
   try{ if(sockets[name]) sockets[name].close(); }catch(_){}
   sockets[name]=null; _wsOpen[name]=null; }
+function dosingSocketDead(){ var ws=sockets['dosing']; return !ws||ws.readyState>1; }
 function dosingFrame(m){
+  // The gateway answers a socket for a scale it is not holding with an error
+  // and closes. That is the hold having gone, not a reading.
+  if(m.error){ state.dosingConnected=false; state.dosingWeight=null;
+    _dosingHoldAt=0;
+    syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); syncConnDosing(); return; }
+  // A reading is proof of a connection whether or not the status said so.
+  if(m.weight!==undefined&&!state.dosingConnected) state.dosingConnected=true;
   if(m.status){ state.dosingConnected=(m.status==='connected');
     if(!state.dosingConnected) state.dosingWeight=null;
     syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); syncConnDosing(); return; }
-  if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); } }
+  if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); syncConnDosing(); } }
 // Opening the socket is what makes the reading appear, so it is opened only
 // once the gateway is actually holding the scale -- otherwise the socket would
 // be answered with "disconnected" and retried every two seconds for nothing.
@@ -4638,7 +4646,7 @@ function syncDosing(){
   if(!d){ if(sockets['dosing']) closeWs('dosing');
     if(state.dosingConnected){ state.dosingConnected=false; state.dosingWeight=null; syncDoseTake(); syncRecipe(); }
     return; }
-  if(d.connectionRole==='auxiliary'){ if(!sockets['dosing']) reopenDosingWs(); return; }
+  if(d.connectionRole==='auxiliary'){ if(dosingSocketDead()) reopenDosingWs(); return; }
   if(d.connectionRole==='primary') return;
   // Present but not held, and the brewing scale has not arrived yet: let the
   // gateway finish looking for it before a second radio is claimed.
@@ -6165,6 +6173,21 @@ function dosingBlockHtml(){
 // nothing -- otherwise the scale being looked for could be taken for the
 // brewing one, which is the opposite of what is wanted here.
 var _dosingScanning=false;
+// Held but silent for ten seconds is not a state to sit in: the socket is
+// asked for again. Nothing else here is periodic, and every other path needs
+// the device list to change before it looks.
+var _dosingGreyAt=0;
+function dosingWatchdog(){
+  if(_asleep) return;
+  var id=dosingId(); if(!id) return;
+  var d=deviceById(id);
+  if(!d||d.connectionRole!=='auxiliary'){ _dosingGreyAt=0; return; }
+  if(state.dosingConnected&&!dosingSocketDead()){ _dosingGreyAt=0; return; }
+  if(!_dosingGreyAt){ _dosingGreyAt=Date.now(); return; }
+  if(Date.now()-_dosingGreyAt<10000) return;
+  _dosingGreyAt=Date.now();
+  reopenDosingWs(); }
+setInterval(dosingWatchdog,5000);
 var _dosingAutoScanAt=0, _dosingDiscoverAt=0;
 function dosingPickable(){
   var brew=brewScaleId(), pref=(gwSettings&&gwSettings.preferredScaleId)||'';
