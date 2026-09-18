@@ -581,17 +581,17 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .rc-mode .dose-fn .dose-live{font-size:10px}
 .rc-mode .preset-chips{flex:1;justify-content:flex-end;gap:5px}
 .rc-mode .preset-chips{flex:1;min-width:0;flex-wrap:nowrap;overflow:hidden;justify-content:flex-start}
-.rc-mode .preset-chip{min-height:24px;padding:0 9px;font-size:10px;white-space:nowrap}
+.rc-mode .preset-chip{min-height:28px;height:28px;padding:0 12px;font-size:11px;white-space:nowrap}
 /* the tick sits with the preset chips, so it is a chip's size */
-.rc-mode-head .rc-save{min-height:24px;height:24px;padding:0 10px;font-size:12px;
+.rc-mode-head .rc-save{min-height:28px;height:28px;padding:0 12px;font-size:13px;
   line-height:1;flex:none;border-radius:100px}
 .rc-sw{transform:scale(.7);transform-origin:center;flex:none}
 .rc-sw-wrap{display:inline-flex;align-items:center;gap:1px;flex:none;cursor:default}
 .rc-sw-l{font-size:9px;font-weight:700;color:var(--ink-mute);white-space:nowrap}
-.rc-milklog{min-height:20px;padding:0 7px;font-size:10px;border-radius:8px}
+.rc-milklog{min-height:28px;height:28px;padding:0 12px;font-size:11px;border-radius:100px;flex:none}
 .rc-mode .dose-fn{margin-top:3px}
 .rc-mode-head{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;min-width:0}
-.rc-mode-head .m-btn{min-height:24px}
+.rc-mode-head .m-btn{min-height:28px}
 .rc-milkfn{flex:none;margin:0}
 .rc-mode-t{font-size:15px;flex:none;line-height:1}
 .rc-mode-acts{display:flex;justify-content:flex-end;gap:8px}
@@ -1706,7 +1706,7 @@ body.night .ep-grid .gname{color:var(--ink)}
 .preset-chip .pc-edit{display:none}
 .preset-chip.on .pc-edit{display:inline}
 .ps-modal{max-width:420px}
-.preset-chip .pc-save{font-size:11px;color:var(--ink-mute);border:none;background:none;cursor:pointer;padding:0 2px}
+.preset-chip .pc-save{font-size:12px;color:var(--ink-mute);border:none;background:none;cursor:pointer;padding:0 2px}
 .preset-chip .pc-save:hover{color:var(--accent)}
 .opt-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(139,92,246,.1)}
 .opt-row:last-child{border-bottom:none}
@@ -4629,7 +4629,9 @@ function renderMilkRow(){
     ico.title=live?t('doseTareHint'):''; }
   if(pill){ pill.hidden=!live;
     pill.textContent=live?(Math.round(state.dosingWeight)+'g'):'\u2014'; }
-  var fn=document.getElementById('milkFn'); if(fn) fn.classList.toggle('off',!live);
+  // The group carries the log button as well as the live reading, and a milk
+  // weight can be typed -- so it goes only when there is neither.
+  var fn=document.getElementById('milkFn'); if(fn) fn.classList.toggle('off',!live&&milkG==null);
   var box=document.getElementById('milkFn');
   var lu=box&&box.parentNode?box.parentNode.querySelector('.lu'):null;
   if(lu) lu.hidden=live;
