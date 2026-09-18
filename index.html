@@ -2647,6 +2647,7 @@ var I18N={
     csWaiting:'Waiting for the machine\u2026', csLiveOn:'Live \u2014 the machine has the picture',
     csLiveStopped:'Stopped', csLiveFailed:'The connection failed',
     csDenied:'Camera permission was refused', csNoCamera:'No camera could be opened',
+    csNoSecureIos:'On an iPhone no browser opens a camera on a plain http:// page \u2014 not Chrome, not Safari, and there is no setting anywhere that changes it. Use way 2 below, which works.',
     csNoSecure:'This browser gives no camera to a plain http:// page. In Chrome open chrome://flags/#unsafely-treat-insecure-origin-as-secure, add the address below, set it to Enabled and restart Chrome, then come back here. Or use way 2, which needs no browser setting:',
     camError:'The stream could not be reached',
     guideLine:'Extraction guideline', guideLineDesc:'Draw what the shot should look like under the live graph.',
@@ -2932,6 +2933,7 @@ var I18N={
     csWaiting:'머신 응답 기다리는 중…', csLiveOn:'연결됨 — 머신에 화면이 나옵니다',
     csLiveStopped:'중지했습니다', csLiveFailed:'연결에 실패했습니다',
     csDenied:'카메라 권한이 거부됐습니다', csNoCamera:'카메라를 열지 못했습니다',
+    csNoSecureIos:'아이폰에서는 어느 브라우저도 http:// 페이지에 카메라를 열어주지 않습니다. 크롬이든 사파리든 바꿀 수 있는 설정이 없습니다. 아래 2번 방법을 쓰세요 — 그쪽은 됩니다.',
     csNoSecure:'브라우저가 http:// 페이지에는 카메라를 주지 않습니다. 크롬에서 chrome://flags/#unsafely-treat-insecure-origin-as-secure 를 열어 아래 주소를 등록하고 Enabled로 바꾼 뒤 크롬을 재시작하고 다시 오세요. 브라우저 설정 없이 쓰려면 아래 2번 방법을 쓰시면 됩니다:',
     camError:'스트림에 연결하지 못했습니다',
     guideLine:'추출 가이드라인', guideLineDesc:'실시간 그래프 아래에 목표 모양을 깔아둡니다.',
@@ -13727,7 +13729,14 @@ function csSecureCheck(){
   if(!note) return;
   var ok=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   note.hidden=ok; if(btn) btn.disabled=!ok;
-  if(!ok) note.textContent=t('csNoSecure')+' '+window.location.origin; }
+  if(ok) return;
+  // Every browser on an iPhone is WebKit underneath, and WebKit gives no camera
+  // to a plain http page. Chrome there has no flag for it and Safari has no
+  // setting; sending someone to chrome://flags is sending them nowhere, and the
+  // address they were told to paste has nowhere to go.
+  note.textContent=(phPlatform()==='ios')
+    ? t('csNoSecureIos')
+    : (t('csNoSecure')+' '+window.location.origin); }
 // A key is not part of describing a coffee. It is how this phone is set up, it
 // is asked for once, and it belongs where the rest of that would be.
 function phVizFill(){
