@@ -1963,6 +1963,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="conn-rows">
           <span class="conn-line" id="connMachineRow"><span class="status-dot" id="dotMachine"></span><span class="conn-txt" id="lblMachine">Machine</span></span>
           <span class="conn-line" id="connScaleRow"><span class="status-dot" id="dotScale"></span><span class="conn-txt" id="lblScale">Scale</span></span>
+          <span class="conn-line" id="connDosingRow" hidden><span class="status-dot" id="dotDosing"></span><span class="conn-txt" id="lblDosing">Dosing</span></span>
         </div>
       </button></div>
 
@@ -2916,7 +2917,7 @@ var I18N={
     dosingScale:'Dosing scale', dosingScaleDesc:'A second scale to weigh the dose on. It is held open for this skin only, is never used to weigh a shot, and is let go when the app closes.',
     dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
     dosingReading:'Dosing reading',
-    dosingTareHint:'The \u2696 beside the dose on the main screen zeroes it too, without coming in here.', dosingWaiting:'Waiting for the scale', dosingTare:'Zero',
+    dosingTareHint:'The \u2696 beside the dose on the main screen zeroes it too, without coming in here.', dosingWaiting:'Waiting for the scale', dosingWaitBrew:'Waiting for the brewing scale first', dosingTare:'Zero',
     dosingHeld:'Dosing scale connected', dosingHoldFailed:'Could not hold the dosing scale',
     dosingUnsupported:'This gateway is too old for a second scale. Update Decaid.',
     favTag:'Favourites', noTag:'No tag', loadingCenter:'Loading this one…',
@@ -3237,7 +3238,7 @@ var I18N={
     dosingScale:'도징 저울', dosingScaleDesc:'도징 무게를 재는 두 번째 저울입니다. 이 스킨을 위해서만 잡아 두며, 추출 계량에는 쓰이지 않고 앱을 닫으면 놓습니다.',
     dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
     dosingReading:'도징 측정값',
-    dosingTareHint:'메인 화면 도스 옆의 ⚖ 를 눌러도 영점이 잡힙니다. 여기까지 들어오지 않아도 됩니다.', dosingWaiting:'저울을 기다리는 중', dosingTare:'영점',
+    dosingTareHint:'메인 화면 도스 옆의 ⚖ 를 눌러도 영점이 잡힙니다. 여기까지 들어오지 않아도 됩니다.', dosingWaiting:'저울을 기다리는 중', dosingWaitBrew:'추출 저울을 먼저 기다리는 중', dosingTare:'영점',
     dosingHeld:'도징 저울을 연결했습니다', dosingHoldFailed:'도징 저울을 잡지 못했습니다',
     dosingUnsupported:'이 게이트웨이는 두 번째 저울을 지원하지 않습니다. Decaid를 업데이트하세요.',
     favTag:'즐겨찾기', noTag:'태그 없음', loadingCenter:'이것을 불러오는 중…',
@@ -4127,7 +4128,19 @@ function updateConnUI(s){ var btn=document.getElementById('btnConnect');
   var mRow=document.getElementById('connMachineRow'), sRow=document.getElementById('connScaleRow');
   mRow.className='conn-line'+(mUp?' up':' down'); sRow.className='conn-line'+(sUp?' up':' down');
   document.getElementById('lblMachine').textContent=state.machineName||'DE1';
-  document.getElementById('lblScale').textContent=state.scaleName||'Scale'; }
+  document.getElementById('lblScale').textContent=state.scaleName||'Scale';
+  syncConnDosing(); }
+// Held by the gateway is what puts the line on screen; a reading arriving is
+// what turns it green. The two are not the same moment, and the gap is worth
+// seeing -- it is exactly where a dosing scale goes quiet.
+function syncConnDosing(){
+  var row=document.getElementById('connDosingRow'); if(!row) return;
+  var id=dosingId(), d=id?deviceById(id):null;
+  var held=!!(d&&d.connectionRole==='auxiliary');
+  row.hidden=!held;
+  if(!held) return;
+  row.className='conn-line'+(state.dosingConnected?' up':' down');
+  document.getElementById('lblDosing').textContent=d.name||t('dosingScale'); }
 
 // ── Timer & chart ───────────────────────────────────────────────────
 function startTimer(){ state.shotStart=Date.now(); state.shotPourEnd=null; if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
@@ -4539,7 +4552,7 @@ function closeWs(name){
 function dosingFrame(m){
   if(m.status){ state.dosingConnected=(m.status==='connected');
     if(!state.dosingConnected) state.dosingWeight=null;
-    syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); return; }
+    syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); syncConnDosing(); return; }
   if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); } }
 // Opening the socket is what makes the reading appear, so it is opened only
 // once the gateway is actually holding the scale -- otherwise the socket would
@@ -4556,6 +4569,14 @@ function reopenDosingWs(){
   _wsParked['dosing']=false;
   openWs('dosing','/ws/v1/scales/'+encodeURIComponent(id)+'/snapshot',dosingFrame,{optional:true}); }
 var _dosingHoldAt=0;
+var DOSING_BREW_WAIT=45000;
+var _dosingWaitAt=0;
+function brewScalePending(){
+  var want=(gwSettings&&gwSettings.preferredScaleId)||'';
+  if(!want||want===dosingId()) return false;
+  return !state.scaleConnected; }
+function dosingWaitingForBrew(){
+  return !!(brewScalePending()&&_dosingWaitAt&&(Date.now()-_dosingWaitAt)<DOSING_BREW_WAIT); }
 function holdDosingScale(id,announce){
   return api('PUT','/api/v1/devices/connect',{deviceId:id,connectionRole:'auxiliary'})
     .then(function(){ return confirmDosingHold(id,announce); })
@@ -4580,7 +4601,7 @@ function releaseDosingScale(id){
 // Called whenever the device list changes: take the hold when the chosen scale
 // turns up, and let the socket follow it.
 function syncDosing(){
-  renderDosingRow();
+  renderDosingRow(); syncConnDosing();
   if(!dosingSupported()) return;
   var id=dosingId(); if(!id) return;
   var d=deviceById(id);
@@ -4589,8 +4610,14 @@ function syncDosing(){
     return; }
   if(d.connectionRole==='auxiliary'){ if(!sockets['dosing']) reopenDosingWs(); return; }
   if(d.connectionRole==='primary') return;
-  // Present but not held. Retry sparingly: a scale that refuses to connect
-  // should not be hammered every time the device list twitches.
+  // Present but not held, and the brewing scale has not arrived yet: let the
+  // gateway finish looking for it before a second radio is claimed.
+  if(brewScalePending()){
+    if(!_dosingWaitAt) _dosingWaitAt=Date.now();
+    if(Date.now()-_dosingWaitAt<DOSING_BREW_WAIT) return;
+  } else _dosingWaitAt=0;
+  // Retry sparingly: a scale that refuses to connect should not be hammered
+  // every time the device list twitches.
   if(Date.now()-_dosingHoldAt<8000) return;
   _dosingHoldAt=Date.now();
   holdDosingScale(id,false); }
@@ -4599,7 +4626,7 @@ function setDosingScale(id){
   id=id||'';
   if(id===prev) return;
   prefs.dosingScaleId=id; savePrefs();
-  _dosingHoldAt=0;
+  _dosingHoldAt=0; _dosingWaitAt=0;
   closeWs('dosing');
   state.dosingConnected=false; state.dosingWeight=null; syncDoseTake(); syncRecipe();
   var done=prev?releaseDosingScale(prev):Promise.resolve();
@@ -6005,7 +6032,7 @@ function dosingStatusRow(){
   var id=dosingId(); if(!id) return '';
   var val=state.dosingConnected&&state.dosingWeight!==null
     ? convWeight(state.dosingWeight).toFixed(1)+weightUnitLabel()
-    : t('dosingWaiting');
+    : t(dosingWaitingForBrew()?'dosingWaitBrew':'dosingWaiting');
   return '<div class="set-row"><div class="set-info"><div class="set-name">'+t('dosingReading')+'</div>'
     +'<div class="set-desc">'+escapeHtml(val)+'</div>'
     +'<div class="set-desc">'+escapeHtml(t('dosingTareHint'))+'</div></div>'
