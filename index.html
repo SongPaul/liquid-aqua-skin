@@ -3505,6 +3505,8 @@ function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window
   // A non-integer scale over a backdrop-filter re-snapshots and re-blurs the
   // backdrop every frame, so the glass gives up its blur exactly where it costs.
   document.body.classList.toggle('scaled',scaled); }
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden&&typeof maybeAutoScanDosing==='function') maybeAutoScanDosing(); });
 var _resizeT=null;
 window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requestAnimationFrame(function(){ _resizeT=null; fitStage(); _chartBgKey=null; drawChart(); }); });
 
@@ -4801,7 +4803,7 @@ function updateLockClock(){ var d=new Date();
   document.getElementById('lockDate').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
 // Show/hide the lock without issuing a state change (used when the machine itself reports sleep).
 function enterSleepLocalOnly(){ beginSleepUI(); }
-function wakeLocalOnly(){ endSleepUI(); }
+function wakeLocalOnly(){ endSleepUI(); maybeAutoScanDosing(); }
 function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast(t('tScanFailed'),'err');}); }
 
 // ── Steam/Flush modals ──────────────────────────────────────────────
