@@ -555,6 +555,11 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-num.tap,.rv.tap,.recipe .grind-val{cursor:pointer;border-radius:11px;min-height:40px;display:inline-flex;align-items:baseline;justify-content:center;gap:3px;padding:5px 6px;border:1px solid transparent;background-color:transparent;transition:background .15s,transform .1s}
 .du{font-size:13px;font-weight:700;color:var(--ink-mute)}
 .dose-ico{font-size:12px;line-height:1;opacity:.75}
+/* a mark that does something needs somewhere to press, not just somewhere to
+   look; the row is 14px tall, so the target grows without moving the text */
+.dose-ico.tap{cursor:pointer;opacity:1;border-radius:10px;padding:10px 11px;margin:-10px -5px;
+  border:1px solid transparent;transition:background .15s}
+.dose-ico.tap:hover{background-color:var(--ctl-face)}
 .recipe .grind-val:hover{background:transparent}
 .dose-num.tap:active,.rv.tap:active{transform:scale(.95)}
 .ms-btn.sm{width:36px;height:36px;font-size:16px;border-radius:11px}
@@ -2559,6 +2564,7 @@ var I18N={
     doseFromScaleOk:'Dose taken from the scale',
     doseNoScale:'The scale has not sent a reading',
     doseHoldHint:'Tap to type it, hold to take it off the scale',
+    doseTareHint:'Zero the dosing scale',
     tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', brewTemp:'Brew temp', noProfile:'No profile loaded',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
@@ -2862,6 +2868,7 @@ var I18N={
     doseFromScaleOk:'저울값을 도징으로 넣었습니다',
     doseNoScale:'저울이 값을 보내지 않습니다',
     doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
+    doseTareHint:'누르면 도징 저울 영점',
     tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
@@ -4287,6 +4294,10 @@ function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==n
 function syncDoseTake(){ var i=document.getElementById('doseIco'); if(!i) return;
   var live=doseSourceWeight()!==null;
   i.hidden=!live;
+  var tarable=dosingHasReading();
+  i.classList.toggle('tap',tarable);
+  i.onclick=tarable?function(e){ e.stopPropagation(); tareDosingScale(); }:null;
+  i.title=tarable?t('doseTareHint'):'';
   var el=document.getElementById('doseIn');
   if(el) el.title=live?t('doseHoldHint'):''; }
 // tap types it, hold takes it off the scale -- the same two gestures the steam,
