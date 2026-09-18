@@ -550,9 +550,13 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dose-num{font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
 .dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:3px;min-height:14px;line-height:14px;display:flex;align-items:center;justify-content:center;gap:5px}
 .dose-lbl .lu,.dose-lbl .dose-live{text-transform:none}
-/* once the mark is something to press, the row is a control and gets the room
-   a control needs -- rather than a press target reaching into its neighbours */
-.dose-lbl.has-tare{min-height:34px}
+.dose-cap{margin:0 0 4px}
+/* what can be done to the number, under the number. Empty until a scale is
+   feeding it, and taking no room until then. */
+.dose-fn{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:5px;
+  min-height:0;text-transform:none}
+.dose-fn:empty,.dose-fn.off{display:none}
+.dose-fn .dose-live{font-size:11px}
 .dose-lbl .lu{font-weight:800;color:var(--accent);opacity:.6}
 /* Only drawn while a dosing scale is reporting. Press it to take the reading into the dose, which is the same thing holding the dose does. */
 .dose-live{font-size:10px;font-weight:800;line-height:14px;color:var(--accent2);background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:100px;padding:0 6px;cursor:pointer;white-space:nowrap}
@@ -2059,24 +2063,26 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="recipe-grid">
         <div class="rg-main">
           <div class="dose-block">
+            <div class="dose-lbl dose-cap"><span data-i18n="doseG">Dose</span><span class="lu" id="doseInUnit">g</span></div>
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
               <div class="dose-num tap" id="doseIn"><span id="doseInVal">18.0</span></div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
-            <div class="dose-lbl"><span class="dose-ico" id="doseIco" hidden>⚖</span><span data-i18n="doseG">Dose</span><span class="lu" id="doseInUnit">g</span><span class="dose-live" id="doseLive" hidden onclick="doseFromScale()" title="">—</span></div>
+            <div class="dose-fn" id="doseFn"><span class="dose-ico" id="doseIco" hidden>⚖</span><span class="dose-live" id="doseLive" hidden onclick="doseFromScale()" title="">—</span></div>
           </div>
           <div class="dose-block">
+            <div class="dose-lbl dose-cap" data-i18n="ratio">Ratio</div>
             <div class="dose-adj"><button class="ms-btn" onclick="adjustRatio(-0.1)">−</button>
               <div class="rv tap" onclick="openKeypad('ratio')">1:<span id="ratioTag">2.0</span></div>
               <button class="ms-btn" onclick="adjustRatio(0.1)">+</button></div>
-            <div class="dose-lbl" data-i18n="ratio">Ratio</div>
           </div>
           <div class="dose-block">
+            <div class="dose-lbl dose-cap"><span data-i18n="yieldG">Yield</span><span class="lu" id="doseOutUnit">g</span></div>
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
               <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')"><span id="doseOutVal">36.0</span></div>
               <button class="ms-btn" onclick="adjust('doseOut',0.5)">+</button></div>
-            <div class="dose-lbl"><span data-i18n="yieldG">Yield</span><span class="lu" id="doseOutUnit">g</span></div>
           </div>
           <div class="dose-block" id="grindRow" style="display:none">
+            <div class="dose-lbl dose-cap" data-i18n="grind"></div>
             <div class="dose-adj"><button class="ms-btn" onclick="adjustGrind(-1)">−</button>
               <span class="grind-val" id="grindVal" onclick="openGrindKeypad()">—</span>
               <button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
@@ -4338,7 +4344,8 @@ function syncDoseTake(){ var i=document.getElementById('doseIco'); if(!i) return
   i.classList.toggle('tap',tarable);
   i.onclick=tarable?function(e){ e.stopPropagation(); tareDosingScale(); }:null;
   i.title=tarable?t('doseTareHint'):'';
-  var lbl=i.parentNode; if(lbl) lbl.classList.toggle('has-tare',tarable);
+  var fn=document.getElementById('doseFn');
+  if(fn) fn.classList.toggle('off',!live);
   // "Dose g 12g" says gram twice. The reading carries the unit while it is
   // there; the bare one comes back when it is not.
   var u=document.getElementById('doseInUnit'); if(u) u.hidden=tarable;
