@@ -2908,6 +2908,9 @@ var I18N={
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
     scaleBrew:'Brewing scale',
     scaleBrewDesc:'The scale a shot is weighed on. The gateway reconnects to it by itself.',
+    scaleMove:'in the other column \u2014 tap to move it',
+    dosingTakeOver:'Shots are weighed on \u201c{n}\u201d right now. Use it as the dosing scale instead?\n\nIt stops being the brewing scale, and shots are weighed on nothing until another one is chosen.',
+    brewTakeOver:'\u201c{n}\u201d is held as the dosing scale. Weigh shots on it instead?\n\nThe dosing reading goes away.',
     scaleTaken:'taken by the other side', scaleBrewSet:'Brewing scale changed',
     scaleBrewCleared:'No brewing scale', scaleBrewFailed:'Could not change it:',
     dosingFind:'Look for scales', dosingScanning:'Looking\u2026',
@@ -3229,6 +3232,9 @@ var I18N={
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
     scaleBrew:'추출 저울',
     scaleBrewDesc:'샷을 재는 저울입니다. 게이트웨이가 알아서 다시 연결합니다.',
+    scaleMove:'반대쪽에 있음 — 누르면 옴김',
+    dosingTakeOver:'지금 샷은 “{n}” 으로 재고 있습니다. 도징 저울로 쓸까요?\n\n추출 저울에서 빠지며, 다른 저울을 고를 때까지 샷은 계량 없이 내립니다.',
+    brewTakeOver:'“{n}” 은 도징 저울로 잡혀 있습니다. 샷을 이 저울로 재게 할까요?\n\n도징 측정값은 사라집니다.',
     scaleTaken:'반대쪽이 쓰는 중', scaleBrewSet:'추출 저울을 바꿨습니다',
     scaleBrewCleared:'추출 저울 없음', scaleBrewFailed:'바꾸지 못했습니다:',
     dosingFind:'저울 찾기', dosingScanning:'찾는 중…',
@@ -3638,9 +3644,10 @@ function initWebSockets(){
       if(d.type==='scale'&&d.connectionRole!=='auxiliary'){ if(!scaleName||d.state==='connected') scaleName=d.name; if(d.state==='connected') scaleConnected=true; }
     }); }
     state.machineName=machineName; state.scaleName=scaleName;
-    var wasConnected=state.connected;
+    var wasConnected=state.connected, wasScale=state.scaleConnected;
     state.connected=machineConnected||(phase==='ready');
     state.scaleConnected=scaleConnected;
+    if(scaleConnected&&!wasScale) maybeAutoScanDosing();
     updateConnUI(state.connected?'on':(scanning?'ing':'off'));
     var err=m.connectionStatus&&m.connectionStatus.error; if(err&&err.suggestion) toast(err.suggestion,'err');
     if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); }
@@ -3756,7 +3763,9 @@ function onMachineState(ms,prev){
   // treating it as one restarted the timer and wiped the graph mid pour. Once
   // extraction has begun the shot runs until the espresso state itself ends.
   state.shotRunning=extracting||(state.shotRunning&&inEspresso);
-  if(ms.state!==prev) syncRecipeMode(ms,prev);
+  if(ms.state!==prev){
+    syncRecipeMode(ms,prev);
+    if(prev==='sleeping') maybeAutoScanDosing(); }
   state.shotActive=inEspresso;
   // Steam session lifecycle (records flow/pressure/steam temp; no DYE)
   if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
@@ -4625,6 +4634,22 @@ function setDosingScale(id){
   var prev=dosingId();
   id=id||'';
   if(id===prev) return;
+  if(id&&id===brewScaleId()){
+    var bd=deviceById(id);
+    if(!confirm(t('dosingTakeOver').replace('{n}',(bd&&bd.name)||id))) return;
+    return releaseBrewScale(id).then(function(){ applyDosingScale(id,prev); }); }
+  applyDosingScale(id,prev); }
+// Clearing the preference matters as much as the disconnect: left in place the
+// gateway takes the scale straight back on its next scan.
+function releaseBrewScale(id){
+  var chain=Promise.resolve();
+  if(gwSettings&&gwSettings.preferredScaleId===id){
+    gwSettings.preferredScaleId=null;
+    chain=chain.then(function(){
+      return api('POST','/api/v1/settings',{preferredScaleId:null}).catch(function(){}); }); }
+  return chain.then(function(){
+    return api('PUT','/api/v1/devices/disconnect',{deviceId:id}).catch(function(){}); }); }
+function applyDosingScale(id,prev){
   prefs.dosingScaleId=id; savePrefs();
   _dosingHoldAt=0; _dosingWaitAt=0;
   closeWs('dosing');
@@ -6061,8 +6086,8 @@ function scaleColList(side){
   var h='<div class="sc-list">'+scaleChoice(side,'',t('dosingNone'),mine==='',false,busy);
   list.forEach(function(d){
     var taken=(theirs&&d.id===theirs);
-    var note=d._away?'':(taken?t('scaleTaken'):'');
-    h+=scaleChoice(side,d.id,d.name,mine===d.id,taken,busy,note); });
+    var note=d._away?'':(taken?t('scaleMove'):'');
+    h+=scaleChoice(side,d.id,d.name,mine===d.id,false,busy,note); });
   return h+'</div>'; }
 function scaleChoice(side,id,label,on,taken,busy,note){
   var dis=(taken||busy)&&!on;
@@ -6076,11 +6101,26 @@ function pickScale(side,id){
   return setBrewScale(id); }
 // Changing what a shot is weighed on is not a preference to be forgotten at the
 // next restart, so the choice is written down as well as acted on.
+// The same conflict the other way round: the gateway will not weigh a shot on
+// a scale this skin is holding, so the hold is let go before the scale is
+// asked to take the shot.
+function releaseDosingForBrew(id){
+  prefs.dosingScaleId=''; savePrefs();
+  _dosingHoldAt=0; _dosingWaitAt=0;
+  closeWs('dosing');
+  state.dosingConnected=false; state.dosingWeight=null;
+  syncDoseTake(); syncRecipe();
+  return releaseDosingScale(id); }
 function setBrewScale(id){
   var prev=brewScaleId();
   if(id===prev) return;
-  if(id&&id===dosingId()) return;
-  var done=prev?api('PUT','/api/v1/devices/disconnect',{deviceId:prev}).catch(function(){}):Promise.resolve();
+  var pre=Promise.resolve();
+  if(id&&id===dosingId()){
+    var dd=deviceById(id);
+    if(!confirm(t('brewTakeOver').replace('{n}',(dd&&dd.name)||id))) return;
+    pre=releaseDosingForBrew(id); }
+  var done=pre.then(function(){
+    return prev?api('PUT','/api/v1/devices/disconnect',{deviceId:prev}).catch(function(){}):null; });
   done.then(function(){
       return api('POST','/api/v1/settings',{preferredScaleId:id||null}).catch(function(){}); })
     .then(function(){
@@ -6104,6 +6144,19 @@ function dosingBlockHtml(){
 // nothing -- otherwise the scale being looked for could be taken for the
 // brewing one, which is the opposite of what is wanted here.
 var _dosingScanning=false;
+var _dosingAutoScanAt=0;
+function maybeAutoScanDosing(){
+  if(!dosingSupported()) return;
+  var id=dosingId(); if(!id) return;
+  if(deviceById(id)) return;
+  if(state.shotRunning||_dosingScanning) return;
+  if(brewScalePending()) return;
+  if(Date.now()-_dosingAutoScanAt<90000) return;
+  _dosingAutoScanAt=Date.now();
+  _dosingScanning=true; renderDosingRow();
+  api('GET','/api/v1/devices/scan?connect=false',null,60000)
+    .then(function(list){ if(Array.isArray(list)) state.devices=list; },function(){})
+    .then(function(){ _dosingScanning=false; renderDosingRow(); syncDosing(); }); }
 function dosingScan(){
   if(_dosingScanning||state.shotRunning) return;
   _dosingScanning=true; renderDosingRow();
