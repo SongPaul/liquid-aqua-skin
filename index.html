@@ -234,6 +234,7 @@ header>*{position:relative;z-index:1}
 .conn-toggle:active{transform:scale(.96)}
 .conn-toggle.ing{border-color:var(--amber)}
 .conn-rows{display:flex;flex-direction:column;gap:4px}
+[hidden]{display:none!important}
 .conn-line{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--ink-mute)}
 .conn-line .conn-txt{white-space:nowrap}
 .conn-line.up{color:var(--green)} .conn-line.down{color:var(--ink-mute)}
@@ -1974,11 +1975,11 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </span>
         </div>
       </div>
-      <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()">
+      <button class="conn-toggle off" id="btnConnect" onclick="toggleConnect()" data-i18n-title="connTapHint">
         <div class="conn-rows">
           <span class="conn-line" id="connMachineRow"><span class="status-dot" id="dotMachine"></span><span class="conn-txt" id="lblMachine">Machine</span></span>
           <span class="conn-line" id="connScaleRow"><span class="status-dot" id="dotScale"></span><span class="conn-txt" id="lblScale">Scale</span></span>
-          <span class="conn-line" id="connDosingRow" hidden><span class="status-dot" id="dotDosing"></span><span class="conn-txt" id="lblDosing">Dosing</span></span>
+          <span class="conn-line" id="connDosingRow" hidden><span class="status-dot" id="dotDosing"></span><span class="conn-txt" id="lblDosing" data-i18n="dosingScale">Dosing</span></span>
         </div>
       </button></div>
 
@@ -2373,6 +2374,18 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <!-- ── Flush modal ─────────────────────────────────────────────── -->
 
 <!-- ── Hot Water modal ─────────────────────────────────────────── -->
+
+<!-- Which scale does which -->
+<div class="overlay" id="scalePickOverlay" onclick="closeModal(event,'scalePickOverlay')">
+  <div class="modal ps-modal"><div class="modal-head"><div class="modal-title" data-i18n="scalePickTitle"></div><button class="modal-close" onclick="closeModal(null,'scalePickOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="set-desc" data-i18n="scalePickDesc"></div>
+    <div id="scalePickList"></div>
+    <div class="modal-actions">
+      <button class="m-btn" onclick="closeModal(null,'scalePickOverlay')"><span data-i18n="close"></span></button>
+    </div>
+  </div></div>
+</div>
 
 <!-- Preset editor -->
 <div class="overlay" id="presetOverlay" onclick="closeModal(event,'presetOverlay')">
@@ -2924,6 +2937,8 @@ var I18N={
     tempLabel:'Temp °C', exitTitle:'Exit condition', exitOver:'over', exitUnder:'under', noLimit:'no limit', volLimit:'Volume limit', wtLimit:'Weight limit', exitDesc:'Leave this step the moment the reading crosses the line, even if its time is not up. This is what ends a shot early while every number on screen still looks right.',
     legWeight:'Weight', legWeightFlow:'Weight flow', wflow:'Weight flow',
     scaleBrew:'Brewing scale',
+    scalePickTitle:'Scales', scalePickDesc:'Which scale weighs the shot, and which one the dose.',
+    scaleFree:'not in use', scaleUseBrew:'Brewing', scaleUseDosing:'Dosing',
     scaleBrewDesc:'The scale a shot is weighed on. The gateway reconnects to it by itself.',
     scaleMove:'in the other column \u2014 tap to move it',
     dosingTakeOver:'Shots are weighed on \u201c{n}\u201d right now. Use it as the dosing scale instead?\n\nIt stops being the brewing scale, and shots are weighed on nothing until another one is chosen.',
@@ -2935,7 +2950,7 @@ var I18N={
     dosingScanFound:'{n} more scale(s) found', dosingScanNone:'Nothing new turned up',
     dosingScanFailed:'The search failed:',
     dosingScale:'Dosing scale', dosingScaleDesc:'A second scale to weigh the dose on. It is held open for this skin only, is never used to weigh a shot, and is let go when the app closes.',
-    dosingPicked:'Using \u201c{n}\u201d as the dosing scale', dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
+    connTapHint:'Look for the machine and the scales, and take a dosing scale if one turns up', dosingPicked:'Using \u201c{n}\u201d as the dosing scale', dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
     dosingReading:'Dosing reading',
     dosingTareHint:'The \u2696 beside the dose on the main screen zeroes it too, without coming in here.', dosingWaiting:'Waiting for the scale', dosingWaitBrew:'Waiting for the brewing scale first', dosingTare:'Zero',
     dosingHeld:'Dosing scale connected', dosingHoldFailed:'Could not hold the dosing scale',
@@ -3249,6 +3264,8 @@ var I18N={
     tempLabel:'온도 °C', exitTitle:'조건부 넘김', exitOver:'이상', exitUnder:'이하', noLimit:'제한 없음', volLimit:'부피 제한', wtLimit:'무게 제한', exitDesc:'측정값이 이 선을 넘는 순간, 시간이 남아도 다음 스텝으로 넘어갑니다. 화면의 숫자는 전부 정상인데 샷이 일찍 끝나는 원인이 이것입니다.',
     legWeight:'누적 추출량', legWeightFlow:'초당 추출량', wflow:'초당 추출량',
     scaleBrew:'추출 저울',
+    scalePickTitle:'저울', scalePickDesc:'어느 저울로 샷을 재고, 어느 저울로 도징을 재는지 고르세요.',
+    scaleFree:'사용 안 함', scaleUseBrew:'추출용', scaleUseDosing:'도징용',
     scaleBrewDesc:'샷을 재는 저울입니다. 게이트웨이가 알아서 다시 연결합니다.',
     scaleMove:'반대쪽에 있음 — 누르면 옴김',
     dosingTakeOver:'지금 샷은 “{n}” 으로 재고 있습니다. 도징 저울로 쓸까요?\n\n추출 저울에서 빠지며, 다른 저울을 고를 때까지 샷은 계량 없이 내립니다.',
@@ -3260,7 +3277,7 @@ var I18N={
     dosingScanFound:'저울 {n}대를 찾았습니다', dosingScanNone:'새로 찾은 저울이 없습니다',
     dosingScanFailed:'찾기에 실패했습니다:',
     dosingScale:'도징 저울', dosingScaleDesc:'도징 무게를 재는 두 번째 저울입니다. 이 스킨을 위해서만 잡아 두며, 추출 계량에는 쓰이지 않고 앱을 닫으면 놓습니다.',
-    dosingPicked:'“{n}” 을 도징 저울로 잡았습니다', dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
+    connTapHint:'머신과 저울을 찾고, 도징 저울이 나오면 잡습니다', dosingPicked:'“{n}” 을 도징 저울로 잡았습니다', dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
     dosingReading:'도징 측정값',
     dosingTareHint:'메인 화면 도스 옆의 ⚖ 를 눌러도 영점이 잡힙니다. 여기까지 들어오지 않아도 됩니다.', dosingWaiting:'저울을 기다리는 중', dosingWaitBrew:'추출 저울을 먼저 기다리는 중', dosingTare:'영점',
     dosingHeld:'도징 저울을 연결했습니다', dosingHoldFailed:'도징 저울을 잡지 못했습니다',
@@ -4841,7 +4858,44 @@ function updateLockClock(){ var d=new Date();
 // Show/hide the lock without issuing a state change (used when the machine itself reports sleep).
 function enterSleepLocalOnly(){ beginSleepUI(); }
 function wakeLocalOnly(){ endSleepUI(); maybeAutoScanDosing(); }
-function toggleConnect(){ toast(state.connected?'Re-scanning…':'Scanning…'); api('GET','/api/v1/devices/scan').catch(function(){toast(t('tScanFailed'),'err');}); }
+function scaleRoleOf(d){
+  if(d.id===brewScaleId()) return 'brew';
+  if(d.id===dosingId()) return 'dosing';
+  return ''; }
+function renderScalePick(){
+  var box=document.getElementById('scalePickList'); if(!box) return;
+  var list=scaleDevices();
+  if(!list.length){ box.innerHTML='<div class="set-desc">'+escapeHtml(t('dosingScanNone'))+'</div>'; return; }
+  var h='';
+  list.forEach(function(d){
+    var role=scaleRoleOf(d);
+    var note=role==='brew'?t('scaleBrew'):role==='dosing'?t('dosingScale'):t('scaleFree');
+    h+='<div class="set-row"><div class="set-info"><div class="set-name">'+escapeHtml(d.name||d.id)+'</div>'
+      +'<div class="set-desc">'+escapeHtml(note)+'</div></div>'
+      +'<button class="m-btn"'+(role==='brew'?' disabled':'')+' onclick="pickScaleFromModal(\'brew\',\''+escapeAttr(d.id)+'\')"><span>'+escapeHtml(t('scaleUseBrew'))+'</span></button>'
+      +'<button class="m-btn"'+(role==='dosing'?' disabled':'')+' onclick="pickScaleFromModal(\'dosing\',\''+escapeAttr(d.id)+'\')"><span>'+escapeHtml(t('scaleUseDosing'))+'</span></button></div>'; });
+  box.innerHTML=h; }
+function openScalePick(){
+  renderScalePick();
+  document.getElementById('scalePickOverlay').classList.add('show'); }
+function pickScaleFromModal(side,id){
+  closeModal(null,'scalePickOverlay');
+  pickScale(side,id); }
+function toggleConnect(){
+  if(_dosingScanning) return;
+  toast(state.connected?'Re-scanning…':'Scanning…');
+  _dosingAutoScanAt=0; _dosingDiscoverAt=0;
+  _dosingScanning=true; renderDosingRow(); syncConnDosing();
+  api('GET','/api/v1/devices/scan',null,60000)
+    .catch(function(){ toast(t('tScanFailed'),'err'); })
+    .then(function(){ return api('GET','/api/v1/devices').catch(function(){ return null; }); })
+    .then(function(list){
+      if(Array.isArray(list)) state.devices=list;
+      _dosingScanning=false;
+      _dosingHoldAt=0;
+      renderDosingRow(); syncConnDosing(); syncDosing();
+      var free=scaleDevices().filter(function(d){ return !scaleRoleOf(d); });
+      if(free.length) openScalePick(); }); }
 
 // ── Steam/Flush modals ──────────────────────────────────────────────
 // Steam, flush and hot water each had a modal of their own. They are panes of
