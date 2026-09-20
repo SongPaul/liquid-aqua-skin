@@ -14780,25 +14780,36 @@ function phNetCheck(manual){
 function phNetWatch(){
   clearTimeout(_phNetT);
   phNetCheck().then(function(ok){ _phNetT=setTimeout(phNetWatch,ok?30000:8000); }); }
+// Two settings belong to the phone rather than to the tablet: which service it
+// talks to, and whether it is dark. They are re-applied after anything that
+// brings the tablet's settings over.
+function phoneOwnPrefs(){
+  try{ var pv=localStorage.getItem('aurora_aiprov'); if(AI_PROVIDERS.indexOf(pv)>=0) prefs.aiProvider=pv; }catch(_){}
+  var stored=lsGet('aurora_prefs');
+  var night=(stored&&typeof stored.night==='boolean')?stored.night
+    :!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.body.classList.toggle('night',night); }
 function bootPhone(tab){
   skinStableCheck();
   phoneHomeIcon();
   loadAiLangs();
   loadPrefs(); // picks up language + applies i18n
-  // loadPrefs reads the tablet's stored settings; the phone's own choice wins.
-  try{ var pv=localStorage.getItem('aurora_aiprov'); if(AI_PROVIDERS.indexOf(pv)>=0) prefs.aiProvider=pv; }catch(_){}
   document.querySelector('.stage-wrap').style.display='none';
   document.getElementById('phoneShell').style.display='block';
   document.documentElement.classList.add('mobile-scan'); document.body.classList.add('mobile-scan');
-  // The phone keeps its own storage, so it rarely knows what the tablet is set
-  // to. Its own setting is a better guess than always-light.
-  var stored=lsGet('aurora_prefs');
-  var night=(stored&&typeof stored.night==='boolean')?stored.night
-    :!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
-  if(night) document.body.classList.add('night');
+  phoneOwnPrefs();
   applyI18n();
   phoneGo(tab||'bean');
-  phNetWatch(); }
+  phNetWatch();
+  // The keys, the units and the language live in the gateway's store, put there
+  // by the tablet. Without this the phone starts from nothing every time.
+  try{
+    hydrateFromStore().then(function(){ phoneOwnPrefs(); applyI18n(); phoneAfterHydrate(); },
+                            function(){});
+  }catch(_){} }
+// The tabs were drawn before the language arrived.
+function phoneAfterHydrate(){
+  if(typeof renderPhoneNav==='function') try{ renderPhoneNav(); }catch(_){} }
 function renderPhoneNav(){
   var nav=document.getElementById('phNav'); if(!nav) return;
   nav.innerHTML=PHONE_TABS.map(function(c){
