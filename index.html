@@ -2684,6 +2684,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <div class="set-desc" id="phVizStat" style="margin-top:10px"></div>
     </div>
     <div class="mb-card" id="phHomeBox" style="margin-top:14px"></div>
+    <div class="mb-card" id="phSkinBox" style="margin-top:14px"></div>
     <div class="mb-card" style="margin-top:14px">
       <button class="m-btn mb-analyze" onclick="phoneShowTablet()" data-i18n="phTabletView">Show the tablet screen</button>
       <div class="set-desc" style="margin-top:10px" data-i18n="phTabletViewNote"></div>
@@ -6651,10 +6652,10 @@ function loadSkinInfo(){
   if(skinRunningVer===null){ skinRunningVer='';
     fetch('skin-manifest.json?_='+Date.now()).then(function(r){ return r.json(); })
       .then(function(m){ skinRunningVer=String((m&&m.version)||'');
-        if(spOpen()&&spCat==='updates') renderSkinBox(); }).catch(function(){}); }
+        skinBoxRefresh(); }).catch(function(){}); }
   api('GET','/api/v1/webui/skins/'+encodeURIComponent(SKIN_ID))
     .then(function(x){ if(x) skinInfo=x; }).catch(function(){})
-    .then(function(){ if(spOpen()&&spCat==='updates') renderSkinBox(); loadSkinNews(); }); }
+    .then(function(){ skinBoxRefresh(); loadSkinNews(); }); }
 // A tablet at a machine is not always on a network, so the last history it saw
 // is kept and shown while a fresher one is asked for.
 function loadSkinNews(force){
@@ -6662,10 +6663,10 @@ function loadSkinNews(force){
   if(!force){
     var c=lsGet('aurora_skinnews');
     if(c&&c.repo===repo&&c.list&&c.list.length){ skinNews=c.list;
-      if(Date.now()-(c.at||0)<SKIN_NEWS_TTL){ if(spOpen()&&spCat==='updates') renderSkinBox(); return; } } }
+      if(Date.now()-(c.at||0)<SKIN_NEWS_TTL){ skinBoxRefresh(); return; } } }
   if(_skinNewsState==='loading') return;
   _skinNewsState='loading';
-  if(spOpen()&&spCat==='updates') renderSkinBox();
+  skinBoxRefresh();
   fetch('https://api.github.com/repos/'+repo+'/releases?per_page=20',
         {headers:{Accept:'application/vnd.github+json'}})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -6676,10 +6677,10 @@ function loadSkinNews(force){
       _skinNewsState='';
       lsSet('aurora_skinnews',{repo:repo,at:Date.now(),list:skinNews}); })
     .catch(function(){ _skinNewsState=(skinNews&&skinNews.length)?'':'err'; })
-    .then(function(){ if(spOpen()&&spCat==='updates') renderSkinBox(); }); }
+    .then(function(){ skinBoxRefresh(); }); }
 function skinCheckUpdate(){
   if(_skinChecking) return;
-  _skinChecking=true; renderSkinBox();
+  _skinChecking=true; skinBoxRefresh();
   api('POST','/api/v1/webui/skins/update',null,90000)
     .then(function(){ toast(t('skinChecked'),'ok'); })
     .catch(function(e){ toast(apiErrorText(e),'err'); })
@@ -6706,6 +6707,30 @@ function skinRelHtml(r,running,open){
       +'<span class="sk-date">'+escapeHtml(isoDay(r.at))+'</span></div>'
     +(body?'<div class="sk-body">'+escapeHtml(body)+'</div>':'')
     +'</div>'; }
+function skinBoxRefresh(){
+  if(spOpen()&&spCat==='updates') renderSkinBox();
+  renderPhSkin(); }
+// The phone gets the same two numbers and the same button, without the history:
+// a release list is not what somebody standing at the machine with a phone is
+// after. It is the tablet's own check, so the gateway is asked exactly once.
+function renderPhSkin(){
+  var box=document.getElementById('phSkinBox'); if(!box) return;
+  var inst=skinVer(), latest=skinLatest(), running=skinRunningVer||inst;
+  var stale=!!(inst&&running&&verCmp(inst,running)>0);
+  var h='<div class="mb-sec-h">'+escapeHtml(t('catSkin'))+'</div>';
+  h+='<div class="set-desc" style="margin-bottom:10px">'
+    +escapeHtml(t('installed'))+' '+(inst?('v'+escapeHtml(inst)):'\u2014')
+    +' \u00b7 '+escapeHtml(t('available'))+' '+(latest?('v'+escapeHtml(latest)):'\u2014')+'</div>';
+  h+='<button class="m-btn primary mb-analyze" onclick="skinCheckUpdate()"'+(_skinChecking?' disabled':'')+'>'
+    +escapeHtml(t('skinCheck'))+'</button>';
+  if(stale) h+='<button class="m-btn mb-analyze" style="margin-top:8px" onclick="location.reload()">'
+    +escapeHtml(t('skinReload'))+'</button>';
+  var note=_skinChecking?t('skinChecking')
+    :stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
+    :(inst&&latest&&verCmp(latest,inst)>0)?t('skinNewer').replace('{v}',latest)
+    :(inst&&latest)?t('skinUpToDate'):'';
+  if(note) h+='<div class="set-desc" style="margin-top:10px">'+escapeHtml(note)+'</div>';
+  box.innerHTML=h; }
 function renderSkinBox(){
   var box=document.getElementById('skinBox'); if(!box) return;
   var inst=skinVer(), latest=skinLatest(), running=skinRunningVer||inst;
@@ -14576,7 +14601,7 @@ function phVizSave(){
       var bad=(e&&e.message)==='auth';
       if(bad) vizSetCreds(null,null);
       phVizStat(bad?t('phVizBad'):t('phVizNoNet'),true); }); }
-function initPhoneSet(){ mbSyncKeyBox(); }
+function initPhoneSet(){ mbSyncKeyBox(); loadSkinInfo(); }
 // The apps that do this, and the things that stop them working, are not the
 // same on an iPhone as on an Android phone. Naming the Android two to someone
 // holding an iPhone is naming nothing.
@@ -14827,7 +14852,7 @@ function phoneGo(tab){
   // Only the page being looked at asks the machine anything.
   if(tab==='status'){ phStatusPoll(true); psWaterOpen(); psTankStart(); }
   else { phStatusPoll(false); psTankStop(); }
-  if(tab==='set'){ phVizFill(); phHomeCard(); }
+  if(tab==='set'){ phVizFill(); phHomeCard(); renderPhSkin(); }
   // the description is data-i18n, so a language change puts the other one back
   if(tab==='cam') csWayTwo();
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
