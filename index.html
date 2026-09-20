@@ -2599,6 +2599,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="opt-ctrl"><input type="range" class="slider" id="csZoom" min="1" max="4" step="0.1" value="1"
           oninput="csSetZoom(this.value)"><span class="opt-val" id="csZoomVal">1.0x</span></div></div>
       <div class="mb-sub" id="csLiveStatus"></div>
+      <div class="set-desc" id="csWakeNote" hidden data-i18n="csWakeNote"></div>
     </div>
 
     <div class="cs-way">
@@ -2842,7 +2843,7 @@ var I18N={
     csShapeLandscape:'Landscape', csShapePortrait:'Portrait', csZoom:'Camera zoom',
     csAsking:'Asking for the camera\u2026', csOffering:'Offering it to the machine\u2026',
     csWaiting:'Waiting for the machine\u2026', csLiveOn:'Live \u2014 the machine has the picture',
-    csLiveStopped:'Stopped', csLiveFailed:'The connection failed',
+    csWakeNote:'The screen is kept on while this camera is in use.', csLiveStopped:'Stopped', csLiveFailed:'The connection failed',
     csDenied:'Camera permission was refused', csNoCamera:'No camera could be opened',
     csUrlDescIos:'On an iPhone an app makes the phone a camera server \u2014 IP Camera Lite (free) or SimpleIPCamera. Start it and type in the address it shows.',
     csIosMjpeg:'It has to be the MJPEG address, not the RTSP one. It usually ends in /video.mjpg or /videofeed.',
@@ -3169,7 +3170,7 @@ var I18N={
     csShapeLandscape:'가로', csShapePortrait:'세로', csZoom:'카메라 줌',
     csAsking:'카메라 권한 요청 중…', csOffering:'머신에 연결 신청 중…',
     csWaiting:'머신 응답 기다리는 중…', csLiveOn:'연결됨 — 머신에 화면이 나옵니다',
-    csLiveStopped:'중지했습니다', csLiveFailed:'연결에 실패했습니다',
+    csWakeNote:'이 카메라를 쓰는 동안 화면이 꺼지지 않습니다.', csLiveStopped:'중지했습니다', csLiveFailed:'연결에 실패했습니다',
     csDenied:'카메라 권한이 거부됐습니다', csNoCamera:'카메라를 열지 못했습니다',
     csUrlDescIos:'아이폰은 앱이 폰을 카메라 서버로 만들어 줍니다 — IP Camera Lite(무료) 나 SimpleIPCamera. 앱을 실행한 뒤 그 앱이 보여주는 주소를 넣으세요.',
     csIosMjpeg:'RTSP 주소 말고 MJPEG 주소여야 합니다. 보통 /video.mjpg 나 /videofeed 로 끝납니다.',
@@ -14490,6 +14491,27 @@ function csSave(){
     .catch(function(){ st.textContent=t('camSetupFailed'); }); }
 // ── This phone's camera, offered to the machine ─────────────────────
 var _csPc=null, _csStream=null, _csSid=null, _csPoll=null, _csFacing='environment', _csPortrait=false;
+var _csWake=null;
+function csLive(){ return !!(_csPc||_csStream); }
+function csWakeNote(){
+  var el=document.getElementById('csWakeNote'); if(el) el.hidden=!_csWake; }
+function csWakeOn(){
+  if(_csWake||!csLive()) return;
+  if(!navigator.wakeLock||!navigator.wakeLock.request) return;
+  navigator.wakeLock.request('screen').then(function(lock){
+    // the camera may have been switched off while the request was in the air
+    if(!csLive()){ try{ lock.release(); }catch(_){} return; }
+    _csWake=lock;
+    lock.addEventListener('release',function(){ if(_csWake===lock){ _csWake=null; csWakeNote(); } });
+    csWakeNote(); }).catch(function(){}); }
+function csWakeOff(){
+  var lock=_csWake; _csWake=null; csWakeNote();
+  if(lock){ try{ lock.release(); }catch(_){} } }
+// A screen lock is dropped whenever the page is hidden, and is not given back
+// on its own. Coming back to a camera that is still running asks again.
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden||!csLive()) return;
+  csWakeOn(); });
 function csSay(msg){ document.getElementById('csLiveStatus').textContent=msg; }
 function csLiveStop(){
   if(_csPoll){ clearInterval(_csPoll); _csPoll=null; }
@@ -14501,6 +14523,7 @@ function csLiveStop(){
   document.getElementById('csShapeBtn').hidden=true;
   document.getElementById('csZoomBox').hidden=true;
   document.getElementById('csLiveBtn').textContent=t('csLiveStart');
+  csWakeOff();
   storePut(CAM_OFFER,{}).catch(function(){}); }
 function csLiveToggle(){ if(_csPc||_csStream){ csLiveStop(); csSay(t('csLiveStopped')); return; } csLiveStart(); }
 function csFlip(){ _csFacing=(_csFacing==='environment'?'user':'environment'); csLiveStart(); }
@@ -14539,6 +14562,7 @@ function csLiveStart(){
     shape.hidden=false; shape.textContent=t(_csPortrait?'csShapePortrait':'csShapeLandscape');
     csZoomOffer(stream.getVideoTracks()[0]);
     document.getElementById('csLiveBtn').textContent=t('csLiveStop');
+    csWakeOn();
     var pc=new RTCPeerConnection({iceServers:[]}); _csPc=pc;
     stream.getTracks().forEach(function(tr){ pc.addTrack(tr,stream); });
     pc.onconnectionstatechange=function(){
