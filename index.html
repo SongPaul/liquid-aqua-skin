@@ -403,34 +403,37 @@ body.night .gauge.z1{--zc:#fbbf24} body.night .gauge.z2{--zc:#34d399} body.night
 .cam-qr-title{font-size:13px;font-weight:800;margin-bottom:5px}
 .cam-qr-url{font-size:11px;font-weight:700;color:rgba(255,255,255,.62);word-break:break-all;margin-bottom:6px}
 .cam-qr-note{font-size:11px;font-weight:600;line-height:1.5;color:rgba(255,255,255,.55)}
-/* streaming: the albums keep a strip, the picture takes the rest */
-.cam-card{padding:8px;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+/* the pane's parking place while no camera is on; nothing is drawn here now */
+.cam-card{padding:8px;flex:none;min-height:0;display:flex;flex-direction:column}
 .cam-card[hidden]{display:none}
 .cam-card .cam-pane{margin:0}
-body.cam-on .bean-info{flex:0 0 auto}
-/* while a camera is on, the picture's card is the one that grows, and the
-   others give it what they can spare without losing a usable size */
-body.cam-on .lastshot-card{flex:none}
-body.cam-on .carousel-card{padding:6px 12px}
-body.cam-on .right .recipe{padding:6px 12px}
-body.cam-on .lastshot-card{padding:6px 12px}
-body.cam-on .bean-info{padding:6px 12px}
-body.cam-on .ls-stat{padding:4px 4px}
-/* streaming: the albums stand down so the picture's card has the room, and
-   the strip carries on marking what is loaded and what is being browsed */
-.carousel-card.cam .carousel{display:none}
-.carousel-card.cam .cc-tags,.carousel-card.cam .cc-hint{display:none}
-.carousel-card.cam{flex:none}
-/* the picture takes what the bean card can spare while it is on */
-body.cam-on .bean-info{min-height:56px}
-body.cam-on .bean-chips{display:none}
+/* streaming: the camera takes the place of the profile's own drawing, inside
+   the cover in the middle. The album clips it, so it is a cover-sized picture
+   and the card around it is untouched. */
+.album.cam-host>.cam-pane{position:absolute;inset:0;flex:none;min-height:0;margin:0;
+  border:0;border-radius:0;max-height:none;z-index:0}
+.album.cam-host .al-curve{display:none}
+/* a cover is small and mostly name, so the name reads over the picture rather
+   than over a gradient that is no longer there to help it */
+.album.cam-host .al-name{background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.72) 38%)}
+.album.cam-host .al-nametext{text-shadow:0 1px 3px rgba(0,0,0,.75)}
+/* the address card was drawn for a pane several times this size. In a cover
+   the code itself is the only part that has to survive, so it halves and the
+   words beside it keep the one line that says what to do. */
+.album.cam-host .cam-qr{gap:8px;padding:8px 8px 28px;background:rgba(11,10,20,.94)}
+.album.cam-host .cam-qr canvas{width:66px;height:66px;border-radius:6px}
+.album.cam-host .cam-qr-title{font-size:10px;line-height:1.25;margin-bottom:0}
+.album.cam-host .cam-qr-url,.album.cam-host .cam-qr-note{display:none}
+/* the same for the "connecting"/"no camera" line */
+.album.cam-host .cam-msg{font-size:10px;line-height:1.4;padding:8px 8px 28px}
+
+.carousel.dragging .album{transition:none}
 .carousel{position:relative;height:156px;display:flex;align-items:center;justify-content:center;overflow-x:clip;overflow-y:visible;touch-action:pan-y}
 .carousel-stage{position:relative;width:100%;height:100%;transform:scale(.86)}
 .car-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--ink-mute);font-size:12px}
 .album{position:absolute;top:50%;left:50%;width:216px;height:152px;margin:-76px 0 0 -108px;border-radius:16px;cursor:default;transition:transform .38s cubic-bezier(.25,.8,.25,1),opacity .38s;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(30,25,70,.14)}
 .album.side{opacity:.55}
 /* Under a finger the cover is where the finger is, not easing towards it. */
-.carousel.dragging .album{transition:none}
 .album.center{box-shadow:0 14px 32px rgba(80,70,160,.3);border-color:rgba(255,255,255,.6)}
 .album .al-curve{position:absolute;inset:0;min-height:0}
 .album .al-curve canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -514,9 +517,6 @@ body.night .car-tag.on{background-color:var(--accent);border-color:var(--accent)
    to answer it. */
 body.brewing .album.center .al-edit{display:none}
 .al-edit:active{transform:scale(.88)}
-.al-shine{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s}
-.album.loaded .al-shine{opacity:1}
-body.no-fx .al-shine{display:none}
 body.no-fx .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.9)}
 body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 
@@ -6935,6 +6935,8 @@ function camQrShow(noteKey){
 function camApplyView(){
   var pane=document.getElementById('camPane'); if(!pane||pane.hidden) return;
   var r=pane.getBoundingClientRect(); if(!r.width||!r.height) return;
+  var inAlbum=!!(pane.parentElement&&pane.parentElement.classList
+    &&pane.parentElement.classList.contains('album'));
   var rot=prefs.camRotate|0, quarter=(rot===90||rot===270);
   var w=quarter?r.height:r.width, h=quarter?r.width:r.height;
   var t='translate(-50%,-50%) rotate('+rot+'deg) scale('+(prefs.camZoom||1)+')'
@@ -6942,7 +6944,7 @@ function camApplyView(){
   ['camVideo','camImg'].forEach(function(id){ var el=document.getElementById(id); if(!el) return;
     el.style.position='absolute'; el.style.left='50%'; el.style.top='50%';
     el.style.width=w+'px'; el.style.height=h+'px';
-    el.style.objectFit=(prefs.camFit==='cover'?'cover':'contain');
+    el.style.objectFit=(inAlbum||prefs.camFit==='cover')?'cover':'contain';
     el.style.transform=t; });
   camFitCard(); }
 var _camRO=null;
@@ -6956,6 +6958,11 @@ function camWatchSize(){
 // taller box with bars above and below it.
 function camFitCard(){
   var pane=document.getElementById('camPane'); if(!pane||pane.hidden) return;
+  // Inside a cover the pane is the cover, so the cover's shape is the one that
+  // counts: capped to the picture's instead, it would leave a bare strip under
+  // the name.
+  var host=pane.parentElement;
+  if(host&&host.classList&&host.classList.contains('album')){ pane.style.maxHeight=''; return; }
   var v=document.getElementById('camVideo'), i=document.getElementById('camImg');
   var live=v&&!v.hidden&&v.videoWidth;
   var w=live?v.videoWidth:(i?i.naturalWidth:0), h=live?v.videoHeight:(i?i.naturalHeight:0);
@@ -6977,17 +6984,38 @@ function camPause(){ camStop(); camQrHide(); camPeerStop(); }
 // The pane is one element wherever it is shown: moved, not copied, so a live
 // peer connection survives the trip and an address is not fetched twice.
 function camToMonitor(on){
-  var pane=document.getElementById('camPane'), host=document.getElementById('monCamHost');
-  if(!pane||!host) return;
-  var show=on&&!!prefs.cam;
-  host.classList.toggle('on',show);
-  if(show){ if(pane.parentElement!==host) host.appendChild(pane); }
-  else if(pane.parentElement===host){
-    var home=document.getElementById('camCard');
-    if(home){ home.appendChild(pane); home.hidden=!prefs.cam; } }
-  var camCard=document.getElementById('camCard');
-  if(camCard&&show) camCard.hidden=true;
+  var host=document.getElementById('monCamHost');
+  if(!host) return;
+  host.classList.toggle('on',on&&!!prefs.cam);
+  camPlace();
   camApplyView(); }
+// The pane is one element wherever it is shown, so where it belongs is decided
+// in one place: the monitor while a shot is on screen, the profile card while
+// a camera is on, and its own card -- drawn by nothing -- the rest of the time.
+function camPlace(){
+  var pane=document.getElementById('camPane'); if(!pane) return;
+  var host=document.getElementById('monCamHost');
+  var target=(host&&host.classList.contains('on'))?host
+    :(prefs.cam?(camAlbum()||document.getElementById('camCard')):document.getElementById('camCard'));
+  if(!target) return;
+  if(pane.parentElement!==target){
+    if(target.classList.contains('album')) target.insertBefore(pane,target.firstChild);
+    else target.appendChild(pane); }
+  camMarkAlbums();
+  var own=document.getElementById('camCard');
+  if(own) own.hidden=true;
+  camApplyView(); }
+// The cover in the middle, whichever that is now. Moving the pane is what
+// keeps a live connection alive, so it is never moved mid-swipe.
+function camAlbum(){
+  var it=(typeof carItems!=='undefined'&&carItems)?carItems[carIndex]:null;
+  return (it&&it._el)?it._el:null; }
+function camMarkAlbums(){
+  if(typeof carItems==='undefined'||!carItems) return;
+  var pane=document.getElementById('camPane');
+  var home=(pane&&!pane.hidden)?pane.parentElement:null;
+  carItems.forEach(function(p){
+    if(p._el) p._el.classList.toggle('cam-host',p._el===home); }); }
 function camStart(){
   var i=document.getElementById('camImg'); if(!i) return;
   if(camLive()) return;
@@ -7004,8 +7032,7 @@ function applyCam(){
   if(!card||!pane) return;
   var on=!!prefs.cam;
   card.classList.toggle('cam',on); document.body.classList.toggle('cam-on',on); pane.hidden=!on;
-  var camCard=document.getElementById('camCard');
-  if(camCard) camCard.hidden=!on||pane.parentElement!==camCard;
+  camPlace();
   if(on&&!_asleep){ camStart(); camWatchSize(); camApplyView(); if(!camLive()) camWatchStore(); }
   else { camStop(); camQrHide(); camPeerStop(); camMessage(null); }
   buildCarousel(); }
@@ -7275,7 +7302,14 @@ function carSetTag(k){
 function buildCarousel(){
   applyBrewLock(brewLocked());
   carItems=carListProfiles();
-  var stage=document.getElementById('carouselStage'); stage.innerHTML='';
+  var stage=document.getElementById('carouselStage');
+  // The covers are thrown away and made again below, and the camera pane may
+  // be living inside one of them. It is moved out of the way first, and put
+  // back by renderCarousel once the new covers exist.
+  var _cp=document.getElementById('camPane');
+  if(_cp&&_cp.parentElement&&_cp.parentElement.classList.contains('album')){
+    var _park=document.getElementById('camCard'); if(_park) _park.appendChild(_cp); }
+  stage.innerHTML='';
   if(!carItems.length){ stage.innerHTML='<div class="car-empty">'+t('noProfilesFound')+'</div>'; return; }
   carItems.forEach(function(p,i){ var title=(p.profile&&p.profile.title)||p.id;
     var el=document.createElement('div'); el.className='album';
@@ -7292,7 +7326,7 @@ function buildCarousel(){
     // thing that opens a profile is the one control that says it does.
     ed.onclick=function(){ if(carJustSwiped()) return; openEditPageFor(p); };
     el.appendChild(ed);
-    el.appendChild(curve); el.appendChild(shine()); el.appendChild(nm);
+    el.appendChild(curve); el.appendChild(nm);
     stage.appendChild(el); p._el=el; p._curveCv=cv;
     setTimeout(function(){ drawSimCurve(cv,p.profile,true); },0); });
   buildCarTags();
@@ -7353,22 +7387,6 @@ function syncCarouselLock(){
 // The same idea as the tank: an SVG animation, so the one call that pauses every
 // svg under .app on sleep pauses this too, and document.getAnimations() -- which
 // the idle-screen rule is measured with -- never sees it.
-var _shineN=0;
-function shine(){
-  var id='alShine'+(++_shineN);
-  var sv=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  sv.setAttribute('class','al-shine');
-  sv.setAttribute('viewBox','0 0 100 100');
-  sv.setAttribute('preserveAspectRatio','none');
-  sv.innerHTML='<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="0">'
-    +'<stop offset="0" stop-color="#fff" stop-opacity="0"/>'
-    +'<stop offset="0.5" stop-color="#fff" stop-opacity="0.55"/>'
-    +'<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'
-    +'<g transform="rotate(12 50 50)">'
-    +'<rect y="-40" width="26" height="180" fill="url(#'+id+')">'
-    +'<animate attributeName="x" values="-40;130" dur="4.5s" begin="0s" repeatCount="indefinite"/>'
-    +'</rect></g>';
-  return sv; }
 function renderCarousel(){
   var lock=brewLocked();
   carItems.forEach(function(p,i){ var off=i-carIndex-carDragSteps; var abs=Math.abs(off);
@@ -7394,7 +7412,8 @@ function renderCarousel(){
     var isLoaded=!!(curProfileObj&&curProfileObj.id===p.id);
     p._el.classList.toggle('loaded', isLoaded); });
   // redraw center curve crisp at its scaled size after transform applies
-  if(!_carDragging){ var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); } }
+  if(!_carDragging){ var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); }
+    if(prefs.cam) camPlace(); }
   var cur=carItems[carIndex]; if(cur){ var pr=cur.profile||{};
     var stc=splitTitle(pr.title||cur.id);
     var isCur=curProfileObj&&curProfileObj.id===cur.id;
