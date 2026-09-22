@@ -210,7 +210,9 @@ header>*{position:relative;z-index:1}
 .act-btn .ab-txt{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
 .act-btn .ab-head{display:flex;align-items:center;gap:5px;white-space:nowrap}
 .act-btn .ab-name{font-size:13px;font-weight:700;line-height:1.1}
-.act-btn .ab-preset{font-size:11px;font-weight:700;line-height:1.1;color:var(--ink-mute)}
+.act-btn .ab-preset{font-size:11px;font-weight:700;line-height:1.1;color:var(--ink-mute);
+  max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.act-btn .ab-preset:empty{display:none}
 /* which mode the card is showing, marked on the button that shows it */
 .act-btn.on{border-color:var(--accent);box-shadow:var(--ctl-lift),0 0 0 1px var(--accent)}
 .act-btn.active .ab-preset{color:rgba(255,255,255,.9)}
@@ -220,7 +222,6 @@ header>*{position:relative;z-index:1}
 .act-btn:active:not(:disabled){transform:scale(.94);filter:brightness(.96)}
 .act-btn:disabled{opacity:.4;cursor:not-allowed}
 .act-btn.start{color:#fff;background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);border-color:transparent;box-shadow:var(--ctl-lift-on);padding:10px 24px;font-size:13px}
-.act-btn.start.stop{background-color:var(--ctl-tint-stop)}
 .act-btn.steam:not(:disabled){color:var(--steam)} .act-btn.flush:not(:disabled){color:var(--green)}
 .act-btn.water:not(:disabled){color:#0ea5e9}
 .act-btn.sleep{min-height:44px;padding-top:0;padding-bottom:0}
@@ -249,7 +250,11 @@ header>*{position:relative;z-index:1}
 .hdr-aux{position:relative;display:flex;align-items:stretch;gap:3px;padding:4px;border-radius:21px;background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift)}
 .hdr-aux .act-btn{border-radius:17px;border-color:transparent;background-color:transparent;background-image:none;box-shadow:none;padding:7px 15px}
 .hdr-aux .act-btn.start{color:var(--accent)}
-.hdr-aux .act-btn.start.stop{color:#fff;background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on)}
+/* Running fills the button the way it fills the other three. Without this the
+   header's own pale treatment of the start button stays, and the white the
+   active state gives the recipe line has nothing to sit on. */
+.hdr-aux .act-btn.start.active{color:#fff;background-color:var(--ctl-tint-stop);
+  background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on)}
 .hdr-aux .act-btn.active{border-color:transparent}
 .aux-hint{position:absolute;top:100%;left:0;right:0;text-align:center;font-size:10px;font-weight:700;line-height:10px;letter-spacing:.1px;color:var(--ink-mute);white-space:nowrap;pointer-events:none}
 .aux-hint:empty{display:none}
@@ -263,7 +268,6 @@ header>*{position:relative;z-index:1}
 .act-btn.flush.active{background-color:rgba(5,150,105,.92)}
 .act-btn.water.active{background-color:rgba(2,132,199,.92)}
 .act-btn.sleep.active{background-color:rgba(100,116,139,.90)}
-.act-btn.start.stop{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
 @keyframes actpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
 
 /* ── Center column ───────────────────────────────────────────────── */
@@ -2006,7 +2010,10 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 
     <div class="hdr-aux">
       <button class="act-btn start" id="btnShot" disabled>
-        <span class="ico" id="shotIco">☕</span><span id="shotLbl" data-i18n="actEspresso">Espresso</span>
+        <span class="ab-txt">
+          <span class="ab-head"><span class="ico" id="shotIco">☕</span><span class="ab-name" id="shotLbl" data-i18n="actEspresso">Espresso</span><span class="ab-preset" id="shotPreset"></span></span>
+          <span class="ab-sum" id="shotSum">—</span>
+        </span>
       </button>
       <button class="act-btn steam" id="btnSteam" disabled>
         <span class="ab-txt">
@@ -4216,7 +4223,11 @@ function fillHeight(pct){ return (Math.max(0,Math.min(pct,100))*0.9)+'%'; }
 function updateShotBtn(){ var st=state.machine.state;
   var btn=document.getElementById('btnShot'),ico=document.getElementById('shotIco'),lbl=document.getElementById('shotLbl');
   btn.disabled=state.ghc?false:!state.connected;
-  if(st==='espresso'){ btn.className='act-btn start stop'; ico.textContent='⏹'; lbl.textContent=t('stop'); } else { btn.className='act-btn start'; ico.textContent='☕'; lbl.textContent=t('actEspresso'); }
+  // Steam, flush and water do not rename themselves while they run; they light
+  // up and keep saying what they are. Espresso says the same.
+  btn.className='act-btn start';
+  ico.textContent='☕'; lbl.textContent=t('actEspresso');
+  syncShotSum();
   var steam=document.getElementById('btnSteam'),flush=document.getElementById('btnFlush'),water=document.getElementById('btnWater'),sleep=document.getElementById('btnSleep');
   steam.disabled=!state.connected; flush.disabled=!state.connected; water.disabled=!state.connected; sleep.disabled=!state.connected;
   var wt=document.getElementById('weightTap');
@@ -4224,6 +4235,7 @@ function updateShotBtn(){ var st=state.machine.state;
   syncDoseTake();
   // reflect running state with an 'active' color (only meaningful when GHC-less / actions)
   btn.classList.toggle('on', recipeMode==='espresso');
+  btn.classList.toggle('active', st==='espresso');
   steam.classList.toggle('on', recipeMode==='steam');
   flush.classList.toggle('on', recipeMode==='flush');
   water.classList.toggle('on', recipeMode==='water');
@@ -5202,6 +5214,17 @@ function auxLabel(kind){
     else hit=auxClose(ps.temp,settings.waterTemp)&&auxClose(ps.vol,settings.waterVol)&&auxClose(ps.dur,settings.waterDur)&&auxClose(ps.flow,settings.waterFlow,0.051);
     if(hit) return ps.n; }
   return t('custom'); }
+function shotSummary(){
+  var r=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
+  var bc=brewTempC();
+  return (bc==null?'—':convTemp(bc).toFixed(1)+'°')
+    +' · '+convWeight(settings.doseIn).toFixed(1)+' → '+convWeight(settings.doseOut).toFixed(1)+weightUnitLabel()
+    +' · 1:'+(r?r.toFixed(1):'—'); }
+function syncShotSum(){
+  var el=document.getElementById('shotSum'); if(el) el.textContent=shotSummary();
+  var pr=document.getElementById('shotPreset');
+  if(pr){ var p=curProfileObj&&curProfileObj.profile;
+    pr.textContent=p?splitTitle(p.title||'').name:''; } }
 function syncAux(){
   ['steam','flush','water'].forEach(function(kind){
     var cap=kind.charAt(0).toUpperCase()+kind.slice(1);
@@ -5469,6 +5492,7 @@ function syncRecipe(){
   syncThermo();
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
   document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
+  syncShotSum();
   var md=document.getElementById('monDose');
   if(md){ md.textContent=settings.doseIn.toFixed(1);
     document.getElementById('monYield').textContent=settings.doseOut.toFixed(1);
