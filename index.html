@@ -545,6 +545,14 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .th-bulb{width:18px;height:18px;border-radius:50%;background:#d6402b;border:1px solid var(--edge);margin-top:-6px;flex:none}
 .thermo.drag .th-fill{transition:none}
 .th-ctrl{width:52px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
+/* only drawn while the number is not the profile's own: what the profile asked
+   for, and the way back to it */
+.th-orig{font-family:var(--font);font-size:9px;font-weight:800;line-height:1;padding:3px 5px;
+  border-radius:100px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);
+  color:var(--accent2);cursor:pointer;white-space:nowrap;-webkit-appearance:none;flex:none}
+.th-orig[hidden]{display:none}
+.eye-btn.danger{color:var(--red)}
+.th-orig:active{transform:scale(.94)}
 /* the reading here is the same chip as the four beside it -- same height, same type, same corner -- only narrower, and the degree sign stands in for the unit the thermometer already names */
 .th-val{font-size:20px;font-weight:800;color:var(--accent2);line-height:1;white-space:nowrap}
 .th-val.tap{font-size:23px}
@@ -2152,6 +2160,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           <div class="th-ctrl">
             <button class="ms-btn" onclick="adjustTemp(0.5)">+</button>
             <div class="th-val tap" id="brewTempVal" onclick="openKeypad('brewTemp')">—</div>
+            <button class="th-orig" id="brewTempOrig" hidden onclick="resetBrewTemp()"></button>
             <button class="ms-btn" onclick="adjustTemp(-0.5)">−</button>
           </div>
         </div>
@@ -2374,6 +2383,20 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <!-- ── Flush modal ─────────────────────────────────────────────── -->
 
 <!-- ── Hot Water modal ─────────────────────────────────────────── -->
+
+<!-- Deleting a profile: filed away, or destroyed -->
+<div class="overlay" id="delProfOverlay" onclick="closeModal(event,'delProfOverlay')">
+  <div class="modal ps-modal"><div class="modal-head"><div class="modal-title" data-i18n="deleteProfile"></div><button class="modal-close" onclick="closeModal(null,'delProfOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="set-row"><div class="set-info"><div class="set-name" id="delProfName"></div>
+      <div class="set-desc" id="delProfNote"></div></div></div>
+    <div class="modal-actions">
+      <button class="m-btn" onclick="closeModal(null,'delProfOverlay')"><span data-i18n="cancel"></span></button>
+      <button class="m-btn danger" id="delProfHard" onclick="delProfPurge()"><span data-i18n="delProfHardBtn"></span></button>
+      <button class="m-btn primary" onclick="delProfSoft()"><span data-i18n="delProfSoftBtn"></span></button>
+    </div>
+  </div></div>
+</div>
 
 <!-- Which scale does which -->
 <div class="overlay" id="scalePickOverlay" onclick="closeModal(event,'scalePickOverlay')">
@@ -2959,6 +2982,7 @@ var I18N={
     dosingUnsupported:'This gateway is too old for a second scale. Update Decaid.',
     favTag:'Favourites', noTag:'No tag', loadingCenter:'Loading this one…',
     usTitle:'Carry settings over?', usFromThis:'From your last shot with {n}', usFromLast:'From your last shot',
+    tempChanged:'Changed from the profile\u2019s {v} \u2014 tap to put it back', tempChangedSteps:'Every step is one temperature now. The profile asked for its own per step, up to {v} \u2014 tap to give that back.', tempReset:'Back to the profile\u2019s temperature',
     usApply:'Apply', usSkip:'Skip', usApplied:'Settings applied', brewTempLabel:'Brew temp',
     profileList:'Profiles',
     isBlend:'Blend', blendPart:'Coffee', blendAdd:'Add coffee', blendTotal:'Total', blendPartsSuffix:' coffees',
@@ -2983,6 +3007,12 @@ var I18N={
     favorites:'Favorites', recentlyUsed:'Recently used',     tagPressure:'pressure', tagFlow:'flow', tagMixed:'mixed', tagLowPressure:'low pressure',
     tagBloom:'bloom', tagDecline:'declining', tagCool:'cool', tagHot:'hot',
     tagLight:'light roast', tagMedium:'medium roast', tagDark:'dark roast',
+    kindTrash:'Bin', deleteProfile:'Delete profile', restoreProfile:'Put it back', purgeProfile:'Delete for good',
+    delProfNote:'It goes to the bin, where it can be put back. Deleting it for good cannot be undone.',
+    delProfDefault:'A profile that ships with the app is hidden rather than deleted, and comes back with the next update.',
+    delProfSoftBtn:'To the bin', delProfHardBtn:'Delete for good',
+    delProfConfirm:'Delete \u201c{n}\u201d for good? This cannot be undone.',
+    delProfDone:'Moved to the bin', delProfPurged:'Deleted', delProfRestored:'Put back',
     kindHidden:'Hidden', hideProfile:'Hide this profile', showProfile:'Show this profile',
     hidden:'Hidden', shown:'Shown again', toggleFav:'Toggle favorite', favAdded:'★ {n} added to favorites', favRemoved:'{n} removed from favorites', favNeedsSave:'Save the profile first',
     roastLevel:'Roast', fromProfile:'from the profile', clear:'Clear',
@@ -3286,6 +3316,7 @@ var I18N={
     dosingUnsupported:'이 게이트웨이는 두 번째 저울을 지원하지 않습니다. Decaid를 업데이트하세요.',
     favTag:'즐겨찾기', noTag:'태그 없음', loadingCenter:'이것을 불러오는 중…',
     usTitle:'이전 설정을 가져올까요?', usFromThis:'{n} 의 마지막 샷', usFromLast:'가장 최근 샷',
+    tempChanged:'프로파일의 {v} 에서 바뀜 값 — 누르면 되돌립니다', tempChangedSteps:'모든 단계가 한 온도입니다. 원래는 단계마다 달랏고 최고 {v} 였습니다 — 누르면 되돌립니다', tempReset:'프로파일 온도로 되돌렸습니다',
     usApply:'적용', usSkip:'건너뛰기', usApplied:'설정을 적용했습니다', brewTempLabel:'물 온도',
     profileList:'목록',
     isBlend:'블렌드', blendPart:'원두', blendAdd:'원두 추가', blendTotal:'합계', blendPartsSuffix:'종',
@@ -3310,6 +3341,12 @@ var I18N={
     favorites:'즐겨찾기', recentlyUsed:'최근 사용',     tagPressure:'압력제어', tagFlow:'유량제어', tagMixed:'혼합', tagLowPressure:'저압',
     tagBloom:'블루밍', tagDecline:'디클라인', tagCool:'저온', tagHot:'고온',
     tagLight:'약배전', tagMedium:'중배전', tagDark:'강배전',
+    kindTrash:'휴지통', deleteProfile:'프로파일 삭제', restoreProfile:'되돌리기', purgeProfile:'완전 삭제',
+    delProfNote:'휴지통으로 가며 다시 꺼낼 수 있습니다. 완전 삭제는 되돌릴 수 없습니다.',
+    delProfDefault:'기본 제공 프로파일은 삭제 대신 숨김 처리되며, 다음 업데이트 때 다시 돌아옵니다.',
+    delProfSoftBtn:'휴지통으로', delProfHardBtn:'완전 삭제',
+    delProfConfirm:'“{n}” 을 완전히 삭제할까요? 되돌릴 수 없습니다.',
+    delProfDone:'휴지통으로 옮겼습니다', delProfPurged:'삭제했습니다', delProfRestored:'되돌렸습니다',
     kindHidden:'숨김', hideProfile:'이 프로파일 숨기기', showProfile:'다시 보이기',
     hidden:'숨김 처리됨', shown:'다시 표시됨', toggleFav:'즐겨찾기', favAdded:'★ {n} 즐겨찾기 추가', favRemoved:'{n} 즐겨찾기 해제', favNeedsSave:'프로파일을 먼저 저장하세요',
     roastLevel:'배전도', fromProfile:'프로파일에 명시됨', clear:'해제',
@@ -5238,48 +5275,69 @@ function brewTempSaved(k){
 // number took that away, leaving the machine held at brewing temperature all
 // day. Hot water is drawn through that, and arrived at the profile's
 // temperature however low it had been set to.
+// The first step that asks for a temperature: what the machine settles at
+// before the shot, and what a profile is spoken of as being.
+function profileFirstTemp(pr){
+  var st=(pr&&pr.steps)||[];
+  for(var i=0;i<st.length;i++){ if(st[i].temperature!=null) return st[i].temperature; }
+  return null; }
+// True only once every step that asks for a temperature asks for this one.
+function profileIsFlatAt(pr,v){
+  var st=(pr&&pr.steps)||[], any=false;
+  for(var i=0;i<st.length;i++){ var x=st[i].temperature;
+    if(x==null) continue; any=true; if(x!==v) return false; }
+  return any; }
 function profileTopTemp(pr){
   var st=(pr&&pr.steps)||[], top=null;
   st.forEach(function(x){ if(x.temperature==null) return;
     if(top===null||x.temperature>top) top=x.temperature; });
   return top; }
-// A copy shifted so its highest step reads the wanted temperature, with one
-// step left alone: the first one the profile gives a temperature to.
-//
-// The machine idles at the temperature its profile starts at. So whatever the
-// card did to that first step, it did to the machine's standby -- put the card
-// at 95 and the machine sat at 95 all day, put it at 40 and the machine tried
-// to cool to 40. Hot water is drawn through whatever the machine is sitting at,
-// which is how a control for espresso came to decide what temperature the water
-// came out at.
-//
-// The first step is the profile author's, then, and stays theirs. The card
-// moves the rest. A profile with only one temperature of its own is the
-// exception -- there is nothing else to move, so it moves.
+// A copy with every step that has a temperature set to the wanted one. A step
+// the profile gives no temperature is left without one rather than given a
+// number it never asked for.
 function withBrewTemp(pr,v){
   if(v==null||!pr||!pr.steps) return pr;
-  var top=profileTopTemp(pr); if(top===null) return pr;
-  var d=v-top; if(d===0) return pr;
-  var withTemp=0;
-  pr.steps.forEach(function(st){ if(st.temperature!=null) withTemp++; });
-  var holdFirst=(withTemp>1), seen=false;
+  v=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round(v*2)/2));
   var c={}; for(var k in pr) c[k]=pr[k];
   c.steps=pr.steps.map(function(st){
-    if(st.temperature==null) return st;
-    if(holdFirst&&!seen){ seen=true; return st; }
+    if(st.temperature==null||st.temperature===v) return st;
     var e={}; for(var j in st) e[j]=st[j];
-    e.temperature=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round((st.temperature+d)*2)/2));
+    e.temperature=v;
+    return e; });
+  return c; }
+// What the profile asked for before the card was touched. Flattening throws
+// that away, and the loaded copy is overwritten with the flat one the moment
+// the workflow is read back -- so the shape is written down when the first
+// number is set, and is what going back restores.
+function stepTemps(pr){
+  return (((pr&&pr.steps)||[]).map(function(st){
+    return st.temperature==null?null:st.temperature; })); }
+function brewTempBase(k){
+  k=k||profileKey();
+  var b=k&&prefs.brewTempBase&&prefs.brewTempBase[k];
+  return (b&&b.length)?b:null; }
+function withBaseTemps(pr,base){
+  if(!pr||!pr.steps||!base||base.length!==pr.steps.length) return null;
+  var c={}; for(var k in pr) c[k]=pr[k];
+  c.steps=pr.steps.map(function(st,i){
+    var e={}; for(var j in st) e[j]=st[j];
+    if(base[i]==null) delete e.temperature; else e.temperature=base[i];
     return e; });
   return c; }
 function brewProfileForMachine(pr,k){ return withBrewTemp(pr||(curProfileObj&&curProfileObj.profile),brewTempSaved(k)); }
 function brewTempC(){ var o=brewTempSaved(); if(o!=null) return o;
-  return profileTopTemp(curProfileObj&&curProfileObj.profile); }
+  return profileFirstTemp(curProfileObj&&curProfileObj.profile); }
 function setBrewTempC(v){
   var cur=brewTempC(); if(cur==null) return;
   var k=profileKey(); if(!k) return;
   v=Math.max(TH_ABS_MIN,Math.min(TH_ABS_MAX,Math.round(v*2)/2));
   if(v===cur&&brewTempSaved(k)!=null) return;
   if(!prefs.brewTemp) prefs.brewTemp={};
+  if(!prefs.brewTempBase) prefs.brewTempBase={};
+  // written once, while the loaded copy is still the profile's own
+  if(brewTempSaved(k)==null&&!brewTempBase(k)){
+    var base=stepTemps(curProfileObj&&curProfileObj.profile);
+    if(base.length) prefs.brewTempBase[k]=base; }
   prefs.brewTemp[k]=v; savePrefs();
   syncRecipe(); pushProfileTemp(); }
 // The tube reads 40 to 100, which covers everything the machine is asked to
@@ -5298,12 +5356,65 @@ function thRange(){
 function syncThermo(){
   var bt=document.getElementById('brewTempVal'), fill=document.getElementById('thFill'), bc=brewTempC();
   if(bt) bt.textContent=(bc==null)?'—':convTemp(bc).toFixed(1);
+  syncTempOrig();
   var tu=document.getElementById('brewTempUnit'); if(tu) tu.textContent=tempUnitLabel();
   var r=thRange();
   if(fill) fill.style.height=(bc==null?0:Math.max(0,Math.min(1,(bc-r[0])/(r[1]-r[0])))*100).toFixed(1)+'%';
   var th=document.getElementById('thermo');
   if(th){ th.setAttribute('aria-valuemin',r[0]); th.setAttribute('aria-valuemax',r[1]);
     if(bc!=null) th.setAttribute('aria-valuenow',bc.toFixed(1)); } }
+// The profile's own top temperature, which is what the card would read if
+// nobody had touched it.
+function brewTempOrigC(){
+  var b=brewTempBase();
+  if(b){ for(var i=0;i<b.length;i++){ if(b[i]!=null) return b[i]; } }
+  return profileFirstTemp(curProfileObj&&curProfileObj.profile); }
+// A profile whose steps did not all ask for the same thing says so, because
+// going back to it is giving that shape back.
+function brewTempWasFlat(){
+  var b=brewTempBase(); if(!b) return true;
+  var seen=null, flat=true;
+  b.forEach(function(x){ if(x==null) return;
+    if(seen===null) seen=x; else if(x!==seen) flat=false; });
+  return flat; }
+// Flattening a profile to the very temperature it started at changes it
+// without changing the number, so the number is not what decides this: the
+// profile was changed if what it asked for is not what it asks for now.
+function baseFlatAt(b,v){
+  var any=false;
+  for(var i=0;i<b.length;i++){ if(b[i]==null) continue; any=true; if(b[i]!==v) return false; }
+  return any; }
+function brewTempChanged(){
+  var w=brewTempSaved(); if(w==null) return false;
+  var b=brewTempBase();
+  if(b) return !baseFlatAt(b,w);
+  var o=brewTempOrigC(); return o!=null&&o!==w; }
+function syncTempOrig(){
+  var el=document.getElementById('brewTempOrig'); if(!el) return;
+  var on=brewTempChanged();
+  el.hidden=!on;
+  if(!on) return;
+  var o=brewTempOrigC(), txt=convTemp(o).toFixed(1)+tempUnitLabel();
+  var flat=brewTempWasFlat();
+  el.textContent='\u21ba '+convTemp(o).toFixed(1)+(flat?'':'\u2026');
+  el.title=t(flat?'tempChanged':'tempChangedSteps').replace('{v}',txt); }
+// Putting it back is forgetting the saved one, not saving the old one: an
+// untouched profile is one the card has nothing of its own to say about.
+function resetBrewTemp(){
+  var k=profileKey(); if(!k||!prefs.brewTemp) return;
+  if(prefs.brewTemp[k]==null) return;
+  // Flattening is not undone by forgetting the number: the steps have to be
+  // given their own temperatures back, and the loaded copy holds the flat one.
+  var base=brewTempBase(k);
+  var back=base?withBaseTemps(curProfileObj&&curProfileObj.profile,base):null;
+  delete prefs.brewTemp[k];
+  if(prefs.brewTempBase) delete prefs.brewTempBase[k];
+  savePrefs();
+  if(back&&curProfileObj){ curProfileObj.profile=back;
+    api('PUT','/api/v1/workflow',{profile:back}).catch(function(){ toast(t('tTempError'),'err'); }); }
+  else pushProfileTemp();
+  syncRecipe();
+  toast(t('tempReset'),'ok'); }
 // Dragging the tube reads the whole range in one gesture; the write behind it
 // is the same debounced one the buttons use, so a drag is one request.
 var _thBand=null;
@@ -5421,6 +5532,7 @@ function applyPrefsObject(p){
   if(p.chartHide&&typeof p.chartHide==='object') prefs.chartHide=p.chartHide;
   if(p.slHide&&typeof p.slHide==='object') prefs.slHide=p.slHide;
   if(p.brewTemp&&typeof p.brewTemp==='object') prefs.brewTemp=p.brewTemp;
+  if(p.brewTempBase&&typeof p.brewTempBase==='object') prefs.brewTempBase=p.brewTempBase;
   if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye;
   if(typeof p.night==='boolean') prefs.night=p.night;
   if(typeof p.nightAuto==='boolean') prefs.nightAuto=p.nightAuto;
@@ -5684,7 +5796,7 @@ var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', claudeKey:
   // the touch ripple and the light on the loaded cover
   fx:true,
   // the temperature chosen for each profile, by profile id
-  brewTemp:{},
+  brewTemp:{}, brewTempBase:{},
   // Series hidden from the extraction graph, by legend key. Weight flow
   // starts hidden: the cumulative weight is what the recipe is about, and
   // two scale lines at once is a choice rather than a default.
@@ -7158,7 +7270,7 @@ function loadGuideProfile(id){
   var match=(allProfiles||[]).filter(function(p){ return p.profile&&p.profile.title===pr.title; })[0];
   if(match){ selectProfile(match,true); return; }
   curProfileObj={id:'guide',profile:pr,isDefault:false};
-  api('PUT','/api/v1/workflow',{profile:pr})
+  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(pr)})
     .then(function(){ toast('\u25b6 '+pr.title,'ok'); refreshCarouselMark(); })
     .catch(function(){ toast(t('tProfileError'),'err'); }); }
 
@@ -7665,6 +7777,49 @@ function setProfileRoast(id,key){
   api('PUT','/api/v1/profiles/'+encodeURIComponent(id),{metadata:meta}).then(function(saved){
     p.metadata=(saved&&saved.metadata)||meta; renderEpList(); renderEpEditor(); toast(t('saved'),'ok');
   }).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+// The gateway's own delete is the soft one: a default profile it hides, a
+// profile of one's own it marks deleted. Purge is the other, and refuses a
+// default profile outright, so that is not offered for one.
+var _delProf=null;
+function askDeleteProfile(id){
+  var p=(allProfiles||[]).filter(function(x){ return x.id===id; })[0];
+  if(!p) return;
+  _delProf=p;
+  var nm=document.getElementById('delProfName');
+  if(nm) nm.textContent=profTitle(p);
+  var hard=document.getElementById('delProfHard');
+  if(hard) hard.hidden=!!p.isDefault;
+  var note=document.getElementById('delProfNote');
+  if(note) note.textContent=t(p.isDefault?'delProfDefault':'delProfNote');
+  document.getElementById('delProfOverlay').classList.add('show'); }
+function delProfSoft(){
+  var p=_delProf; if(!p) return;
+  closeModal(null,'delProfOverlay'); _delProf=null;
+  api('DELETE','/api/v1/profiles/'+encodeURIComponent(p.id))
+    .then(function(){ toast(t('delProfDone'),'ok'); return loadProfiles(); })
+    .then(function(){ renderEpList(); renderEpEditor(); })
+    .catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+function delProfPurge(){
+  var p=_delProf; if(!p) return;
+  if(!confirm(t('delProfConfirm').replace('{n}',profTitle(p)))) return;
+  closeModal(null,'delProfOverlay'); _delProf=null;
+  purgeProfileNow(p); }
+function purgeProfileNow(p){
+  return api('DELETE','/api/v1/profiles/'+encodeURIComponent(p.id)+'/purge')
+    .then(function(){ toast(t('delProfPurged'),'ok');
+      if(editing&&editing.id===p.id) editing=null;
+      return loadProfiles(); })
+    .then(function(){ renderEpList(); renderEpEditor(); })
+    .catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+function restoreProfile(id){
+  api('PUT','/api/v1/profiles/'+encodeURIComponent(id)+'/visibility',{visibility:'visible'})
+    .then(function(){ toast(t('delProfRestored'),'ok'); return loadProfiles(); })
+    .then(function(){ renderEpList(); })
+    .catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+function purgeFromTrash(id){
+  var p=(allProfiles||[]).filter(function(x){ return x.id===id; })[0]; if(!p) return;
+  if(!confirm(t('delProfConfirm').replace('{n}',profTitle(p)))) return;
+  purgeProfileNow(p); }
 function setProfileHidden(id,hidden){
   api('PUT','/api/v1/profiles/'+encodeURIComponent(id)+'/visibility',{visibility:hidden?'hidden':'visible'})
     .then(function(){ toast(hidden?t('hidden'):t('shown'),'ok'); return loadProfiles(); })
@@ -7758,6 +7913,7 @@ function epSetQuery(v){ epQuery=String(v||''); renderEpItems(); }
 function epMatches(p){
   var pr=p.profile||{};
   var hid=(p.visibility==='hidden');
+  if(epKind==='trash') return p.visibility==='deleted';
   if(p.visibility==='deleted') return false;
   if(epKind==='hidden'){ if(!hid) return false; }
   else { if(hid) return false;
@@ -7773,7 +7929,7 @@ function epMatches(p){
 function renderEpList(){ renderEpTools(); renderEpItems(); }
 function renderEpTools(){
   var bar=document.getElementById('epTools'); if(!bar) return; bar.innerHTML='';
-  var kinds=[['espresso','kindEspresso'],['brew','kindBrew'],['other','kindOther'],['all','kindAll'],['hidden','kindHidden']];
+  var kinds=[['espresso','kindEspresso'],['brew','kindBrew'],['other','kindOther'],['all','kindAll'],['hidden','kindHidden'],['trash','kindTrash']];
   bar.innerHTML='<input class="ep-search" id="epSearch" placeholder="'+escapeAttr(t('searchProfiles'))+'" value="'+escapeAttr(epQuery)+'" oninput="epSetQuery(this.value)">'
     +'<div class="ep-kinds">'+kinds.map(function(k){
         return '<button class="ep-kind'+(epKind===k[0]?' on':'')+'" onclick="epSetKind(\''+k[0]+'\')">'+escapeHtml(t(k[1]))+'</button>'; }).join('')+'</div>';
@@ -7833,11 +7989,23 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     var fav=document.createElement('button'); fav.className='fav-btn'+(favIds[p.id]?' on':''); fav.textContent=favIds[p.id]?'★':'☆'; fav.title=t('toggleFav');
     fav.onclick=function(e){ e.stopPropagation(); toggleFav(p.id); };
     var hid=(p.visibility==='hidden');
+    var inTrash=(p.visibility==='deleted');
     var eye=document.createElement('button'); eye.className='eye-btn'+(hid?' on':''); eye.textContent=hid?'🙈':'👁'; eye.title=hid?t('showProfile'):t('hideProfile');
     eye.onclick=function(e){ e.stopPropagation(); setProfileHidden(p.id,!hid); };
+    var del=document.createElement('button'); del.className='eye-btn';
+    del.textContent=inTrash?'↺':'🗑';
+    del.title=t(inTrash?'restoreProfile':'deleteProfile');
+    del.onclick=function(e){ e.stopPropagation();
+      if(inTrash) restoreProfile(p.id); else askDeleteProfile(p.id); };
     var foot=document.createElement('div'); foot.className='cfoot';
     var chips=document.createElement('div'); chips.className='ep-chips'; chips.innerHTML=tagHtml;
-    foot.appendChild(chips); foot.appendChild(fav); foot.appendChild(eye);
+    foot.appendChild(chips);
+    if(inTrash){
+      var pg=document.createElement('button'); pg.className='eye-btn danger';
+      pg.textContent='×'; pg.title=t('purgeProfile');
+      pg.onclick=function(e){ e.stopPropagation(); purgeFromTrash(p.id); };
+      foot.appendChild(del); foot.appendChild(pg); }
+    else { foot.appendChild(fav); foot.appendChild(eye); foot.appendChild(del); }
     body.appendChild(foot);
     it.appendChild(th); it.appendChild(body);
     it.onclick=function(){ epSelect(p); };
@@ -14476,8 +14644,7 @@ function loadWorkflow(){
 // profile re-seeded by an update -- is put back to the chosen one, once.
 function restoreBrewTemp(wp){
   var want=brewTempSaved(); if(want==null||!wp||!wp.steps) return;
-  var has=profileTopTemp(wp);
-  if(has===want) return;
+  if(profileIsFlatAt(wp,want)) return;
   api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(wp)}).catch(function(){}); }
 function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(function(s){ if(s&&s.groupTemp) settings.groupTemp=s.groupTemp; }).catch(function(){}); }
 
