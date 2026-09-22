@@ -863,10 +863,21 @@ body.night .ep-cbody{background:rgba(22,19,36,.46);box-shadow:inset 0 1px 0 rgba
 body.scaled .ep-cbody,body.no-fx .ep-cbody{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.80)}
 body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,.86)}
 .ep-card .mt{font-size:10px;font-weight:700;color:var(--ink-mute);margin:0 0 1px;text-transform:uppercase;letter-spacing:.04em}
+/* what came with the app reads as ground rather than as a word on every row.
+   The plain rows are one's own. */
+.ep-item.defp{background:rgba(99,102,241,.13);border-color:rgba(99,102,241,.26)}
+body.night .ep-item.defp{background-color:rgba(139,92,246,.30);border-color:rgba(139,92,246,.38)}
+/* the frosted pane is the surface anyone actually looks at, so it is the one
+   that has to carry the tint */
+.ep-item.defp .ep-cbody{background:rgba(99,102,241,.17)}
+/* night keeps the pane dark: the text on it is light, and lifting the ground
+   to mark the row took the contrast with it. The colour moves, not the depth. */
+body.night .ep-item.defp .ep-cbody{background:rgba(58,40,104,.62)}
+body.scaled .ep-item.defp .ep-cbody,body.no-fx .ep-item.defp .ep-cbody{background:rgba(216,217,250,.88)}
+body.night.scaled .ep-item.defp .ep-cbody,body.night.no-fx .ep-item.defp .ep-cbody{background:rgba(48,38,84,.90)}
 .ep-card .nm{font-size:14px;font-weight:800;line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;color:var(--ink)}
 .ep-card .cfoot{display:flex;align-items:flex-end;gap:6px;margin-top:6px}
 .ep-card .cfoot .ep-chips{flex:1;min-width:0}
-.ep-card .fav-btn,.ep-card .eye-btn{margin-left:0;flex-shrink:0;width:30px;height:30px;border-radius:9px}
 .ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,.18)}
 .ep-item .thmb{width:44px;height:44px;border-radius:9px;background:#f8f8ff;position:relative;overflow:hidden;flex-shrink:0}
 .ep-item .thmb canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -876,6 +887,8 @@ body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,
 .ep-item .fav-btn{margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:11px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);color:var(--ink-mute);font-size:15px;line-height:1;cursor:pointer;transition:all .15s;-webkit-appearance:none;display:flex;align-items:center;justify-content:center}
 .ep-item .fav-btn:hover{border-color:var(--amber);color:var(--amber)}
 .ep-item .fav-btn.on{color:var(--amber);border-color:var(--amber);background:rgba(245,158,11,.1)}
+.ep-card .fav-btn,.ep-card .eye-btn{margin-left:0;flex-shrink:0;width:30px;height:30px;
+  border-radius:9px;font-size:15px}
 .bg-tabs{display:flex;gap:6px;margin-bottom:10px;position:sticky;top:0;background:var(--sheet);padding:2px 0 6px;z-index:1}
 .bg-tab{flex:1;min-height:44px;padding:9px 8px;border-radius:10px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;font-weight:800;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none;transition:all .15s}
 .bg-tab.active{background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);border-color:var(--ctl-edge);color:var(--accent)}
@@ -3007,6 +3020,7 @@ var I18N={
     favorites:'Favorites', recentlyUsed:'Recently used',     tagPressure:'pressure', tagFlow:'flow', tagMixed:'mixed', tagLowPressure:'low pressure',
     tagBloom:'bloom', tagDecline:'declining', tagCool:'cool', tagHot:'hot',
     tagLight:'light roast', tagMedium:'medium roast', tagDark:'dark roast',
+    defaultProfileNote:'Ships with the app: it can be hidden but not deleted for good, and comes back with the next update.',
     kindTrash:'Bin', deleteProfile:'Delete profile', restoreProfile:'Put it back', purgeProfile:'Delete for good',
     delProfNote:'It goes to the bin, where it can be put back. Deleting it for good cannot be undone.',
     delProfDefault:'A profile that ships with the app is hidden rather than deleted, and comes back with the next update.',
@@ -3341,6 +3355,7 @@ var I18N={
     favorites:'즐겨찾기', recentlyUsed:'최근 사용',     tagPressure:'압력제어', tagFlow:'유량제어', tagMixed:'혼합', tagLowPressure:'저압',
     tagBloom:'블루밍', tagDecline:'디클라인', tagCool:'저온', tagHot:'고온',
     tagLight:'약배전', tagMedium:'중배전', tagDark:'강배전',
+    defaultProfileNote:'앱에 포함된 프로파일입니다. 숨길 수는 있지만 완전 삭제는 되지 않으며, 다음 업데이트 때 다시 돌아옵니다.',
     kindTrash:'휴지통', deleteProfile:'프로파일 삭제', restoreProfile:'되돌리기', purgeProfile:'완전 삭제',
     delProfNote:'휴지통으로 가며 다시 꺼낼 수 있습니다. 완전 삭제는 되돌릴 수 없습니다.',
     delProfDefault:'기본 제공 프로파일은 삭제 대신 숨김 처리되며, 다음 업데이트 때 다시 돌아옵니다.',
@@ -7975,7 +7990,8 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     if(!groups[key]){ groups[key]=[]; order.push(key); } groups[key].push({p:p,st:st}); });
   order.sort(function(a,b){ if(a==='Other') return 1; if(b==='Other') return -1; return a.localeCompare(b); });
   function addItem(p,st){ var author=(p.profile&&p.profile.author)||'';
-    var it=document.createElement('div'); it.className='ep-item ep-card'+(editing&&editing.id===p.id?' active':'');
+    var it=document.createElement('div'); it.className='ep-item ep-card'+(editing&&editing.id===p.id?' active':'')+(p.isDefault?' defp':'');
+    if(p.isDefault) it.title=t('defaultProfileNote');
     var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
     var pc=colorOf(p); if(pc){ var dot=document.createElement('span'); dot.className='ep-dot'; dot.style.background=gradOf(pc); th.appendChild(dot); }
     var body=document.createElement('div'); body.className='ep-cbody';
@@ -7983,7 +7999,8 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     var tagHtml=allTagsOf(p).map(function(k){ var cls='ep-chip'+(ROAST_KEYS.indexOf(k)>=0?' roast':'');
       if(aiSet.indexOf(k)>=0&&(guess||ROAST_KEYS.indexOf(k)<0)) cls+=' ai';
       return '<span class="'+cls+'">'+escapeHtml(t(k))+'</span>'; }).join('');
-    body.innerHTML='<div class="mt">'+escapeHtml(author?author+' \u00b7 ':'')
+    body.innerHTML='<div class="mt">'
+      +escapeHtml(author?author+' \u00b7 ':'')
       +((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' '+escapeHtml(t('stepsShort'))+'</div>'
       +'<div class="nm">'+escapeHtml(st.name)+'</div>';
     var fav=document.createElement('button'); fav.className='fav-btn'+(favIds[p.id]?' on':''); fav.textContent=favIds[p.id]?'★':'☆'; fav.title=t('toggleFav');
