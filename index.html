@@ -611,6 +611,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .rc-mode-head .rc-save{min-height:28px;height:28px;padding:0 12px;font-size:13px;
   line-height:1;flex:none;border-radius:100px}
 .rc-sw{transform:scale(.7);transform-origin:center;flex:none}
+.cs-opts .field{flex:1;min-width:0}
 .rc-sw-wrap{display:inline-flex;align-items:center;gap:1px;flex:none;cursor:default}
 .rc-sw-l{font-size:9px;font-weight:700;color:var(--ink-mute);white-space:nowrap}
 /* a button with a height and a span inside sits its text on the bottom edge
@@ -2638,6 +2639,20 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <button class="m-btn" id="csFlipBtn" onclick="csFlip()" hidden data-i18n="csFlip">Flip</button>
         <button class="m-btn" id="csShapeBtn" onclick="csShape()" hidden data-i18n="csShapeLandscape">Landscape</button>
       </div>
+      <div class="field-row cs-opts">
+        <div class="field"><label data-i18n="csRes"></label>
+          <select id="csResSel" onchange="csSetRes(this.value)">
+            <option value="360">360p</option><option value="540">540p</option>
+            <option value="720">720p</option><option value="1080">1080p</option></select></div>
+        <div class="field"><label data-i18n="csFps"></label>
+          <select id="csFpsSel" onchange="csSetFps(this.value)">
+            <option value="15">15</option><option value="24">24</option><option value="30">30</option></select></div>
+      </div>
+      <div class="field"><label data-i18n="csDeg"></label>
+        <select id="csDegSel" onchange="csSetDeg(this.value)">
+          <option value="framerate" data-i18n="csDegSmooth"></option>
+          <option value="resolution" data-i18n="csDegSharp"></option></select></div>
+      <div class="set-desc" id="csActual"></div>
       <div class="field" id="csZoomBox" hidden><label data-i18n="csZoom">Camera zoom</label>
         <div class="opt-ctrl"><input type="range" class="slider" id="csZoom" min="1" max="4" step="0.1" value="1"
           oninput="csSetZoom(this.value)"><span class="opt-val" id="csZoomVal">1.0x</span></div></div>
@@ -2883,6 +2898,8 @@ var I18N={
     csLiveTitle:"This phone's camera",
     csLiveDesc:'The sharper picture, at the rate the camera runs, and no app to install. Chrome has to be told to trust this address once.',
     csLiveStart:'Use this camera', csLiveStop:'Stop', csFlip:'Flip',
+    csRes:'Picture size', csFps:'Frames', csDeg:'When the phone cannot keep up',
+    csDegSmooth:'Keep it smooth', csDegSharp:'Keep it sharp',
     csShapeLandscape:'Landscape', csShapePortrait:'Portrait', csZoom:'Camera zoom',
     csAsking:'Asking for the camera\u2026', csOffering:'Offering it to the machine\u2026',
     csWaiting:'Waiting for the machine\u2026', csLiveOn:'Live \u2014 the machine has the picture',
@@ -3218,6 +3235,8 @@ var I18N={
     csLiveTitle:'이 폰의 카메라 쓰기',
     csLiveDesc:'화질과 프레임이 더 좋고 앱을 깔 필요가 없습니다. 대신 크롬에서 이 주소를 한 번 허용해야 합니다.',
     csLiveStart:'이 카메라 쓰기', csLiveStop:'중지', csFlip:'전후 전환',
+    csRes:'화면 크기', csFps:'프레임', csDeg:'폰이 버거울 때',
+    csDegSmooth:'부드러움 유지', csDegSharp:'화질 유지',
     csShapeLandscape:'가로', csShapePortrait:'세로', csZoom:'카메라 줌',
     csAsking:'카메라 권한 요청 중…', csOffering:'머신에 연결 신청 중…',
     csWaiting:'머신 응답 기다리는 중…', csLiveOn:'연결됨 — 머신에 화면이 나옵니다',
@@ -14718,6 +14737,38 @@ function csSave(){
     .catch(function(){ st.textContent=t('camSetupFailed'); }); }
 // ── This phone's camera, offered to the machine ─────────────────────
 var _csPc=null, _csStream=null, _csSid=null, _csPoll=null, _csFacing='environment', _csPortrait=false;
+// A cover is 216 across and the monitor's pane is not much more, so 540p is
+// the honest default; the rest are there for anyone who wants them.
+var CS_RES={'360':[640,360],'540':[960,540],'720':[1280,720],'1080':[1920,1080]};
+var _csRes='540', _csFps=30, _csDeg='framerate';
+function csLoadOpts(){
+  var o=lsGet('aurora_csopts')||{};
+  if(CS_RES[o.res]) _csRes=o.res;
+  if(o.fps==15||o.fps==24||o.fps==30) _csFps=+o.fps;
+  if(o.deg==='resolution'||o.deg==='framerate') _csDeg=o.deg; }
+function csSaveOpts(){ lsSet('aurora_csopts',{res:_csRes,fps:_csFps,deg:_csDeg}); }
+function csSyncOpts(){
+  var r=document.getElementById('csResSel'); if(r) r.value=_csRes;
+  var f=document.getElementById('csFpsSel'); if(f) f.value=String(_csFps);
+  var g=document.getElementById('csDegSel'); if(g) g.value=_csDeg; }
+// A change is only a change once the camera is opened again with it.
+function csSetRes(v){ if(!CS_RES[v]) return; _csRes=v; csSaveOpts(); if(csLive()) csLiveStart(); }
+function csSetFps(v){ _csFps=parseInt(v,10)||30; csSaveOpts(); if(csLive()) csLiveStart(); }
+function csSetDeg(v){ _csDeg=(v==='resolution')?'resolution':'framerate'; csSaveOpts();
+  csApplyDeg(); }
+// Asked for is not the same as given: a phone answers with the nearest mode it
+// has, and that is the number worth showing.
+function csShowActual(track){
+  var el=document.getElementById('csActual'); if(!el) return;
+  var g=(track&&track.getSettings)?track.getSettings():null;
+  el.textContent=g?((g.width||'?')+'\u00d7'+(g.height||'?')+' @ '+Math.round(g.frameRate||0)+'fps'):''; }
+function csApplyDeg(){
+  if(!_csPc||!_csPc.getSenders) return;
+  var sn=_csPc.getSenders().filter(function(x){ return x.track&&x.track.kind==='video'; })[0];
+  if(!sn||!sn.getParameters||!sn.setParameters) return;
+  try{ var p=sn.getParameters();
+    p.degradationPreference=(_csDeg==='resolution')?'maintain-resolution':'maintain-framerate';
+    sn.setParameters(p).catch(function(){}); }catch(_){} }
 var _csWake=null;
 function csLive(){ return !!(_csPc||_csStream); }
 function csWakeNote(){
@@ -14778,9 +14829,10 @@ function csLiveStart(){
   if(_csPoll){ clearInterval(_csPoll); _csPoll=null; }
   if(_csStream){ _csStream.getTracks().forEach(function(t){ t.stop(); }); _csStream=null; }
   csSay(t('csAsking'));
-  var wide=_csPortrait?720:1280, tall=_csPortrait?1280:720;
+  var base=CS_RES[_csRes]||CS_RES['540'];
+  var wide=_csPortrait?base[1]:base[0], tall=_csPortrait?base[0]:base[1];
   navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:_csFacing},
-    width:{ideal:wide},height:{ideal:tall},frameRate:{ideal:30}}})
+    width:{ideal:wide},height:{ideal:tall},frameRate:{ideal:_csFps}}})
   .then(function(stream){
     _csStream=stream;
     var v=document.getElementById('csPreview'); v.srcObject=stream; v.hidden=false;
@@ -14788,10 +14840,12 @@ function csLiveStart(){
     var shape=document.getElementById('csShapeBtn');
     shape.hidden=false; shape.textContent=t(_csPortrait?'csShapePortrait':'csShapeLandscape');
     csZoomOffer(stream.getVideoTracks()[0]);
+    csShowActual(stream.getVideoTracks()[0]);
     document.getElementById('csLiveBtn').textContent=t('csLiveStop');
     csWakeOn();
     var pc=new RTCPeerConnection({iceServers:[]}); _csPc=pc;
     stream.getTracks().forEach(function(tr){ pc.addTrack(tr,stream); });
+    csApplyDeg();
     pc.onconnectionstatechange=function(){
       if(pc!==_csPc) return;
       if(pc.connectionState==='connected') csSay(t('csLiveOn'));
@@ -14871,6 +14925,7 @@ function csWayTwo(){
     return '<div class="cs-tip">'+escapeHtml(t(k))+'</div>'; }).join(''); }
 function initPhoneCam(){
   // whatever the machine is already pointed at, so it can be corrected
+  csLoadOpts(); csSyncOpts();
   csSecureCheck(); csWayTwo();
   api('GET',storeUrl(PREF_PREFIX+'camUrl')).then(function(v){
     var url=(typeof v==='string'?v:(v&&v.value)||'');
