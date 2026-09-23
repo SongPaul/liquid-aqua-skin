@@ -733,6 +733,31 @@ body.night .bl-card{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 .editpage.show{opacity:1;pointer-events:auto}
 body.page-swap .editpage{transition:none}
 .ep-head{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--glass-line);background:rgba(255,255,255,.6)}
+.ep-head-btns{display:flex;align-items:center;gap:10px}
+/* list editing: the editor stands down, the filters keep the rail they always
+   had, and the covers take the rest. .ep-col dissolves so its two children
+   become the two columns. */
+body.ep-wide .ep-body{grid-template-columns:300px 1fr}
+body.ep-wide .ep-col{display:contents}
+body.ep-wide .ep-toolbar{align-self:start;max-height:100%;overflow-y:auto}
+body.ep-wide .ep-editor{display:none}
+/* a cover being picked, and the bar that says how many */
+body.ep-wide .ep-item.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+body.ep-wide .ep-item.sel::after{content:'✓';position:absolute;z-index:5;top:6px;right:8px;
+  width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ep-selbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--glass-line)}
+.ep-selbar .n{flex:1 0 100%;font-size:11px;font-weight:800;color:var(--ink-mute)}
+.ep-selbar .m-btn{min-height:32px;padding:0 10px;font-size:11px;border-radius:9px}
+/* Both of these are load-bearing. A card's picture is an absolutely placed
+   layer, so stretched to its row it measures as its borders and collapses to
+   two pixels; and rows left to size themselves come out near zero, letting the
+   cards overlap. Start the items, and size the rows to their content. */
+body.ep-wide .ep-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));
+  grid-auto-rows:min-content;align-content:start;align-items:start;gap:10px;padding:0 12px 14px}
+body.ep-wide .ep-list>.ep-group-head{grid-column:1/-1}
+body.ep-wide .ep-list>.ep-placeholder{grid-column:1/-1}
 .ep-title{font-size:20px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .ep-close{min-height:44px;padding:10px 18px;border-radius:100px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .2s}
 .ep-close:hover{transform:translateY(-2px)}
@@ -2384,7 +2409,10 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <div class="editpage" id="editPage">
   <div class="ep-head">
     <div class="ep-title" data-i18n="profileEditor">Profile Editor</div>
-    <button class="ep-close" onclick="closeEditPage()">✕ <span data-i18n="close">Close</span></button>
+    <div class="ep-head-btns">
+      <button class="ep-close" id="epWideBtn" onclick="epToggleWide()"><span id="epWideIco">✎</span> <span id="epWideLbl"></span></button>
+      <button class="ep-close" onclick="closeEditPage()">✕ <span data-i18n="close">Close</span></button>
+    </div>
   </div>
   <div class="ep-body">
     <div class="ep-col">
@@ -3097,6 +3125,9 @@ var I18N={
     mbSaveFailed:'Save failed:', mbNeedRoasterName:'Roaster and name required', mbTimeout:'No response from the gateway',
     mbAnalyzing:'Analyzing… ✨', mbAnalyzeFailed:'Analyze failed:', mbReview:'Review, then add to gateway',
     mbNeedKey:'Enter your {n} API key to analyze', mbKeySaved:'Key saved — tap Analyze',
+    epEditList:'Edit list', epEditDone:'Done', epSelected:'{n} selected',
+    epSelAll:'All', epSelNone:'None',
+    delProfSomeDefault:'{n} of them ship with the app and are hidden rather than deleted.',
     profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'☕ Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
     steamOptions:'💨 Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
     tapWake:'Tap anywhere to wake'
@@ -3434,6 +3465,9 @@ var I18N={
     mbSaveFailed:'저장 실패:', mbNeedRoasterName:'로스터와 이름은 필수입니다', mbTimeout:'게이트웨이 응답 없음',
     mbAnalyzing:'분석 중… ✨', mbAnalyzeFailed:'분석 실패:', mbReview:'확인 후 게이트웨이에 추가하세요',
     mbNeedKey:'분석하려면 {n} API 키를 입력하세요', mbKeySaved:'키 저장됨 — 분석을 누르세요',
+    epEditList:'목록 편집', epEditDone:'편집 끝', epSelected:'{n}개 선택',
+    epSelAll:'전체', epSelNone:'해제',
+    delProfSomeDefault:'그중 {n}개는 기본 제공 프로파일이라 삭제 대신 숨김 처리됩니다.',
     profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'☕ 에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
     steamOptions:'💨 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
     tapWake:'화면을 눌러 깨우기'
@@ -7745,10 +7779,12 @@ function openEditPage(){ openEditPageFor(carItems[carIndex]||allProfiles[0]); }
 // opens the library on itself. Same page either way -- the list is on the left
 // of it, so arriving on one profile never hides the rest.
 function openEditPageFor(p){
+  epSetWide(_epWide);
   renderEpList(); loadRecentProfiles().then(renderEpList);
   document.getElementById('editPage').classList.add('show'); afterPageChange();
   if(p) epSelect(p); }
 function closeEditPage(){
+  document.body.classList.remove('ep-wide');
   if(_backToBean){ _backToBean=false;
     swapPage(function(){ document.getElementById('editPage').classList.remove('show');
       document.getElementById('beanPage').classList.add('show'); });
@@ -7838,11 +7874,11 @@ function setProfileRoast(id,key){
 // The gateway's own delete is the soft one: a default profile it hides, a
 // profile of one's own it marks deleted. Purge is the other, and refuses a
 // default profile outright, so that is not offered for one.
-var _delProf=null;
+var _delProf=null, _delList=null;
 function askDeleteProfile(id){
   var p=(allProfiles||[]).filter(function(x){ return x.id===id; })[0];
   if(!p) return;
-  _delProf=p;
+  _delProf=p; _delList=null;
   var nm=document.getElementById('delProfName');
   if(nm) nm.textContent=profTitle(p);
   var hard=document.getElementById('delProfHard');
@@ -7850,18 +7886,51 @@ function askDeleteProfile(id){
   var note=document.getElementById('delProfNote');
   if(note) note.textContent=t(p.isDefault?'delProfDefault':'delProfNote');
   document.getElementById('delProfOverlay').classList.add('show'); }
+function epBulkDelete(){
+  var ids=epSelIds(); if(!ids.length) return;
+  var ps=(allProfiles||[]).filter(function(x){ return ids.indexOf(x.id)>=0; });
+  if(!ps.length) return;
+  _delProf=null; _delList=ps;
+  var defs=ps.filter(function(x){ return x.isDefault; }).length;
+  var nm=document.getElementById('delProfName');
+  if(nm) nm.textContent=t('epSelected').replace('{n}',ps.length);
+  var hard=document.getElementById('delProfHard');
+  if(hard) hard.hidden=(defs===ps.length);
+  var note=document.getElementById('delProfNote');
+  if(note) note.textContent=t('delProfNote')+(defs?(' '+t('delProfSomeDefault').replace('{n}',defs)):'');
+  document.getElementById('delProfOverlay').classList.add('show'); }
+// One at a time rather than all at once: the gateway is answering a shot as
+// well, and a list of sixty is not a reason to shout at it.
+function delRunSeq(list,fn){
+  return list.reduce(function(chain,p){
+    return chain.then(function(){ return fn(p).catch(function(){}); }); },Promise.resolve()); }
+function delAfter(msg){
+  return loadProfiles().then(function(){
+    _epSel={}; renderEpList(); renderEpEditor(); toast(msg,'ok'); }); }
+function delTargets(){ return _delList||(_delProf?[_delProf]:[]); }
 function delProfSoft(){
-  var p=_delProf; if(!p) return;
-  closeModal(null,'delProfOverlay'); _delProf=null;
-  api('DELETE','/api/v1/profiles/'+encodeURIComponent(p.id))
-    .then(function(){ toast(t('delProfDone'),'ok'); return loadProfiles(); })
-    .then(function(){ renderEpList(); renderEpEditor(); })
-    .catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+  var list=delTargets(); if(!list.length) return;
+  closeModal(null,'delProfOverlay'); _delProf=null; _delList=null;
+  delRunSeq(list,function(p){
+    return api('DELETE','/api/v1/profiles/'+encodeURIComponent(p.id)); })
+    .then(function(){ return delAfter(t('delProfDone')); }); }
 function delProfPurge(){
-  var p=_delProf; if(!p) return;
-  if(!confirm(t('delProfConfirm').replace('{n}',profTitle(p)))) return;
-  closeModal(null,'delProfOverlay'); _delProf=null;
-  purgeProfileNow(p); }
+  var list=delTargets(); if(!list.length) return;
+  var what=(list.length===1)?profTitle(list[0]):t('epSelected').replace('{n}',list.length);
+  if(!confirm(t('delProfConfirm').replace('{n}',what))) return;
+  closeModal(null,'delProfOverlay'); _delProf=null; _delList=null;
+  delRunSeq(list,function(p){
+    if(editing&&editing.id===p.id) editing=null;
+    // a bundled profile refuses to be purged, so it is filed away instead
+    return p.isDefault
+      ? api('DELETE','/api/v1/profiles/'+encodeURIComponent(p.id))
+      : api('DELETE','/api/v1/profiles/'+encodeURIComponent(p.id)+'/purge'); })
+    .then(function(){ return delAfter(t('delProfPurged')); }); }
+function epBulkRestore(){
+  var ids=epSelIds(); if(!ids.length) return;
+  delRunSeq(ids,function(id){
+    return api('PUT','/api/v1/profiles/'+encodeURIComponent(id)+'/visibility',{visibility:'visible'}); })
+    .then(function(){ return delAfter(t('delProfRestored')); }); }
 function purgeProfileNow(p){
   return api('DELETE','/api/v1/profiles/'+encodeURIComponent(p.id)+'/purge')
     .then(function(){ toast(t('delProfPurged'),'ok');
@@ -8003,6 +8072,16 @@ function renderEpTools(){
     +(allProfiles.some(function(p){ return aiTagsOf(p).length; })
       ? '<button class="ep-aibtn ghost" onclick="clearAiTags()">'+escapeHtml(t('aiClear'))+'</button>' : '');
   bar.appendChild(ai);
+  if(_epWide){
+    var n=epSelIds().length, trash=(epKind==='trash');
+    var sb=document.createElement('div'); sb.className='ep-selbar';
+    var h='<div class="n">'+escapeHtml(t('epSelected').replace('{n}',n))+'</div>'
+      +'<button class="m-btn" onclick="epSelAll(true)">'+escapeHtml(t('epSelAll'))+'</button>'
+      +'<button class="m-btn" onclick="epSelAll(false)"'+(n?'':' disabled')+'>'+escapeHtml(t('epSelNone'))+'</button>';
+    if(trash) h+='<button class="m-btn" onclick="epBulkRestore()"'+(n?'':' disabled')+'>'+escapeHtml(t('restoreProfile'))+'</button>';
+    h+='<button class="m-btn danger" onclick="epBulkDelete()"'+(n?'':' disabled')+'>'+escapeHtml(t('deleteProfile'))+'</button>';
+    sb.innerHTML=h;
+    bar.appendChild(sb); }
   var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
   var counts={}; pool.forEach(function(p){ allTagsOf(p).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
   var avail=TAG_KEYS.filter(function(k){ return counts[k]; });
@@ -8023,6 +8102,7 @@ function renderEpTools(){
 function renderEpItems(){ var list=document.getElementById('epList'); if(!list) return;
   list.innerHTML=''; epItemEls={}; ensureCurveObserver();
   var shown=allProfiles.filter(epMatches);
+  _epShown=shown.map(function(p){ return p.id; });
   if(!shown.length){ var none=document.createElement('div'); none.className='ep-placeholder'; none.style.marginTop='24px'; none.textContent=t('noMatches'); list.appendChild(none); return; }
 
   var favList=(epKind==='hidden')?[]:shown.filter(function(p){ return favIds[p.id]; });
@@ -8033,7 +8113,7 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     if(!groups[key]){ groups[key]=[]; order.push(key); } groups[key].push({p:p,st:st}); });
   order.sort(function(a,b){ if(a==='Other') return 1; if(b==='Other') return -1; return a.localeCompare(b); });
   function addItem(p,st){ var author=(p.profile&&p.profile.author)||'';
-    var it=document.createElement('div'); it.className='ep-item ep-card'+(editing&&editing.id===p.id?' active':'')+(p.isDefault?' defp':'');
+    var it=document.createElement('div'); it.className='ep-item ep-card'+(editing&&editing.id===p.id?' active':'')+(p.isDefault?' defp':'')+(_epSel[p.id]?' sel':'');
     if(p.isDefault) it.title=t('defaultProfileNote');
     var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
     var pc=colorOf(p); if(pc){ var dot=document.createElement('span'); dot.className='ep-dot'; dot.style.background=gradOf(pc); th.appendChild(dot); }
@@ -8367,7 +8447,30 @@ function cancelEdit(){
   editing=null; epStepIdx=0;
   Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.remove('active'); }); });
   renderEpEditor(); }
-function epSelect(p){ editing=JSON.parse(JSON.stringify(p));
+var _epWide=false, _epSel={}, _epShown=[];
+function epToggleWide(){ epSetWide(!_epWide); }
+function epSetWide(on){
+  _epWide=!!on;
+  document.body.classList.toggle('ep-wide',_epWide);
+  if(!_epWide) _epSel={};
+  var l=document.getElementById('epWideLbl'), i=document.getElementById('epWideIco');
+  if(l) l.textContent=t(_epWide?'epEditDone':'epEditList');
+  if(i) i.textContent=_epWide?'\u2713':'\u270e';
+  renderEpList(); }
+function epSelIds(){ var out=[]; for(var k in _epSel) if(_epSel[k]) out.push(k); return out; }
+function epMarkSel(id){
+  (epItemEls[id]||[]).forEach(function(e){ e.classList.toggle('sel',!!_epSel[id]); }); }
+function epToggleSel(id){
+  if(_epSel[id]) delete _epSel[id]; else _epSel[id]=true;
+  epMarkSel(id); renderEpTools(); }
+function epSelAll(on){
+  _epSel={};
+  if(on) _epShown.forEach(function(id){ _epSel[id]=true; });
+  renderEpList(); }
+// While the list is being worked on a cover is something to pick. Opening one
+// is editing it, which is the other mode.
+function epSelect(p){ if(_epWide){ epToggleSel(p.id); return; }
+  editing=JSON.parse(JSON.stringify(p));
   // just move the active highlight — no full list rebuild (keeps it fast)
   Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.toggle('active', k===p.id); }); });
   renderEpEditor(); }
