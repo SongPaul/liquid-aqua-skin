@@ -1081,7 +1081,16 @@ body.night .aip-out{background-color:rgba(99,102,241,.16);box-shadow:inset 0 1px
 .ai-thumbs{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%}
 .ai-thumbs:empty{display:none}
 .ai-thumbs:empty{display:none}
-.ai-thumb{width:52px;height:52px;border-radius:10px;background-size:cover;background-position:center;position:relative;border:1px solid var(--glass-line)}
+.ai-thumb{width:52px;height:52px;border-radius:10px;background-size:cover;background-position:center;position:relative;border:1px solid var(--glass-line);overflow:hidden}
+/* reading the label: a light crosses each photograph until an answer comes */
+body.mb-scanning .ai-thumb{border-color:var(--accent)}
+body.mb-scanning .ai-thumb::after{content:'';position:absolute;left:0;right:0;top:0;height:100%;
+  background:linear-gradient(180deg,rgba(99,102,241,0) 35%,rgba(160,170,255,.85) 50%,rgba(99,102,241,0) 65%);
+  animation:mbscan 1.15s linear infinite;pointer-events:none}
+@keyframes mbscan{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
+body.mb-scanning #mbStatus{animation:mbpulse 1.15s ease-in-out infinite}
+@keyframes mbpulse{0%,100%{opacity:1}50%{opacity:.45}}
+body.no-fx .ai-thumb::after{animation:none;display:none}
 .ai-thumb-x{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:12px;line-height:1;cursor:pointer;-webkit-appearance:none}
 .ai-scan-actions{display:flex;gap:6px;margin:0;flex:none;flex-wrap:wrap}
 .ai-scan-actions .m-btn{min-height:40px;padding:8px 14px;font-size:12px}
@@ -1359,6 +1368,36 @@ body.night #phoneShell{background-attachment:fixed;
    so the setting still means something on this page. */
 body.night #phoneShell{
   background:
+    linear-gradient(to top,rgba(10,4,28,.58),transparent 26%),
+    radial-gradient(120% 82% at 8% 0%,rgba(14,116,144,.60),transparent 58%),
+    radial-gradient(105% 72% at 97% 10%,rgba(91,33,182,.70),transparent 60%),
+    radial-gradient(115% 78% at 82% 52%,rgba(134,25,143,.55),transparent 58%),
+    radial-gradient(125% 85% at 2% 72%,rgba(49,46,129,.78),transparent 60%),
+    radial-gradient(95% 62% at 55% 104%,rgba(112,26,117,.50),transparent 62%),
+    linear-gradient(152deg,#160f38,#2e1065 32%,#3b0764 62%,#0f214d)}
+/* The ground was painted onto the shell itself, which is as tall as the page.
+   So every time the page grew -- an answer arriving, a card unfolding -- the
+   whole gradient was laid down again and every pane of glass over it re-blurred
+   what it had just re-drawn. That is the blink, and it is the whole screen
+   because every panel is one of those panes. On its own fixed layer the ground
+   is painted once, at the size of the window, and nothing that happens above it
+   reaches it again. It is also what the comment above always claimed: fixed to
+   the viewport. The shorthand underneath had been quietly undoing that. */
+/* isolate, not relative: the layer has to sit inside a stacking context of the
+   shell's own or the body's colour paints straight over it, and isolate buys
+   that without making the shell a containing block for anything positioned. */
+#phoneShell{background:none;isolation:isolate}
+#phoneShell::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(to top,rgba(23,10,58,.46),transparent 24%),
+    radial-gradient(120% 82% at 8% 0%,rgba(56,189,248,.62),transparent 58%),
+    radial-gradient(105% 72% at 97% 10%,rgba(167,139,250,.62),transparent 60%),
+    radial-gradient(115% 78% at 82% 52%,rgba(232,121,249,.50),transparent 58%),
+    radial-gradient(125% 85% at 2% 72%,rgba(79,70,229,.72),transparent 60%),
+    radial-gradient(95% 62% at 55% 104%,rgba(190,24,93,.48),transparent 62%),
+    linear-gradient(152deg,#312e81,#5b21b6 30%,#701a75 60%,#1e40af)}
+body.night #phoneShell{background:none}
+body.night #phoneShell::before{background:
     linear-gradient(to top,rgba(10,4,28,.58),transparent 26%),
     radial-gradient(120% 82% at 8% 0%,rgba(14,116,144,.60),transparent 58%),
     radial-gradient(105% 72% at 97% 10%,rgba(91,33,182,.70),transparent 60%),
@@ -9177,7 +9216,7 @@ var bgSel=null; // {type:'bean'|'grinder', obj}
 var bgPane='info';
 // The strip is rebuilt whenever the data behind a tab changes, so a scan's
 // suggestions announce themselves without moving the user off the fields.
-function renderBgTabs(){
+function renderBgTabsNow(){
   var box=document.getElementById('bgTabs'); if(!box) return;
   var nRec=(profileRows||[]).length, hasHist=!!(usageStats&&usageStats.n);
   var tabs=[['info',t('tabBeanInfo')],['profiles',t('tabBeanProfiles')+(nRec?' \u00b7 '+nRec:'')]];
@@ -9767,7 +9806,7 @@ function avgGrind(rows){
   return best; }
 function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
 var histProfile=null;
-function renderBeanStats(){
+function renderBeanStatsNow(){
   renderBgTabs();
   var box=document.getElementById(recPfx+'Stats'); if(!box) return;
   var all=usageShots||[];
@@ -9900,7 +9939,7 @@ function buildProfileRows(){
     if(ra!==rb) return ra-rb;
     return (b.use?b.use.n:0)-(a.use?a.use.n:0); });
   return profileRows; }
-function renderProfileList(){
+function renderProfileListNow(){
   var box=document.getElementById(recPfx+'Rec'); if(!box) return;
   var other=document.getElementById(recPfx+'Use'); if(other) other.style.display='none';
   var have=(recResults&&recResults.length)||(usageResults&&usageResults.length);
@@ -9931,6 +9970,12 @@ function renderProfileList(){
       +'</div>'; }).join('')+'</div>';
   var cvs=box.querySelectorAll('.prow-curve canvas');
   rows.forEach(function(r,i){ var cv=cvs[i]; if(cv) setTimeout(function(){ drawSimCurve(cv,r.p.profile,true); },0); }); }
+function _coalesce(fn){ var booked=false;
+  return function(){ if(booked) return; booked=true;
+    setTimeout(function(){ booked=false; fn(); },0); }; }
+var renderProfileList=_coalesce(renderProfileListNow);
+var renderBgTabs=_coalesce(renderBgTabsNow);
+var renderBeanStats=_coalesce(renderBeanStatsNow);
 function renderRecBox(){ renderProfileList(); renderBgTabs(); }
 function renderUsageBox(){ renderProfileList(); renderBgTabs(); }
 function useProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return; useProfileObj(r.p); }
@@ -10233,6 +10278,13 @@ function aiKeyMsg(e){
   return tAi('keyErr').replace('{e}',(e&&e.detail)||'error'); }
 // The lines that name the service read it from the setting rather than assuming.
 function tAi(k){ return t(k).replace('{n}',aiName()); }
+// A label in a script the reader cannot read is worth translating; one in their
+// own language or in English is worth leaving alone. This is what tells the
+// model which is which.
+var AI_LANG_NAMES={en:'English',ko:'Korean',fr:'French',es:'Spanish',de:'German',it:'Italian',
+  nl:'Dutch',pt:'Portuguese',da:'Danish',sv:'Swedish',nb:'Norwegian',
+  zh:'Simplified Chinese',zt:'Traditional Chinese',ar:'Arabic',he:'Hebrew'};
+function aiOutLang(){ return AI_LANG_NAMES[_lang]||'English'; }
 function aiKeyFor(p){
   var k=(p==='claude')?prefs.claudeKey:(p==='openai')?prefs.openaiKey:prefs.geminiKey;
   return String(k||'').trim(); }
@@ -10488,7 +10540,7 @@ function scanLookupNote(data){
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE, DO NOT TRANSLATE. Copy every text value exactly as printed, in the label\'s own language and script - Korean stays Korean, Japanese stays Japanese. Do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method into English terms. The only exceptions are the three non-text fields below. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE, the one printed most prominently, and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. NEVER fill a field from what you know about the coffee rather than from what is printed: a country or a region does not tell you the altitude, the process or the variety, and a famous name does not either. If the bag does not print it, leave it empty. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE WHAT THE READER CAN READ; PUT THE REST INTO THEIR LANGUAGE. The reader reads '+aiOutLang()+'. When the label is written in '+aiOutLang()+' or in English, copy the value exactly as printed: do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method. When the label is in any other language - Chinese, Japanese, Thai, Russian - give the value in '+aiOutLang()+' instead, and give it the way the coffee trade writes it there, NOT as a literal translation of the characters. In Korean a washed coffee is \uc6cc\uc2dc\ub4dc, never a phrase meaning rinsed or washed clean; natural, honey, anaerobic, wet-hulled, carbonic maceration and the rest keep their trade names in the same way, as do roast levels and decaffeination methods. Countries, regions, farms, roasters and varieties keep the Latin spelling the trade already uses where there is one, and otherwise take the ordinary transliteration into '+aiOutLang()+'. The three non-text fields below are unaffected. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE: the one in '+aiOutLang()+' if the label prints it, otherwise the English one, otherwise the most prominent - and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. NEVER fill a field from what you know about the coffee rather than from what is printed: a country or a region does not tell you the altitude, the process or the variety, and a famous name does not either. If the bag does not print it, leave it empty. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   return aiJson(key,parts,0.1).then(function(d){
     return scanLookup(key,d).then(function(found){
@@ -10710,7 +10762,9 @@ function copyPhoneUrl(url,msg){
 
 // ── Mobile bean-scan page (runs when ?beanscan=1) ───────────────────
 function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){ mbShowKeyBox(); return; }
-  var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing'); document.getElementById('mbAnalyzeBtn').disabled=true;
+  var st=document.getElementById('mbStatus'); st.textContent=t('mbAnalyzing');
+  document.getElementById('mbAnalyzeBtn').disabled=true;
+  mbScanning(true);
   recResults=null; usageResults=null; usageStats=null; _usageFor=null; recPfx='mb'; renderRecBox(); renderUsageBox(); renderBeanStats();
   geminiAnalyze(key,aiImages).then(function(data){
     data=cleanBeanText(data);
@@ -10731,7 +10785,15 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     st.textContent=t('mbReview')+(note?('  '+note):'');
     _usageFor=null; loadBeanUsage('mb');
     recommendProfiles('mb',true);
-  }).catch(function(e){ st.textContent=t('mbAnalyzeFailed')+' '+((e&&e.message)||'error'); }).then(function(){ document.getElementById('mbAnalyzeBtn').disabled=aiImages.length===0; }); }
+  }).catch(function(e){ st.textContent=t('mbAnalyzeFailed')+' '+((e&&e.message)||'error'); })
+    .then(function(){ mbScanning(false);
+      document.getElementById('mbAnalyzeBtn').disabled=aiImages.length===0; }); }
+// A line of text is a poor answer to "is it doing anything". The light crossing
+// the photographs is, because the photographs are what is being read.
+function mbScanning(on){
+  document.body.classList.toggle('mb-scanning',!!on);
+  var st=document.getElementById('mbStatus');
+  if(st) st.setAttribute('aria-busy',on?'true':'false'); }
 function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getElementById('mbSaveBtn'), body;
   var v=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
   try{ body={ roaster:v('mbRoaster'), name:v('mbName'), country:v('mbCountry')||null, region:v('mbRegion')||null,
