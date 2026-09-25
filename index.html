@@ -3889,11 +3889,11 @@ function applyActionMode(){
   shot.style.display='';
   clearBtn(steam); clearBtn(flush); clearBtn(water); clearBtn(shot);
   if(state.ghc){
-    shot.onclick=function(){ setRecipeMode('espresso'); };
+    shot.onclick=function(){ setRecipeMode('espresso',true); };
     steam.onclick=openSteamModal; flush.onclick=openFlushModal; water.onclick=openWaterModal;
     ah.textContent='';
   } else {
-    bindActionLongPress(shot, function(){ toggleShot(); }, function(){ setRecipeMode('espresso'); });
+    bindActionLongPress(shot, function(){ toggleShot(); }, function(){ setRecipeMode('espresso',true); });
     bindActionLongPress(steam, function(){ doSteamAction(); }, openSteamModal);
     bindActionLongPress(flush, function(){ doFlushAction(); }, openFlushModal);
     bindActionLongPress(water, function(){ doWaterAction(); }, openWaterModal);
@@ -4386,10 +4386,11 @@ function vis(k){ return !(prefs.chartHide&&prefs.chartHide[k]); }
 function toggleSerie(k){
   if(!prefs.chartHide) prefs.chartHide={};
   if(prefs.chartHide[k]) delete prefs.chartHide[k]; else prefs.chartHide[k]=true;
-  savePrefs(); _chartLegendMode=null;
-  // A tap has to show its own result. Ordinary redraws are coalesced onto an
-  // animation frame, and a frame already pending swallows the request -- fine
-  // for a stream of samples, wrong for a press, so this one draws now.
+  savePrefs(); _chartLegendMode=null; drawChartNow(); }
+// A tap has to show its own result. Ordinary redraws are coalesced onto an
+// animation frame, and a frame already pending swallows the request -- fine for
+// a stream of samples, wrong for a press.
+function drawChartNow(){
   if(!_asleep&&(!_pageOpen||_monOpen)){ _drawChartNow(); drawTempChart(); } else drawChart(); }
 function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
@@ -5081,7 +5082,7 @@ function lockRecipeHeight(){
   _recipeH=h;
   var list=document.querySelectorAll('#recipeSteam,#recipeFlush,#recipeWater');
   for(var i=0;i<list.length;i++){ list[i].style.height=''; list[i].style.maxHeight=_recipeH+'px'; } }
-function setRecipeMode(m){
+function setRecipeMode(m,byUser){
   if(!RECIPE_PANES[m]) m='espresso';
   if(m!=='espresso') lockRecipeHeight();
   recipeMode=m;
@@ -5090,7 +5091,8 @@ function setRecipeMode(m){
     if(el) el.style.display=(k===m)?'':'none'; });
   if(m==='steam'){ syncSteamModal(); renderPresets('steam'); renderMilkRow(); }
   else if(m==='flush'){ syncFlushModal(); renderPresets('flush'); }
-  else if(m==='water'){ syncWaterModal(); renderPresets('water'); syncWaterStop(); } }
+  else if(m==='water'){ syncWaterModal(); renderPresets('water'); syncWaterStop(); }
+  if(byUser&&chartFollowMode(m)) drawChartNow(); }
 // The machine moving into steam is the same statement as somebody pressing
 // steam, so the card follows it -- and returns to the shot when that ends,
 // but only if it is still showing the mode that just finished.
@@ -5100,15 +5102,15 @@ function syncRecipeMode(ms,prev){
   var now=recipeModeForState(ms.state), was=recipeModeForState(prev);
   if(now&&now!==recipeMode) setRecipeMode(now);
   else if(!now&&was&&recipeMode===was) setRecipeMode('espresso'); }
-function openSteamModal(){ setRecipeMode('steam'); }
-function openFlushModal(){ setRecipeMode('flush'); }
+function openSteamModal(){ setRecipeMode('steam',true); }
+function openFlushModal(){ setRecipeMode('flush',true); }
 function openWaterModal(){ syncWaterModal(); renderPresets('water');
   // read on open rather than cached: another skin or the app itself may
   // have changed it since, and it is the setting that decides whether the
   // volume above is a target or only the machine's own backstop
   api('GET','/api/v1/settings').then(function(x){ gwSettings=x||gwSettings; syncWaterStop(); }).catch(function(){});
   syncWaterStop();
-  setRecipeMode('water'); }
+  setRecipeMode('water',true); }
 // Hot water stops on the scale at the volume above, read as grams. The
 // gateway does that only outside full mode and only with a scale, so when
 // either is missing the control says which one rather than lying about it.
@@ -7802,13 +7804,33 @@ function refreshCarouselMark(){
 // Between actions the graph belongs to espresso: steam and hot water own it
 // only while they are running. Nothing is discarded that is still being
 // filled -- a running action keeps its own mode until it ends.
-function chartBackToEspresso(){
-  if(chart.mode==='espresso') return false;
+// The shot is the one graph worth coming back to, so leaving espresso puts it
+// aside instead of throwing it away and returning hands it back. Steam, flush
+// and hot water are watched while they run and not afterwards, so they are not
+// kept: each of those starts from nothing.
+var _espHeld=null;
+var CHART_SERIES=['pressure','flow','weight','wflow','frame','steamTemp','waterTemp',
+  'groupTemp','mixTemp','targetGroup','targetMix','targetFlow','targetPressure','t','wt'];
+function holdEspresso(){
+  var o={span:_axisSpan};
+  CHART_SERIES.forEach(function(k){ o[k]=chart[k]; });
+  _espHeld=o; }
+function restoreEspresso(){
+  if(!_espHeld) return;
+  CHART_SERIES.forEach(function(k){ chart[k]=_espHeld[k]; });
+  _axisSpan=_espHeld.span; }
+function chartFollowMode(m){
+  if(chart.mode===m) return false;
   if(state.shotRunning||state.steamRunning||state.waterRunning) return false;
   if(chartReviewing) return false;
-  chart.mode='espresso'; _chartLegendMode=null; _guideKey=null; _axisSpan=0;
+  if(chart.mode==='espresso') holdEspresso();
+  chart.mode=m; _chartLegendMode=null; _guideKey=null; _axisSpan=0;
   clearChartSeries(); chart.t=[]; chart.wt=[];
+  if(m==='espresso') restoreEspresso();
   return true; }
+// Loading a profile is a statement about the shot, and it is made from the
+// shot card, so the graph it asks for is the one the card is already showing.
+function chartBackToEspresso(){ return chartFollowMode(recipeMode); }
 function guideProfileChanged(){ if(!guideFollowsProfile()) return;
   chartBackToEspresso();
   // a different profile is a different axis, and the held one only grows
