@@ -778,9 +778,47 @@ body.ep-wide .ep-list>.ep-placeholder{grid-column:1/-1}
 .ep-kind{flex:0 1 auto;min-width:0;min-height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ep-kind.on{background-color:var(--ctl-tint);background-image:var(--ctl-sheen-on);box-shadow:var(--ctl-lift-on);border-color:transparent;color:#fff}
 .ep-tags{display:flex;flex-wrap:wrap;gap:4px}
+.ep-taghint{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;
+  color:var(--ink-mute);line-height:1.45;margin:2px 0 4px}
+.ep-taghint button{padding:0;border:0;background:none;cursor:pointer;font-family:var(--font);
+  font-size:11px;font-weight:700;color:var(--accent);text-decoration:underline}
+/* The same two columns the list edit has: what acts on the tags down the left,
+   the tags themselves taking the rest. The panel is its own class so that
+   turning list editing on for profiles does not turn this list into covers. */
+#tagPage .ep-body{grid-template-columns:300px 1fr}
+#tagPage .ep-toolbar{align-self:start;max-height:100%;overflow-y:auto}
+.tge-panel{padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;min-height:0}
+.tge-sec{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-mute);margin:4px 0 -2px}
+.tge-btns{display:flex;flex-wrap:wrap;gap:6px}
+.tge-btns .m-btn{flex:1;min-width:0}
+/* the tag page: one row a tag, wide enough that the name can be typed over */
+.tge-hint{font-size:11px;font-weight:600;color:var(--ink-mute);line-height:1.5;margin-top:4px}
+.tge-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:12px;
+  border:1px solid var(--ctl-edge);background:rgba(255,255,255,.45)}
+.tge-row.sel{border-color:var(--accent);background:rgba(99,102,241,.10)}
+.tge-row.gone{opacity:.62}
+.tge-check{width:20px;height:20px;flex:none;padding:0;cursor:pointer;border-radius:6px;
+  border:1.5px solid var(--ctl-edge);background:transparent;-webkit-appearance:none}
+.tge-check.on{border-color:var(--accent);background:var(--accent)}
+.tge-check.on::after{content:'✓';color:#fff;font-size:12px;font-weight:800;line-height:1}
+.tge-name{flex:1;min-width:140px;min-height:32px;padding:0 10px;border-radius:9px;
+  border:1px solid transparent;background:transparent;font-family:var(--font);
+  font-size:13px;font-weight:700;color:var(--ink)}
+.tge-name:focus{border-color:var(--accent);background:rgba(255,255,255,.7);outline:none}
+.tge-n{flex:none;min-width:34px;text-align:right;font-size:11px;font-weight:700;color:var(--ink-mute)}
+.tge-main{flex:none;min-height:32px;padding:0 12px;border-radius:100px;cursor:pointer;
+  border:1px solid var(--ctl-edge);background:var(--ctl-face);font-family:var(--font);
+  font-size:11px;font-weight:700;color:var(--ink-mute)}
+.tge-main.on{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.38);color:var(--accent)}
+.tge-act{flex:none;min-height:32px;padding:0 11px}
+/* a button that has asked says so, and says it in the place the answer goes */
+.m-btn.danger.armed{background:var(--red);border-color:var(--red);color:#fff}
+body.night .tge-row{background:rgba(255,255,255,.06)}
+body.night .tge-name:focus{background:rgba(255,255,255,.12)}
 /* eleven tags wrap to four rows and the panel was taking more of the column
    than the list it filters; two rows show, the rest scroll */
-#epTools .ep-tags{max-height:80px;overflow-y:auto;scrollbar-width:thin}
+#epTools .ep-tags{max-height:116px;overflow-y:auto;scrollbar-width:thin}
 .ep-tagfold{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
 .ep-tagfold .tf-name{text-transform:uppercase;letter-spacing:.04em}
 .ep-tagfold .tf-n{color:var(--ink-mute);opacity:.7}
@@ -788,6 +826,10 @@ body.ep-wide .ep-list>.ep-placeholder{grid-column:1/-1}
 .ep-tagfold .tf-caret{margin-left:auto;font-size:10px}
 .ep-tag{min-height:36px;padding:0 13px;border-radius:100px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer}
 .ep-tag span{opacity:.55;margin-left:2px}
+/* Where a tag is offered is said by the chip: the ones the main screen carries
+   are filled in, the ones kept to this list are not. */
+.ep-tag.main{background-color:rgba(99,102,241,.16);background-image:none;
+  border-color:rgba(99,102,241,.38);color:var(--accent)}
 .ep-tag.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ep-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
 .ep-chip{font-size:11px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.10);border-radius:100px;padding:2px 6px}
@@ -811,6 +853,17 @@ body.night .ep-aibtn.ghost{background:rgba(255,255,255,.07);color:var(--ink)}
 .eye-btn{background:var(--ctl-face);border:1px solid var(--ctl-edge);border-radius:10px;font-size:17px;line-height:1;cursor:pointer;opacity:.55;padding:0;width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}
 .eye-btn:hover,.eye-btn.on{opacity:1}
 .ep-roastrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 10px}
+.ep-tagrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-2px 0 8px}
+.ep-tagchip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;
+  color:var(--accent);background:rgba(99,102,241,.10);border-radius:100px;padding:3px 4px 3px 9px}
+.ep-tagchip button{width:18px;height:18px;padding:0;border:0;border-radius:100px;cursor:pointer;
+  background:rgba(99,102,241,.16);color:inherit;font-family:var(--font);font-size:12px;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center}
+.ep-tagchip button:active{transform:scale(.9)}
+.ep-tagadd{width:112px;min-height:26px;padding:0 9px;border-radius:100px;
+  border:1px dashed var(--ctl-edge);background:transparent;
+  font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink)}
+.ep-tagadd::placeholder{color:var(--ink-mute);font-weight:600}
 .ep-colorrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:-4px 0 8px}
 .ep-batchrow{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:-2px 0 12px}
 .ep-batch{min-height:38px;padding:0 14px;border-radius:12px;border:1px solid var(--ctl-edge);
@@ -1775,6 +1828,7 @@ body.step-dragging .ep-grid .grip{cursor:grabbing}
 .ep-meta .ep-notes{grid-column:1/-1;grid-row:2}
 .ep-meta .ep-colorrow{grid-column:2;grid-row:1;margin:0;flex-wrap:nowrap}
 .ep-meta .ep-roastrow{grid-column:3;grid-row:1;margin:0;flex-wrap:nowrap}
+.ep-meta .ep-tagrow{grid-column:1/-1;margin:0}
 body.night .ep-grid .gname{color:var(--ink)}
 .ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:12px 14px 14px;border-left:4px solid var(--accent)}
 .ep-step-editor.flow{border-left-color:var(--steam)}
@@ -2449,6 +2503,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   <div class="ep-head">
     <div class="ep-title" data-i18n="profileEditor">Profile Editor</div>
     <div class="ep-head-btns">
+      <button class="ep-close" onclick="openTagPage()">🏷 <span data-i18n="tagEditOpen">Edit tags</span></button>
       <button class="ep-close" id="epWideBtn" onclick="epToggleWide()"><span id="epWideIco">✎</span> <span id="epWideLbl"></span></button>
       <button class="ep-close" onclick="closeEditPage()">✕ <span data-i18n="close">Close</span></button>
     </div>
@@ -2463,6 +2518,19 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="ep-placeholder">← Select a profile to edit</div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="editpage" id="tagPage">
+  <div class="ep-head">
+    <div class="ep-title" data-i18n="tagEditor">Tags</div>
+    <div class="ep-head-btns">
+      <button class="ep-close" onclick="closeTagPage()">✕ <span data-i18n="close">Close</span></button>
+    </div>
+  </div>
+  <div class="ep-body">
+    <div class="ep-toolbar glass" id="tagTools"></div>
+    <div class="tge-panel glass" id="tagList"></div>
   </div>
 </div>
 
@@ -3124,6 +3192,15 @@ var I18N={
     kindHidden:'Hidden', hideProfile:'Hide this profile', showProfile:'Show this profile',
     hidden:'Hidden', shown:'Shown again', toggleFav:'Toggle favorite', favAdded:'★ {n} added to favorites', favRemoved:'{n} removed from favorites', favNeedsSave:'Save the profile first',
     roastLevel:'Roast', fromProfile:'from the profile', clear:'Clear',
+    tagAdd:'Add a tag…', tagRemove:'Remove this tag',
+    mainTagHint:'Filled tags are the ones the main screen offers. Hold one to change that.',
+    mainTagTip:'Hold to show or hide on the main screen', mainTagAll:'Show all on the main screen',
+    tagEditor:'Tags', tagEditOpen:'Tags', tagNone:'No tags yet',
+    tagSearch:'Search tags…', tagSelSec:'Select', tagSelDo:'{n} selected',
+    epNoMatch:'Nothing matches',
+    tagOnMain:'Main screen', tagMainOn:'Show on main', tagMainOff:'Hide from main',
+    tagDelete:'Delete', tagDeleteSure:'Sure?', tagRestore:'Bring back', tagSilenced:'off',
+    tagPageHint:'Typing over a name renames the tag everywhere. Deleting a tag takes it off every profile that carries it; one the profiles themselves spell out is silenced instead, and typing it again brings it back.',
     tagForMilk:'for milk', tagForLong:'long drink',
     aiClassify:'✨ Classify with AI', aiClassifyingShort:'Classifying…', aiClear:'Clear AI',
     aiClassifying:'Classifying {a} of {b}…', aiClassified:'Tagged {n} of {m} profiles',
@@ -3464,6 +3541,16 @@ var I18N={
     delProfDone:'휴지통으로 옮겼습니다', delProfPurged:'삭제했습니다', delProfRestored:'되돌렸습니다',
     kindHidden:'숨김', hideProfile:'이 프로파일 숨기기', showProfile:'다시 보이기',
     hidden:'숨김 처리됨', shown:'다시 표시됨', toggleFav:'즐겨찾기', favAdded:'★ {n} 즐겨찾기 추가', favRemoved:'{n} 즐겨찾기 해제', favNeedsSave:'프로파일을 먼저 저장하세요',
+    tagAdd:'태그 추가…', tagRemove:'이 태그 지우기',
+    mainTagHint:'색이 채워진 태그가 메인 화면에 나옵니다. 길게 누르면 바뀝니다.',
+    mainTagTip:'길게 누르면 메인 화면 노출이 바뀝니다',
+    mainTagAll:'전부 메인에 표시',
+    tagEditor:'태그 편집', tagEditOpen:'태그 편집', tagNone:'아직 태그가 없습니다',
+    tagSearch:'태그 검색…', tagSelSec:'선택', tagSelDo:'선택한 {n}개에',
+    epNoMatch:'결과가 없습니다',
+    tagOnMain:'메인 화면', tagMainOn:'메인에 표시', tagMainOff:'메인에서 숨김',
+    tagDelete:'삭제', tagDeleteSure:'정말?', tagRestore:'되살리기', tagSilenced:'꺼짐',
+    tagPageHint:'이름을 고쳐 쓰면 모든 곳에서 바뀝니다. 삭제하면 그 태그를 가진 프로파일에서 떼어내고, 프로파일 모양에서 읽힌 태그는 지우는 대신 꺼두며 어느 프로파일에든 다시 적으면 돌아옵니다.',
     roastLevel:'배전도', fromProfile:'프로파일에 명시됨', clear:'해제',
     tagForMilk:'우유음료', tagForLong:'롱드링크',
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
@@ -5677,6 +5764,12 @@ function applyPrefsObject(p){
   if(typeof p.claudeKey==='string') prefs.claudeKey=p.claudeKey;
   if(typeof p.openaiKey==='string') prefs.openaiKey=p.openaiKey;
   if(AI_PROVIDERS.indexOf(p.aiProvider)>=0) prefs.aiProvider=p.aiProvider;
+  if(Array.isArray(p.mainTags)) prefs.mainTags=p.mainTags.filter(function(k){ return typeof k==='string'; });
+  else if(p.mainTags===null) prefs.mainTags=null;
+  if(Array.isArray(p.tagsGone)) prefs.tagsGone=p.tagsGone.filter(function(k){ return typeof k==='string'; });
+  else if(p.tagsGone===null) prefs.tagsGone=null;
+  if(p.tagNames&&typeof p.tagNames==='object') prefs.tagNames=p.tagNames;
+  else if(p.tagNames===null) prefs.tagNames=null;
   if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost;
   if(typeof p.lang==='string') prefs.lang=p.lang;
   if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit;
@@ -7498,7 +7591,8 @@ var CAR_NOTAG='\u0000none';
 // so they say nothing about whether anybody has filed this profile. Untagged
 // means the roast and the AI labels are both empty -- nothing has been said
 // about it yet.
-function carUntagged(p){ return carVisible(p)&&!profileRoast(p).length&&!profileAiExtras(p).length; }
+function carUntagged(p){ return carVisible(p)&&!profileRoast(p).length&&!profileAiExtras(p).length
+  &&!customTagsOf(p).length; }
 function carListProfiles(){
   var list;
   if(carTag===CAR_NOTAG){ list=allProfiles.filter(carUntagged); }
@@ -7596,7 +7690,7 @@ function buildCarTags(){
   var chips=[['', t('favTag'), favN]];
   var noneN=allProfiles.filter(carUntagged).length;
   if(noneN) chips.push([CAR_NOTAG, t('noTag'), noneN]);
-  TAG_KEYS.forEach(function(k){ if(counts[k]) chips.push([k, t(k), counts[k]]); });
+  tagOrder(counts).forEach(function(k){ if(mainTagOn(k)) chips.push([k, tagLabel(k), counts[k]]); });
   chips.forEach(function(c){
     var b=document.createElement('button');
     b.className='car-tag'+(carTag===c[0]?' on':'');
@@ -7927,15 +8021,45 @@ function isAiRoast(p){ return !manualRoast(p).length && !roastFromTitle(((p&&p.p
   && !roastFromNotes(((p&&p.profile)||{}).notes).length && aiTagsOf(p).length>0; }
 // Metadata is writable on bundled profiles, but only on its own - sending the
 // profile alongside is rejected as an attempt to edit default content.
-function setProfileRoast(id,key){
+function saveProfileMeta(id,change){
   var p=allProfiles.find(function(x){ return x.id===id; }); if(!p) return;
   var meta=JSON.parse(JSON.stringify(p.metadata||{}));
-  var tags=(meta.tags||[]).filter(function(t){ return ROAST_KEYS.indexOf(t)<0; });
-  if(key) tags.push(key);
-  meta.tags=tags;
+  if(change(p,meta)===false) return;
+  if(meta.tags&&!meta.tags.length) delete meta.tags;
+  if(meta.tagsOff&&!meta.tagsOff.length) delete meta.tagsOff;
   api('PUT','/api/v1/profiles/'+encodeURIComponent(id),{metadata:meta}).then(function(saved){
-    p.metadata=(saved&&saved.metadata)||meta; renderEpList(); renderEpEditor(); toast(t('saved'),'ok');
+    p.metadata=(saved&&saved.metadata)||meta; renderEpList(); renderEpEditor(); renderCarousel(); toast(t('saved'),'ok');
   }).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+function setProfileRoast(id,key){
+  saveProfileMeta(id,function(p,meta){
+    meta.tags=(meta.tags||[]).filter(function(k){ return ROAST_KEYS.indexOf(k)<0; });
+    if(key) meta.tags.push(key);
+    // choosing a roast is also withdrawing any refusal of it
+    meta.tagsOff=(meta.tagsOff||[]).filter(function(k){ return k!==key; }); }); }
+// Whether a word has to be written down depends on whether it would be read
+// anyway: one the profile already says is only remembered when it is refused,
+// and one nothing says is only remembered when it is added.
+function wouldRead(p,meta,key){
+  return readTagsOf({id:p.id,profile:p.profile,metadata:meta}).indexOf(key)>=0; }
+function addProfileTag(id,raw){
+  var key=String(raw||'').trim().replace(/\s+/g,' ').slice(0,24);
+  if(!key) return;
+  if(tagGone(key)){ prefs.tagsGone=(prefs.tagsGone||[]).filter(function(k){ return k!==key; });
+    if(!prefs.tagsGone.length) prefs.tagsGone=null; savePrefs(); }
+  saveProfileMeta(id,function(p,meta){
+    meta.tagsOff=(meta.tagsOff||[]).filter(function(k){ return k!==key; });
+    if(wouldRead(p,meta,key)) return;
+    meta.tags=(meta.tags||[]);
+    if(meta.tags.indexOf(key)<0) meta.tags.push(key); }); }
+function removeProfileTag(id,key){
+  saveProfileMeta(id,function(p,meta){
+    meta.tags=(meta.tags||[]).filter(function(k){ return k!==key; });
+    if(!wouldRead(p,meta,key)) return;
+    meta.tagsOff=(meta.tagsOff||[]);
+    if(meta.tagsOff.indexOf(key)<0) meta.tagsOff.push(key); }); }
+function epTagKey(ev,id){
+  if(ev.key!=='Enter') return;
+  ev.preventDefault(); var v=ev.target.value; ev.target.value=''; addProfileTag(id,v); }
 // The gateway's own delete is the soft one: a default profile it hides, a
 // profile of one's own it marks deleted. Purge is the other, and refuses a
 // default profile outright, so that is not offered for one.
@@ -8095,7 +8219,173 @@ function clearAiTags(){
     return api('PUT','/api/v1/profiles/'+encodeURIComponent(p.id),{metadata:meta})
       .then(function(saved){ p.metadata=(saved&&saved.metadata)||meta; }).catch(function(){}); }))
     .then(function(){ renderEpList(); renderEpEditor(); toast(t('aiCleared'),'ok'); }); }
-function allTagsOf(p){ return profileRoast(p).concat(profileAiExtras(p)).concat(profileTags((p&&p.profile)||{})); }
+function customTagsOf(p){ var a=((p&&p.metadata)||{}).tags||[];
+  return a.filter(function(k){ return k&&ROAST_KEYS.indexOf(k)<0; }); }
+function tagsOffOf(p){ return ((p&&p.metadata)||{}).tagsOff||[]; }
+function readTagsOf(p){ return profileRoast(p).concat(profileAiExtras(p))
+  .concat(profileTags((p&&p.profile)||{})).concat(customTagsOf(p)); }
+function allTagsOf(p){
+  var off=tagsOffOf(p), seen={}, out=[];
+  readTagsOf(p).forEach(function(k){
+    if(!k||seen[k]||off.indexOf(k)>=0||tagGone(k)) return; seen[k]=1; out.push(k); });
+  return out; }
+// The built-in tags are phrases this skin knows how to say in the reader's
+// language. A typed one is already in it, so it is left alone.
+// A built-in tag is a phrase this skin knows how to say; a typed one is
+// already somebody's words. Either can be renamed, and the new name is kept
+// beside the tag rather than written into every profile that carries it, so
+// renaming costs nothing and undoing it costs nothing.
+function tagAlias(k){ var m=prefs.tagNames;
+  return (m&&typeof m[k]==='string'&&m[k])||''; }
+function tagLabel(k){ return tagAlias(k)||(TAG_KEYS.indexOf(k)>=0?t(k):String(k)); }
+function tagGone(k){ var g=prefs.tagsGone; return !!g&&g.indexOf(k)>=0; }
+// The chips offered as filters: the known ones in their settled order first,
+// then whatever anybody has typed, so a new word joins the end rather than
+// shuffling the row.
+function allTagKeys(){ var counts={};
+  allProfiles.forEach(function(p){ allTagsOf(p).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
+  return tagOrder(counts); }
+function mainTagOn(k){ var sel=prefs.mainTags; return !sel||sel.indexOf(k)>=0; }
+// The first refusal is what turns "all of them" into a list, and the list is
+// taken from every tag there is rather than the ones this filter happens to be
+// showing: a choice made while looking at espresso should not quietly drop the
+// tea tags.
+function toggleMainTag(k){
+  var sel=prefs.mainTags?prefs.mainTags.slice():allTagKeys();
+  var i=sel.indexOf(k);
+  if(i>=0) sel.splice(i,1); else sel.push(k);
+  prefs.mainTags=sel; savePrefs();
+  renderEpTools(); renderTagPage();
+  if(carTag&&!mainTagOn(carTag)) carSetTag(carTag); else buildCarTags(); }
+function resetMainTags(){ prefs.mainTags=null; savePrefs(); renderEpTools(); renderTagPage(); buildCarTags(); }
+function tagsRefresh(){ renderEpTools(); renderTagPage(); renderEpList(); buildCarTags(); }
+function tagCounts(){ var c={};
+  allProfiles.forEach(function(p){ allTagsOf(p).forEach(function(k){ c[k]=(c[k]||0)+1; }); });
+  return c; }
+// The page lists what is in use and, after it, anything silenced -- a reading
+// that was turned off is still being made, so it is shown rather than lost.
+function tagRows(){
+  var c=tagCounts();
+  var rows=tagOrder(c).map(function(k){ return {k:k,n:c[k],gone:false}; });
+  (prefs.tagsGone||[]).forEach(function(k){ rows.push({k:k,n:0,gone:true}); });
+  return rows; }
+var tpSel={};
+function openTagPage(){ tpSel={}; renderTagPage();
+  document.getElementById('tagPage').classList.add('show'); afterPageChange(); }
+function closeTagPage(){
+  document.getElementById('tagPage').classList.remove('show'); afterPageChange(); }
+function tpToggle(k){ if(tpSel[k]) delete tpSel[k]; else tpSel[k]=1; renderTagPage(); }
+function tpSelAll(on){ tpSel={};
+  if(on) tagRows().forEach(function(r){ tpSel[r.k]=1; });
+  renderTagPage(); }
+function tpKeys(){ return Object.keys(tpSel); }
+function tpSetMain(on){
+  var sel=prefs.mainTags?prefs.mainTags.slice():allTagKeys();
+  tpKeys().forEach(function(k){ var i=sel.indexOf(k);
+    if(on&&i<0) sel.push(k); else if(!on&&i>=0) sel.splice(i,1); });
+  prefs.mainTags=sel; savePrefs(); tagsRefresh(); }
+function renameTag(k,name){
+  name=String(name||'').trim().replace(/\s+/g,' ').slice(0,24);
+  var m={}; for(var x in (prefs.tagNames||{})) m[x]=prefs.tagNames[x];
+  if(!name||name===(TAG_KEYS.indexOf(k)>=0?t(k):String(k))) delete m[k]; else m[k]=name;
+  prefs.tagNames=Object.keys(m).length?m:null; savePrefs(); tagsRefresh(); }
+function tpRename(ev,k){
+  if(ev.type==='keydown'){ if(ev.key!=='Enter') return; ev.preventDefault(); ev.target.blur(); return; }
+  renameTag(k,ev.target.value); }
+function restoreTag(k){
+  prefs.tagsGone=(prefs.tagsGone||[]).filter(function(x){ return x!==k; });
+  if(!prefs.tagsGone.length) prefs.tagsGone=null;
+  savePrefs(); tagsRefresh(); }
+function tagUsers(k){ return allProfiles.filter(function(p){
+  return (((p.metadata||{}).tags)||[]).indexOf(k)>=0; }); }
+// Deleting a word somebody typed takes it off the profiles that carry it.
+// Deleting a reading cannot do that -- the profile still has the shape that
+// produced it -- so that one is silenced instead, and typing it again anywhere
+// brings it back.
+function deleteTags(keys){
+  var jobs=[];
+  keys.forEach(function(k){ tagUsers(k).forEach(function(p){
+    var meta=JSON.parse(JSON.stringify(p.metadata||{}));
+    meta.tags=(meta.tags||[]).filter(function(x){ return x!==k; });
+    if(!meta.tags.length) delete meta.tags;
+    jobs.push(api('PUT','/api/v1/profiles/'+encodeURIComponent(p.id),{metadata:meta})
+      .then(function(saved){ p.metadata=(saved&&saved.metadata)||meta; })); }); });
+  return Promise.all(jobs).then(function(){
+    var g=(prefs.tagsGone||[]).filter(function(x){ return keys.indexOf(x)<0; });
+    prefs.tagsGone=g.length?g:null;
+    keys.forEach(function(k){
+      if(allProfiles.some(function(p){ return allTagsOf(p).indexOf(k)>=0; })){
+        prefs.tagsGone=(prefs.tagsGone||[]); prefs.tagsGone.push(k); }
+      if(prefs.mainTags) prefs.mainTags=prefs.mainTags.filter(function(x){ return x!==k; });
+      if(prefs.tagNames&&prefs.tagNames[k]) delete prefs.tagNames[k];
+      if(epTag===k) epTag='';
+      if(carTag===k) carTag='';
+      delete tpSel[k]; });
+    savePrefs(); tagsRefresh(); buildCarousel(); toast(t('saved'),'ok');
+  }).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+var tgeArm='', _tgeArmT=null;
+function tgeAsk(key,run){
+  if(_tgeArmT){ clearTimeout(_tgeArmT); _tgeArmT=null; }
+  if(tgeArm===key){ tgeArm=''; run(); return; }
+  tgeArm=key; renderTagPage();
+  _tgeArmT=setTimeout(function(){ _tgeArmT=null; tgeArm=''; renderTagPage(); },3000); }
+function tgeAskOne(k){ tgeAsk('one:'+k,function(){ deleteTags([k]); }); }
+function tpDelete(){ var keys=tpKeys(); if(!keys.length) return;
+  tgeAsk('all',function(){ deleteTags(keys); }); }
+var tgeQuery='';
+function tgeSetQuery(v){ tgeQuery=String(v||''); renderTagList(); }
+function tgeMatches(r){
+  var q=tgeQuery.trim().toLowerCase(); if(!q) return true;
+  return (tagLabel(r.k)+' '+r.k).toLowerCase().indexOf(q)>=0; }
+function renderTagPage(){ renderTagTools(); renderTagList(); }
+function renderTagTools(){
+  var bar=document.getElementById('tagTools'); if(!bar) return;
+  var n=tpKeys().length;
+  bar.innerHTML='<input class="ep-search" placeholder="'+escapeAttr(t('tagSearch'))+'"'
+      +' value="'+escapeAttr(tgeQuery)+'" oninput="tgeSetQuery(this.value)">'
+    +'<div class="tge-sec">'+escapeHtml(t('tagSelSec'))+'</div>'
+    +'<div class="tge-btns">'
+      +'<button class="m-btn" onclick="tpSelAll(true)">'+escapeHtml(t('epSelAll'))+'</button>'
+      +'<button class="m-btn" onclick="tpSelAll(false)"'+(n?'':' disabled')+'>'+escapeHtml(t('epSelNone'))+'</button>'
+    +'</div>'
+    +'<div class="tge-sec">'+escapeHtml(t('tagSelDo').replace('{n}',n))+'</div>'
+    +'<div class="tge-btns">'
+      +'<button class="m-btn" onclick="tpSetMain(true)"'+(n?'':' disabled')+'>'+escapeHtml(t('tagMainOn'))+'</button>'
+      +'<button class="m-btn" onclick="tpSetMain(false)"'+(n?'':' disabled')+'>'+escapeHtml(t('tagMainOff'))+'</button>'
+    +'</div>'
+    +'<div class="tge-btns">'
+      +'<button class="m-btn danger'+(tgeArm==='all'?' armed':'')+'" onclick="tpDelete()"'+(n?'':' disabled')+'>'
+        +escapeHtml(tgeArm==='all'?t('tagDeleteSure'):t('tagDelete'))+'</button>'
+    +'</div>'
+    +(prefs.mainTags?'<div class="tge-btns"><button class="m-btn" onclick="resetMainTags()">'
+        +escapeHtml(t('mainTagAll'))+'</button></div>':'')
+    +'<div class="tge-hint">'+escapeHtml(t('tagPageHint'))+'</div>'; }
+function renderTagList(){
+  var box=document.getElementById('tagList'); if(!box) return;
+  var rows=tagRows().filter(tgeMatches);
+  if(!rows.length){ box.innerHTML='<div class="ep-placeholder">'
+    +escapeHtml(t(tgeQuery?'epNoMatch':'tagNone'))+'</div>'; return; }
+  var list=rows.map(function(r){
+    var k=r.k, on=mainTagOn(k)&&!r.gone;
+    return '<div class="tge-row'+(r.gone?' gone':'')+(tpSel[k]?' sel':'')+'" data-k="'+escapeAttr(k)+'">'
+      +'<button class="tge-check'+(tpSel[k]?' on':'')+'" onclick="tpToggle(this.parentNode.dataset.k)"></button>'
+      +'<input class="tge-name" maxlength="24" value="'+escapeAttr(tagLabel(k))+'"'
+        +' onchange="tpRename(event,this.parentNode.dataset.k)"'
+        +' onkeydown="tpRename(event,this.parentNode.dataset.k)">'
+      +'<span class="tge-n">'+(r.gone?escapeHtml(t('tagSilenced')):r.n)+'</span>'
+      +(r.gone
+        ? '<button class="m-btn tge-act" onclick="restoreTag(this.parentNode.dataset.k)">'+escapeHtml(t('tagRestore'))+'</button>'
+        : '<button class="tge-main'+(on?' on':'')+'" onclick="toggleMainTag(this.parentNode.dataset.k)">'
+          +escapeHtml(t('tagOnMain'))+'</button>')
+      +'<button class="m-btn danger tge-act'+(tgeArm==='one:'+k?' armed':'')
+        +'" onclick="tgeAskOne(this.parentNode.dataset.k)">'
+        +(tgeArm==='one:'+k?escapeHtml(t('tagDeleteSure')):'\u00d7')+'</button>'
+    +'</div>'; }).join('');
+  box.innerHTML=list; }
+function tagOrder(counts){
+  var out=TAG_KEYS.filter(function(k){ return counts[k]; });
+  Object.keys(counts).forEach(function(k){ if(TAG_KEYS.indexOf(k)<0&&counts[k]) out.push(k); });
+  return out; }
 function epSetKind(k){ epKind=k; epTag=''; renderEpList(); }
 var epTagsOpen=false;
 function epSetTag(t){ epTag=(epTag===t)?'':t; renderEpList(); }
@@ -8113,7 +8403,7 @@ function epMatches(p){
   if(epTag&&allTagsOf(p).indexOf(epTag)<0) return false;
   var needle=epNeedle();
   if(needle){ var hay=[pr.title,pr.author,pr.notes].join(' ').toLowerCase()
-      +' '+allTagsOf(p).map(function(k){ return t(k); }).join(' ').toLowerCase();
+      +' '+allTagsOf(p).map(tagLabel).join(' ').toLowerCase();
     if(hay.indexOf(needle)<0) return false; }
   return true; }
 // The search box filters the list and nothing else, so it is drawn once and
@@ -8149,7 +8439,7 @@ function renderEpTools(){
     bar.appendChild(sb); }
   var pool=allProfiles.filter(function(p){ return epKind==='all'||profileKind(p.profile||{})===epKind; });
   var counts={}; pool.forEach(function(p){ allTagsOf(p).forEach(function(k){ counts[k]=(counts[k]||0)+1; }); });
-  var avail=TAG_KEYS.filter(function(k){ return counts[k]; });
+  var avail=tagOrder(counts);
   if(avail.length){
     // eleven tags are four rows of chrome above the list they filter, and
     // most of the time none of them is in use; folded, the row still says
@@ -8157,12 +8447,23 @@ function renderEpTools(){
     var head=document.createElement('button'); head.className='ep-tagfold'+(epTagsOpen?' open':'');
     head.onclick=function(){ epTagsOpen=!epTagsOpen; renderEpTools(); };
     head.innerHTML='<span class="tf-name">'+escapeHtml(t('tagsLabel'))+'</span>'
-      +(epTag?'<span class="tf-on">'+escapeHtml(t(epTag))+'</span>':'<span class="tf-n">'+avail.length+'</span>')
+      +(epTag?'<span class="tf-on">'+escapeHtml(tagLabel(epTag))+'</span>':'<span class="tf-n">'+avail.length+'</span>')
       +'<span class="tf-caret">'+(epTagsOpen?'▴':'▾')+'</span>';
     bar.appendChild(head);
-    if(epTagsOpen){ var tw=document.createElement('div'); tw.className='ep-tags';
+    if(epTagsOpen){
+      var hint=document.createElement('div'); hint.className='ep-taghint';
+      hint.innerHTML='<span>'+escapeHtml(t('mainTagHint'))+'</span>';
+      bar.appendChild(hint);
+      var tw=document.createElement('div'); tw.className='ep-tags';
       tw.innerHTML=avail.map(function(k){
-        return '<button class="ep-tag'+(epTag===k?' on':'')+'" onclick="epSetTag(\''+k+'\')">'+escapeHtml(t(k))+' <span>'+counts[k]+'</span></button>'; }).join('');
+        return '<button class="ep-tag'+(epTag===k?' on':'')+(mainTagOn(k)?' main':'')+'"'
+          +' data-k="'+escapeAttr(k)+'" title="'+escapeAttr(t('mainTagTip'))+'">'
+          +escapeHtml(tagLabel(k))+' <span>'+counts[k]+'</span></button>'; }).join('');
+      // a tap asks the list a question; a hold answers a different one, about
+      // where the tag belongs, so the two are the same chip and not two
+      Array.prototype.forEach.call(tw.querySelectorAll('.ep-tag'),function(b){
+        bindActionLongPress(b,function(){ epSetTag(b.dataset.k); },
+                              function(){ toggleMainTag(b.dataset.k); }); });
       bar.appendChild(tw); } } }
 function renderEpItems(){ var list=document.getElementById('epList'); if(!list) return;
   list.innerHTML=''; epItemEls={}; ensureCurveObserver();
@@ -8186,7 +8487,7 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     var aiSet=aiTagsOf(p), guess=isAiRoast(p);
     var tagHtml=allTagsOf(p).map(function(k){ var cls='ep-chip'+(ROAST_KEYS.indexOf(k)>=0?' roast':'');
       if(aiSet.indexOf(k)>=0&&(guess||ROAST_KEYS.indexOf(k)<0)) cls+=' ai';
-      return '<span class="'+cls+'">'+escapeHtml(t(k))+'</span>'; }).join('');
+      return '<span class="'+cls+'">'+escapeHtml(tagLabel(k))+'</span>'; }).join('');
     body.innerHTML='<div class="mt">'
       +escapeHtml(author?author+' \u00b7 ':'')
       +((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' '+escapeHtml(t('stepsShort'))+'</div>'
@@ -8779,6 +9080,17 @@ function roastPicker(p){
   var src=(cur.length&&!isManual)
     ? '<span class="ep-roastlab">'+escapeHtml(isAiRoast(live)?t('fromAi'):t('fromProfile'))+'</span>' : '';
   return '<div class="ep-roastrow">'+src+btns+clear+'</div>'; }
+// Every tag the profile carries, however it got there, with the same way off
+// each of them and a place to type another.
+function tagEditor(p){
+  var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
+  var chips=allTagsOf(live).map(function(k){
+    return '<span class="ep-tagchip" data-k="'+escapeAttr(k)+'">'+escapeHtml(tagLabel(k))
+      +'<button title="'+escapeAttr(t('tagRemove'))+'"'
+      +' onclick="removeProfileTag(\''+live.id+'\',this.parentNode.dataset.k)">\u00d7</button></span>'; }).join('');
+  return '<div class="ep-tagrow">'+chips
+    +'<input class="ep-tagadd" maxlength="24" placeholder="'+escapeAttr(t('tagAdd'))+'"'
+    +' onkeydown="epTagKey(event,\''+live.id+'\')"></div>'; }
 function renderEpEditor(){ var wrap=document.getElementById('epEditor');
   if(!editing){ wrap.innerHTML=epGuideHtml(); return; }
   var pr=editing.profile||{};
@@ -8793,6 +9105,7 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor');
       ? '<button class="ep-aibtn aip-open" onclick="aiProfOpen()">\u2728 '+escapeHtml(t('aipOpen'))+'</button>'
       : (colorPicker(editing)+roastPicker(editing)))
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
+    +(editing.isNew?'':tagEditor(editing))
     +aipResultHtml()
     +'</div>';
   wrap.innerHTML=meta
@@ -9730,7 +10043,7 @@ function profileCatalogForAi(){
       var temps=steps.map(function(st){ return parseFloat(st.temperature)||0; }).filter(function(x){ return x>0; });
       var pres=steps.filter(function(st){ return st.pump==='pressure'; }).map(function(st){ return parseFloat(st.pressure)||0; });
       return { title:pr.title||'', author:pr.author||'',
-        tags:allTagsOf(p).map(function(k){ return t(k); }),
+        tags:allTagsOf(p).map(tagLabel),
         tempC:temps.length?[Math.min.apply(null,temps),Math.max.apply(null,temps)]:null,
         peakBar:pres.length?Math.round(Math.max.apply(null,pres)*10)/10:null,
         notes:String(pr.notes||'').replace(/\s+/g,' ').slice(0,260) }; }); }
