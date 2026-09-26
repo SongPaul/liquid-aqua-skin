@@ -14213,7 +14213,8 @@ function tasteOf(sh){
   return out; }
 function tasteNoteOf(sh){
   var an=(sh&&sh.annotations)||{}, ex=an.extras||{};
-  return ex.lqNote!=null?String(ex.lqNote):String(an.espressoNotes||''); }
+  if(Object.prototype.hasOwnProperty.call(ex,'lqNote')) return ex.lqNote==null?'':String(ex.lqNote);
+  return String(an.espressoNotes||''); }
 function tasteWords(v){
   var out=[];
   TASTE_ITEMS.forEach(function(it){ var n=v[it[0]]; if(!n) return;
@@ -14221,11 +14222,15 @@ function tasteWords(v){
   return out; }
 // The note the person wrote comes first; the card follows it as a line, because
 // that line is all Visualizer and every other reader will ever see of it.
-function tasteCompose(v,note){
-  var line=tasteWords(v).join(' \u00b7 '), n=String(note||'').trim();
-  return (n&&line)?(n+'\n'+line):(n||line||null); }
-function tasteAnn(v,note){
-  return { enjoyment:v.again||null, espressoNotes:tasteCompose(v,note),
+function basketNoteLine(basket){
+  basket=String(basket||'').trim();
+  return basket?(t('basketLabel')+': '+basket):''; }
+function tasteCompose(v,note,basket){
+  var parts=[String(note||'').trim(), tasteWords(v).join(' \u00b7 '), basketNoteLine(basket)]
+    .filter(Boolean);
+  return parts.length?parts.join('\n'):null; }
+function tasteAnn(v,note,basket){
+  return { enjoyment:v.again||null, espressoNotes:tasteCompose(v,note,basket),
     extras:{ lqTaste:v, lqNote:String(note||'').trim()||null } }; }
 var _tcOpen=null;
 function tasteCardHtml(id,v,mode){
@@ -14322,8 +14327,10 @@ function saveAndSyncShot(id){
 function saveShotLog(id,quiet){ var dose=parseFloat(document.getElementById('slDose').value)||null, yld=parseFloat(document.getElementById('slYield').value)||null;
   var tds=parseFloat(document.getElementById('slTds').value)||null, ey=parseFloat(document.getElementById('slEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1));
-  var tv=(slSel&&slSel._taste)||{}, ta=tasteAnn(tv,document.getElementById('slNotes').value);
   var bEl=document.getElementById('slBasket'), basket=bEl?bEl.value.trim():'';
+  var tv=(slSel&&slSel._taste)||{};
+  var ta=tasteAnn(tv,document.getElementById('slNotes').value,
+    bEl?basket:shotBasket(slSel));
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
     enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
   if(bEl){ ann.extras=ann.extras||{}; ann.extras.lqBasket=basket||null; noteBasket(basket); }
@@ -16149,7 +16156,7 @@ function phAnnPut(id,patch,after){
 function phTastePick(id,k,n){
   var row=phShotRow(id); if(!row) return;
   var v=tasteOf(row); v[k]=(v[k]===n)?null:n;
-  phAnnPut(id,tasteAnn(v,tasteNoteOf(row)));
+  phAnnPut(id,tasteAnn(v,tasteNoteOf(row),shotBasket(row)));
   _tcOpen=true; _tcCtx={mode:'ph',id:id}; tasteRedraw(); }
 
 // Typing redraws nothing. The model is updated as it goes and the write waits
@@ -16159,9 +16166,9 @@ function phNote(id,v){
   var row=phShotRow(id); if(!row) return;
   var tv=tasteOf(row);
   var an=row.annotations=row.annotations||{}; an.extras=an.extras||{};
-  an.extras.lqNote=v; an.espressoNotes=tasteCompose(tv,v);
+  an.extras.lqNote=v; an.espressoNotes=tasteCompose(tv,v,shotBasket(row));
   clearTimeout(_phNoteT);
-  _phNoteT=setTimeout(function(){ phAnnPut(id,tasteAnn(tv,v)); },700); }
+  _phNoteT=setTimeout(function(){ phAnnPut(id,tasteAnn(tv,v,shotBasket(row))); },700); }
 // Redrawing the list throws the canvas away with it, so whatever is open is
 // drawn again afterwards -- otherwise asking for a reading blanked the graph
 // the reading was about.
