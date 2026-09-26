@@ -323,8 +323,8 @@ body.night .fan-b3{stroke:#fb7185}
 .gauge.dial{padding:2px 2px 7px;justify-content:flex-end}
 .gauge.dial .gauge-val{font-size:38px;line-height:1;text-align:center}
 .gauge.dial .gauge-val .u{display:block;font-size:13px;line-height:1.1;margin-top:1px}
-.mon-gauge.dial .gauge-val{font-size:56px}
-.mon-gauge.dial .gauge-val .u{font-size:20px;margin-top:2px}
+.mon-gauge.dial .gauge-val{font-size:clamp(28px,7vh,49px)}
+.mon-gauge.dial .gauge-val .u{font-size:clamp(12px,2.6vh,18px);margin-top:2px}
 .gauge-read{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;pointer-events:none;max-width:100%}
 .gauge-val{font-size:60px;font-weight:800;letter-spacing:-.04em;line-height:.85;white-space:nowrap}
 .gauge-val .u{font-size:20px;color:var(--ink-mute);font-weight:700;letter-spacing:0}
@@ -357,8 +357,9 @@ body.night .gauge.z1{--zc:#fbbf24} body.night .gauge.z2{--zc:#34d399} body.night
 .temp-card .chart-title{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em}
 .chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0}
 .chart-title{font-size:13px;font-weight:700}
-.chart-legend{display:flex;gap:12px}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ink-soft)}
+.chart-legend{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 12px;min-width:0}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ink-soft);
+  white-space:nowrap;flex:none}
 .legend-dot{width:9px;height:9px;border-radius:3px}
 .legend-dash{width:14px;height:3px;border-radius:2px}
 .legend-item.tog{cursor:pointer;-webkit-user-select:none;user-select:none;padding:3px 7px;margin:-3px -1px;border-radius:9px;border:1px solid transparent;transition:background .15s,border-color .15s,opacity .15s}
@@ -1626,22 +1627,23 @@ body.night .sl-stop.ok{color:#5eead4} body.night .sl-stop.warn{color:#fbbf24} bo
 .sl-metric{background-color:var(--pane-face);background-image:var(--ctl-sheen);box-shadow:var(--pane-lift);border:1px solid transparent;border-radius:12px;padding:12px 8px;text-align:center}
 .sl-metric .v{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
 .sl-metric .l{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
-.monpage{padding:18px 22px;gap:14px}
+.monpage{--mg:clamp(8px,2vh,14px);
+  padding:clamp(10px,2.57vh,18px) clamp(12px,1.75vw,22px);gap:var(--mg)}
 .mon-head{display:flex;align-items:center;gap:18px;flex-shrink:0}
 .mon-id{min-width:0;flex:1}
-.mon-title{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mon-bean{font-size:14px;font-weight:600;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.mon-title{font-size:clamp(19px,4.3vh,30px);font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mon-bean{font-size:clamp(11px,2vh,14px);font-weight:600;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .mon-bean:empty{display:none}
-.mon-state{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);
-  background:rgba(99,102,241,.1);border-radius:100px;padding:9px 16px;flex-shrink:0}
+.mon-state{font-size:clamp(11px,1.86vh,13px);font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);
+  background:rgba(99,102,241,.1);border-radius:100px;padding:clamp(6px,1.29vh,9px) clamp(11px,1.3vw,16px);flex-shrink:0}
 .mon-state:empty{display:none}
-.mon-stop{min-height:56px;padding:0 26px;border-radius:100px;border:none;flex-shrink:0;
+.mon-stop{min-height:clamp(42px,8vh,56px);padding:0 clamp(16px,2.1vw,26px);border-radius:100px;border:none;flex-shrink:0;
   background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;font-family:var(--font);
-  font-size:17px;font-weight:800;letter-spacing:-.01em;cursor:pointer;-webkit-appearance:none;
+  font-size:clamp(14px,2.43vh,17px);font-weight:800;letter-spacing:-.01em;cursor:pointer;-webkit-appearance:none;
   box-shadow:0 6px 18px rgba(225,29,72,.32);transition:transform .15s,box-shadow .15s}
 .mon-stop:hover{transform:translateY(-2px);box-shadow:0 9px 24px rgba(225,29,72,.4)}
 .mon-stop:active{transform:translateY(0)}
-.mon-body{flex:1;display:grid;grid-template-columns:1fr 380px;gap:14px;min-height:0}
+.mon-body{flex:1;display:grid;grid-template-columns:1fr clamp(230px,30vw,380px);gap:var(--mg);min-height:0}
 .mon-chart-card{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;min-width:0}
 .mon-chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0}
 /* streaming: the picture on top, the graphs under it */
@@ -1653,24 +1655,39 @@ body.night .sl-stop.ok{color:#5eead4} body.night .sl-stop.warn{color:#fbbf24} bo
 .mon-chart-wrap canvas,.mon-temp-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
 .mon-temp-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px;flex-shrink:0}
 .mon-temp-title{font-size:12px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em}
-.mon-side{display:flex;flex-direction:column;gap:14px;min-height:0}
-.mon-read{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.mon-cell{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px}
+.mon-side{display:flex;flex-direction:column;gap:var(--mg);min-height:0}
+.mon-read{display:grid;grid-template-columns:1fr;gap:var(--mg);flex:none}
+.mon-cell{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px;
+  display:flex;flex-direction:column;justify-content:center;min-height:0}
 .mon-lbl{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em}
-.mon-big{font-size:58px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin-top:2px}
-.mon-u{font-size:20px;font-weight:700;color:var(--ink-mute);margin-left:3px}
-.mon-gauges{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0}
-.mon-gauge{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:10px 8px;flex:1;justify-content:center;min-height:0}
+.mon-glbl{position:absolute;left:14px;top:11px;z-index:1;pointer-events:none}
+.mon-big{font-size:clamp(34px,9.7vh,68px);font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin-top:2px}
+.mon-u{font-size:clamp(13px,3.3vh,23px);font-weight:700;color:var(--ink-mute);margin-left:3px}
+.mon-gauges{display:flex;flex-direction:column;gap:var(--mg);flex:1;min-height:0}
+.mon-gauge{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:10px 8px;
+  flex:1;justify-content:center;min-width:0;min-height:0}
 
-.mon-gauge .gauge-val{font-size:80px}
-.mon-gauge .gauge-val .u{font-size:26px}
+.mon-gauge .gauge-val{font-size:clamp(40px,10vh,70px)}
+.mon-gauge .gauge-val .u{font-size:clamp(14px,3.3vh,23px)}
+/* Five cards down one column want about six hundred pixels of it: two
+   readings, two dials and the recipe. Where there is less, the dials go side
+   by side -- of the five they are the only pair that reads as well at half the
+   width, because what is read off them is a needle and not a number. */
+@media (max-height:680px){
+  .mon-gauges{flex-direction:row;flex:none}
+  .mon-gauge{aspect-ratio:100/72}
+  .mon-gauge .gauge-val,.mon-gauge.dial .gauge-val{font-size:clamp(20px,2.9vw,37px)}
+  .mon-gauge .gauge-val .u,.mon-gauge.dial .gauge-val .u{font-size:clamp(10px,1.25vw,16px)}
+  .mon-glbl{left:10px;top:8px}
+  .mon-read{flex:1}
+}
 .mon-recipe{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px}
-.mon-recipe-row{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:700;color:var(--ink-mute);margin-top:4px}
-.mon-recipe-row b{font-size:30px;font-weight:800;color:var(--ink)}
+.mon-recipe-row{display:flex;align-items:baseline;gap:8px;font-size:clamp(12px,2.3vh,16px);font-weight:700;color:var(--ink-mute);margin-top:4px}
+.mon-recipe-row b{font-size:clamp(20px,4.3vh,30px);font-weight:800;color:var(--ink)}
 .mon-arrow{color:var(--ink-mute)}
-.mon-aux-row{font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.01em;margin-top:4px;
+.mon-aux-row{font-size:clamp(17px,3.72vh,26px);font-weight:800;color:var(--ink);letter-spacing:-.01em;margin-top:4px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mon-ratio{margin-left:auto;font-size:20px;font-weight:800;color:var(--accent)}
+.mon-ratio{margin-left:auto;font-size:clamp(14px,2.86vh,20px);font-weight:800;color:var(--accent)}
 body.night .mon-cell,body.night .mon-recipe,body.night .mon-chart-card{background:rgba(255,255,255,.06)}
 body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .chart-canvas-wrap{cursor:pointer}
@@ -2469,10 +2486,12 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       </div>
       <div class="mon-gauges">
         <div class="gauge mon-gauge">
+          <div class="mon-lbl mon-glbl" data-i18n="pressure">Pressure</div>
           <svg class="gs" id="monPressureScene" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"></svg>
               <div class="gauge-read"><span class="gauge-val pressure" id="monPressureVal">0.0<span class="u"> bar</span></span></div>
         </div>
         <div class="gauge mon-gauge">
+          <div class="mon-lbl mon-glbl" data-i18n="flow">Flow</div>
           <svg class="gs" id="monFlowScene" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"></svg>
               <div class="gauge-read"><span class="gauge-val flow" id="monFlowVal">0.0<span class="u"> bar</span></span></div>
         </div>
@@ -3258,6 +3277,8 @@ var I18N={
     keyEmpty:'No key to check', keyTimeout:'No answer in time',
     actEspresso:'Espresso', actWater:'Hot water',
     monAuto:'Full-screen monitor', monAutoDesc:'Which actions open the monitor by themselves. Tap the graph to open it at any time.',
+    monClose:'Close it when the action ends',
+    monCloseDesc:'Which actions take the monitor away again the moment they finish. The rest leave it up to be read, and it goes when it is closed.',
     stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
     flushGraph:'Flush Graph',
     rating:'Rating', cmpAll:'All', cmpAdd:'Add to comparison', cmpMax:'Compare up to {n} shots', cmpHead:'Comparing shots', cmpSub:'{n} shots overlaid', cmpClear:'Clear',
@@ -3614,6 +3635,8 @@ var I18N={
     keyErr:'{n} 가 오류를 돌려줍니다 — {e}',
     keyEmpty:'확인할 키가 없습니다', keyTimeout:'응답이 없습니다',
     actEspresso:'에스프레소', actWater:'온수',
+    monClose:'동작이 끝나면 바로 닫기',
+    monCloseDesc:'어떤 동작이 끝나는 즉시 모니터를 닫을지 선택합니다. 고르지 않은 동작은 읽을 수 있도록 남아 있다가 닫을 때 사라집니다.',
     monAuto:'전체화면 모니터', monAutoDesc:'어떤 동작에서 모니터를 자동으로 열지 선택합니다. 그래프를 누르면 언제든 열 수 있습니다.',
     stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
     flushGraph:'플러시 그래프',
@@ -5835,6 +5858,9 @@ function applyPrefsObject(p){
   else if(p.refillKitFull==='auto'||p.refillKitFull==='on'||p.refillKitFull==='off') prefs.refillKitFull=p.refillKitFull;
   // it used to be one switch for all four actions; on becomes the new default
   // rather than all of them, off stays off
+  // it was one switch for everything before it was four
+  if(typeof p.monClose==='boolean') prefs.monClose=p.monClose?{espresso:true,steam:true,flush:true,hotWater:true}:{};
+  else if(p.monClose&&typeof p.monClose==='object') prefs.monClose=p.monClose;
   if(typeof p.monAuto==='boolean') prefs.monAuto=p.monAuto?{espresso:true}:{};
   else if(p.monAuto&&typeof p.monAuto==='object') prefs.monAuto=p.monAuto;
   if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim;
@@ -6137,7 +6163,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ autoDye:true, night:false, nightAuto:false, geminiKey:'', claudeKey:'', openaiKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
+var prefs={ autoDye:true, monClose:{}, night:false, nightAuto:false, geminiKey:'', claudeKey:'', openaiKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
   // Which scale this skin weighs a dose on. The gateway holds it open on request and attaches no meaning to it, so the choice lives here.
   dosingScaleId:'',
   // 'on' | 'off'. guideSrc is not chosen in settings: loading a profile makes
@@ -6470,6 +6496,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('wakeLock','wakeLockDesc',sw('setWake',!!gwSettings.keepAwake,'setKeepAwake(this.checked)'));
     h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
     h+='<div class="set-row"><div class="set-info" style="max-width:46%"><div class="set-name">'+t('monAuto')+'</div>'+'<div class="set-desc">'+t('monAutoDesc')+'</div></div>'+monAutoChips()+'</div>';
+    h+='<div class="set-row"><div class="set-info" style="max-width:46%"><div class="set-name">'+t('monClose')+'</div>'+'<div class="set-desc">'+t('monCloseDesc')+'</div></div>'+monCloseChips()+'</div>';
     h+=row('guideLine','guideLineDesc',sw('setGuide',guideOn(),'setGuideOn(this.checked)'));
     if(guideOn()){
       // the source is never chosen here -- it is whatever was picked last
@@ -6799,6 +6826,15 @@ function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
 // worth reading; a shot is the one worth watching from the first drop. So the
 // actions that open it are picked rather than all or none.
 var MON_AUTO_ACTS=[['espresso','actEspresso'],['steam','steam'],['flush','flush'],['hotWater','actWater']];
+function monCloseOn(k){ return !!(prefs.monClose&&prefs.monClose[k]); }
+function toggleMonClose(k){
+  if(!prefs.monClose||typeof prefs.monClose!=='object') prefs.monClose={};
+  if(prefs.monClose[k]) delete prefs.monClose[k]; else prefs.monClose[k]=true;
+  savePrefs(); renderSpContent(); }
+function monCloseChips(){
+  return '<div class="optset">'+MON_AUTO_ACTS.map(function(a){ var on=monCloseOn(a[0]);
+    return '<button class="optchip'+(on?' on':'')+'" role="switch" aria-checked="'+on+'"'
+      +' onclick="toggleMonClose(\''+a[0]+'\')">'+escapeHtml(t(a[1]))+'</button>'; }).join('')+'</div>'; }
 function monAutoOn(k){ return !!(prefs.monAuto&&prefs.monAuto[k]); }
 function toggleMonAuto(k){
   if(!prefs.monAuto||typeof prefs.monAuto!=='object') prefs.monAuto={};
@@ -15295,7 +15331,7 @@ function openMonitor(auto){
   syncMonitorHead(); syncMonitorLive(); syncRecipe();
   applyGauges('monPressure','monFlow');
   tick(); drawChart(); }
-function closeMonitor(){
+function closeMonitor(keepTrace){
   if(!_monOpen) return;
   _monOpen=false;
   document.getElementById('monPage').classList.remove('show');
@@ -15303,7 +15339,7 @@ function closeMonitor(){
   afterPageChange();
   // Closing after the action has finished puts the live graph back to live. Mid
   // action it keeps filling, because the main screen carries on showing it.
-  if(!MON_STATES[state.machine.state]) clearChartSeries();
+  if(!keepTrace&&!MON_STATES[state.machine.state]) clearChartSeries();
   _chartDims.w=0; _chartDims.h=0; _chartLegendMode=null; _chartBgKey=null;
   _tempDims.w=0; _tempDims.h=0; _tempBgKey=null;
   drawChart(); }
@@ -15320,12 +15356,14 @@ function monStop(){
   api('PUT','/api/v1/machine/state/idle')
     .then(function(){ toast(t('stopped'),'ok'); })
     .catch(function(){ toast(t('stopFailed'),'err'); }); }
-// An action starting opens the monitor when asked. An action ending does not
-// take it away again: the graph and the numbers are worth reading after the fact,
-// and the page goes when it is closed.
+// An action starting opens the monitor when asked. An action ending leaves it
+// up by default, because the graph and the numbers are worth reading after the
+// fact -- but a machine that is used standing over it wants the screen back,
+// and that is what the setting is for.
 function monitorOnState(st,prev){
   var now=!!MON_STATES[st], was=!!MON_STATES[prev];
   if(now&&!was&&monAutoOn(st)&&!_monOpen&&!_asleep) openMonitor(true);
+  if(!now&&was&&_monOpen&&monCloseOn(prev)){ closeMonitor(true); return; }
   if(_monOpen) syncMonitorHead(); }
 // GHC presence arrives after the machine connects, so a monitor already open has
 // to be told.
