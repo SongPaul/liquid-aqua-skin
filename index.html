@@ -830,6 +830,30 @@ body.night .tge-name:focus{background:rgba(255,255,255,.12)}
    are filled in, the ones kept to this list are not. */
 .ep-tag.main{background-color:rgba(99,102,241,.16);background-image:none;
   border-color:rgba(99,102,241,.38);color:var(--accent)}
+.field label.bk-lab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bk-manage{flex:none;width:30px;height:30px;padding:0;margin:-4px 0;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:9px;border:1px solid var(--ctl-edge);
+  background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);
+  font-family:var(--font);font-size:13px;line-height:1;color:var(--ink-mute);
+  -webkit-appearance:none;transition:transform .1s}
+.bk-manage:active{transform:scale(.92)}
+.bk-add{display:flex;gap:7px;margin-bottom:12px}
+.bk-add input{flex:1;min-width:0;min-height:40px;padding:0 12px;border-radius:11px;
+  border:1px solid var(--ctl-edge);background-color:var(--ctl-face);
+  font-family:var(--font);font-size:13px;font-weight:700;color:var(--ink)}
+.bk-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+.bk-row+.bk-row{border-top:1px solid var(--glass-line)}
+.bk-star{width:32px;height:32px;flex:none;padding:0;border:0;border-radius:100px;cursor:pointer;
+  background:transparent;color:var(--ink-mute);font-size:15px;line-height:1}
+.bk-star.on{color:var(--amber)}
+.bk-name{flex:1;min-width:90px;min-height:34px;padding:0 10px;border-radius:9px;
+  border:1px solid transparent;background:transparent;font-family:var(--font);
+  font-size:13px;font-weight:700;color:var(--ink)}
+.bk-name:focus{border-color:var(--accent);background:rgba(255,255,255,.7);outline:none}
+.bk-n{flex:none;font-size:11px;font-weight:600;color:var(--ink-mute);white-space:nowrap}
+.bk-del{flex:none;min-height:32px;padding:0 11px}
+body.night .bk-name:focus{background:rgba(255,255,255,.12)}
 .ep-tag.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ep-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
 .ep-chip{font-size:11px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.10);border-radius:100px;padding:2px 6px}
@@ -2540,6 +2564,21 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 
 <!-- ── Hot Water modal ─────────────────────────────────────────── -->
 
+<!-- What is in the drawer: the baskets offered when a shot is written up -->
+<div class="overlay" id="basketOverlay" onclick="closeModal(event,'basketOverlay')">
+  <div class="modal ps-modal"><div class="modal-head">
+    <div class="modal-title" data-i18n="basketListTitle">Baskets</div>
+    <button class="modal-close" onclick="closeModal(null,'basketOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="bk-add">
+      <input id="bkNew" maxlength="32" placeholder="" data-i18n-ph="basketNew" onkeydown="bkAddKey(event)">
+      <button class="m-btn primary" onclick="bkAdd()" data-i18n="basketAdd">Add</button>
+    </div>
+    <div id="bkList"></div>
+    <div class="set-desc" style="margin-top:10px" data-i18n="basketListHint"></div>
+  </div></div>
+</div>
+
 <!-- Deleting a profile: filed away, or destroyed -->
 <div class="overlay" id="delProfOverlay" onclick="closeModal(event,'delProfOverlay')">
   <div class="modal ps-modal"><div class="modal-head"><div class="modal-title" data-i18n="deleteProfile"></div><button class="modal-close" onclick="closeModal(null,'delProfOverlay')">×</button></div>
@@ -2998,6 +3037,12 @@ var I18N={
     close:'Close', save:'Save', saveOptions:'Save Options', delete:'Delete', useForShot:'Use for shot', set:'Set',
     beans:'Beans', grinders:'Grinders', addBean:'+ Add Bean', addGrinder:'+ Add Grinder', newBean:'New Bean', editBean:'Edit Bean',     name:'Name', origin:'Origin', process:'Process', notes:'Notes',
     shotBeanGrinder:'Bean & grinder', roaster:'Roaster', coffee:'Coffee', shotFixed:'Shot updated',
+    basketLabel:'Basket', basketPh:'VST 18g, IMS Competition 20g…',
+    basketListTitle:'Baskets', basketManage:'Manage the basket list', basketAdd:'Add',
+    basketNew:'New basket', basketNone:'The list is empty.',
+    basketDefaultTip:'Fill this in on shots that have no basket',
+    basketRemove:'Take out of the list', basketUsed:'{n} of the last {m}',
+    basketListHint:'This is the list the basket box offers. A star fills that basket in on shots that were never asked. Renaming puts the entry right here and leaves what each shot already recorded alone.',
     brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Reading the grinder…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what was still empty', gAiKept:'Nothing was empty to fill', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
     burrBrand:'Burr brand', burrModel:'Burr type', burrCoating:'Coating', burrGeom:'Geometry', burrSet:'Burrs',
     burrNotes:'What these burrs do', bAiFill:'Ask about these burrs', bAiWorking:'Reading the burrs…',
@@ -3348,6 +3393,12 @@ var I18N={
     close:'닫기', save:'저장', saveOptions:'옵션 저장', delete:'삭제', useForShot:'샷에 사용', set:'설정',
     beans:'원두', grinders:'그라인더', addBean:'+ 원두 추가', addGrinder:'+ 그라인더 추가', newBean:'새 원두', editBean:'원두 편집',     name:'이름', origin:'원산지', process:'가공', notes:'메모',
     shotBeanGrinder:'원두 · 그라인더', roaster:'로스터', coffee:'원두', shotFixed:'샷 정보 수정됨',
+    basketLabel:'바스켓', basketPh:'VST 18g, IMS Competition 20g…',
+    basketListTitle:'바스켓 목록', basketManage:'바스켓 목록 관리', basketAdd:'추가',
+    basketNew:'새 바스켓', basketNone:'목록이 비어 있습니다.',
+    basketDefaultTip:'바스켓이 비어 있는 기록에 채워 넣기',
+    basketRemove:'목록에서 빼기', basketUsed:'최근 {m}샷 중 {n}회',
+    basketListHint:'바스켓 칸이 제안하는 목록입니다. 별표를 달면 바스켓을 적지 않은 기록에 그 바스켓이 채워집니다. 이름을 고치면 이 목록에서만 바뀜니다 — 이미 기록된 샷의 내용은 그대로 둡니다.',
     brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'그라인더를 찾는 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'비어 있던 칸을 채웠습니다', gAiKept:'비어 있는 칸이 없어 그대로 두었습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
     burrBrand:'버 브랜드', burrModel:'버 타입', burrCoating:'코팅', burrGeom:'형상', burrSet:'버',
     burrNotes:'이 버가 하는 일', bAiFill:'이 버에 대해 묻기', bAiWorking:'버를 읽는 중…',
@@ -5749,6 +5800,9 @@ function hydrateFromStore(){
     else if(Object.keys(grinderSpeeds).length) storePut('gspeed',grinderSpeeds);
     if(all.gburr&&typeof all.gburr==='object'){ grinderBurrs=all.gburr; lsSet('aurora_gburr',grinderBurrs); }
     else if(Object.keys(grinderBurrs).length) storePut('gburr',grinderBurrs);
+    if(Array.isArray(all.baskets)){ basketNames=all.baskets.filter(function(x){ return typeof x==='string'&&x; });
+      lsSet('aurora_baskets',basketNames); }
+    else if(basketNames) storePut('baskets',basketNames);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
       updateBeanInfo(); applyCam(); applyFx(); if(carItems.length) buildCarousel(); }
   }); }
@@ -5770,6 +5824,8 @@ function applyPrefsObject(p){
   else if(p.tagsGone===null) prefs.tagsGone=null;
   if(p.tagNames&&typeof p.tagNames==='object') prefs.tagNames=p.tagNames;
   else if(p.tagNames===null) prefs.tagNames=null;
+  if(typeof p.basketDefault==='string') prefs.basketDefault=p.basketDefault;
+  else if(p.basketDefault===null) prefs.basketDefault=null;
   if(typeof p.qrHost==='string') prefs.qrHost=p.qrHost;
   if(typeof p.lang==='string') prefs.lang=p.lang;
   if(p.tempUnit==='C'||p.tempUnit==='F') prefs.tempUnit=p.tempUnit;
@@ -5802,6 +5858,74 @@ function applyPrefsObject(p){
 // what every skin sees. Only the point it splits at is ours to remember, keyed
 // by grinder id, and a missing entry just means the whole name is the model.
 var grinderBrands={};
+// Two brands were asked for by name; the rest of the list is whatever has
+// actually been used, because a basket drawer is a personal thing and a
+// suggestion is only a suggestion -- anything at all can be typed instead.
+var BASKET_SEEDS=['VST 15g','VST 18g','VST 20g','VST 22g',
+  'IMS Competition 18g','IMS Competition 20g','IMS Superfine 18g','Decent 18g'];
+var basketNames=null;
+function loadBaskets(){ var a=lsGet('aurora_baskets');
+  basketNames=Array.isArray(a)?a.filter(function(x){ return typeof x==='string'&&x; }):null; }
+function saveBaskets(){ lsSet('aurora_baskets',basketNames||[]); storeSave('baskets',basketNames||[]); }
+function basketList(){ return basketNames||BASKET_SEEDS.slice(); }
+// Editing the list is what turns the suggestions into somebody's own drawer.
+function basketOwn(){ if(!basketNames) basketNames=BASKET_SEEDS.slice(); return basketNames; }
+function noteBasket(v){ v=String(v||'').trim(); if(!v) return;
+  var l=basketList(); if(l.indexOf(v)>=0) return;
+  basketOwn().push(v); saveBaskets(); }
+function shotBasket(s){ var ex=((s&&s.annotations)||{}).extras||{};
+  var v=ex.lqBasket; return (v==null?'':String(v)); }
+// A shot that was never asked gets the usual basket filled in; one that was
+// asked and answered with nothing is left alone.
+function shotBasketField(s){
+  var ex=((s&&s.annotations)||{}).extras||{};
+  if(Object.prototype.hasOwnProperty.call(ex,'lqBasket')) return shotBasket(s);
+  return prefs.basketDefault||''; }
+function basketUses(v){ var n=0;
+  (shotList||[]).forEach(function(sh){ if(shotBasket(sh)===v) n++; });
+  return n; }
+function openBasketList(){ renderBasketList();
+  document.getElementById('basketOverlay').classList.add('show');
+  var el=document.getElementById('bkNew'); if(el) el.value=''; }
+function bkAdd(){ var el=document.getElementById('bkNew'); if(!el) return;
+  var v=el.value.trim().replace(/\s+/g,' ').slice(0,32); el.value='';
+  if(!v||basketList().indexOf(v)>=0) return;
+  basketOwn().push(v); saveBaskets(); renderBasketList(); }
+function bkAddKey(ev){ if(ev.key==='Enter'){ ev.preventDefault(); bkAdd(); } }
+// Renaming puts the entry right in the drawer. It does not go back through the
+// shots: what a shot says is what was written down at the time, and only the
+// newest fifty are even here to be rewritten.
+function bkRename(ev,was){
+  if(ev.type==='keydown'){ if(ev.key!=='Enter') return; ev.preventDefault(); ev.target.blur(); return; }
+  var v=ev.target.value.trim().replace(/\s+/g,' ').slice(0,32);
+  var l=basketOwn(), i=l.indexOf(was);
+  if(i<0) return;
+  if(!v||l.indexOf(v)>=0&&v!==was){ renderBasketList(); return; }
+  l[i]=v;
+  if(prefs.basketDefault===was){ prefs.basketDefault=v; savePrefs(); }
+  saveBaskets(); renderBasketList(); }
+function bkRemove(v){ var l=basketOwn(), i=l.indexOf(v); if(i<0) return;
+  l.splice(i,1);
+  if(prefs.basketDefault===v){ prefs.basketDefault=null; savePrefs(); }
+  saveBaskets(); renderBasketList(); }
+function bkSetDefault(v){
+  prefs.basketDefault=(prefs.basketDefault===v)?null:v; savePrefs(); renderBasketList(); }
+function renderBasketList(){
+  var box=document.getElementById('bkList'); if(!box) return;
+  var l=basketList(), seen=(shotList||[]).length;
+  if(!l.length){ box.innerHTML='<div class="set-desc">'+escapeHtml(t('basketNone'))+'</div>'; return; }
+  box.innerHTML=l.map(function(v){
+    var n=basketUses(v), def=(prefs.basketDefault===v);
+    return '<div class="bk-row" data-v="'+escapeAttr(v)+'">'
+      +'<button class="bk-star'+(def?' on':'')+'" title="'+escapeAttr(t('basketDefaultTip'))+'"'
+        +' onclick="bkSetDefault(this.parentNode.dataset.v)">'+(def?'\u2605':'\u2606')+'</button>'
+      +'<input class="bk-name" maxlength="32" value="'+escapeAttr(v)+'"'
+        +' onchange="bkRename(event,this.parentNode.dataset.v)"'
+        +' onkeydown="bkRename(event,this.parentNode.dataset.v)">'
+      +'<span class="bk-n">'+(n?escapeHtml(t('basketUsed').replace('{n}',n).replace('{m}',seen)):'')+'</span>'
+      +'<button class="m-btn bk-del" title="'+escapeAttr(t('basketRemove'))+'"'
+        +' onclick="bkRemove(this.parentNode.dataset.v)">\u00d7</button>'
+    +'</div>'; }).join(''); }
 function loadGrinderBrands(){ grinderBrands=lsGet('aurora_gbrands')||{}; }
 function saveGrinderBrands(){ lsSet('aurora_gbrands',grinderBrands); storeSave('gbrands',grinderBrands); }
 // A speed knob is not part of the gateway's grinder, so it is kept beside it
@@ -13961,7 +14085,7 @@ function slMatches(s){
   var pr=(s.workflow&&s.workflow.profile)||{}, cx=(s.workflow&&s.workflow.context)||{};
   var an=s.annotations||{};
   return [pr.title,cx.coffeeName,cx.coffeeRoaster,cx.grinderModel,cx.grinderSetting,
-          an.notes,fmtShotDate(s)].join(' ').toLowerCase().indexOf(needle)>=0; }
+          shotBasket(s),an.notes,fmtShotDate(s)].join(' ').toLowerCase().indexOf(needle)>=0; }
 function renderShotList(){ var list=document.getElementById('slList'); if(!list) return; list.innerHTML='';
   if(!shotList.length){ list.innerHTML=slLoading?'<div class="ep-group-head">Loading…</div>':'<div class="ep-placeholder">'+t('noShots2')+'</div>'; return; }
   var sb=document.createElement('input'); sb.className='ep-search'; sb.id='slSearch';
@@ -14000,6 +14124,7 @@ function shotContextLine(s){ var c=(s.workflow&&s.workflow.context)||{}; var bit
   var bean=[c.coffeeRoaster,c.coffeeName].filter(Boolean).join(' · '); if(bean) bits.push(bean);
   var grind=[c.grinderModel,c.grinderSetting!=null&&c.grinderSetting!==''?('@ '+c.grinderSetting):''].filter(Boolean).join(' ');
   if(grind) bits.push(grind);
+  var bk=shotBasket(s); if(bk) bits.push(bk);
   return bits.length?'<div class="sl-dt-sub">'+escapeHtml(bits.join('  ·  '))+'</div>':''; }
 function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s&&s.measurements&&s.measurements.length) slFull[s.id]=s;
   var have=!!(s&&s.measurements&&s.measurements.length); var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
@@ -14038,6 +14163,14 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
           return '<option value="'+escapeAttr(g.model||'')+'"></option>'; }).join('')+'</datalist></div>'
       +'<div class="field"><label>'+escapeHtml(t('grindSetting'))+'</label>'
       +'<input id="slGrind" value="'+escapeAttr(ctx.grinderSetting!=null?String(ctx.grinderSetting):'')+'"></div></div>'
+    +'<div class="field-row"><div class="field" style="grid-column:1/-1">'
+      +'<label class="bk-lab">'+escapeHtml(t('basketLabel'))
+      +'<button type="button" class="bk-manage" title="'+escapeAttr(t('basketManage'))+'"'
+      +' aria-label="'+escapeAttr(t('basketManage'))+'" onclick="openBasketList()">☰</button></label>'
+      +'<input id="slBasket" list="slBasketList" placeholder="'+escapeAttr(t('basketPh'))+'"'
+      +' value="'+escapeAttr(shotBasketField(s))+'">'
+      +'<datalist id="slBasketList">'+basketList().map(function(b){
+          return '<option value="'+escapeAttr(b)+'"></option>'; }).join('')+'</datalist></div></div>'
     +'<div class="ep-section-title" style="margin-top:16px">'+t('tastingLog')+'</div>'
     +'<div class="field-row"><div class="field"><label>'+t('actualDose')+'</label><input id="slDose" type="number" step="0.1" value="'+(an.actualDoseWeight!=null?an.actualDoseWeight:'')+'"></div>'
       +'<div class="field"><label>'+t('actualYield')+'</label><input id="slYield" type="number" step="0.1" value="'+(an.actualYield!=null?an.actualYield:'')+'"></div></div>'
@@ -14190,8 +14323,10 @@ function saveShotLog(id,quiet){ var dose=parseFloat(document.getElementById('slD
   var tds=parseFloat(document.getElementById('slTds').value)||null, ey=parseFloat(document.getElementById('slEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1));
   var tv=(slSel&&slSel._taste)||{}, ta=tasteAnn(tv,document.getElementById('slNotes').value);
+  var bEl=document.getElementById('slBasket'), basket=bEl?bEl.value.trim():'';
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
     enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
+  if(bEl){ ann.extras=ann.extras||{}; ann.extras.lqBasket=basket||null; noteBasket(basket); }
   var edits=shotContextEdits();
   return api('PUT','/api/v1/shots/'+id,{annotations:ann})
     .then(function(){ return edits?api('PUT','/api/v1/shots/'+id,{workflow:{context:edits}}):null; })
@@ -14722,6 +14857,8 @@ function shotDigestForAi(sh){
     // the shot only records the grinder by name; the burrs come from the library
     grinder:grinderDigest(grinderByName(c.grinderModel),c.grinderSetting)||{model:c.grinderModel||'',setting:c.grinderSetting},
     grind:c.grinderSetting,
+    // how much room the dose had is part of what the numbers below mean
+    basket:shotBasket(sh)||null,
     dose:d, yield:y, ratio:(d&&y)?Math.round((y/d)*100)/100:null,
     seconds:st.seconds?Math.round(st.seconds*10)/10:null,
     peakBar:st.peakPressure?Math.round(st.peakPressure*10)/10:null,
@@ -16167,7 +16304,7 @@ document.addEventListener('DOMContentLoaded', function(){
   else if(phoneSized()&&!viewForcedTablet()){ bootPhone('status'); return; }
   skinStableCheck();
   bindDoseGestures(); thermoInit();
-  fitStage(); tickHdrClock(); loadFavs(); loadAiLangs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); loadGrinderBurrs(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); tickHdrClock(); loadFavs(); loadAiLangs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); loadGrinderBurrs(); loadBaskets(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
