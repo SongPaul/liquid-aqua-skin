@@ -832,6 +832,25 @@ body.night .tge-name:focus{background:rgba(255,255,255,.12)}
 .ep-tag.main{background-color:rgba(99,102,241,.16);background-image:none;
   border-color:rgba(99,102,241,.38);color:var(--accent)}
 .field label.bk-lab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ep-pmeta{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin:2px 0 4px}
+.ep-pf{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ep-pf>span{font-size:10px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
+.ep-pf select,.ep-pf input{min-height:34px;padding:0 9px;border-radius:9px;border:1px solid var(--ctl-edge);
+  background-color:var(--ctl-face);font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink);
+  -webkit-appearance:none;appearance:none}
+.ep-pf select{padding-right:22px;background-image:linear-gradient(45deg,transparent 50%,var(--ink-mute) 50%),linear-gradient(135deg,var(--ink-mute) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 15px,calc(100% - 8px) 15px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.ep-pf input{width:88px}
+.ep-pf select{width:112px}
+.ep-pf:nth-child(2) input{width:132px}
+.ep-pf input:focus,.ep-pf select:focus{outline:none;border-color:var(--accent)}
+.ep-advtog{margin-left:auto;min-height:34px;padding:0 11px;border-radius:9px;cursor:pointer;
+  border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);
+  font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute)}
+.ep-advtog.on{color:var(--accent);border-color:rgba(99,102,241,.38);background-color:rgba(99,102,241,.12);background-image:none}
+/* a ceiling's range says nothing until there is a ceiling */
+.ep-slider-row.lim-range.off{opacity:.42}
+.ep-slider-row.lim-range.off input{pointer-events:none}
 .bk-manage{flex:none;width:30px;height:30px;padding:0;margin:-4px 0;cursor:pointer;
   display:inline-flex;align-items:center;justify-content:center;
   border-radius:9px;border:1px solid var(--ctl-edge);
@@ -1874,6 +1893,7 @@ body.step-dragging .ep-grid .grip{cursor:grabbing}
 .ep-meta .ep-colorrow{grid-column:2;grid-row:1;margin:0;flex-wrap:nowrap}
 .ep-meta .ep-roastrow{grid-column:3;grid-row:1;margin:0;flex-wrap:nowrap}
 .ep-meta .ep-tagrow{grid-column:1/-1;margin:0}
+.ep-meta .ep-pmeta{grid-column:1/-1;margin:0}
 body.night .ep-grid .gname{color:var(--ink)}
 .ep-step-editor{background:#fff;border:1px solid transparent;box-shadow:var(--pane-lift);border-radius:14px;padding:12px 14px 14px;border-left:4px solid var(--accent)}
 .ep-step-editor.flow{border-left-color:var(--steam)}
@@ -3261,6 +3281,13 @@ var I18N={
     kindHidden:'Hidden', hideProfile:'Hide this profile', showProfile:'Show this profile',
     hidden:'Hidden', shown:'Shown again', toggleFav:'Toggle favorite', favAdded:'★ {n} added to favorites', favRemoved:'{n} removed from favorites', favNeedsSave:'Save the profile first',
     tempSensor:'Measured at', sensorBasket:'Basket', sensorWater:'Water',
+    rampLabel:'Ramp', rampFast:'Step', rampSmooth:'Ease',
+    limPress:'Max bar', limFlow:'Max ml/s', limRange:'Ease over',
+    bevType:'Kind', authorLabel:'Author', stopWeight:'Stop at g', advFields:'More',
+    stopVolume:'Stop at ml', volCountFrom:'Count ml from', volCountNone:'The start',
+    tankTemp:'Tank \u00b0C',
+    bevEspresso:'Espresso', bevPourover:'Pour-over', bevCleaning:'Cleaning',
+    bevCalibrate:'Calibration', bevManual:'Manual',
     roastLevel:'Roast', fromProfile:'from the profile', clear:'Clear',
     tagAdd:'Add a tag…', tagRemove:'Remove this tag',
     mainTagHint:'Filled tags are the ones the main screen offers. Hold one to change that.',
@@ -3630,6 +3657,13 @@ var I18N={
     tagDelete:'삭제', tagDeleteSure:'정말?', tagRestore:'되살리기', tagSilenced:'꺼짐',
     tagPageHint:'이름을 고쳐 쓰면 모든 곳에서 바뀝니다. 삭제하면 그 태그를 가진 프로파일에서 떼어내고, 프로파일 모양에서 읽힌 태그는 지우는 대신 꺼두며 어느 프로파일에든 다시 적으면 돌아옵니다.',
     tempSensor:'온도 기준', sensorBasket:'바스켓', sensorWater:'물',
+    rampLabel:'도달 방식', rampFast:'계단', rampSmooth:'완만',
+    limPress:'압력 상한', limFlow:'유량 상한', limRange:'완화 폭',
+    bevType:'종류', authorLabel:'작성자', stopWeight:'종료 중량 g', advFields:'더보기',
+    stopVolume:'종료 부피 ml', volCountFrom:'부피 계산 시작', volCountNone:'처음부터',
+    tankTemp:'탱크 °C',
+    bevEspresso:'에스프레소', bevPourover:'푸어오버', bevCleaning:'청소',
+    bevCalibrate:'캘리브레이션', bevManual:'수동',
     roastLevel:'배전도', fromProfile:'프로파일에 명시됨', clear:'해제',
     tagForMilk:'우유음료', tagForLong:'롱드링크',
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
@@ -8970,7 +9004,7 @@ function newProfile(){
   editing={ id:'', isNew:true, metadata:{},
     profile:{ title:t('newProfileName'), author:'', notes:'', beverage_type:'espresso',
       target_volume:0, target_weight:0, target_volume_count_start:0, tank_temperature:0,
-      steps:[{ name:t('newStep'), pump:'pressure', transition:'smooth', pressure:9,
+      steps:[{ name:t('newStep'), pump:'pressure', transition:'fast', pressure:9,
         temperature:92, seconds:25, volume:0, sensor:'water' }] } };
   epStepIdx=0;
   Object.keys(epItemEls).forEach(function(k){ epItemEls[k].forEach(function(el){ el.classList.remove('active'); }); });
@@ -9252,6 +9286,56 @@ function roastPicker(p){
   return '<div class="ep-roastrow">'+src+btns+clear+'</div>'; }
 // Every tag the profile carries, however it got there, with the same way off
 // each of them and a place to type another.
+var BEV_KINDS=[['espresso','bevEspresso'],['pourover','bevPourover'],
+  ['cleaning','bevCleaning'],['calibrate','bevCalibrate'],['manual','bevManual']];
+var epAdvOpen=false;
+function epAdvToggle(){ epAdvOpen=!epAdvOpen; renderEpEditor(); }
+function pfNumV(v){ return (v==null||v===''||!isFinite(+v)||+v===0)?'':String(+v); }
+function profFieldsHtml(pr){
+  var bev=String(pr.beverage_type||'espresso');
+  function fld(lab,inner){ return '<label class="ep-pf"><span>'+escapeHtml(lab)+'</span>'+inner+'</label>'; }
+  var h='<div class="ep-pmeta">'
+    +fld(t('bevType'),'<select id="epBev">'+BEV_KINDS.map(function(k){
+        return '<option value="'+k[0]+'"'+(bev===k[0]?' selected':'')+'>'+escapeHtml(t(k[1]))+'</option>'; }).join('')+'</select>')
+    +fld(t('authorLabel'),'<input id="epAuthor" maxlength="40" value="'+escapeAttr(pr.author||'')+'">')
+    +fld(t('stopWeight'),'<input id="epTW" type="number" min="0" max="200" step="0.1" placeholder="'+escapeAttr(t('noLimit'))+'" value="'+escapeAttr(pfNumV(pr.target_weight))+'">')
+    +'<button type="button" class="ep-advtog'+(epAdvOpen?' on':'')+'" onclick="epAdvToggle()">'
+      +escapeHtml(t('advFields'))+' '+(epAdvOpen?'\u25b4':'\u25be')+'</button>'
+    +'</div>';
+  if(epAdvOpen) h+='<div class="ep-pmeta">'
+    +fld(t('stopVolume'),'<input id="epTV" type="number" min="0" max="500" step="1" placeholder="'+escapeAttr(t('noLimit'))+'" value="'+escapeAttr(pfNumV(pr.target_volume))+'">')
+    +fld(t('volCountFrom'),'<select id="epTVS">'+volMarkOpts(pr)+'</select>')
+    +fld(t('tankTemp'),'<input id="epTank" type="number" min="0" max="95" step="1" placeholder="'+escapeAttr(t('auto'))+'" value="'+escapeAttr(pfNumV(pr.tank_temperature))+'">')
+    +'</div>';
+  return h; }
+function bindProfFields(){
+  var pr=editing.profile;
+  function num(id,key,dp){ var el=document.getElementById(id); if(!el) return;
+    el.oninput=function(){ var v=parseFloat(el.value);
+      pr[key]=(isFinite(v)&&v>0)?parseFloat(v.toFixed(dp==null?1:dp)):0; }; }
+  var bv=document.getElementById('epBev');
+  if(bv) bv.onchange=function(){ pr.beverage_type=bv.value; renderEpList(); };
+  var au=document.getElementById('epAuthor');
+  if(au) au.oninput=function(){ pr.author=au.value; };
+  num('epTW','target_weight',1); num('epTV','target_volume',0);
+  num('epTank','tank_temperature',0);
+  var vs=document.getElementById('epTVS');
+  if(vs) vs.onchange=function(){ pr.target_volume_count_start=parseInt(vs.value,10)||0; }; }
+function volMarkOpts(pr){
+  var cur=+(pr.target_volume_count_start||0);
+  var h='<option value="0"'+(cur?'':' selected')+'>'+escapeHtml(t('volCountNone'))+'</option>';
+  (pr.steps||[]).forEach(function(st,i){
+    h+='<option value="'+(i+1)+'"'+(cur===i+1?' selected':'')+'>'
+      +escapeHtml((i+1)+'. '+(st.name||''))+'</option>'; });
+  return h; }
+// Following the step itself rather than patching the number covers dragging
+// the rows around as well as the buttons that move one at a time.
+function volMarkStep(){ var p=editing&&editing.profile; if(!p) return null;
+  var n=+(p.target_volume_count_start||0);
+  return (n>0&&p.steps&&p.steps[n-1])||null; }
+function volMarkFollow(st){ var p=editing&&editing.profile; if(!p||!st) return;
+  var at=(p.steps||[]).indexOf(st);
+  p.target_volume_count_start=(at>=0)?at+1:0; }
 function tagEditor(p){
   var live=allProfiles.find(function(x){ return x.id===p.id; })||p;
   var chips=allTagsOf(live).map(function(k){
@@ -9276,6 +9360,7 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor');
       : (colorPicker(editing)+roastPicker(editing)))
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
     +(editing.isNew?'':tagEditor(editing))
+    +profFieldsHtml(pr)
     +aipResultHtml()
     +'</div>';
   wrap.innerHTML=meta
@@ -9296,6 +9381,7 @@ function renderEpEditor(){ var wrap=document.getElementById('epEditor');
   setTimeout(function(){ drawEditCurve(); },30);
   document.getElementById('epName').oninput=function(){ editing.profile.title=this.value; };
   document.getElementById('epNotes').oninput=function(){ editing.profile.notes=this.value; };
+  bindProfFields();
 }
 var epStepIdx=0;
 function bindStepVals(ed,st){
@@ -9379,10 +9465,12 @@ function bindExitEditor(ed,st){
     st.exit.value=parseFloat(this.value)||0;
     this.parentElement.querySelector('.val').textContent=st.exit.value.toFixed(1); }; }
 function addStep(){ var a=editing.profile.steps; if(!a) a=editing.profile.steps=[];
+  var mk=volMarkStep();
   // volume and sensor are required by the profile schema; a step made here
   // used to go out without them
-  a.push({name:t('newStep'),pump:'pressure',transition:'smooth',pressure:6,temperature:90,
+  a.push({name:t('newStep'),pump:'pressure',transition:'fast',pressure:6,temperature:90,
     seconds:10,volume:0,sensor:(a[0]&&a[0].sensor)||'water'});
+  volMarkFollow(mk);
   epStepIdx=a.length-1; renderEpSteps(); drawEditCurve(); }
 // One step at a time meant four tab switches to compare four temperatures,
 // and nowhere to see two of them at once. The profile is a table now: every
@@ -9391,11 +9479,23 @@ function addStep(){ var a=editing.profile.steps; if(!a) a=editing.profile.steps=
 // keypad for landing on one.
 function stepSel(i){ epStepIdx=i; renderEpSteps(); drawEditCurve(); epScrollRowIntoView(i); }
 function stepSwap(i,j){ var a=editing.profile.steps; if(!a||j<0||j>=a.length) return;
-  var t2=a[i]; a[i]=a[j]; a[j]=t2; epStepIdx=j; renderEpSteps(); drawEditCurve(); }
+  var mk=volMarkStep();
+  var t2=a[i]; a[i]=a[j]; a[j]=t2; epStepIdx=j;
+  volMarkFollow(mk); renderEpSteps(); drawEditCurve(); }
 function stepDup(i){ var a=editing.profile.steps; if(!a) return;
-  a.splice(i+1,0,JSON.parse(JSON.stringify(a[i]))); epStepIdx=i+1; renderEpSteps(); drawEditCurve(); }
+  var mk=volMarkStep();
+  a.splice(i+1,0,JSON.parse(JSON.stringify(a[i]))); epStepIdx=i+1;
+  volMarkFollow(mk); renderEpSteps(); drawEditCurve(); }
 function delStepAt(i){ var a=editing.profile.steps; if(!a||a.length<=1) return;
-  a.splice(i,1); if(epStepIdx>=a.length) epStepIdx=a.length-1; renderEpSteps(); drawEditCurve(); }
+  var mk=volMarkStep(), gone=a[i];
+  a.splice(i,1); if(epStepIdx>=a.length) epStepIdx=a.length-1;
+  // the marked step itself is what went: the mark falls back to the one before
+  if(mk===gone) editing.profile.target_volume_count_start=i; else volMarkFollow(mk);
+  renderEpSteps(); drawEditCurve(); }
+function stepRamp(i,v){ var st=editing.profile.steps[i];
+  v=(v==='smooth')?'smooth':'fast';
+  if((st.transition||'fast')===v) return;
+  st.transition=v; renderEpSteps(); drawEditCurve(); }
 function stepSensor(i,v){ var st=editing.profile.steps[i];
   v=(v==='coffee')?'coffee':'water';
   if((st.sensor||'water')===v) return;
@@ -9405,8 +9505,8 @@ function stepPump(i){ var st=editing.profile.steps[i];
   if(st.pump==='pressure'&&st.pressure===undefined) st.pressure=6;
   if(st.pump==='flow'&&st.flow===undefined) st.flow=2;
   renderEpSteps(); drawEditCurve(); }
-var KEY_RANGE={ pressure:{min:0,max:12,dp:1}, flow:{min:0,max:8,dp:1}, temperature:{min:20,max:100,dp:1},
-  seconds:{min:0,max:120,dp:1}, volume:{min:0,max:150,dp:0}, weight:{min:0,max:80,dp:1} };
+var KEY_RANGE={ pressure:{min:0,max:12,dp:1}, flow:{min:0,max:15,dp:1}, temperature:{min:0,max:105,dp:1},
+  seconds:{min:0,max:127,dp:1}, volume:{min:0,max:500,dp:0}, weight:{min:0,max:500,dp:1} };
 var KEY_LABEL={ pressure:'pressure', flow:'flow', temperature:'tempLabel', seconds:'secondsLabel',
   volume:'volLimit', weight:'wtLimit' };
 function sensorUnit(st){
@@ -9480,14 +9580,16 @@ function gripUp(){
   if(!tr){ return; }
   tr.classList.remove('drag');
   var order=[]; tr.parentNode.querySelectorAll('tr.gr').forEach(function(r){ order.push(+r.dataset.i); });
-  var a=editing.profile.steps, was=a[epStepIdx];
+  var a=editing.profile.steps, was=a[epStepIdx], mk=volMarkStep();
   editing.profile.steps=order.map(function(ix){ return a[ix]; });
   var at=editing.profile.steps.indexOf(was); if(at>=0) epStepIdx=at;
-  renderEpSteps(); drawEditCurve(); }
+  volMarkFollow(mk); renderEpSteps(); drawEditCurve(); }
 document.addEventListener('pointermove',gripMove,{passive:false});
 document.addEventListener('pointerup',gripUp);
 document.addEventListener('pointercancel',gripUp);
 function renderEpSteps(){
+  var vs=document.getElementById('epTVS');
+  if(vs) vs.innerHTML=volMarkOpts(editing.profile);
   var steps=editing.profile.steps||[];
   if(epStepIdx>=steps.length) epStepIdx=Math.max(0,steps.length-1);
   var g=document.getElementById('epStepGrid'); if(!g) return;
@@ -9532,8 +9634,12 @@ function renderEpSteps(){
   var st=steps[epStepIdx]; var ed=document.getElementById('epStepEditor');
   if(!st){ ed.innerHTML=''; return; }
   var isP=(st.pump==='pressure'); var valLabel=isP?t('pressure'):t('flow');
-  var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
+  var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:15;
   var isC=(String(st.sensor||'water')==='coffee');
+  // a flow step is capped in bar, a pressure step in ml/s
+  var limMax=isP?8:12;
+  var limV=(st.limiter&&+st.limiter.value)||0;
+  var limR=(st.limiter&&st.limiter.range!=null)?+st.limiter.range:0.6;
   ed.className='ep-step-editor'+(isP?'':' flow');
   ed.innerHTML=''
     +'<div class="ep-step-head"><span class="who"><span class="n">'+(epStepIdx+1)+'</span>'
@@ -9542,21 +9648,46 @@ function renderEpSteps(){
       +'<button class="'+(isP?'on':'')+'" data-v="pressure">'+escapeHtml(t('pressure'))+'</button></div></div>'
     +'<div class="ep-sliders">'
     +'<div class="ep-slider-row"><span class="lbl">'+valLabel+'</span><input type="range" min="0" max="'+valMax+'" step="0.1" value="'+valNow+'" data-k="'+(isP?'pressure':'flow')+'"><span class="val">'+valNow.toFixed(1)+'</span></div>'
-    +'<div class="ep-slider-row"><span class="lbl">'+t('tempLabel')+'</span><input type="range" min="20" max="100" step="0.5" value="'+(st.temperature||90)+'" data-k="temperature"><span class="val">'+(st.temperature||90).toFixed(1)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">'+t('tempLabel')+'</span><input type="range" min="0" max="105" step="0.5" value="'+(st.temperature||90)+'" data-k="temperature"><span class="val">'+(st.temperature||90).toFixed(1)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('tempSensor')+'</span>'
       +'<div class="ep-pump-toggle" id="epSensor">'
       +'<button class="'+(isC?'on':'')+'" data-v="coffee">☕ '+escapeHtml(t('sensorBasket'))+'</button>'
       +'<button class="'+(isC?'':'on')+'" data-v="water">💧 '+escapeHtml(t('sensorWater'))+'</button>'
       +'</div></div>'
-    +'<div class="ep-slider-row"><span class="lbl">'+t('secondsLabel')+'</span><input type="range" min="0" max="120" step="0.5" value="'+(st.seconds||0)+'" data-k="seconds"><span class="val">'+(st.seconds||0).toFixed(1)+'</span></div>'
-    +'<div class="ep-slider-row"><span class="lbl">'+t('volLimit')+'</span><input type="range" min="0" max="150" step="1" value="'+(st.volume||0)+'" data-k0="volume"><span class="val">'+limTxt(st.volume,0)+'</span></div>'
-    +'<div class="ep-slider-row"><span class="lbl">'+t('wtLimit')+'</span><input type="range" min="0" max="80" step="0.5" value="'+(st.weight||0)+'" data-k0="weight"><span class="val">'+limTxt(st.weight,1)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">'+t('rampLabel')+'</span>'
+      +seg('epRamp',(st.transition==='smooth'?'smooth':'fast'),
+           [['fast',t('rampFast')],['smooth',t('rampSmooth')]])
+      +'</div>'
+    +'<div class="ep-slider-row"><span class="lbl">'+escapeHtml(t(isP?'limFlow':'limPress'))+'</span>'
+      +'<input type="range" min="0" max="'+limMax+'" step="0.1" value="'+limV+'" data-lim="v">'
+      +'<span class="val">'+limTxt(limV,1)+'</span></div>'
+    +'<div class="ep-slider-row lim-range'+(limV>0?'':' off')+'"><span class="lbl">'+escapeHtml(t('limRange'))+'</span>'
+      +'<input type="range" min="0.1" max="'+limMax+'" step="0.1" value="'+limR+'" data-lim="r">'
+      +'<span class="val">'+limR.toFixed(1)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">'+t('secondsLabel')+'</span><input type="range" min="0" max="127" step="0.5" value="'+(st.seconds||0)+'" data-k="seconds"><span class="val">'+(st.seconds||0).toFixed(1)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">'+t('volLimit')+'</span><input type="range" min="0" max="500" step="1" value="'+(st.volume||0)+'" data-k0="volume"><span class="val">'+limTxt(st.volume,0)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">'+t('wtLimit')+'</span><input type="range" min="0" max="500" step="0.5" value="'+(st.weight||0)+'" data-k0="weight"><span class="val">'+limTxt(st.weight,1)+'</span></div>'
     +'</div>'
     +exitEditorHtml(st);
   ed.querySelectorAll('#epPump button').forEach(function(b){
     b.onclick=function(){ if(st.pump!==b.dataset.v) stepPump(epStepIdx); }; });
   ed.querySelectorAll('#epSensor button').forEach(function(b){
     b.onclick=function(){ stepSensor(epStepIdx,b.dataset.v); }; });
+  ed.querySelectorAll('#epRamp button').forEach(function(b){
+    b.onclick=function(){ stepRamp(epStepIdx,b.dataset.v); }; });
+  // The range only means something once there is a ceiling, so it dims rather
+  // than disappearing -- a row that comes and goes moves everything under it.
+  ed.querySelectorAll('input[data-lim]').forEach(function(inp){ inp.oninput=function(){
+    var v=parseFloat(inp.value)||0, which=inp.dataset.lim;
+    if(which==='v'){
+      if(v>0){ st.limiter={ value:v, range:(st.limiter&&st.limiter.range!=null)?+st.limiter.range:0.6 }; }
+      else st.limiter=null;
+      inp.parentElement.querySelector('.val').textContent=limTxt(v,1);
+      var rr=ed.querySelector('.lim-range'); if(rr) rr.classList.toggle('off',!(v>0));
+    } else {
+      if(st.limiter) st.limiter.range=v;
+      inp.parentElement.querySelector('.val').textContent=v.toFixed(1); }
+    drawEditCurve(); }; });
   bindExitEditor(ed,st);
   bindStepVals(ed,st);
   ed.querySelectorAll('input[data-k0]').forEach(function(inp){ inp.oninput=function(){
