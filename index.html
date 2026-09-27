@@ -609,8 +609,6 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .rc-mode .preset-chips{flex:1;min-width:0;flex-wrap:nowrap;overflow:hidden;justify-content:flex-start}
 .rc-mode .preset-chip{min-height:28px;height:28px;padding:0 12px;font-size:11px;white-space:nowrap}
 /* the tick sits with the preset chips, so it is a chip's size */
-.rc-mode-head .rc-save{min-height:28px;height:28px;padding:0 12px;font-size:13px;
-  line-height:1;flex:none;border-radius:100px}
 .rc-sw{transform:scale(.7);transform-origin:center;flex:none}
 .cs-opts .field{flex:1;min-width:0}
 .rc-sw-wrap{display:inline-flex;align-items:center;gap:1px;flex:none;cursor:default}
@@ -849,6 +847,7 @@ body.night .tge-name:focus{background:rgba(255,255,255,.12)}
   font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute)}
 .ep-advtog.on{color:var(--accent);border-color:rgba(99,102,241,.38);background-color:rgba(99,102,241,.12);background-image:none}
 /* a ceiling's range says nothing until there is a ceiling */
+.preset-chip.pc-add.full{opacity:.45}
 .ep-slider-row.lim-range.off{opacity:.42}
 .ep-slider-row.lim-range.off input{pointer-events:none}
 .bk-manage{flex:none;width:30px;height:30px;padding:0;margin:-4px 0;cursor:pointer;
@@ -1927,9 +1926,11 @@ body.night .ep-grid .gname{color:var(--ink)}
 .preset-chip{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:100px;border:1px solid var(--glass-line);background:#fff;font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;-webkit-appearance:none;transition:all .18s}
 .preset-chip:hover{border-color:var(--accent);color:var(--accent)}
 .preset-chip.on{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+/* pressed, then changed: the same chip, saying the numbers have moved off it */
+.preset-chip.edited{border-color:var(--accent);border-style:dashed;color:var(--accent)}
 .preset-chip .pc-name{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0}
-.preset-chip .pc-edit{display:none}
-.preset-chip.on .pc-edit{display:inline}
+.preset-chip .pc-put{display:none}
+.preset-chip.edited .pc-put{display:inline}
 .ps-modal{max-width:420px}
 .preset-chip .pc-save{font-size:12px;color:var(--ink-mute);border:none;background:none;cursor:pointer;padding:0 2px}
 .preset-chip .pc-save:hover{color:var(--accent)}
@@ -2372,7 +2373,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div id="recipeLive" style="display:none"></div>
         </div>
         <div class="rc-mode" id="recipeSteam" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="steamOptions">💨</span><div class="preset-chips" id="steamPresets"></div><button class="m-btn rc-milklog" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLogShort"></span></button><button class="m-btn rc-save" onclick="saveSteam()" data-i18n-title="saveOptions">✓</button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="steamOptions">💨</span><div class="preset-chips" id="steamPresets"></div><button class="m-btn rc-milklog" id="milkLogBtn" onclick="milkToShot()"><span data-i18n="milkLogShort"></span></button></div>
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="oTargetTemp"></span><span class="lu">°</span></div>
@@ -2402,7 +2403,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </div>
         </div>
         <div class="rc-mode" id="recipeFlush" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="flushOptions">🚿</span><div class="preset-chips" id="flushPresets"></div><button class="m-btn rc-save" onclick="saveFlush()" data-i18n-title="saveOptions">✓</button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="flushOptions">🚿</span><div class="preset-chips" id="flushPresets"></div></div>
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span><span class="lu">°</span></div>
@@ -2425,7 +2426,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </div>
         </div>
         <div class="rc-mode" id="recipeWater" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="waterOptions">💧</span><div class="preset-chips" id="waterPresets"></div><span class="rc-sw-wrap" id="waterStopRow"><span class="rc-sw-l" data-i18n="stopAtWeight"></span><label class="switch rc-sw"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></span><button class="m-btn rc-save" onclick="saveWater()" data-i18n-title="saveOptions">✓</button></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="waterOptions">💧</span><div class="preset-chips" id="waterPresets"></div><span class="rc-sw-wrap" id="waterStopRow"><span class="rc-sw-l" data-i18n="stopAtWeight"></span><label class="switch rc-sw"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></span></div>
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span><span class="lu">°</span></div>
@@ -2995,7 +2996,8 @@ var I18N={
     hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 = off', hSteamDur:'max steaming seconds', hSteamFlow:'steam flow rate',
     hFlushTemp:'flush water temperature', hFlushDur:'flush seconds', hFlushFlow:'flush flow rate',
     hWaterTemp:'hot water temperature', hWaterVol:'target millilitres', hWaterDur:'max seconds', hWaterFlow:'flow rate',
-    presetEdit:'Edit preset', presetName:'Name', presetSaved:'Saved as',
+    presetEdit:'Edit preset', presetPutNow:'Save the numbers on screen into this preset', presetNew:'New preset', presetNeedName:'Give it a name',
+    presetFull:'Room for {n} presets. Delete one to make space.', presetName:'Name', presetSaved:'Saved as',
     presetNow:'Current numbers', presetTakeNow:'Take these',
     presetRenamed:'Renamed', presetUpdated:'Preset updated', presetDeleted:'Preset deleted',
     presetDelConfirm:'Delete the preset \u201c{n}\u201d?', presetNameAsk:'Preset name?',
@@ -3360,7 +3362,8 @@ var I18N={
     hSteamTemp:'135\u2013160 \u00b0C \u00b7 0 은 꺼짐', hSteamDur:'최대 스팀 초', hSteamFlow:'스팀 유량',
     hFlushTemp:'플러시 물 온도', hFlushDur:'플러시 초', hFlushFlow:'플러시 유량',
     hWaterTemp:'온수 온도', hWaterVol:'목표 밀리리터', hWaterDur:'최대 초', hWaterFlow:'유량',
-    presetEdit:'프리셋 편집', presetName:'이름', presetSaved:'저장된 값',
+    presetEdit:'프리셋 편집', presetPutNow:'지금 값을 이 프리셋에 저장', presetNew:'새 프리셋', presetNeedName:'이름을 적어주세요',
+    presetFull:'프리셋은 {n}개까지입니다. 하나를 지우면 자리가 생깁니다.', presetName:'이름', presetSaved:'저장된 값',
     presetNow:'지금 값', presetTakeNow:'이 값으로',
     presetRenamed:'이름을 바꿨습니다', presetUpdated:'프리셋을 갱신했습니다', presetDeleted:'프리셋을 지웠습니다',
     presetDelConfirm:'프리셋 “{n}” 을 지울까요?', presetNameAsk:'프리셋 이름?',
@@ -5361,6 +5364,7 @@ function loadPresets(){ try{ var p=JSON.parse(localStorage.getItem('aurora_prese
 function savePresets(){ lsSet('aurora_presets',presets); storeSave('presets',presets); }
 // Pressing a preset changed the numbers and left the chip looking untouched,
 // so nothing on screen said which one was in force.
+var _psCur={steam:-1,flush:-1,water:-1};
 function presetOn(kind,ps){
   if(kind==='steam') return auxClose(ps.temp,settings.steamTemp)&&auxClose(ps.dur,settings.steamDur)&&auxClose(ps.flow,settings.steamFlow,0.051);
   if(kind==='flush') return auxClose(ps.temp,settings.flushTemp)&&auxClose(ps.dur,settings.flushDur)&&auxClose(ps.flow,settings.flushFlow,0.051);
@@ -5371,8 +5375,12 @@ function syncPresetChips(kind){
     var wrap=document.getElementById(k+'Presets'); if(!wrap) return;
     var chips=wrap.querySelectorAll('.preset-chip[data-i]');
     for(var i=0;i<chips.length;i++){
-      var ps=(presets[k]||[])[+chips[i].getAttribute('data-i')];
-      chips[i].classList.toggle('on',!!(ps&&presetOn(k,ps))); } }); }
+      var ix=+chips[i].getAttribute('data-i'), ps=(presets[k]||[])[ix];
+      var on=!!(ps&&presetOn(k,ps));
+      chips[i].classList.toggle('on',on);
+      // the one that was pressed, still carrying the numbers it was pressed
+      // with or not: either way it is the one a change belongs to
+      chips[i].classList.toggle('edited',!on&&_psCur[k]===ix); } }); }
 function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); wrap.innerHTML='';
   presets[kind].forEach(function(ps,i){ var chip=document.createElement('div'); chip.className='preset-chip';
     chip.setAttribute('data-i',i);
@@ -5380,25 +5388,53 @@ function renderPresets(kind){ var wrap=document.getElementById(kind+'Presets'); 
     name.textContent=ps.n;
     name.onclick=function(){ applyPreset(kind,ps); };
     chip.appendChild(name);
+    var put=document.createElement('button'); put.className='pc-save pc-put';
+    put.textContent='💾'; put.title=t('presetPutNow');
+    put.onclick=function(e){ e.stopPropagation(); presetPutNow(kind,i); };
+    chip.appendChild(put);
     var pen=document.createElement('button'); pen.className='pc-save pc-edit';
     pen.textContent='\u270e'; pen.title=t('presetEdit');
     pen.onclick=function(e){ e.stopPropagation(); openPresetEdit(kind,i); };
     chip.appendChild(pen);
     wrap.appendChild(chip); });
   syncPresetChips(kind);
-  if(presets[kind].length<3){ var add=document.createElement('button'); add.className='preset-chip pc-add'; add.style.borderStyle='dashed'; add.textContent='+'; add.title=t('presetSaveCur');
+  { var add=document.createElement('button'); add.className='preset-chip pc-add'+(presets[kind].length>=PRESET_MAX?' full':''); add.style.borderStyle='dashed'; add.textContent='+'; add.title=t('presetSaveCur');
     add.onclick=function(){ addPreset(kind); }; wrap.appendChild(add); }
 }
+// The numbers on screen, put back into the preset they were nudged away from.
+function presetPutNow(kind,i){
+  var ps=(presets[kind]||[])[i]; if(!ps) return;
+  if(kind==='steam'){ ps.temp=settings.steamTemp; ps.dur=settings.steamDur; ps.flow=settings.steamFlow; }
+  else if(kind==='water'){ ps.temp=settings.waterTemp; ps.vol=settings.waterVol; ps.dur=settings.waterDur; ps.flow=settings.waterFlow; }
+  else { ps.temp=settings.flushTemp; ps.dur=settings.flushDur; ps.flow=settings.flushFlow; }
+  _psCur[kind]=i;
+  savePresets(); renderPresets(kind); syncAux();
+  toast(t('presetUpdated'),'ok'); }
 function applyPreset(kind,ps){
+  _psCur[kind]=(presets[kind]||[]).indexOf(ps);
   if(kind==='steam'){ auxSet('steamTemp',ps.temp); auxSet('steamDur',ps.dur); auxSet('steamFlow',ps.flow); }
   else if(kind==='water'){ auxSet('waterTemp',ps.temp); auxSet('waterVol',ps.vol); auxSet('waterDur',ps.dur); auxSet('waterFlow',ps.flow); }
   else { auxSet('flushTemp',ps.temp); auxSet('flushDur',ps.dur); auxSet('flushFlow',ps.flow); }
   toast(t('presetApplied').replace('{n}',ps.n),'ok'); }
 // ── editing one ──────────────────────────────────────────────────────────
 var _psEdit=null;
+// A preset being made has nothing saved to compare against and nothing to
+// delete, so the modal drops those two rows rather than showing them empty.
+var PRESET_MAX=3;
+function psModalMode(){
+  psArmOff();
+  var isNew=!!(_psEdit&&_psEdit.i<0);
+  var ov=document.getElementById('presetOverlay'); if(!ov) return;
+  var ttl=ov.querySelector('.modal-title');
+  if(ttl) ttl.textContent=t(isNew?'presetNew':'presetEdit');
+  var was=document.getElementById('psWas');
+  var row=was&&was.parentElement&&was.parentElement.parentElement;
+  if(row) row.hidden=isNew;
+  var del=ov.querySelector('.modal-actions .m-btn.danger'); if(del) del.hidden=isNew; }
 function openPresetEdit(kind,i){
   var ps=(presets[kind]||[])[i]; if(!ps) return;
   _psEdit={kind:kind,i:i};
+  psModalMode();
   var el=document.getElementById('psName'); if(el) el.value=ps.n;
   var now=document.getElementById('psNow');
   if(now) now.textContent=auxSummary(kind);
@@ -5408,36 +5444,58 @@ function openPresetEdit(kind,i){
 function presetSummary(kind,ps){
   if(kind==='water') return ps.temp+'\u00b0 \u00b7 '+ps.dur+'s \u00b7 '+(ps.vol>0?(ps.vol+'ml \u00b7 '):'')+(+ps.flow).toFixed(1)+' ml/s';
   return ps.temp+'\u00b0 \u00b7 '+ps.dur+'s \u00b7 '+(+ps.flow).toFixed(1)+' ml/s'; }
-function psRename(){
+function psRename(){ psCommit(false); }
+// One path for all three: a new preset always takes the numbers on screen,
+// because there are no others to take.
+function psCommit(takeNow){
   if(!_psEdit) return;
+  var k=_psEdit.kind, isNew=(_psEdit.i<0);
   var v=(document.getElementById('psName').value||'').trim();
-  if(!v) return;
-  presets[_psEdit.kind][_psEdit.i].n=v;
-  psDone(t('presetRenamed')); }
+  if(isNew&&!v){ toast(t('presetNeedName'),'err'); return; }
+  var ps=isNew?{n:v}:presets[k][_psEdit.i];
+  if(!isNew&&v) ps.n=v;
+  if(isNew||takeNow){
+    if(k==='steam'){ ps.temp=settings.steamTemp; ps.dur=settings.steamDur; ps.flow=settings.steamFlow; }
+    else if(k==='water'){ ps.temp=settings.waterTemp; ps.vol=settings.waterVol; ps.dur=settings.waterDur; ps.flow=settings.waterFlow; }
+    else { ps.temp=settings.flushTemp; ps.dur=settings.flushDur; ps.flow=settings.flushFlow; } }
+  if(isNew){ presets[k].push(ps); _psCur[k]=presets[k].length-1; }
+  else if(takeNow) _psCur[k]=_psEdit.i;
+  psDone(t(isNew?'tPresetSaved':(takeNow?'presetUpdated':'presetRenamed'))); }
 // Taking the current numbers is the whole point of a preset one has outgrown.
-function psOverwrite(){
-  if(!_psEdit) return;
-  var k=_psEdit.kind, ps=presets[k][_psEdit.i];
-  var v=(document.getElementById('psName').value||'').trim(); if(v) ps.n=v;
-  if(k==='steam'){ ps.temp=settings.steamTemp; ps.dur=settings.steamDur; ps.flow=settings.steamFlow; }
-  else if(k==='water'){ ps.temp=settings.waterTemp; ps.vol=settings.waterVol; ps.dur=settings.waterDur; ps.flow=settings.waterFlow; }
-  else { ps.temp=settings.flushTemp; ps.dur=settings.flushDur; ps.flow=settings.flushFlow; }
-  psDone(t('presetUpdated')); }
+function psOverwrite(){ psCommit(true); }
+var _psArm=false, _psArmT=null;
+function psArmDraw(){
+  var b=document.querySelector('#presetOverlay .modal-actions .m-btn.danger');
+  if(!b) return;
+  b.classList.toggle('armed',_psArm);
+  var sp=b.querySelector('span')||b;
+  sp.textContent=t(_psArm?'tagDeleteSure':'delete'); }
+function psArmOff(){ if(_psArmT){ clearTimeout(_psArmT); _psArmT=null; } _psArm=false; psArmDraw(); }
 function psDelete(){
   if(!_psEdit) return;
-  if(!confirm(t('presetDelConfirm').replace('{n}',presets[_psEdit.kind][_psEdit.i].n))) return;
-  presets[_psEdit.kind].splice(_psEdit.i,1);
+  if(!_psArm){ _psArm=true; psArmDraw();
+    if(_psArmT) clearTimeout(_psArmT);
+    _psArmT=setTimeout(function(){ _psArmT=null; _psArm=false; psArmDraw(); },3000);
+    return; }
+  psArmOff();
+  var k=_psEdit.kind, i=_psEdit.i;
+  presets[k].splice(i,1);
+  if(_psCur[k]===i) _psCur[k]=-1; else if(_psCur[k]>i) _psCur[k]--;
   psDone(t('presetDeleted')); }
 function psDone(msg){
   var kind=_psEdit.kind;
   savePresets(); renderPresets(kind); syncAux();
   closeModal(null,'presetOverlay'); _psEdit=null;
   toast(msg,'ok'); }
-function addPreset(kind){ var name=prompt(t('presetNameAsk'),(kind==='steam'?'Steam ':kind==='water'?'Water ':'Flush ')+(presets[kind].length+1)); if(!name) return;
-  if(kind==='steam') presets.steam.push({n:name,temp:settings.steamTemp,dur:settings.steamDur,flow:settings.steamFlow});
-  else if(kind==='water') presets.water.push({n:name,temp:settings.waterTemp,vol:settings.waterVol,dur:settings.waterDur,flow:settings.waterFlow});
-  else presets.flush.push({n:name,temp:settings.flushTemp,dur:settings.flushDur,flow:settings.flushFlow});
-  savePresets(); renderPresets(kind); toast(t('tPresetSaved'),'ok'); }
+function addPreset(kind){
+  if((presets[kind]||[]).length>=PRESET_MAX){ toast(t('presetFull').replace('{n}',PRESET_MAX),'err'); return; }
+  _psEdit={kind:kind,i:-1};
+  var el=document.getElementById('psName');
+  if(el) el.value=(kind==='steam'?'Steam ':kind==='water'?'Water ':'Flush ')+((presets[kind]||[]).length+1);
+  var now=document.getElementById('psNow'); if(now) now.textContent=auxSummary(kind);
+  psModalMode();
+  document.getElementById('presetOverlay').classList.add('show');
+  if(el){ try{ el.focus(); el.select(); }catch(_){} } }
 function syncSteamModal(){ ['steamTemp','steamDur','steamFlow'].forEach(auxShow); }
 function syncWaterModal(){ ['waterTemp','waterVol','waterDur','waterFlow'].forEach(auxShow); }
 function syncFlushModal(){ ['flushTemp','flushDur','flushFlow'].forEach(auxShow); }
@@ -5454,7 +5512,8 @@ function auxSet(key,v){
   v=Math.max(c.min,Math.min(c.max,parseFloat(v)));
   if(!isFinite(v)) return;
   settings[key]=parseFloat(v.toFixed(c.dp));
-  auxShow(key); syncAux(); syncPresetChips(key.replace(/[A-Z].*$/,'')); }
+  var kind=key.replace(/[A-Z].*$/,'');
+  auxShow(key); syncAux(); syncPresetChips(kind); pushAux(kind); }
 function auxAdj(key,d){ auxSet(key,(+settings[key]||0)+d); }
 function auxKeypad(key){
   var c=AUX_NUM[key]; if(!c) return;
@@ -5470,12 +5529,6 @@ function set(id,v,vid,dec){ var el=document.getElementById(id); if(el) el.value=
   var t2=document.getElementById(vid); if(t2) t2.textContent=dec?(+v).toFixed(1):v; }
 function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTempV',steamDur:'steamDurV',steamFlow:'steamFlowV',flushTemp:'flushTempV',flushDur:'flushDurV',flushFlow:'flushFlowV',waterTemp:'waterTempV',waterVol:'waterVolV',waterDur:'waterDurV',waterFlow:'waterFlowV'}; var dec=(key==='steamFlow'||key==='flushFlow'||key==='waterFlow'); document.getElementById(map[key]).textContent=dec?v.toFixed(1):v;
   if(settings[key]!==undefined){ settings[key]=v; syncAux(); } }
-function saveSteam(){
-  api('PUT','/api/v1/workflow',{steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}}).then(function(){ syncAux(); toast(t('tSteamSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
-function saveFlush(){
-  api('PUT','/api/v1/workflow',{rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}}).then(function(){ syncAux(); toast(t('tFlushSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
-function saveWater(){
-  api('PUT','/api/v1/workflow',{hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}).then(function(){ syncAux(); toast(t('tWaterSaved'),'ok');}).catch(function(){toast(t('saveFailed'),'err');}); }
 
 // Steam, flush and hot water each have their own stored numbers. The recipe card
 // shows what they are set to, and while one of them is running it swaps to
@@ -5533,17 +5586,22 @@ function syncAux(){
     if(el) el.textContent=auxSummary(kind);
     if(_monOpen) syncMonitorHead(); });
   if(_auxLiveKind){ var def=AUX_KINDS[_auxLiveKind];
-    def.fields.forEach(function(f){ var el=document.getElementById('live_'+f.k); if(el) el.textContent=auxNum(f); }); } }
+    def.fields.forEach(function(f){ var el=document.getElementById('live_'+f.k); if(el) el.textContent=auxNum(f); }); }
+  syncPresetChips(); }
 // The workflow endpoint does not debounce, so the trailing edge is ours to keep.
-var _auxPushT=null, _auxPushKind=null;
+var _auxPushT=null, _auxPushSet={};
 function auxBody(kind){
   if(kind==='steam') return {steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}};
   if(kind==='flush') return {rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}};
   return {hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}; }
-function pushAux(kind){ _auxPushKind=kind;
+function pushAux(kind){ _auxPushSet[kind]=1;
   if(_auxPushT) clearTimeout(_auxPushT);
   _auxPushT=setTimeout(function(){ _auxPushT=null;
-    api('PUT','/api/v1/workflow',auxBody(_auxPushKind)).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); },450); }
+    var kinds=Object.keys(_auxPushSet); _auxPushSet={};
+    if(!kinds.length) return;
+    var body={};
+    kinds.forEach(function(k){ var b=auxBody(k); for(var x in b) body[x]=b[x]; });
+    api('PUT','/api/v1/workflow',body).catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); },450); }
 function adjustAux(kind,key,delta){
   var def=AUX_KINDS[kind], f=null;
   for(var i=0;i<def.fields.length;i++) if(def.fields[i].k===key) f=def.fields[i];
