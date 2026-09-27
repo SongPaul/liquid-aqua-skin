@@ -1821,13 +1821,17 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .ep-grid tr.on td{background-color:rgba(99,102,241,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22)}
 .ep-grid tr.on td:first-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset 3px 0 0 var(--accent)}
 .ep-grid tr.on td:last-child{box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(99,102,241,.22), inset -1px 0 0 rgba(99,102,241,.22)}
-.ep-grid td.nm{display:flex;align-items:center;gap:6px;height:38px;min-width:118px}
+.ep-grid td.nm{display:flex;align-items:center;gap:6px;height:38px;min-width:108px}
 .ep-grid .ix{font-size:11px;font-weight:800;color:var(--ink-mute);width:14px;text-align:right;flex-shrink:0}
 .ep-grid .gname{flex:1 1 60px;width:60px;min-width:0;border:none;background:none;outline:none;font-family:var(--font);font-size:13px;font-weight:800;color:var(--ink);padding:4px 2px;border-radius:7px}
 .ep-grid .gname:focus{background:rgba(99,102,241,.10)}
 .ep-grid .gv{display:block;text-align:center;font-size:14px;font-weight:800;color:var(--accent);padding:5px 2px;border-radius:8px;white-space:nowrap;transition:background .15s,transform .1s}
 .ep-grid .gv:active{transform:scale(.94);background:rgba(99,102,241,.16)}
 .ep-grid .gv small{font-size:9px;font-weight:700;color:var(--ink-mute);margin-left:1px}
+.ep-grid td[data-k="temperature"] .gv small{font-size:11px;margin-left:2px}
+.kp-seg{display:flex;justify-content:center;margin:-4px 0 12px}
+.kp-seg[hidden]{display:none}
+.kp-seg .ep-pump-toggle button{min-height:38px;padding:0 18px;font-size:12px}
 .ep-grid .gv.none{color:var(--ink-mute);font-weight:700;opacity:.55}
 .ep-grid tr.gr td{cursor:grab}
 body.step-dragging{cursor:grabbing;user-select:none}
@@ -2714,6 +2718,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   <div class="modal keypad-modal"><div class="modal-head"><div class="modal-title" id="kpTitle">Enter value</div><button class="modal-close" onclick="closeModal(null,'keypadOverlay')">×</button></div>
   <div class="modal-body">
     <div class="kp-display"><span id="kpValue">0</span><span class="kp-unit" id="kpUnit">g</span></div>
+    <div class="kp-seg" id="kpSeg" hidden></div>
     <div class="kp-grid">
       <button class="kp-key" onclick="kpPress('7')">7</button><button class="kp-key" onclick="kpPress('8')">8</button><button class="kp-key" onclick="kpPress('9')">9</button>
       <button class="kp-key" onclick="kpPress('4')">4</button><button class="kp-key" onclick="kpPress('5')">5</button><button class="kp-key" onclick="kpPress('6')">6</button>
@@ -3255,6 +3260,7 @@ var I18N={
     delProfDone:'Moved to the bin', delProfPurged:'Deleted', delProfRestored:'Put back',
     kindHidden:'Hidden', hideProfile:'Hide this profile', showProfile:'Show this profile',
     hidden:'Hidden', shown:'Shown again', toggleFav:'Toggle favorite', favAdded:'★ {n} added to favorites', favRemoved:'{n} removed from favorites', favNeedsSave:'Save the profile first',
+    tempSensor:'Measured at', sensorBasket:'Basket', sensorWater:'Water',
     roastLevel:'Roast', fromProfile:'from the profile', clear:'Clear',
     tagAdd:'Add a tag…', tagRemove:'Remove this tag',
     mainTagHint:'Filled tags are the ones the main screen offers. Hold one to change that.',
@@ -3623,6 +3629,7 @@ var I18N={
     tagOnMain:'메인 화면', tagMainOn:'메인에 표시', tagMainOff:'메인에서 숨김',
     tagDelete:'삭제', tagDeleteSure:'정말?', tagRestore:'되살리기', tagSilenced:'꺼짐',
     tagPageHint:'이름을 고쳐 쓰면 모든 곳에서 바뀝니다. 삭제하면 그 태그를 가진 프로파일에서 떼어내고, 프로파일 모양에서 읽힌 태그는 지우는 대신 꺼두며 어느 프로파일에든 다시 적으면 돌아옵니다.',
+    tempSensor:'온도 기준', sensorBasket:'바스켓', sensorWater:'물',
     roastLevel:'배전도', fromProfile:'프로파일에 명시됨', clear:'해제',
     tagForMilk:'우유음료', tagForLong:'롱드링크',
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
@@ -6139,6 +6146,7 @@ function openKeypad(field){ var c=KP_CFG[field]; if(!c) return;
     :field==='brewTemp'?convTemp(brewTempC()):settings[field];
   KP.str=String(parseFloat(cur.toFixed(field==='doseIn'?1:field==='ratio'?2:1)));
   document.getElementById('kpTitle').textContent=t(c.title); document.getElementById('kpUnit').textContent=KP.unit;
+  kpSetSeg(null);
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 function kpRender(){ document.getElementById('kpValue').textContent=KP.str.length?KP.str:'0'; }
 
@@ -6151,8 +6159,10 @@ function kpPress(k){
   else { KP.str+=k; if(KP.str.replace('.','').length>5) KP.str=KP.str.slice(0,6); }
   kpRender(); }
 function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'keypadOverlay'); return; }
-  if(KP.field==='__cb'){ var o=KP.cb; closeModal(null,'keypadOverlay');
-    v=Math.max(o.min,Math.min(o.max,v)); o.onOk(parseFloat(v.toFixed(o.dp==null?1:o.dp))); return; }
+  if(KP.field==='__cb'){ var o=KP.cb, sg=KP.seg; closeModal(null,'keypadOverlay');
+    v=Math.max(o.min,Math.min(o.max,v));
+    if(sg&&sg.apply) sg.apply(sg.value);
+    o.onOk(parseFloat(v.toFixed(o.dp==null?1:o.dp))); return; }
   if(KP.field==='grind'){ setGrind(String(Math.max(0,parseFloat(v.toFixed(2))))); closeModal(null,'keypadOverlay'); return; }
   // the card is in the display unit; a profile is always Celsius
   if(KP.field==='brewTemp'){ setBrewTempC(unconvTemp(v)); closeModal(null,'keypadOverlay'); return; }
@@ -9318,7 +9328,18 @@ function openKeypadFor(o){
   KP.str=String(parseFloat((o.value||0).toFixed(o.dp==null?1:o.dp)));
   document.getElementById('kpTitle').textContent=o.title||'';
   document.getElementById('kpUnit').textContent=KP.unit;
+  kpSetSeg(o.seg);
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
+function kpSetSeg(sg){
+  var box=document.getElementById('kpSeg'); if(!box) return;
+  KP.seg=sg||null;
+  if(!KP.seg){ box.hidden=true; box.innerHTML=''; box.onclick=null; return; }
+  box.hidden=false; kpDrawSeg();
+  box.onclick=function(e){ var b=e.target.closest('button[data-v]'); if(!b) return;
+    KP.seg.value=b.dataset.v; kpDrawSeg(); }; }
+function kpDrawSeg(){
+  var box=document.getElementById('kpSeg'); if(!box||!KP.seg) return;
+  box.innerHTML=seg('kpSegBtns',KP.seg.value,KP.seg.opts); }
 function limTxt(v,dp){ return (v>0)?(v.toFixed(dp)):t('noLimit'); }
 // A step ends on whichever comes first: its seconds, its volume, its weight,
 // or this -- a reading crossing a line. It is the one that surprises people,
@@ -9375,6 +9396,10 @@ function stepDup(i){ var a=editing.profile.steps; if(!a) return;
   a.splice(i+1,0,JSON.parse(JSON.stringify(a[i]))); epStepIdx=i+1; renderEpSteps(); drawEditCurve(); }
 function delStepAt(i){ var a=editing.profile.steps; if(!a||a.length<=1) return;
   a.splice(i,1); if(epStepIdx>=a.length) epStepIdx=a.length-1; renderEpSteps(); drawEditCurve(); }
+function stepSensor(i,v){ var st=editing.profile.steps[i];
+  v=(v==='coffee')?'coffee':'water';
+  if((st.sensor||'water')===v) return;
+  st.sensor=v; renderEpSteps(); drawEditCurve(); }
 function stepPump(i){ var st=editing.profile.steps[i];
   st.pump=(st.pump==='pressure')?'flow':'pressure';
   if(st.pump==='pressure'&&st.pressure===undefined) st.pressure=6;
@@ -9384,6 +9409,8 @@ var KEY_RANGE={ pressure:{min:0,max:12,dp:1}, flow:{min:0,max:8,dp:1}, temperatu
   seconds:{min:0,max:120,dp:1}, volume:{min:0,max:150,dp:0}, weight:{min:0,max:80,dp:1} };
 var KEY_LABEL={ pressure:'pressure', flow:'flow', temperature:'tempLabel', seconds:'secondsLabel',
   volume:'volLimit', weight:'wtLimit' };
+function sensorUnit(st){
+  return String((st&&st.sensor)||'water')==='coffee'?'☕':'💧'; }
 function gridNum(v,unit,dp){
   if(v==null||v===0) return '<span class="gv none">—</span>';
   return '<span class="gv">'+v.toFixed(dp)+(unit?'<small>'+unit+'</small>':'')+'</span>'; }
@@ -9396,6 +9423,9 @@ function bindGridNums(tr,i){
       openKeypadFor({ title:(st.name||'')+' · '+t(KEY_LABEL[k]||'stepCol'), unit:'',
         min:lim.min, max:lim.max, dp:lim.dp,
         value:(k==='weight'?(st.weight||0):(st[k]||0)),
+        seg:(k!=='temperature')?null:{ value:(String(st.sensor||'water')==='coffee'?'coffee':'water'),
+          opts:[['coffee','☕ '+t('sensorBasket')],['water','💧 '+t('sensorWater')]],
+          apply:function(v){ st.sensor=(v==='coffee')?'coffee':'water'; } },
         onOk:function(nv){ if(k==='weight') st.weight=(nv>0?nv:null); else st[k]=nv;
           renderEpSteps(); drawEditCurve(); } }); }; }); }
 // Dragging a slider must not rebuild the table under the finger, so the row it
@@ -9404,7 +9434,7 @@ function renderGridRow(i){
   var st=editing.profile.steps[i], tr=document.querySelector('.ep-grid tr.gr[data-i="'+i+'"]'); if(!st||!tr) return;
   var isP=(st.pump==='pressure'), tds=tr.querySelectorAll('td[data-k]');
   var vals=[isP?(st.pressure||0):(st.flow||0), st.temperature||0, st.seconds||0, st.volume||0, st.weight||0];
-  var units=[isP?'bar':'ml/s','','','',''], dps=[1,1,1,0,1];
+  var units=[isP?'bar':'ml/s',sensorUnit(st),'','',''], dps=[1,1,1,0,1];
   tds.forEach(function(td,n){ td.innerHTML=gridNum(vals[n],units[n],dps[n]); });
   var xc=tr.querySelector('td.xc');
   if(xc) xc.innerHTML=st.exit?('<span class="xon"><span class="d"></span>'+escapeHtml(t18nExitShort(st))+'</span>')
@@ -9471,7 +9501,7 @@ function renderEpSteps(){
           +'<i class="bar"></i><span class="ix">'+(i+1)+'</span></span>'
         +'<input class="gname" value="'+escapeAttr(st.name||'')+'" title="'+escapeAttr(st.name||'')+'" data-i="'+i+'"></td>'
       +'<td data-k="'+(isP?'pressure':'flow')+'">'+gridNum(isP?(st.pressure||0):(st.flow||0),isP?'bar':'ml/s',1)+'</td>'
-      +'<td data-k="temperature">'+gridNum(st.temperature||0,'',1)+'</td>'
+      +'<td data-k="temperature">'+gridNum(st.temperature||0,sensorUnit(st),1)+'</td>'
       +'<td data-k="seconds">'+gridNum(st.seconds||0,'',1)+'</td>'
       +'<td data-k="volume">'+gridNum(st.volume||0,'',0)+'</td>'
       +'<td data-k="weight">'+gridNum(st.weight||0,'',1)+'</td>'
@@ -9503,6 +9533,7 @@ function renderEpSteps(){
   if(!st){ ed.innerHTML=''; return; }
   var isP=(st.pump==='pressure'); var valLabel=isP?t('pressure'):t('flow');
   var valNow=isP?(st.pressure||0):(st.flow||0); var valMax=isP?12:8;
+  var isC=(String(st.sensor||'water')==='coffee');
   ed.className='ep-step-editor'+(isP?'':' flow');
   ed.innerHTML=''
     +'<div class="ep-step-head"><span class="who"><span class="n">'+(epStepIdx+1)+'</span>'
@@ -9512,6 +9543,11 @@ function renderEpSteps(){
     +'<div class="ep-sliders">'
     +'<div class="ep-slider-row"><span class="lbl">'+valLabel+'</span><input type="range" min="0" max="'+valMax+'" step="0.1" value="'+valNow+'" data-k="'+(isP?'pressure':'flow')+'"><span class="val">'+valNow.toFixed(1)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('tempLabel')+'</span><input type="range" min="20" max="100" step="0.5" value="'+(st.temperature||90)+'" data-k="temperature"><span class="val">'+(st.temperature||90).toFixed(1)+'</span></div>'
+    +'<div class="ep-slider-row"><span class="lbl">'+t('tempSensor')+'</span>'
+      +'<div class="ep-pump-toggle" id="epSensor">'
+      +'<button class="'+(isC?'on':'')+'" data-v="coffee">☕ '+escapeHtml(t('sensorBasket'))+'</button>'
+      +'<button class="'+(isC?'':'on')+'" data-v="water">💧 '+escapeHtml(t('sensorWater'))+'</button>'
+      +'</div></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('secondsLabel')+'</span><input type="range" min="0" max="120" step="0.5" value="'+(st.seconds||0)+'" data-k="seconds"><span class="val">'+(st.seconds||0).toFixed(1)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('volLimit')+'</span><input type="range" min="0" max="150" step="1" value="'+(st.volume||0)+'" data-k0="volume"><span class="val">'+limTxt(st.volume,0)+'</span></div>'
     +'<div class="ep-slider-row"><span class="lbl">'+t('wtLimit')+'</span><input type="range" min="0" max="80" step="0.5" value="'+(st.weight||0)+'" data-k0="weight"><span class="val">'+limTxt(st.weight,1)+'</span></div>'
@@ -9519,6 +9555,8 @@ function renderEpSteps(){
     +exitEditorHtml(st);
   ed.querySelectorAll('#epPump button').forEach(function(b){
     b.onclick=function(){ if(st.pump!==b.dataset.v) stepPump(epStepIdx); }; });
+  ed.querySelectorAll('#epSensor button').forEach(function(b){
+    b.onclick=function(){ stepSensor(epStepIdx,b.dataset.v); }; });
   bindExitEditor(ed,st);
   bindStepVals(ed,st);
   ed.querySelectorAll('input[data-k0]').forEach(function(inp){ inp.oninput=function(){
@@ -14067,6 +14105,7 @@ function openGrindKeypad(){ var gr=currentGrinder();
   if(gr&&gr.settingType==='preset'){ adjustGrind(1); return; } // preset: tapping cycles forward
   var cur=parseFloat(context.grinderSetting); KP.field='grind'; KP.unit=''; KP.fresh=true; KP.str=isNaN(cur)?'0':String(cur);
   document.getElementById('kpTitle').textContent=t('kpGrind'); document.getElementById('kpUnit').textContent='';
+  kpSetSeg(null);
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 
 // ── DYE (post-shot log) ─────────────────────────────────────────────
