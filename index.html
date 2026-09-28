@@ -3079,6 +3079,7 @@ var I18N={
     vizBrowse:'Browse the community', vizBrowseMore:'Load more',
     vizOpenCommunity:'Open the community page', vizSearchPh:'Search what has been indexed\u2026',
     vizIndexed:'{n} shots indexed', vizSearchCount:'{n} found', vizSearchNone:'Nothing matches.',
+    vizBrowseEmpty:'Press Browse to start building the index.',
     vizRateLimited:'Visualizer is asking for a pause. Try again in a minute.',
     vizAsked:'({n} asked for)',
     vizBrowseNone:'Nothing here you do not already have.',
@@ -3454,6 +3455,7 @@ var I18N={
     vizBrowse:'커뮤니티 둘러보기', vizBrowseMore:'더 불러오기',
     vizOpenCommunity:'커뮤니티 페이지 열기', vizSearchPh:'색인된 샷에서 검색\u2026',
     vizIndexed:'색인 {n}건', vizSearchCount:'{n}개 찾음', vizSearchNone:'일치하는 게 없습니다.',
+    vizBrowseEmpty:'둘러보기를 누르면 색인을 모으기 시작합니다.',
     vizRateLimited:'Visualizer 가 잠시 쉬어가자고 합니다. 1분 뒤에 다시 해보세요.',
     vizAsked:'(새로 물어본 것 {n}건)',
     vizBrowseNone:'이미 가지지 않은 프로파일이 없습니다.',
@@ -14059,7 +14061,7 @@ function loadLastShot(){
 // way to store a shot it did not pull, so offering to save one would be a lie.
 var VIZ_API='https://visualizer.coffee/api', VIZ_PLUGIN='visualizer.reaplugin', _vizProfile=null;
 var VIZ_UUID=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-function openVizImport(){ vizSay(''); _vizGot={};
+function openVizImport(){ vizSay('');
   var fe=document.getElementById('vizFind'); if(fe) fe.value='';
   vizBrowseReset(); var el=document.getElementById('vizCode'); if(el) el.value='';
   document.getElementById('vizOverlay').classList.add('show');
@@ -14215,14 +14217,11 @@ function vizMeasurements(v){
       scale:{ weight:at(d.espresso_weight,i),
         weightFlow:at(d.espresso_flow_weight||d.espresso_flow_weight_raw,i) } }); }
   return out; }
-var _vizB={page:0,seen:{},rows:[],shown:[],busy:false,asked:0,q:''};
+var _vizB={page:0,shown:[],busy:false,asked:0,q:''};
 function vizBrowseReset(){
   var q=(document.getElementById('vizFind')||{}).value||'';
-  _vizB={page:0,seen:{},rows:[],shown:[],busy:false,asked:0,q:q};
-  var l=document.getElementById('vizList'); if(l){ l.hidden=true; l.innerHTML=''; }
-  var say=document.getElementById('vizBrowseSay'); if(say) say.textContent='';
-  // something typed already has a drawer to look in
-  if(q.trim()) vizRenderList(null); }
+  _vizB={page:0,shown:[],busy:false,asked:0,q:q};
+  vizRenderList(null); }
 // Titles are what this skin already matches profiles by, and they are all the
 // shot list gives without downloading every profile behind it.
 var _vizGot={};
@@ -14261,19 +14260,13 @@ function vizBrowse(more){
     return vizPool(ids,vizShotBrief,3);
   }).then(function(list){
     vizCacheSave();
-    var have=vizHaveTitles(), added=0;
-    (list||[]).forEach(function(v){
-      if(!v||!v.t) return;
-      var key=v.t.toLowerCase();
-      if(_vizB.seen[key]||have[key]) return;
-      _vizB.seen[key]=1;
-      _vizB.rows.push({id:v.id,title:v.t,bean:v.b,who:v.w,grinder:v.g});
-      added++; });
-    vizRenderList(added);
+    var before=_vizB.shown.length;
+    vizRenderList(null);
+    if(_vizB.shown.length===before&&say) say.textContent+='  '+t('vizBrowseNoNew');
   }).catch(function(e){
     vizCacheSave();
-    if(e&&e.rateLimited){ _vizB.page--; if(say) say.textContent=t('vizRateLimited');
-      if(_vizB.rows.length) vizRenderList(0); return; }
+    if(e&&e.rateLimited){ _vizB.page--; vizRenderList(null);
+      if(say) say.textContent=t('vizRateLimited'); return; }
     if(say) say.textContent=t('vizFailed')+' '+((e&&e.message)||''); })
   .then(function(){ _vizB.busy=false;
     var b=document.getElementById('vizBrowseBtn'); if(b) b.disabled=false; }); }
@@ -14281,26 +14274,29 @@ function vizOpenCommunity(){
   try{ window.open('https://visualizer.coffee/community','_blank','noopener'); }catch(_){} }
 function vizSetQuery(v){ _vizB.q=String(v||''); vizRenderList(null); }
 // Everything ever looked at, folded by profile and minus what is already here.
-function vizSearchRows(){
-  var q=_vizB.q.trim().toLowerCase(); if(!q) return null;
+// Most recently seen first: the shot list comes newest first, so the order
+// things entered the drawer is roughly the order they appeared.
+function vizRows(){
+  var q=_vizB.q.trim().toLowerCase();
   var c=vizCacheLoad(), have=vizHaveTitles(), seen={}, out=[];
-  Object.keys(c).forEach(function(id){
+  Object.keys(c).reverse().forEach(function(id){
     var v=c[id]; if(!v||!v.t) return;
     var key=v.t.toLowerCase();
     if(seen[key]||have[key]) return;
-    if((v.t+' '+(v.b||'')+' '+(v.g||'')+' '+(v.w||'')).toLowerCase().indexOf(q)<0) return;
+    if(q&&(v.t+' '+(v.b||'')+' '+(v.g||'')+' '+(v.w||'')).toLowerCase().indexOf(q)<0) return;
     seen[key]=1;
     out.push({id:id,title:v.t,bean:v.b,who:v.w,grinder:v.g}); });
   return out; }
 function vizRenderList(added){
   var box=document.getElementById('vizList'); if(!box) return;
   var say=document.getElementById('vizBrowseSay');
-  var found=vizSearchRows(), searching=!!found;
-  _vizB.shown=searching?found:_vizB.rows;
+  var indexed=Object.keys(vizCacheLoad()).length;
+  var searching=!!_vizB.q.trim();
+  _vizB.shown=vizRows();
   box.hidden=false;
   if(!_vizB.shown.length){
     box.innerHTML='<div class="set-desc">'
-      +escapeHtml(t(searching?'vizSearchNone':'vizBrowseNone'))+'</div>';
+      +escapeHtml(t(searching?'vizSearchNone':(indexed?'vizBrowseNone':'vizBrowseEmpty')))+'</div>';
   } else {
     box.innerHTML=_vizB.shown.map(function(r,i){
       var sub=[r.bean,r.grinder,r.who].filter(Boolean).join('  \u00b7  ');
@@ -14313,27 +14309,27 @@ function vizRenderList(added){
   if(!searching) box.innerHTML+='<button class="m-btn viz-more" onclick="vizBrowse(true)">'
     +escapeHtml(t('vizBrowseMore'))+'</button>';
   if(!say) return;
-  var idx=t('vizIndexed').replace('{n}',Object.keys(vizCacheLoad()).length);
-  say.textContent=searching
-    ? t('vizSearchCount').replace('{n}',_vizB.shown.length)+'  '+idx
-    : t('vizBrowseCount').replace('{n}',_vizB.rows.length)
-      +(added===0?('  '+t('vizBrowseNoNew')):'')
-      +'  '+idx; }
+  var idx=t('vizIndexed').replace('{n}',indexed);
+  say.textContent=(searching
+      ? t('vizSearchCount').replace('{n}',_vizB.shown.length)
+      : t('vizBrowseCount').replace('{n}',_vizB.shown.length))
+    +(added===0?('  '+t('vizBrowseNoNew')):'')
+    +'  '+idx
+    +(_vizB.asked?('  '+t('vizAsked').replace('{n}',_vizB.asked)):''); }
 // Saving one takes it out of the list, because the list is what is missing.
 function vizGrab(i){
-  var r=(_vizB.shown||_vizB.rows)[i]; if(!r) return;
+  var r=(_vizB.shown||[])[i]; if(!r) return;
   var box=document.getElementById('vizList');
   var btn=box&&box.querySelector('.viz-row[data-i="'+i+'"] .m-btn');
   if(btn){ btn.disabled=true; btn.textContent=t('vizBusy'); }
+  var key=r.title.toLowerCase();
   vizSaveProfile(r.id).then(function(title){
-    _vizGot[r.title.toLowerCase()]=1;
+    _vizGot[key]=1;
     toast(t('vizProfileSaved').replace('{n}',title||r.title),'ok');
-    return loadProfiles().then(function(){ renderEpList(); }).catch(function(){}); })
-  .then(function(){
-    // it is ours now, so it drops out of both the page and the search
-    var k=r.title.toLowerCase();
-    _vizB.rows=_vizB.rows.filter(function(x){ return x.title.toLowerCase()!==k; });
-    vizRenderList(1); })
+    return loadProfiles()
+      .then(function(){ renderEpList(); delete _vizGot[key]; })
+      .catch(function(){}); })
+  .then(function(){ vizRenderList(null); })
   .catch(function(e){
     toast(t('vizFailed')+' '+((e&&e.message)||''),'err');
     if(btn){ btn.disabled=false; btn.textContent=t('save'); } }); }
