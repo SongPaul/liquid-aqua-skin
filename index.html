@@ -830,6 +830,20 @@ body.night .tge-name:focus{background:rgba(255,255,255,.12)}
 .ep-tag.main{background-color:rgba(99,102,241,.16);background-image:none;
   border-color:rgba(99,102,241,.38);color:var(--accent)}
 .field label.bk-lab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.viz-browse{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:10px}
+.viz-find{margin-top:8px}
+.viz-find input{width:100%}
+.viz-browse .set-desc{margin:0;min-width:0}
+.viz-list{margin-top:10px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.viz-list[hidden]{display:none}
+.viz-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:11px;
+  border:1px solid var(--ctl-edge);background:rgba(255,255,255,.45)}
+.viz-rt{flex:1;min-width:0}
+.viz-rn{font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viz-rs{font-size:11px;font-weight:600;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.viz-row .m-btn{flex:none;min-height:32px;padding:0 12px}
+.viz-more{align-self:center;min-height:32px;padding:0 14px;margin-top:2px}
+body.night .viz-row{background:rgba(255,255,255,.06)}
 .ep-pmeta{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin:2px 0 4px}
 .ep-pf{display:flex;flex-direction:column;gap:3px;min-width:0}
 .ep-pf>span{font-size:10px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.05em}
@@ -2815,6 +2829,14 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     <div class="set-desc" data-i18n="vizHint" style="margin-bottom:10px">Paste a share code, a visualizer.coffee shot link, or a shot id.</div>
     <div class="field"><input id="vizCode" data-i18n-ph="vizPh" placeholder="share code or https://visualizer.coffee/shots/…" onkeydown="if(event.key==='Enter')vizImport()"></div>
     <div class="set-desc" id="vizStatus"></div>
+    <div class="viz-browse">
+      <button class="m-btn" id="vizBrowseBtn" onclick="vizBrowse(false)" data-i18n="vizBrowse">Browse the community</button>
+      <button class="m-btn" onclick="vizOpenCommunity()" data-i18n="vizOpenCommunity">Open the community page</button>
+      <span class="set-desc" id="vizBrowseSay"></span>
+    </div>
+    <div class="field viz-find"><input id="vizFind" data-i18n-ph="vizSearchPh"
+      oninput="vizSetQuery(this.value)" placeholder="Search what has been indexed…"></div>
+    <div class="viz-list" id="vizList" hidden></div>
     <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'vizOverlay')" data-i18n="close">Close</button><button class="m-btn primary" id="vizGo" onclick="vizImport()" data-i18n="vizGo">Import</button></div>
   </div></div>
 </div>
@@ -3053,7 +3075,15 @@ var I18N={
     tcL_dry:['No','Yes'],
     tcL_finish:['Gone at once','Short','Lingers a moment','Lingers well','Long and good'],
     tcL_again:['No','Probably not','Maybe','Yes','Right away'],
-    vizTitle:'Import from Visualizer', vizGo:'Import', vizBusy:'Fetching…',
+    vizTitle:'Import from Visualizer',
+    vizBrowse:'Browse the community', vizBrowseMore:'Load more',
+    vizOpenCommunity:'Open the community page', vizSearchPh:'Search what has been indexed\u2026',
+    vizIndexed:'{n} shots indexed', vizSearchCount:'{n} found', vizSearchNone:'Nothing matches.',
+    vizRateLimited:'Visualizer is asking for a pause. Try again in a minute.',
+    vizAsked:'({n} asked for)',
+    vizBrowseNone:'Nothing here you do not already have.',
+    vizBrowseCount:'{n} profiles you do not have yet',
+    vizBrowseNoNew:'Nothing new on this page.', vizGo:'Import', vizBusy:'Fetching…',
     vizHint:'Paste a share code, a visualizer.coffee shot link, or a shot id.',
     vizPh:'share code or https://visualizer.coffee/shots/…',
     vizNeedCode:'Enter a share code or a shot link.', vizNoData:'That shot has no measurement data.',
@@ -3420,7 +3450,15 @@ var I18N={
     tcL_dry:['없다','있다'],
     tcL_finish:['바로 사라짐','짧다','잠깐 남음','기분 좋게 남음','오래 좋게 남음'],
     tcL_again:['아니오','글쌌','보통','좋다','당장 한 잔 더'],
-    vizTitle:'Visualizer에서 가져오기', vizGo:'가져오기', vizBusy:'불러오는 중…',
+    vizTitle:'Visualizer에서 가져오기',
+    vizBrowse:'커뮤니티 둘러보기', vizBrowseMore:'더 불러오기',
+    vizOpenCommunity:'커뮤니티 페이지 열기', vizSearchPh:'색인된 샷에서 검색\u2026',
+    vizIndexed:'색인 {n}건', vizSearchCount:'{n}개 찾음', vizSearchNone:'일치하는 게 없습니다.',
+    vizRateLimited:'Visualizer 가 잠시 쉬어가자고 합니다. 1분 뒤에 다시 해보세요.',
+    vizAsked:'(새로 물어본 것 {n}건)',
+    vizBrowseNone:'이미 가지지 않은 프로파일이 없습니다.',
+    vizBrowseCount:'아직 없는 프로파일 {n}개',
+    vizBrowseNoNew:'이 번엔 새로운 게 없습니다.', vizGo:'가져오기', vizBusy:'불러오는 중…',
     vizHint:'공유 코드, visualizer.coffee 샷 링크, 또는 샷 ID를 붙여넣으세요.',
     vizPh:'공유 코드 또는 https://visualizer.coffee/shots/…',
     vizNeedCode:'공유 코드나 샷 링크를 입력하세요.', vizNoData:'측정 데이터가 없는 샷입니다.',
@@ -14021,7 +14059,9 @@ function loadLastShot(){
 // way to store a shot it did not pull, so offering to save one would be a lie.
 var VIZ_API='https://visualizer.coffee/api', VIZ_PLUGIN='visualizer.reaplugin', _vizProfile=null;
 var VIZ_UUID=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-function openVizImport(){ vizSay(''); var el=document.getElementById('vizCode'); if(el) el.value='';
+function openVizImport(){ vizSay(''); _vizGot={};
+  var fe=document.getElementById('vizFind'); if(fe) fe.value='';
+  vizBrowseReset(); var el=document.getElementById('vizCode'); if(el) el.value='';
   document.getElementById('vizOverlay').classList.add('show');
   if(el) setTimeout(function(){ el.focus(); },50); }
 function vizSay(m,err){ var el=document.getElementById('vizStatus'); if(!el) return;
@@ -14175,8 +14215,153 @@ function vizMeasurements(v){
       scale:{ weight:at(d.espresso_weight,i),
         weightFlow:at(d.espresso_flow_weight||d.espresso_flow_weight_raw,i) } }); }
   return out; }
+var _vizB={page:0,seen:{},rows:[],shown:[],busy:false,asked:0,q:''};
+function vizBrowseReset(){
+  var q=(document.getElementById('vizFind')||{}).value||'';
+  _vizB={page:0,seen:{},rows:[],shown:[],busy:false,asked:0,q:q};
+  var l=document.getElementById('vizList'); if(l){ l.hidden=true; l.innerHTML=''; }
+  var say=document.getElementById('vizBrowseSay'); if(say) say.textContent='';
+  // something typed already has a drawer to look in
+  if(q.trim()) vizRenderList(null); }
+// Titles are what this skin already matches profiles by, and they are all the
+// shot list gives without downloading every profile behind it.
+var _vizGot={};
+function vizHaveTitles(){ var m={};
+  for(var k in _vizGot) m[k]=1;
+  (allProfiles||[]).forEach(function(p){
+    var t2=((p.profile&&p.profile.title)||'').trim().toLowerCase();
+    if(t2) m[t2]=1; });
+  return m; }
+// A handful at a time: twenty shots is twenty requests, and the far end is
+// somebody else's server with a rate limit on it.
+function vizPool(list,worker,conc){
+  return new Promise(function(res){
+    var out=[], i=0, active=0, done=0;
+    if(!list.length) return res(out);
+    function step(){
+      while(active<conc&&i<list.length){
+        (function(k){ active++;
+          worker(list[k]).then(function(v){ out[k]=v; },function(){ out[k]=null; })
+            .then(function(){ active--; done++;
+              if(done===list.length) res(out); else step(); }); })(i++); }
+    }
+    step(); }); }
+function vizBrowse(more){
+  if(_vizB.busy) return;
+  if(!more) vizBrowseReset();
+  _vizB.busy=true;
+  var btn=document.getElementById('vizBrowseBtn'); if(btn) btn.disabled=true;
+  var say=document.getElementById('vizBrowseSay'); if(say) say.textContent=t('vizBusy');
+  _vizB.page++;
+  vizGet('/shots?items=20&page='+_vizB.page).then(function(r){
+    var ids=((r&&r.data)||[]).map(function(x){ return x.id; }).filter(Boolean);
+    if(!ids.length) return [];
+    var c=vizCacheLoad();
+    _vizB.asked+=ids.filter(function(id){ return !c[id]; }).length;
+    return vizPool(ids,vizShotBrief,3);
+  }).then(function(list){
+    vizCacheSave();
+    var have=vizHaveTitles(), added=0;
+    (list||[]).forEach(function(v){
+      if(!v||!v.t) return;
+      var key=v.t.toLowerCase();
+      if(_vizB.seen[key]||have[key]) return;
+      _vizB.seen[key]=1;
+      _vizB.rows.push({id:v.id,title:v.t,bean:v.b,who:v.w,grinder:v.g});
+      added++; });
+    vizRenderList(added);
+  }).catch(function(e){
+    vizCacheSave();
+    if(e&&e.rateLimited){ _vizB.page--; if(say) say.textContent=t('vizRateLimited');
+      if(_vizB.rows.length) vizRenderList(0); return; }
+    if(say) say.textContent=t('vizFailed')+' '+((e&&e.message)||''); })
+  .then(function(){ _vizB.busy=false;
+    var b=document.getElementById('vizBrowseBtn'); if(b) b.disabled=false; }); }
+function vizOpenCommunity(){
+  try{ window.open('https://visualizer.coffee/community','_blank','noopener'); }catch(_){} }
+function vizSetQuery(v){ _vizB.q=String(v||''); vizRenderList(null); }
+// Everything ever looked at, folded by profile and minus what is already here.
+function vizSearchRows(){
+  var q=_vizB.q.trim().toLowerCase(); if(!q) return null;
+  var c=vizCacheLoad(), have=vizHaveTitles(), seen={}, out=[];
+  Object.keys(c).forEach(function(id){
+    var v=c[id]; if(!v||!v.t) return;
+    var key=v.t.toLowerCase();
+    if(seen[key]||have[key]) return;
+    if((v.t+' '+(v.b||'')+' '+(v.g||'')+' '+(v.w||'')).toLowerCase().indexOf(q)<0) return;
+    seen[key]=1;
+    out.push({id:id,title:v.t,bean:v.b,who:v.w,grinder:v.g}); });
+  return out; }
+function vizRenderList(added){
+  var box=document.getElementById('vizList'); if(!box) return;
+  var say=document.getElementById('vizBrowseSay');
+  var found=vizSearchRows(), searching=!!found;
+  _vizB.shown=searching?found:_vizB.rows;
+  box.hidden=false;
+  if(!_vizB.shown.length){
+    box.innerHTML='<div class="set-desc">'
+      +escapeHtml(t(searching?'vizSearchNone':'vizBrowseNone'))+'</div>';
+  } else {
+    box.innerHTML=_vizB.shown.map(function(r,i){
+      var sub=[r.bean,r.grinder,r.who].filter(Boolean).join('  \u00b7  ');
+      return '<div class="viz-row" data-i="'+i+'">'
+        +'<div class="viz-rt"><div class="viz-rn">'+escapeHtml(r.title)+'</div>'
+        +(sub?'<div class="viz-rs">'+escapeHtml(sub)+'</div>':'')+'</div>'
+        +'<button class="m-btn" onclick="vizGrab('+i+')">'+escapeHtml(t('save'))+'</button>'
+      +'</div>'; }).join('');
+  }
+  if(!searching) box.innerHTML+='<button class="m-btn viz-more" onclick="vizBrowse(true)">'
+    +escapeHtml(t('vizBrowseMore'))+'</button>';
+  if(!say) return;
+  var idx=t('vizIndexed').replace('{n}',Object.keys(vizCacheLoad()).length);
+  say.textContent=searching
+    ? t('vizSearchCount').replace('{n}',_vizB.shown.length)+'  '+idx
+    : t('vizBrowseCount').replace('{n}',_vizB.rows.length)
+      +(added===0?('  '+t('vizBrowseNoNew')):'')
+      +'  '+idx; }
+// Saving one takes it out of the list, because the list is what is missing.
+function vizGrab(i){
+  var r=(_vizB.shown||_vizB.rows)[i]; if(!r) return;
+  var box=document.getElementById('vizList');
+  var btn=box&&box.querySelector('.viz-row[data-i="'+i+'"] .m-btn');
+  if(btn){ btn.disabled=true; btn.textContent=t('vizBusy'); }
+  vizSaveProfile(r.id).then(function(title){
+    _vizGot[r.title.toLowerCase()]=1;
+    toast(t('vizProfileSaved').replace('{n}',title||r.title),'ok');
+    return loadProfiles().then(function(){ renderEpList(); }).catch(function(){}); })
+  .then(function(){
+    // it is ours now, so it drops out of both the page and the search
+    var k=r.title.toLowerCase();
+    _vizB.rows=_vizB.rows.filter(function(x){ return x.title.toLowerCase()!==k; });
+    vizRenderList(1); })
+  .catch(function(e){
+    toast(t('vizFailed')+' '+((e&&e.message)||''),'err');
+    if(btn){ btn.disabled=false; btn.textContent=t('save'); } }); }
 function vizGet(path){ return fetch(VIZ_API+path,{headers:{'Accept':'application/json'}}).then(function(r){
+  if(r.status===429){ var e=new Error('429'); e.rateLimited=true; throw e; }
   if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
+var VIZ_CACHE_MAX=600;
+var _vizShotCache=null;
+function vizCacheLoad(){ if(_vizShotCache) return _vizShotCache;
+  var c=lsGet('aurora_vizshots');
+  _vizShotCache=(c&&typeof c==='object'&&!Array.isArray(c))?c:{};
+  return _vizShotCache; }
+function vizCacheSave(){ try{
+    var c=_vizShotCache||{}, keys=Object.keys(c);
+    if(keys.length>VIZ_CACHE_MAX){
+      // oldest first: the object keeps insertion order for string keys
+      keys.slice(0,keys.length-VIZ_CACHE_MAX).forEach(function(k){ delete c[k]; }); }
+    lsSet('aurora_vizshots',c);
+  }catch(_){} }
+// One shot's own description, from the drawer if it has been seen before.
+function vizShotBrief(id){
+  var c=vizCacheLoad();
+  if(c[id]) return Promise.resolve(c[id]);
+  return vizGet('/shots/'+encodeURIComponent(id)).then(function(v){
+    var b={id:id, t:String(v.profile_title||'').trim(),
+      b:[v.bean_brand,v.bean_type].filter(Boolean).join(' '),
+      g:v.grinder_model||'', w:v.barista||''};
+    c[id]=b; return b; }); }
 function vizShowShot(v){
   var tf=(v&&v.timeframe)||[], d=(v&&v.data)||{};
   // the elapsed column and the data columns are not always the same length
