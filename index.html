@@ -15894,12 +15894,18 @@ function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
   state.machineName=machineName; state.scaleName=scaleName;
   state.connected=machineConnected; state.scaleConnected=scaleConnected;
   updateConnUI(state.connected?'on':'off'); updateShotBtn();
-  if(state.connected){ loadMachineInfo(); loadWorkflow(); }
+  if(state.connected){ loadMachineInfo(); loadWorkflow(); if(!_hbAt) signalPresence(); }
 }).catch(function(e){ console.error('[Aurora] loadDevices failed:', e); toast(t('tGatewayUnreachable')+': '+e.message,'err'); }); }
 
 // ── Toast ────────────────────────────────────────────────────────────
 var toastT=null; function toast(msg,type){ var el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); },2500); }
-setInterval(function(){ if(state.connected) api('POST','/api/v1/machine/heartbeat').catch(function(){}); },30000);
+var _hbAt=0;
+function signalPresence(){
+  if(!state.connected) return;
+  var now=Date.now(); if(now-_hbAt<15000) return; _hbAt=now;
+  api('POST','/api/v1/machine/heartbeat').catch(function(){}); }
+['pointerdown','keydown','touchstart'].forEach(function(ev){
+  document.addEventListener(ev,signalPresence,{passive:true}); });
 
 
 // ── Init ─────────────────────────────────────────────────────────────
