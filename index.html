@@ -1212,6 +1212,26 @@ body.mb-scanning .ai-thumb::after{content:'';position:absolute;left:0;right:0;to
 body.mb-scanning #mbStatus{animation:mbpulse 1.15s ease-in-out infinite}
 @keyframes mbpulse{0%,100%{opacity:1}50%{opacity:.45}}
 body.no-fx .ai-thumb::after{animation:none;display:none}
+.bp-lab{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
+  letter-spacing:.04em;margin:12px 0 7px}
+.bp-strip .bp-t{width:64px;height:64px;cursor:pointer}
+#mobilePage .bp-strip{justify-content:flex-start}
+#phoneShell .bp-lab{color:rgba(255,255,255,.72)}
+.pic-ov{position:fixed;inset:0;z-index:400;background:rgba(10,8,20,.9);
+  display:none;align-items:center;justify-content:center;padding:24px}
+.pic-ov.show{display:flex}
+.pic-big{width:100%;height:100%;background-size:contain;background-repeat:no-repeat;
+  background-position:center}
+.pic-x{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;
+  font-size:18px;cursor:pointer;-webkit-appearance:none}
+.ai-thumb.keep{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.ai-thumb-k{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:11px;font-weight:900;line-height:18px;
+  text-align:center;display:none}
+.ai-thumb.keep .ai-thumb-k{display:block}
+.ai-pick{flex-basis:100%;font-size:11px;font-weight:600;color:var(--ink-mute);margin-top:1px}
+#phoneShell .ai-pick{color:rgba(255,255,255,.74)}
 .ai-thumb-x{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:12px;line-height:1;cursor:pointer;-webkit-appearance:none}
 .ai-scan-actions{display:flex;gap:6px;margin:0;flex:none;flex-wrap:wrap}
 .ai-scan-actions .m-btn{min-height:40px;padding:8px 14px;font-size:12px}
@@ -2925,6 +2945,10 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     </div>
   </div>
 </div>
+<div class="pic-ov" id="picOverlay" onclick="closePicBig()">
+  <div class="pic-big" id="picBig"></div>
+  <button class="pic-x" onclick="closePicBig()">✕</button>
+</div>
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
     <div class="mb-head"><div class="mb-title"><span>✨ </span><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" id="mbSub">Photograph the bag — AI fills the details.</div></div>
@@ -2942,6 +2966,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <input type="file" id="mbCam" accept="image/*" capture="environment" multiple style="display:none" onchange="onAiImages(this.files,true)">
       <input type="file" id="mbFile" accept="image/*" multiple style="display:none" onchange="onAiImages(this.files,true)">
     </div>
+    <div id="mbPics"></div>
     <button class="m-btn primary mb-analyze" id="mbAnalyzeBtn" onclick="mbAnalyze()" disabled data-i18n="analyze">Analyze</button>
     <div id="mbRec" class="rec-box"></div>
     <div class="mb-target" id="mbTarget" style="display:none"></div>
@@ -2951,6 +2976,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
         <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
         <div class="field"><label data-i18n="roastMachine">Roasting machine</label><input id="mbRoastMachine" list="mbRmList" placeholder="Probat UG22"><datalist id="mbRmList"></datalist></div>
+        <div id="mbBatchRow"></div>
         <div class="field-row"><div class="field"><label data-i18n="roastDate">Roast date</label><input id="mbRoastDate" type="date"></div>
           <div class="field"><label data-i18n="roastLevel">Roast level</label><input id="mbRoast"></div></div>
         <div class="field"><label class="bean-check"><input type="checkbox" id="mbIsBlend" onchange="bgBlendToggle(this.checked)"> <span data-i18n="isBlend">Blend</span></label></div>
@@ -3382,7 +3408,9 @@ var I18N={
     batch:'Batch', newBatch:'New batch', batchNoDate:'No date', confirmDeleteBatch:'Delete this batch?',
     dupTitle:'Bean already exists', dupAddBatch:'Add as a batch', dupNewBean:'Register as a new bean',
     dupText:'{bean} is already registered with {n} batch(es). Bought the same coffee again? Add this as a new batch. A different coffee that happens to share the name should be registered separately.',
-    roastDate:'Roast date', roastMachine:'Roasting machine', region:'Region', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
+    roastDate:'Roast date', roastMachine:'Roasting machine', region:'Region',
+    bagPhotos:'Bag photos', bagPhotosFull:'Three photographs is the limit for one bean.',
+    bagPick:'Tap a photo to keep it with the bean', bagPickN:'{n} to keep', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
     species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
     mbSaveFailed:'Save failed:', mbNeedRoasterName:'Roaster and name required', mbTimeout:'No response from the gateway',
@@ -3759,7 +3787,9 @@ var I18N={
     batch:'배치', newBatch:'새 배치', batchNoDate:'날짜 없음', confirmDeleteBatch:'이 배치를 삭제할까요?',
     dupTitle:'이미 등록된 원두입니다', dupAddBatch:'배치로 추가', dupNewBean:'새 원두로 등록',
     dupText:'{bean} 은(는) 이미 배치 {n}개로 등록되어 있습니다. 같은 원두를 다시 구매하셨다면 새 배치로 추가하세요. 이름만 같은 다른 원두라면 새 원두로 등록하세요.',
-    roastDate:'로스팅 날짜', roastMachine:'로스터기', region:'지역', producer:'생산자', variety:'품종', altitude:'고도 (m)',
+    roastDate:'로스팅 날짜', roastMachine:'로스터기', region:'지역',
+    bagPhotos:'봉투 사진', bagPhotosFull:'원두 하나당 사진은 세 장까지입니다.',
+    bagPick:'사진을 누르면 원두에 남깁니다', bagPickN:'{n}장 남김', producer:'생산자', variety:'품종', altitude:'고도 (m)',
     species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
     mbSaveFailed:'저장 실패:', mbNeedRoasterName:'로스터와 이름은 필수입니다', mbTimeout:'게이트웨이 응답 없음',
@@ -10158,25 +10188,35 @@ function saveBeanBatch(beanId,roastDate,roastLevel,batchId){
   var req=batchId?api('PUT','/api/v1/bean-batches/'+encodeURIComponent(batchId),body)
                  :api('POST','/api/v1/beans/'+encodeURIComponent(beanId)+'/batches',body);
   return req; }
-function deleteBatch(id){
-  var o=bgSel&&bgSel.obj; if(!id||!o) return;
+function deleteBatch(id,pfx){
+  pfx=pfx||'bg';
+  var mb=(pfx==='mb');
+  var o=mb?mbBean:(bgSel&&bgSel.obj); if(!id||!o) return;
   if(!confirm(t('confirmDeleteBatch'))) return;
   api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(id))
-    .then(function(){ bgBatchId=null; return loadBeanBatches(); })
-    .then(function(){ toast(t('deleted'),'ok'); renderBgEditor(); renderBgList(); updateBeanInfo(); })
+    .then(function(){ if(mb) mbBatchId=null; else bgBatchId=null; return loadBeanBatches(); })
+    .then(function(){ toast(t('deleted'),'ok');
+      if(mb) mbRenderBatches(); else { renderBgEditor(); renderBgList(); }
+      updateBeanInfo(); })
     .catch(function(e){ toast(t('deleteFailed')+' '+apiErrorText(e),'err'); }); }
 // A bean bought again is a new batch, so the editor picks which one it is editing.
 var bgBatchId=null, bgNewBatch=false;
+var mbBatchId=null, mbNewBatch=false;
 function bgSelectBatch(id){ bgBatchId=id; bgNewBatch=false; renderBgEditor(); }
 function bgAddBatch(){ bgBatchId=null; bgNewBatch=true; renderBgEditor(); }
-function batchPicker(o){
-  var list=batchesOf(o.id); if(!list.length&&!o.id) return '';
-  var sel=bgBatchId||(bgNewBatch?null:(list[0]&&list[0].id));
+function mbSelectBatch(id){ mbBatchId=id; mbNewBatch=false; mbRenderBatches(); }
+function mbAddBatch(){ mbBatchId=null; mbNewBatch=true; mbRenderBatches(); }
+function batchPicker(o,pfx){
+  pfx=pfx||'bg';
+  var mb=(pfx==='mb');
+  var list=batchesOf(o&&o.id); if(!list.length&&!(o&&o.id)) return '';
+  var isNew=mb?mbNewBatch:bgNewBatch;
+  var sel=(mb?mbBatchId:bgBatchId)||(isNew?null:(list[0]&&list[0].id));
   var chips=list.map(function(b){
-    return '<button class="ep-batch'+(sel===b.id&&!bgNewBatch?' on':'')+'" onclick="bgSelectBatch(\''+b.id+'\')">'
+    return '<button class="ep-batch'+(sel===b.id&&!isNew?' on':'')+'" onclick="'+pfx+'SelectBatch(\''+b.id+'\')">'
       +escapeHtml(batchLabel(b))+'</button>'; }).join('');
-  var add='<button class="ep-batch add'+(bgNewBatch?' on':'')+'" onclick="bgAddBatch()">+ '+escapeHtml(t('newBatch'))+'</button>';
-  var del=(sel&&!bgNewBatch)?'<button class="ep-batch del" onclick="deleteBatch(\''+sel+'\')">×</button>':'';
+  var add='<button class="ep-batch add'+(isNew?' on':'')+'" onclick="'+pfx+'AddBatch()">+ '+escapeHtml(t('newBatch'))+'</button>';
+  var del=(sel&&!isNew)?'<button class="ep-batch del" onclick="deleteBatch(\''+sel+'\',\''+pfx+'\')">×</button>':'';
   return '<div class="ep-batchrow"><span class="ep-roastlab">'+escapeHtml(t('batch'))
     +(list.length?' · '+list.length:'')+'</span>'+chips+add+del+'</div>'; }
 function beanSubtitle(b){ var age=daysSinceRoast(beanBatches[b.id]);
@@ -10332,6 +10372,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
         +'<div class="ai-qr" id="aiQr" style="display:none"><div id="aiQrCanvas"></div><div class="ai-qr-url" id="aiQrUrl"></div></div>'
         +'<div class="ai-status" id="aiStatus"></div>'
       +'</div>'
+      +'<div id="bgPics"></div>'
       +'<div class="field-row"><div class="field"><label>'+t('roaster')+'</label><input id="bgRoaster" value="'+escapeAttr(o.roaster||'')+'"></div><div class="field"><label>'+t('name')+'</label><input id="bgName" value="'+escapeAttr(o.name||'')+'"></div></div>'
       +'<div class="field"><label>'+t('roastMachine')+'</label><input id="bgRoastMachine" list="bgRmList" value="'+escapeAttr(beanRoastMachine(o))+'" placeholder="Probat UG22"></div>'
       +dl('bgRmList',roastMachineList())
@@ -10350,6 +10391,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'</div>'
       +'<div class="ep-save-bar">'+'<button class="m-btn" style="margin-right:auto" onclick="bgCloseEditor()">'+t('close')+'</button>'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
     renderRecBox(); renderBeanStats(); renderBgTabs(); loadBeanUsage('bg');
+    showBeanPics('bg',o.id);
   } else {
     var isPreset=(o.settingType==='preset'), gname=splitGrinderName(o);
     if(!o._burr) o._burr=burrPartsOf(o);
@@ -10938,6 +10980,7 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
   if(o.id){
     api('PUT','/api/v1/beans/'+o.id,body)
       .then(function(){ return saveBeanBatch(o.id,roastDate,roastLevel,bgNewBatch?null:bgBatchId); })
+      .then(function(){ return keepScanPics(o.id); })
       .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail);
     return; }
   var dup=findBeanLike(body.roaster,body.name);
@@ -10946,10 +10989,14 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
     if(choice==='batch'&&dup){
       api('PUT','/api/v1/beans/'+dup.id,body)
         .then(function(){ return saveBeanBatch(dup.id,roastDate,roastLevel,null); })
+        .then(function(){ return keepScanPics(dup.id); })
         .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail);
       return; }
+    var madeId=null;
     api('POST','/api/v1/beans',body)
-      .then(function(saved){ return saveBeanBatch(saved&&saved.id,roastDate,roastLevel,null); })
+      .then(function(saved){ madeId=(saved&&saved.id)||null;
+        return saveBeanBatch(madeId,roastDate,roastLevel,null); })
+      .then(function(){ return keepScanPics(madeId); })
       .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail); }); }
 // The same coffee bought again should become a batch, not a second bean - but
 // only the person holding the bag knows which it is.
@@ -10973,6 +11020,8 @@ function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm(t('confirm
   api('GET','/api/v1/beans/'+o.id+'/batches').catch(function(){ return []; })
     .then(function(list){ return Promise.all((list||[]).map(function(b){ return api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(b.id)).catch(function(){}); })); })
     .then(function(){ return api('DELETE','/api/v1/beans/'+o.id); })
+    .then(function(){ delete _beanPics[o.id];
+      return api('DELETE',picUrl(o.id)).catch(function(){}); })
     .then(function(){ delete beanBatches[o.id]; toast(t('deleted'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); })
     .catch(function(e){ toast(t('deleteFailed')+' '+apiErrorText(e),'err'); }); }
 function useBean(){ var o=bgSel.obj; var b=o.id&&beanBatches[o.id];
@@ -10982,6 +11031,84 @@ function useBean(){ var o=bgSel.obj; var b=o.id&&beanBatches[o.id];
       test:function(sh){ var c=(sh.workflow&&sh.workflow.context)||{}; return !!o.name&&c.coffeeName===o.name; },
       after:closeBeanPage }); }).catch(function(){ toast(t('tFailed'),'err'); }); }
 
+// ── The bag, kept ───────────────────────────────────────────
+var PIC_NS='liquid-aqua-pics', PIC_MAX=3, PIC_W=720, PIC_CHARS=200*1024;
+var _beanPics={}, _picPend={};
+function picUrl(id){ return '/api/v1/store/'+PIC_NS+'/'+encodeURIComponent(id); }
+function beanPicsOf(id){ return (id&&_beanPics[id])||[]; }
+function loadBeanPics(id){
+  if(!id) return Promise.resolve([]);
+  if(_beanPics[id]) return Promise.resolve(_beanPics[id]);
+  if(_picPend[id]) return _picPend[id];
+  _picPend[id]=api('GET',picUrl(id)).catch(function(){ return null; })
+    .then(function(v){ delete _picPend[id];
+      _beanPics[id]=(v&&Array.isArray(v.pics))?v.pics:[];
+      return _beanPics[id]; });
+  return _picPend[id]; }
+function putBeanPics(id,pics){
+  _beanPics[id]=pics;
+  return pics.length ? api('POST',picUrl(id),{v:1,pics:pics},30000)
+                     : api('DELETE',picUrl(id)).catch(function(){}); }
+// One fixed quality fits some bags and not others, so it is narrowed and
+// re-encoded until it fits the budget rather than guessed at once.
+function shrinkImage(src){
+  return new Promise(function(res,rej){
+    var im=new Image();
+    im.onload=function(){
+      var iw=im.width||PIC_W, ih=im.height||PIC_W;
+      var w=Math.min(PIC_W,iw), h=Math.max(1,Math.round(ih*(w/iw))), out='';
+      for(var pass=0;pass<4;pass++){
+        var c=document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(im,0,0,w,h);
+        var q=0.72; out=c.toDataURL('image/jpeg',q);
+        while(out.length>PIC_CHARS&&q>0.34){ q-=0.08; out=c.toDataURL('image/jpeg',q); }
+        if(out.length<=PIC_CHARS) break;
+        w=Math.max(220,Math.round(w*0.75)); h=Math.max(1,Math.round(h*0.75)); }
+      res(out); };
+    im.onerror=function(){ rej(new Error('image')); };
+    im.src=src; }); }
+// The photographs taken to be read are the ones worth keeping, so a save
+// carries whatever is on the scanner across. A save never removes: a typo
+// corrected on a bean with nothing attached must not discard its pictures.
+function keepScanPics(id){
+  var srcs=(aiImages||[]).filter(function(im){ return im.keep; })
+    .map(function(im){ return im.url; }).filter(Boolean);
+  if(!id||!srcs.length) return Promise.resolve(null);
+  return loadBeanPics(id).then(function(have){
+    var room=PIC_MAX-have.length;
+    if(room<=0){ try{ toast(t('bagPhotosFull'),'err'); }catch(_){} return null; }
+    return Promise.all(srcs.slice(0,room).map(function(x){
+      return shrinkImage(x).catch(function(){ return null; }); }))
+      .then(function(outs){
+        var add=outs.filter(Boolean).map(function(dd){ return {d:dd,t:Date.now()}; });
+        return add.length?putBeanPics(id,have.concat(add)):null; }); })
+    .catch(function(){ return null; }); }
+function beanPicDrop(id,i,pfx){
+  var have=beanPicsOf(id).slice(); if(i<0||i>=have.length) return;
+  have.splice(i,1);
+  putBeanPics(id,have).catch(function(){}).then(function(){ renderBeanPics(pfx); }); }
+function beanPicsHtml(id,pfx){
+  var list=beanPicsOf(id); if(!list.length) return '';
+  return '<div class="bp-lab">'+escapeHtml(t('bagPhotos'))+' \u00b7 '+list.length+'</div>'
+    +'<div class="ai-thumbs bp-strip">'+list.map(function(p,i){
+      return '<div class="ai-thumb bp-t" style="background-image:url('+p.d+')"'
+        +' onclick="beanPicBig(\''+id+'\','+i+')">'
+        +'<button class="ai-thumb-x" onclick="event.stopPropagation();beanPicDrop(\''+id+'\','+i+',\''+pfx+'\')">\u00d7</button>'
+      +'</div>'; }).join('')+'</div>'; }
+function renderBeanPics(pfx){
+  var box=document.getElementById(pfx==='mb'?'mbPics':'bgPics'); if(!box) return;
+  var id=(pfx==='mb')?(mbBean&&mbBean.id):(bgSel&&bgSel.obj&&bgSel.obj.id);
+  box.innerHTML=id?beanPicsHtml(id,pfx):''; }
+function showBeanPics(pfx,id){
+  if(!id){ renderBeanPics(pfx); return; }
+  loadBeanPics(id).then(function(){ renderBeanPics(pfx); }); }
+function beanPicBig(id,i){
+  var p=beanPicsOf(id)[i], ov=document.getElementById('picOverlay'); if(!p||!ov) return;
+  document.getElementById('picBig').style.backgroundImage='url('+p.d+')';
+  ov.classList.add('show'); }
+function closePicBig(){
+  var ov=document.getElementById('picOverlay'); if(ov) ov.classList.remove('show'); }
+
 // ── AI bean-label scanning (Gemini) ─────────────────────────────────
 var aiImages=[]; // {mime, data(base64), url}
 var aiMobile=false;
@@ -10989,9 +11116,19 @@ function onAiImages(files,mobile){ if(!files) return; if(mobile) aiMobile=true;
   Array.prototype.forEach.call(files,function(f){ if(!/^image\//.test(f.type)) return; if(aiImages.length>=5){ toast(t('tMaxImages'),'err'); return; }
     var rd=new FileReader(); rd.onload=function(){ var s=String(rd.result); var comma=s.indexOf(','); aiImages.push({mime:f.type,data:s.slice(comma+1),url:s}); renderAiThumbs(mobile); }; rd.readAsDataURL(f); });
 }
+function aiKeepCount(){ return (aiImages||[]).filter(function(x){ return x.keep; }).length; }
+function aiKeepToggle(i,mobile){
+  var im=aiImages[i]; if(!im) return;
+  if(!im.keep&&aiKeepCount()>=PIC_MAX){ try{ toast(t('bagPhotosFull'),'err'); }catch(_){} return; }
+  im.keep=!im.keep; renderAiThumbs(mobile); }
 function renderAiThumbs(mobile){ var wrap=document.getElementById(mobile?'mbThumbs':'aiThumbs'); if(!wrap) return; wrap.innerHTML='';
-  aiImages.forEach(function(im,i){ var d=document.createElement('div'); d.className='ai-thumb'; d.style.backgroundImage='url('+im.url+')';
-    var x=document.createElement('button'); x.className='ai-thumb-x'; x.textContent='×'; x.onclick=function(){ aiImages.splice(i,1); renderAiThumbs(mobile); }; d.appendChild(x); wrap.appendChild(d); });
+  aiImages.forEach(function(im,i){ var d=document.createElement('div'); d.className='ai-thumb'+(im.keep?' keep':''); d.style.backgroundImage='url('+im.url+')';
+    d.title=t('bagPick'); d.onclick=function(){ aiKeepToggle(i,mobile); };
+    var k=document.createElement('span'); k.className='ai-thumb-k'; k.textContent='✓'; d.appendChild(k);
+    var x=document.createElement('button'); x.className='ai-thumb-x'; x.textContent='×'; x.onclick=function(ev){ ev.stopPropagation(); aiImages.splice(i,1); renderAiThumbs(mobile); }; d.appendChild(x); wrap.appendChild(d); });
+  if(aiImages.length){ var h=document.createElement('div'); h.className='ai-pick';
+    h.textContent=t('bagPick')+(aiKeepCount()?(' · '+t('bagPickN').replace('{n}',aiKeepCount())):'');
+    wrap.appendChild(h); }
   var btn=document.getElementById(mobile?'mbAnalyzeBtn':'aiAnalyzeBtn'); if(btn) btn.disabled=aiImages.length===0;
 }
 // Resolve the newest usable Flash model at runtime instead of hard-coding a version
@@ -11611,24 +11748,33 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
   }catch(e){ st.textContent=t('mbSaveFailed')+' '+e.message; return; }
   if(!body.roaster||!body.name){ st.textContent=t('mbNeedRoasterName'); return; }
   st.textContent=t('mbSaving'); if(btn) btn.disabled=true;
+  var keepBatch=false, mbSavedId=null;
   var target=mbBeanId?Promise.resolve('open'):(function(){
     var dup=findBeanLike(body.roaster,body.name);
     return askDuplicateBean(dup).then(function(choice){ return {choice:choice,dup:dup}; }); })();
   target
     .then(function(r){
-      if(r==='open') return api('PUT','/api/v1/beans/'+mbBeanId,body,15000).then(function(){ return {id:mbBeanId}; });
+      if(r==='open'){ keepBatch=true;
+        return api('PUT','/api/v1/beans/'+mbBeanId,body,15000).then(function(){ return {id:mbBeanId}; }); }
       if(r.choice===null){ st.textContent=''; if(btn) btn.disabled=false; return Promise.reject({cancelled:true}); }
       return (r.choice==='batch'&&r.dup)
         ? api('PUT','/api/v1/beans/'+r.dup.id,body,15000).then(function(){ return r.dup; })
         : api('POST','/api/v1/beans',body,15000); })
-    .then(function(saved){ return (saved&&saved.id)?saveBeanBatch(saved.id,v('mbRoastDate'),v('mbRoast'),null):null; })
+    .then(function(saved){ mbSavedId=(saved&&saved.id)||null;
+      return mbSavedId
+        ? saveBeanBatch(mbSavedId,v('mbRoastDate'),v('mbRoast'),
+            (keepBatch&&!mbNewBatch)?mbBatchId:null)
+        : null; })
+    .then(function(){ return keepScanPics(mbSavedId); })
     .then(function(){ st.textContent=t('mbSaved');
       api('GET','/api/v1/beans').then(function(l){ beans=l||[]; mbRenderPick(); }).catch(function(){});
       aiImages=[]; renderAiThumbs(true); recResults=null; usageResults=null; usageStats=null; _usageFor=null;
       renderRecBox(); renderUsageBox(); renderBeanStats();
       document.getElementById('mbFields').style.display='none'; })
     .catch(function(e){ if(!(e&&e.cancelled)) st.textContent=t('mbSaveFailed')+' '+apiErrorText(e); })
-    .then(function(){ if(btn) btn.disabled=false; return loadBeanBatches(); }); }
+    .then(function(){ if(btn) btn.disabled=false;
+      mbBatchId=null; mbNewBatch=false;
+      return loadBeanBatches(); }); }
 // The phone keeps its own keys: it is a different device, and the tablet's are
 // not its to read. One per provider, so switching does not lose the other.
 function mbStoreKey(p){ return p==='claude'?'aurora_claude':(p==='openai'?'aurora_openai':'aurora_gemini'); }
@@ -16190,6 +16336,17 @@ function mbFillRmList(){
   var dlist=document.getElementById('mbRmList'); if(!dlist) return;
   dlist.innerHTML=roastMachineList().map(function(m){
     return '<option value="'+escapeAttr(m)+'"></option>'; }).join(''); }
+function mbRenderBatches(){
+  var box=document.getElementById('mbBatchRow'); if(!box) return;
+  if(!mbBean){ box.innerHTML=''; return; }
+  var list=batchesOf(mbBean.id);
+  if(!mbNewBatch&&!mbBatchId&&list.length) mbBatchId=list[0].id;
+  var batch=mbNewBatch?{}:(list.filter(function(b){ return b.id===mbBatchId; })[0]||list[0]||{});
+  if(!mbNewBatch) mbBatchId=batch.id||null;
+  box.innerHTML=batchPicker(mbBean,'mb');
+  var d=document.getElementById('mbRoastDate'), r=document.getElementById('mbRoast');
+  if(d) d.value=isoDay(batch.roastDate)||'';
+  if(r) r.value=batch.roastLevel||''; }
 function mbRenderPick(){
   mbFillRmList();
   var sel=document.getElementById('mbPick'); if(!sel) return;
@@ -16202,6 +16359,7 @@ function mbPickBean(id){
   mbBeanId=id||null;
   mbBean=mbBeanId?((beans||[]).filter(function(b){ return b.id===mbBeanId; })[0]||null):null;
   if(!mbBean) mbBeanId=null;
+  mbBatchId=null; mbNewBatch=false;
   var ttl=document.getElementById('mbTitle'), lbl=document.getElementById('mbSaveLbl');
   if(mbBean){
     mbFill(mbBean);
@@ -16214,13 +16372,17 @@ function mbPickBean(id){
   }
   mbShowTarget(); mbRenderPick();
   var st=document.getElementById('mbStatus'); if(st) st.textContent='';
-  loadBeanBatches(); }
+  mbRenderBatches();
+  showBeanPics('mb',mbBean&&mbBean.id);
+  loadBeanBatches().then(mbRenderBatches); }
 function mbClearFields(){
   ['mbRoaster','mbName','mbCountry','mbRegion','mbProcess','mbProducer','mbDecafProcess',
    'mbVariety','mbAltitude','mbNotes','mbRoastDate','mbRoast','mbRoastMachine'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value=''; });
   bgBlend=null; var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=false;
   bgBlendRender();
+  mbBatchId=null; mbNewBatch=false;
+  var br=document.getElementById('mbBatchRow'); if(br) br.innerHTML='';
   var box=document.getElementById('mbFields'); if(box) box.style.display='none'; }
 function mbShowTarget(){
   var el=document.getElementById('mbTarget'); if(!el) return;
