@@ -1214,7 +1214,7 @@ body.mb-scanning #mbStatus{animation:mbpulse 1.15s ease-in-out infinite}
 body.no-fx .ai-thumb::after{animation:none;display:none}
 .bp-lab{font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;
   letter-spacing:.04em;margin:12px 0 7px}
-.bp-strip .bp-t{width:64px;height:64px;cursor:pointer}
+.bp-strip .bp-t{width:72px;height:72px;cursor:pointer}
 #mobilePage .bp-strip{justify-content:flex-start}
 #phoneShell .bp-lab{color:rgba(255,255,255,.72)}
 .pic-ov{position:fixed;inset:0;z-index:400;background:rgba(10,8,20,.9);
@@ -1232,7 +1232,12 @@ body.no-fx .ai-thumb::after{animation:none;display:none}
 .ai-thumb.keep .ai-thumb-k{display:block}
 .ai-pick{flex-basis:100%;font-size:11px;font-weight:600;color:var(--ink-mute);margin-top:1px}
 #phoneShell .ai-pick{color:rgba(255,255,255,.74)}
-.ai-thumb-x{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:12px;line-height:1;cursor:pointer;-webkit-appearance:none}
+.ai-thumb-x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.5);background:rgba(18,14,28,.66);color:#fff;
+  font-size:14px;font-weight:800;line-height:1;cursor:pointer;-webkit-appearance:none;
+  display:flex;align-items:center;justify-content:center;padding:0}
+.ai-thumb-x:active{background:var(--red);border-color:var(--red)}
+#mobilePage .ai-thumb-x{width:26px;height:26px;font-size:16px}
 .ai-scan-actions{display:flex;gap:6px;margin:0;flex:none;flex-wrap:wrap}
 .ai-scan-actions .m-btn{min-height:40px;padding:8px 14px;font-size:12px}
 .ai-scan-actions .m-btn{padding:8px 14px;font-size:13px}
@@ -2873,6 +2878,10 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 </div>
 
 <!-- ── The phone: one page, one nav, whichever job was asked for ── -->
+<div class="pic-ov" id="picOverlay" onclick="closePicBig()">
+  <div class="pic-big" id="picBig"></div>
+  <button class="pic-x" onclick="closePicBig()">✕</button>
+</div>
 <div id="phoneShell" style="display:none">
 <div class="ph-net" id="phNet" hidden>
   <div class="ph-net-txt"><div class="ph-net-h" data-i18n="phNoNetH">Can't reach the machine</div>
@@ -2944,10 +2953,6 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       <div class="mb-sub" id="csStatus"></div>
     </div>
   </div>
-</div>
-<div class="pic-ov" id="picOverlay" onclick="closePicBig()">
-  <div class="pic-big" id="picBig"></div>
-  <button class="pic-x" onclick="closePicBig()">✕</button>
 </div>
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
@@ -3410,7 +3415,10 @@ var I18N={
     dupText:'{bean} is already registered with {n} batch(es). Bought the same coffee again? Add this as a new batch. A different coffee that happens to share the name should be registered separately.',
     roastDate:'Roast date', roastMachine:'Roasting machine', region:'Region',
     bagPhotos:'Bag photos', bagPhotosFull:'Three photographs is the limit for one bean.',
-    bagPick:'Tap a photo to keep it with the bean', bagPickN:'{n} to keep', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
+    bagPick:'Tap a photo to keep it with the bean', bagPickN:'{n} to keep',
+    bagPhotoDrop:'Remove this photograph from the bean?',
+    slNoBean:'\u2014 not recorded \u2014', slFreeBean:'\u2014 type it in \u2014',
+    slNoBatch:'\u2014 no batch \u2014', producer:'Producer', variety:'Variety', altitude:'Altitude (m)',
     species:'Species', decaf:'Decaf', decafProcess:'Decaf process', daysOffRoast:'{n}d off roast',
     beanSaved:'Bean saved', saved:'Saved ✓', aiFilled:'Filled from label ✓ — review & Save', aiDetected:'Bean details detected',
     mbSaveFailed:'Save failed:', mbNeedRoasterName:'Roaster and name required', mbTimeout:'No response from the gateway',
@@ -3789,7 +3797,10 @@ var I18N={
     dupText:'{bean} 은(는) 이미 배치 {n}개로 등록되어 있습니다. 같은 원두를 다시 구매하셨다면 새 배치로 추가하세요. 이름만 같은 다른 원두라면 새 원두로 등록하세요.',
     roastDate:'로스팅 날짜', roastMachine:'로스터기', region:'지역',
     bagPhotos:'봉투 사진', bagPhotosFull:'원두 하나당 사진은 세 장까지입니다.',
-    bagPick:'사진을 누르면 원두에 남깁니다', bagPickN:'{n}장 남김', producer:'생산자', variety:'품종', altitude:'고도 (m)',
+    bagPick:'사진을 누르면 원두에 남깁니다', bagPickN:'{n}장 남김',
+    bagPhotoDrop:'이 사진을 원두에서 지울까요?',
+    slNoBean:'\u2014 기록 없음 \u2014', slFreeBean:'\u2014 직접 입력 \u2014',
+    slNoBatch:'\u2014 배치 없음 \u2014', producer:'생산자', variety:'품종', altitude:'고도 (m)',
     species:'종', decaf:'디카페인', decafProcess:'디카페인 공정', daysOffRoast:'로스팅 {n}일경과',
     beanSaved:'원두 저장됨', saved:'저장됨 ✓', aiFilled:'라벨에서 채움 ✓ — 확인 후 저장', aiDetected:'원두 정보 인식됨',
     mbSaveFailed:'저장 실패:', mbNeedRoasterName:'로스터와 이름은 필수입니다', mbTimeout:'게이트웨이 응답 없음',
@@ -11085,6 +11096,7 @@ function keepScanPics(id){
     .catch(function(){ return null; }); }
 function beanPicDrop(id,i,pfx){
   var have=beanPicsOf(id).slice(); if(i<0||i>=have.length) return;
+  if(!confirm(t('bagPhotoDrop'))) return;
   have.splice(i,1);
   putBeanPics(id,have).catch(function(){}).then(function(){ renderBeanPics(pfx); }); }
 function beanPicsHtml(id,pfx){
@@ -14823,7 +14835,56 @@ function shotContextLine(s){ var c=(s.workflow&&s.workflow.context)||{}; var bit
   if(grind) bits.push(grind);
   var bk=shotBasket(s); if(bk) bits.push(bk);
   return bits.length?'<div class="sl-dt-sub">'+escapeHtml(bits.join('  ·  '))+'</div>':''; }
+var _slBeanId='', _slBatchId='', _slFreeBean=false;
+function slInitBean(s){
+  var cx=(s&&s.workflow&&s.workflow.context)||{};
+  var bean=shotBeanOf(s);
+  _slBeanId=bean?bean.id:'';
+  // a coffee the catalogue has never heard of is still what this shot says
+  _slFreeBean=!bean&&!!(cx.coffeeName||cx.coffeeRoaster);
+  var bt=batchById(cx.beanBatchId);
+  _slBatchId=(bt&&bean&&bt.beanId===bean.id)?bt.id:''; }
+function slBeansSorted(){
+  return (beans||[]).slice().sort(function(a,b){
+    return String((a.roaster||'')+(a.name||'')).localeCompare(String((b.roaster||'')+(b.name||''))); }); }
+function slBatchSelHtml(){
+  var list=_slBeanId?batchesOf(_slBeanId):[];
+  if(!list.length) return '<select id="slBatch" disabled><option>'
+    +escapeHtml(t('slNoBatch'))+'</option></select>';
+  return '<select id="slBatch">'
+    +'<option value="">'+escapeHtml(t('slNoBatch'))+'</option>'
+    +list.map(function(b){ return '<option value="'+escapeAttr(b.id)+'"'
+      +(b.id===_slBatchId?' selected':'')+'>'+escapeHtml(batchLabel(b))+'</option>'; }).join('')
+    +'</select>'; }
+function slBeanHtml(ctx){
+  var h='<div class="field-row">'
+    +'<div class="field"><label>'+escapeHtml(t('coffee'))+'</label>'
+      +'<select id="slBean" onchange="slPickBean(this.value)">'
+        +'<option value=""'+((!_slBeanId&&!_slFreeBean)?' selected':'')+'>'+escapeHtml(t('slNoBean'))+'</option>'
+        +slBeansSorted().map(function(b){
+          return '<option value="'+escapeAttr(b.id)+'"'+(b.id===_slBeanId?' selected':'')+'>'
+            +escapeHtml((b.roaster?b.roaster+' \u00b7 ':'')+(b.name||''))+'</option>'; }).join('')
+        +'<option value="*"'+(_slFreeBean?' selected':'')+'>'+escapeHtml(t('slFreeBean'))+'</option>'
+      +'</select></div>'
+    +'<div class="field"><label>'+escapeHtml(t('batch'))+'</label>'+slBatchSelHtml()+'</div>'
+  +'</div>';
+  if(_slFreeBean) h+='<div class="field-row">'
+    +'<div class="field"><label>'+escapeHtml(t('roaster'))+'</label>'
+      +'<input id="slRoaster" value="'+escapeAttr(ctx.coffeeRoaster||'')+'"></div>'
+    +'<div class="field"><label>'+escapeHtml(t('coffee'))+'</label>'
+      +'<input id="slCoffee" value="'+escapeAttr(ctx.coffeeName||'')+'"></div></div>';
+  return h; }
+// The batch belongs to the bean, so changing the bean cannot leave the old one
+// standing. The newest roast is the reasonable guess when one is picked.
+function slPickBean(v){
+  _slFreeBean=(v==='*');
+  _slBeanId=_slFreeBean?'':v;
+  var list=_slBeanId?batchesOf(_slBeanId):[];
+  _slBatchId=list.length?list[0].id:'';
+  var box=document.getElementById('slBeanRow');
+  if(box) box.innerHTML=slBeanHtml((slSel&&slSel.workflow&&slSel.workflow.context)||{}); }
 function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s&&s.measurements&&s.measurements.length) slFull[s.id]=s;
+  slInitBean(s);
   var have=!!(s&&s.measurements&&s.measurements.length); var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
   var ctx=(s.workflow&&s.workflow.context)||{}; var stats=shotStats(s);
   var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:(ctx.targetDoseWeight!=null?ctx.targetDoseWeight:null));
@@ -14850,10 +14911,7 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
     +'<div class="sl-edit">'
     +aiPanelHtml()
     +'<div class="ep-section-title" style="margin-top:14px">'+escapeHtml(t('shotBeanGrinder'))+'</div>'
-    +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('roaster'))+'</label>'
-      +'<input id="slRoaster" value="'+escapeAttr(ctx.coffeeRoaster||'')+'"></div>'
-      +'<div class="field"><label>'+escapeHtml(t('coffee'))+'</label>'
-      +'<input id="slCoffee" value="'+escapeAttr(ctx.coffeeName||'')+'"></div></div>'
+    +'<div id="slBeanRow">'+slBeanHtml(ctx)+'</div>'
     +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('grinder'))+'</label>'
       +'<input id="slGrinder" list="slGrinderList" value="'+escapeAttr(ctx.grinderModel||'')+'">'
       +'<datalist id="slGrinderList">'+(grinders||[]).map(function(g){
@@ -14926,11 +14984,28 @@ function roastMachineNoteLine(m){
   m=String(m||'').trim();
   return m?(t('roastMachine')+': '+m):''; }
 // The bean this shot was pulled with, not the bean on the counter now.
+function beanKeyName(v){ return String(v==null?'':v).trim().replace(/\s+/g,' ').toLowerCase(); }
+function batchById(id){
+  if(!id) return null;
+  var all=beanBatchList||{};
+  for(var k in all){
+    var hit=all[k].filter(function(b){ return b.id===id; })[0];
+    if(hit) return hit; }
+  return null; }
+// The id first, because it is the thing that cannot be mistyped. The names
+// stay as a fallback for every shot pulled before the id was being read, and
+// for one whose coffee was never in the catalogue.
 function shotBeanOf(sh){
   var cx=(sh&&sh.workflow&&sh.workflow.context)||{};
-  var n=cx.coffeeName, r=cx.coffeeRoaster; if(!n) return null;
-  return (beans||[]).find(function(b){ return b.name===n && (!r||b.roaster===r); })
-      || (beans||[]).find(function(b){ return b.name===n; }) || null; }
+  var list=beans||[];
+  var bt=batchById(cx.beanBatchId);
+  if(bt){ var byId=list.filter(function(b){ return b.id===bt.beanId; })[0]; if(byId) return byId; }
+  var n=beanKeyName(cx.coffeeName), r=beanKeyName(cx.coffeeRoaster); if(!n) return null;
+  return list.find(function(b){ return beanKeyName(b.name)===n&&(!r||beanKeyName(b.roaster)===r); })
+      || list.find(function(b){ return beanKeyName(b.name)===n; }) || null; }
+function shotBatchOf(sh){
+  var cx=(sh&&sh.workflow&&sh.workflow.context)||{};
+  return batchById(cx.beanBatchId); }
 function shotRoastMachine(sh){ return beanRoastMachine(shotBeanOf(sh)); }
 function tasteCompose(v,note,basket,machine){
   var parts=[String(note||'').trim(), tasteWords(v).join(' \u00b7 '),
@@ -14994,12 +15069,22 @@ function tastePick(mode,id,k,n){
 function shotContextEdits(){
   var g=function(id){ var el=document.getElementById(id); return el?el.value.trim():undefined; };
   var was=(slSel&&slSel.workflow&&slSel.workflow.context)||{}, out={}, any=false;
-  var pairs=[['slRoaster','coffeeRoaster'],['slCoffee','coffeeName'],
-             ['slGrinder','grinderModel'],['slGrind','grinderSetting']];
-  pairs.forEach(function(pair){
+  [['slGrinder','grinderModel'],['slGrind','grinderSetting']].forEach(function(pair){
     var v=g(pair[0]); if(v===undefined) return;
     var old=was[pair[1]]; old=(old==null?'':String(old));
     if(v!==old){ out[pair[1]]=v; any=true; } });
+  if(!document.getElementById('slBean')) return any?out:null;
+  var bean=_slBeanId?((beans||[]).filter(function(b){ return b.id===_slBeanId; })[0]||null):null;
+  var wantName='', wantRoaster='', wantBatch=null;
+  if(bean){ wantName=bean.name||''; wantRoaster=bean.roaster||'';
+    var bs=document.getElementById('slBatch');
+    wantBatch=(bs&&!bs.disabled&&bs.value)?bs.value:null; }
+  else if(_slFreeBean){ wantName=g('slCoffee')||''; wantRoaster=g('slRoaster')||''; }
+  function cmp(key,v){
+    var old=was[key]; old=(old==null?'':String(old));
+    var nv=(v==null?'':String(v));
+    if(nv!==old){ out[key]=(nv===''?null:nv); any=true; } }
+  cmp('coffeeName',wantName); cmp('coffeeRoaster',wantRoaster); cmp('beanBatchId',wantBatch);
   return any?out:null; }
 // The uploader writes the id Visualizer gave a shot into the record's
 // bookkeeping. Its presence is what says this shot is up there to be updated.
@@ -16612,7 +16697,11 @@ function phMachineTo(target){
     .then(function(){ _phBusy='';
       // ask again at once rather than waiting out the next tick
       if(phoneTab==='status') phStatusPoll(true); else renderPhoneStatus(); }); }
-function initPhoneLog(){ phLoadLog(); }
+function initPhoneLog(){ phLoadLog();
+  // A note written here carries the bean's roasting machine, which means this
+  // tab needs the catalogue too -- it had none, so the line was always missing.
+  if(!(beans||[]).length)
+    api('GET','/api/v1/beans').then(function(l){ beans=l||[]; }).catch(function(){}); }
 function phNum(v,d){ var n=parseFloat(v); return isFinite(n)?n.toFixed(d==null?1:d):null; }
 function renderPhoneStatus(){
   var box=document.getElementById('phStatusBody'); if(!box) return;
