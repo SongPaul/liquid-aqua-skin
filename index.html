@@ -10205,6 +10205,8 @@ function deleteBatch(id,pfx){
   var o=mb?mbBean:(bgSel&&bgSel.obj); if(!id||!o) return;
   if(!confirm(t('confirmDeleteBatch'))) return;
   api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(id))
+    .then(function(){ delete _beanPics[id];
+      return api('DELETE',picUrl(id)).catch(function(){}); })
     .then(function(){ if(mb) mbBatchId=null; else bgBatchId=null; return loadBeanBatches(); })
     .then(function(){ toast(t('deleted'),'ok');
       if(mb) mbRenderBatches(); else { renderBgEditor(); renderBgList(); }
@@ -10215,8 +10217,8 @@ var bgBatchId=null, bgNewBatch=false;
 var mbBatchId=null, mbNewBatch=false;
 function bgSelectBatch(id){ bgBatchId=id; bgNewBatch=false; renderBgEditor(); }
 function bgAddBatch(){ bgBatchId=null; bgNewBatch=true; renderBgEditor(); }
-function mbSelectBatch(id){ mbBatchId=id; mbNewBatch=false; mbRenderBatches(); }
-function mbAddBatch(){ mbBatchId=null; mbNewBatch=true; mbRenderBatches(); }
+function mbSelectBatch(id){ mbBatchId=id; mbNewBatch=false; mbRenderBatches(); showBeanPics('mb'); }
+function mbAddBatch(){ mbBatchId=null; mbNewBatch=true; mbRenderBatches(); showBeanPics('mb'); }
 function batchPicker(o,pfx){
   pfx=pfx||'bg';
   var mb=(pfx==='mb');
@@ -10402,7 +10404,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'</div>'
       +'<div class="ep-save-bar">'+'<button class="m-btn" style="margin-right:auto" onclick="bgCloseEditor()">'+t('close')+'</button>'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
     renderRecBox(); renderBeanStats(); renderBgTabs(); loadBeanUsage('bg');
-    showBeanPics('bg',o.id);
+    showBeanPics('bg');
   } else {
     var isPreset=(o.settingType==='preset'), gname=splitGrinderName(o);
     if(!o._burr) o._burr=burrPartsOf(o);
@@ -10991,7 +10993,7 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
   if(o.id){
     api('PUT','/api/v1/beans/'+o.id,body)
       .then(function(){ return saveBeanBatch(o.id,roastDate,roastLevel,bgNewBatch?null:bgBatchId); })
-      .then(function(){ return keepScanPics(o.id); })
+      .then(function(bt){ return keepScanPics((bt&&bt.id)||bgBatchId||o.id); })
       .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail);
     return; }
   var dup=findBeanLike(body.roaster,body.name);
@@ -10999,15 +11001,15 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
     if(choice===null) return;
     if(choice==='batch'&&dup){
       api('PUT','/api/v1/beans/'+dup.id,body)
-        .then(function(){ return saveBeanBatch(dup.id,roastDate,roastLevel,null); })
-        .then(function(){ return keepScanPics(dup.id); })
+        .then(function(bt){ return saveBeanBatch(dup.id,roastDate,roastLevel,null); })
+        .then(function(bt){ return keepScanPics((bt&&bt.id)||dup.id); })
         .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail);
       return; }
     var madeId=null;
     api('POST','/api/v1/beans',body)
       .then(function(saved){ madeId=(saved&&saved.id)||null;
         return saveBeanBatch(madeId,roastDate,roastLevel,null); })
-      .then(function(){ return keepScanPics(madeId); })
+      .then(function(bt){ return keepScanPics((bt&&bt.id)||madeId); })
       .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail); }); }
 // The same coffee bought again should become a batch, not a second bean - but
 // only the person holding the bag knows which it is.
@@ -11031,8 +11033,12 @@ function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm(t('confirm
   api('GET','/api/v1/beans/'+o.id+'/batches').catch(function(){ return []; })
     .then(function(list){ return Promise.all((list||[]).map(function(b){ return api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(b.id)).catch(function(){}); })); })
     .then(function(){ return api('DELETE','/api/v1/beans/'+o.id); })
-    .then(function(){ delete _beanPics[o.id];
-      return api('DELETE',picUrl(o.id)).catch(function(){}); })
+    .then(function(){
+      // the coffee's own key, and one for every roast of it
+      var keys=[o.id].concat(batchesOf(o.id).map(function(b){ return b.id; }));
+      keys.forEach(function(k){ delete _beanPics[k]; });
+      return Promise.all(keys.map(function(k){
+        return api('DELETE',picUrl(k)).catch(function(){}); })); })
     .then(function(){ delete beanBatches[o.id]; toast(t('deleted'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); })
     .catch(function(e){ toast(t('deleteFailed')+' '+apiErrorText(e),'err'); }); }
 function useBean(){ var o=bgSel.obj; var b=o.id&&beanBatches[o.id];
@@ -11044,12 +11050,12 @@ function useBean(){ var o=bgSel.obj; var b=o.id&&beanBatches[o.id];
 
 // ── The bag, kept ───────────────────────────────────────────
 var PIC_NS='liquid-aqua-pics', PIC_MAX=3, PIC_W=720, PIC_CHARS=200*1024;
-var _beanPics={}, _picPend={};
+var _beanPics={}, _picPend={}, _picsKeyShown={};
 function picUrl(id){ return '/api/v1/store/'+PIC_NS+'/'+encodeURIComponent(id); }
 function beanPicsOf(id){ return (id&&_beanPics[id])||[]; }
-function loadBeanPics(id){
+function loadBeanPics(id,fresh){
   if(!id) return Promise.resolve([]);
-  if(_beanPics[id]) return Promise.resolve(_beanPics[id]);
+  if(!fresh&&_beanPics[id]) return Promise.resolve(_beanPics[id]);
   if(_picPend[id]) return _picPend[id];
   _picPend[id]=api('GET',picUrl(id)).catch(function(){ return null; })
     .then(function(v){ delete _picPend[id];
@@ -11085,7 +11091,9 @@ function keepScanPics(id){
   var srcs=(aiImages||[]).filter(function(im){ return im.keep; })
     .map(function(im){ return im.url; }).filter(Boolean);
   if(!id||!srcs.length) return Promise.resolve(null);
-  return loadBeanPics(id).then(function(have){
+  // what is already there may have been added from the other device, so it is
+  // read fresh rather than appended to a stale copy
+  return loadBeanPics(id,true).then(function(have){
     var room=PIC_MAX-have.length;
     if(room<=0){ try{ toast(t('bagPhotosFull'),'err'); }catch(_){} return null; }
     return Promise.all(srcs.slice(0,room).map(function(x){
@@ -11094,6 +11102,16 @@ function keepScanPics(id){
         var add=outs.filter(Boolean).map(function(dd){ return {d:dd,t:Date.now()}; });
         return add.length?putBeanPics(id,have.concat(add)):null; }); })
     .catch(function(){ return null; }); }
+// The batch is where they belong; the bean is where they used to, and where
+// they still go for a coffee that has no batch recorded.
+function picKeyOf(pfx){
+  var mb=(pfx==='mb');
+  return { batch:(mb?mbBatchId:bgBatchId)||'',
+           bean:(mb?(mbBean&&mbBean.id):(bgSel&&bgSel.obj&&bgSel.obj.id))||'' }; }
+function picKeyShow(pfx){
+  var k=picKeyOf(pfx);
+  return (k.batch&&beanPicsOf(k.batch).length)?k.batch:(k.bean||k.batch); }
+function picKeySave(pfx){ var k=picKeyOf(pfx); return k.batch||k.bean; }
 function beanPicDrop(id,i,pfx){
   var have=beanPicsOf(id).slice(); if(i<0||i>=have.length) return;
   if(!confirm(t('bagPhotoDrop'))) return;
@@ -11109,11 +11127,20 @@ function beanPicsHtml(id,pfx){
       +'</div>'; }).join('')+'</div>'; }
 function renderBeanPics(pfx){
   var box=document.getElementById(pfx==='mb'?'mbPics':'bgPics'); if(!box) return;
-  var id=(pfx==='mb')?(mbBean&&mbBean.id):(bgSel&&bgSel.obj&&bgSel.obj.id);
-  box.innerHTML=id?beanPicsHtml(id,pfx):''; }
-function showBeanPics(pfx,id){
-  if(!id){ renderBeanPics(pfx); return; }
-  loadBeanPics(id).then(function(){ renderBeanPics(pfx); }); }
+  var key=_picsKeyShown[pfx]||'';
+  box.innerHTML=key?beanPicsHtml(key,pfx):''; }
+// The phone and the tablet each keep their own copy, so a picture added or
+// dropped on one was invisible to the other until a reload. What the gateway
+// holds is asked for again every time a bean or a batch is opened -- what is
+// already known is drawn first so the strip does not blink.
+function showBeanPics(pfx){
+  var k=picKeyOf(pfx);
+  _picsKeyShown[pfx]=picKeyShow(pfx);
+  renderBeanPics(pfx);
+  var keys=[k.batch,k.bean].filter(Boolean);
+  if(!keys.length) return;
+  Promise.all(keys.map(function(id){ return loadBeanPics(id,true); }))
+    .then(function(){ _picsKeyShown[pfx]=picKeyShow(pfx); renderBeanPics(pfx); }); }
 function beanPicBig(id,i){
   var p=beanPicsOf(id)[i], ov=document.getElementById('picOverlay'); if(!p||!ov) return;
   document.getElementById('picBig').style.backgroundImage='url('+p.d+')';
@@ -11777,7 +11804,7 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
         ? saveBeanBatch(mbSavedId,v('mbRoastDate'),v('mbRoast'),
             (keepBatch&&!mbNewBatch)?mbBatchId:null)
         : null; })
-    .then(function(){ return keepScanPics(mbSavedId); })
+    .then(function(bt){ return keepScanPics((bt&&bt.id)||mbBatchId||mbSavedId); })
     .then(function(){ st.textContent=t('mbSaved');
       api('GET','/api/v1/beans').then(function(l){ beans=l||[]; mbRenderPick(); }).catch(function(){});
       aiImages=[]; renderAiThumbs(true); recResults=null; usageResults=null; usageStats=null; _usageFor=null;
@@ -16423,7 +16450,7 @@ function mbFillRmList(){
     return '<option value="'+escapeAttr(m)+'"></option>'; }).join(''); }
 function mbRenderBatches(){
   var box=document.getElementById('mbBatchRow'); if(!box) return;
-  if(!mbBean){ box.innerHTML=''; return; }
+  if(!mbBean){ box.innerHTML=''; _picsKeyShown.mb=''; renderBeanPics('mb'); return; }
   var list=batchesOf(mbBean.id);
   if(!mbNewBatch&&!mbBatchId&&list.length) mbBatchId=list[0].id;
   var batch=mbNewBatch?{}:(list.filter(function(b){ return b.id===mbBatchId; })[0]||list[0]||{});
@@ -16458,8 +16485,7 @@ function mbPickBean(id){
   mbShowTarget(); mbRenderPick();
   var st=document.getElementById('mbStatus'); if(st) st.textContent='';
   mbRenderBatches();
-  showBeanPics('mb',mbBean&&mbBean.id);
-  loadBeanBatches().then(mbRenderBatches); }
+  loadBeanBatches().then(function(){ mbRenderBatches(); showBeanPics('mb'); }); }
 function mbClearFields(){
   ['mbRoaster','mbName','mbCountry','mbRegion','mbProcess','mbProducer','mbDecafProcess',
    'mbVariety','mbAltitude','mbNotes','mbRoastDate','mbRoast','mbRoastMachine'].forEach(function(id){
