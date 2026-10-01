@@ -896,6 +896,42 @@ body.night .viz-row{background:rgba(255,255,255,.06)}
   font-family:var(--font);font-size:13px;line-height:1;color:var(--ink-mute);
   -webkit-appearance:none;transition:transform .1s}
 .bk-manage:active{transform:scale(.92)}
+.rm-bar{display:flex;gap:8px;margin-bottom:10px}
+.rm-bar input{flex:1;min-width:0;min-height:40px;padding:0 12px;border-radius:11px;
+  border:1px solid var(--edge);background:var(--field);color:var(--ink);
+  font-family:var(--font);font-size:13px;font-weight:600}
+.rm-bar input:focus{border-color:var(--accent);outline:none}
+.rm-grp{font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;
+  letter-spacing:.04em;margin:14px 0 4px;padding-left:2px}
+.rm-grp:first-child{margin-top:2px}
+.rm-row{border-radius:11px}
+.rm-row.open{background:var(--field);box-shadow:inset 0 0 0 1px var(--edge)}
+.rm-sum{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:0 10px;
+  border:0;background:none;cursor:pointer;text-align:left;font-family:var(--font);
+  border-radius:11px}
+.rm-sum:hover{background:var(--glass-hi)}
+.rm-row.open .rm-sum:hover{background:none}
+.rm-nm{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-nm.none{color:var(--ink-mute);font-style:italic}
+.rm-meta{flex:none;font-size:11px;font-weight:600;color:var(--ink-mute)}
+.rm-car{flex:none;width:16px;text-align:center;font-size:13px;line-height:1;color:var(--ink-mute)}
+.rm-row.open .rm-car{color:var(--accent)}
+.rm-edit{padding:2px 10px 10px}
+.rm-line{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rm-line+.rm-line{margin-top:8px}
+.rm-edit label,.rm-wide{display:block;font-size:11px;font-weight:700;color:var(--ink-mute);
+  margin-top:8px}
+.rm-edit .rm-line label{margin-top:0}
+.rm-edit input,.rm-edit select{display:block;width:100%;margin-top:4px;min-height:36px;
+  padding:0 10px;border-radius:9px;border:1px solid var(--edge);background:var(--sheet);
+  color:var(--ink);font-family:var(--font);font-size:13px;font-weight:600}
+.rm-edit input:focus,.rm-edit select:focus{border-color:var(--accent);outline:none}
+.rm-acts{display:flex;justify-content:flex-end;margin-top:10px}
+.rm-del{min-height:34px;padding:0 12px;color:var(--red);border-color:rgba(239,68,68,.3)}
+.rm-foot{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:14px}
+body.night .rm-row.open{background:rgba(255,255,255,.05)}
+body.night .rm-edit input,body.night .rm-edit select{background:rgba(255,255,255,.06)}
 .bk-add{display:flex;gap:7px;margin-bottom:12px}
 .bk-add input{flex:1;min-width:0;min-height:40px;padding:0 12px;border-radius:11px;
   border:1px solid var(--ctl-edge);background-color:var(--ctl-face);
@@ -2673,6 +2709,24 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 
 <!-- ── Hot Water modal ─────────────────────────────────────────── -->
 
+<div class="overlay" id="rmOverlay" onclick="closeModal(event,'rmOverlay')">
+  <div class="modal"><div class="modal-head">
+    <div class="modal-title" data-i18n="rmListTitle">Roasting machines</div>
+    <button class="modal-close" onclick="closeModal(null,'rmOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="rm-bar">
+      <input id="rmFind" data-i18n-ph="rmFind" placeholder="Search" oninput="rmSetQuery(this.value)">
+      <button class="m-btn primary" onclick="rmAdd()" data-i18n="rmAdd">+ Add</button>
+    </div>
+    <div id="rmList"></div>
+    <div class="rm-foot">
+      <span class="set-desc" id="rmCount"></span>
+      <button class="m-btn" onclick="rmReset()" data-i18n="rmReset">Restore the built-in list</button>
+    </div>
+    <div class="set-desc" style="margin-top:10px" data-i18n="rmListHint"></div>
+  </div></div>
+</div>
+
 <!-- What is in the drawer: the baskets offered when a shot is written up -->
 <div class="overlay" id="basketOverlay" onclick="closeModal(event,'basketOverlay')">
   <div class="modal ps-modal"><div class="modal-head">
@@ -2995,7 +3049,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="mb-sec-h" data-i18n="mbSecBean">The coffee</div>
         <div class="field"><label data-i18n="roaster">Roaster</label><input id="mbRoaster"></div>
         <div class="field"><label data-i18n="name">Name</label><input id="mbName"></div>
-        <div class="field"><label data-i18n="roastMachine">Roasting machine</label><input id="mbRoastMachine" list="mbRmList" placeholder="Probat UG22"><datalist id="mbRmList"></datalist></div>
+        <div class="field"><label data-i18n="roastMachine">Roasting machine</label><input id="mbRoastMachine" list="mbRmList" placeholder="\uae30\uc13c W15" oninput="roastMachinePicked('mb')" onchange="roastMachinePicked('mb')"><datalist id="mbRmList"></datalist></div>
+        <div class="field"><label data-i18n="roastType">Heat transfer</label><select id="mbRoastType"></select></div>
         <div id="mbBatchRow"></div>
         <div class="field-row"><div class="field"><label data-i18n="roastDate">Roast date</label><input id="mbRoastDate" type="date"></div>
           <div class="field"><label data-i18n="roastLevel">Roast level</label><input id="mbRoast"></div></div>
@@ -3431,6 +3486,16 @@ var I18N={
     dupTitle:'Bean already exists', dupAddBatch:'Add as a batch', dupNewBean:'Register as a new bean',
     dupText:'{bean} is already registered with {n} batch(es). Bought the same coffee again? Add this as a new batch. A different coffee that happens to share the name should be registered separately.',
     roastDate:'Roast date', roastMachine:'Roasting machine', region:'Region',
+    roastType:'Heat transfer', roastTypeNone:'\u2014 not set \u2014',
+    rmListTitle:'Roasting machines', rmModel:'Model', rmHeat:'Heat source', rmNote:'Note',
+    rmAdd:'+ Add', rmReset:'Restore the built-in list', rmNone:'The list is empty.',
+    rmFind:'Search', rmFindNone:'Nothing matches.', rmUngrouped:'Method not set',
+    rmUsed:'{n} coffees', rmRemove:'Remove', rmCount:'{n} of {m} shown',
+    rmHeatNone:'\u2014 not set \u2014',
+    rmRemoveUsed:'{n} coffees on the shelf name it.',
+    rmUnnamed:'this entry', rmRemoveAsk:'Remove {n} from the list?',
+    rmResetAsk:'Throw away your edits and go back to the list the skin ships with?',
+    rmListHint:'Picking a machine on a bean fills in its heat transfer. Change it there when yours is set up differently \u2014 what is written on the bean always wins.',
     bagPhotos:'Bag photos', bagPhotosFull:'Three photographs is the limit for one bean.',
     bagPick:'Tap a photo to keep it with the bean', bagPickN:'{n} to keep',
     bagPhotoDrop:'Remove this photograph from the bean?',
@@ -3815,6 +3880,16 @@ var I18N={
     dupTitle:'이미 등록된 원두입니다', dupAddBatch:'배치로 추가', dupNewBean:'새 원두로 등록',
     dupText:'{bean} 은(는) 이미 배치 {n}개로 등록되어 있습니다. 같은 원두를 다시 구매하셨다면 새 배치로 추가하세요. 이름만 같은 다른 원두라면 새 원두로 등록하세요.',
     roastDate:'로스팅 날짜', roastMachine:'로스터기', region:'지역',
+    roastType:'로스팅 방식', roastTypeNone:'— 지정 안 함 —',
+    rmListTitle:'로스터기 목록', rmModel:'모델명', rmHeat:'열원', rmNote:'비고',
+    rmFind:'검색', rmFindNone:'일치하는 게 없습니다.', rmUngrouped:'방식 지정 안 함',
+    rmUsed:'원두 {n}', rmRemove:'삭제', rmCount:'{m}개 중 {n}개 표시',
+    rmHeatNone:'— 지정 안 함 —',
+    rmRemoveUsed:'원두 {n}개가 이 로스터기를 가리키고 있습니다.',
+    rmAdd:'+ 추가', rmReset:'기본 목록으로 되돌리기', rmNone:'목록이 비어 있습니다.',
+    rmUnnamed:'이 항목', rmRemoveAsk:'{n} 을(를) 목록에서 지울까요?',
+    rmResetAsk:'직접 고친 내용을 버리고 기본 목록으로 돌아갈까요?',
+    rmListHint:'원두에서 로스터기를 고르면 로스팅 방식이 자동으로 채워집니다. 다르게 운용하시면 원두 쪽에서 바꾸세요 — 원두에 적힌 값이 우선입니다.',
     bagPhotos:'봉투 사진', bagPhotosFull:'원두 하나당 사진은 세 장까지입니다.',
     bagPick:'사진을 누르면 원두에 남깁니다', bagPickN:'{n}장 남김',
     bagPhotoDrop:'이 사진을 원두에서 지울까요?',
@@ -6178,6 +6253,10 @@ function hydrateFromStore(){
     if(Array.isArray(all.baskets)){ basketNames=all.baskets.filter(function(x){ return typeof x==='string'&&x; });
       lsSet('aurora_baskets',basketNames); }
     else if(basketNames) storePut('baskets',basketNames);
+    if(Array.isArray(all.rmachines)&&all.rmachines.length){
+      roastMachines=all.rmachines.filter(function(x){ return x&&typeof x==='object'; });
+      lsSet('aurora_rmachines',roastMachines); }
+    else if(roastMachines) storePut('rmachines',roastMachines);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
       updateBeanInfo(); applyCam(); applyFx(); if(carItems.length) buildCarousel(); }
   }); }
@@ -9471,6 +9550,7 @@ function curBeanForAi(){
     'variety','altitude','notes','flavors','roastLevel','roastDate','daysOffRoast'];
   var out={}; keep.forEach(function(k){ if(b[k]!=null&&b[k]!=='') out[k]=b[k]; });
   var rm=beanRoastMachine(b); if(rm) out.roastMachine=rm;
+  var rt=beanRoastTypeShown(b); if(rt) out.roastType=rt;
   return Object.keys(out).length?out:null; }
 function curGrinderForAi(){
   var g=grinderDigest(grinderByName(AIP.grinder),context&&context.grinderSetting);
@@ -10333,9 +10413,57 @@ function toIsoDate(v){
   if((m=lower.match(/([a-z]{3})[a-z]*\.?\s*(\d{1,2}),?\s*(\d{4})/))&&MONTH_NAMES[m[1]]) return pack(+m[3],MONTH_NAMES[m[1]],+m[2]);
   return '';
 }
-var ROAST_MACHINE_SEEDS=['Probat','Giesen','Loring','Diedrich','Stronghold',
-  'Aillio Bullet','Petroncini','Buhler','Joper','Typhoon','Proaster',
-  'Has Garanti','Mill City','Toper','Ozturk','Roest','Ikawa'];
+var ROAST_TYPES=['\uc5f4\ud48d\uc2dd','\ubc18\uc5f4\ud48d\uc2dd','\uc9c1\ud654\uc2dd','\ud558\uc774\ube0c\ub9ac\ub4dc','\uc804\ub3c4\u00b7\ubcf5\uc0ac\uc2dd'];
+// n 이름 · c 나라 · h 열원 · t 방식(비우면 모델마다 다름) · d 비고
+var ROAST_MACHINES=[
+ {n:'\ub85c\ub9c1',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',t:'\uc5f4\ud48d\uc2dd',d:'\ub4dc\ub7fc \ube44\uac00\uc5f4 \u00b7 \ub300\ud615 \ub85c\uc2a4\ud130\ub9ac \uc704\uc8fc'},
+ {n:'IMF',c:'\uc774\ud0c8\ub9ac\uc544',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uac04\uc811 \ud654\uc5fc \u00b7 \ud0c0\uacf5 \ub4dc\ub7fc \u00b7 \uc5f4\ud48d \uc7ac\uc21c\ud658'},
+ {n:'\uc774\uce74\uc640',c:'\uc601\uad6d',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35 \u00b7 \uc0d8\ud50c \ub85c\uc2a4\ud305'},
+ {n:'\ub274\ud074\ub9ac\uc5b4\uc2a4',m:'\ub9c1\ud06c',c:'\ud638\uc8fc',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35 \u00b7 50~100g \uc0d8\ud50c'},
+ {n:'\ub85c\uc2a4\ud2b8',c:'\ub178\ub974\uc6e8\uc774',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\ub4dc\ub7fc \ube44\uac00\uc5f4 \u00b7 \uc0d8\ud50c'},
+ {n:'\uce74\ud398\ub85c\uc9c1',m:'\ub098\ub178 7',c:'\ub274\uc9c8\ub79c\ub4dc',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35'},
+ {n:'\ube48\ubcf8',m:'BB100+',c:'\ub300\ub9cc',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\ud648\ub85c\uc2a4\ud130 \u00b7 120g'},
+ {n:'\uc81c\ub124\uce74\ud398',c:'\ud55c\uad6d',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\ud68c\uc804 \ucc54\ubc84 \u00b7 \ud648\ub85c\uc2a4\ud130'},
+ {n:'\ud504\ub85c\ubc0b',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uad6d\ub0b4\ub294 \ub9e4\uc7a5\uc6a9 \uc704\uc8fc'},
+ {n:'\uae30\uc13c',c:'\ub124\ub35c\ub780\ub4dc',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uc774\uc911\ubcbd \ub4dc\ub7fc'},
+ {n:'\ub514\ub4dc\ub9ac\ud788',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'IR \ubc84\ub108 + \uc5f4\uad50\ud658'},
+ {n:'\ud0dc\ud658',m:'\ud504\ub85c\uc544\uc2a4\ud130',c:'\ud55c\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:''},
+ {n:'\uc774\uc9c0\uc2a4\ud130',c:'\ud55c\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:''},
+ {n:'\ud6c4\uc9c0\ub85c\uc584',c:'\uc77c\ubcf8',h:'\uac00\uc2a4',t:'',d:'\ubaa8\ub378\ub9c8\ub2e4 \ub2e4\ub984 \u00b7 \uc9c1\ud654\uc2dd \ub300\ud45c \uae30\uc885'},
+ {n:'\uce7c\ub514',c:'\ud55c\uad6d',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'',d:'\ub77c\uc778\uc5c5\ubcc4\ub85c \ub2e4\ub984'},
+ {n:'\uc2a4\ud2b8\ub871\ud640\ub4dc',c:'\ud55c\uad6d',h:'\uc804\uae30',t:'\ud558\uc774\ube0c\ub9ac\ub4dc',d:'\ud560\ub85c\uac90 + \uc5f4\ud48d + \ub4dc\ub7fc \ud788\ud130'},
+ {n:'\ub9ac\uc624\ub098\uc774',m:'\ucee4\uc11c',c:'\ud55c\uad6d',h:'\uc804\uae30',t:'\ud558\uc774\ube0c\ub9ac\ub4dc',d:'\uc138\ub77c\ubbf9 \uc6d0\uc801\uc678\uc120 + \uc5f4\ud48d \u00b7 12\uac01 \ub4dc\ub7fc'},
+ {n:'\uc544\uc77c\ub9ac\uc624',m:'\ubd88\ub9bf',c:'\ub300\ub9cc',h:'\uc804\uae30',t:'\uc804\ub3c4\u00b7\ubcf5\uc0ac\uc2dd',d:'IH \ub4dc\ub7fc'}];
+var roastMachines=null;
+function loadRoastMachines(){
+  var a=lsGet('aurora_rmachines');
+  roastMachines=(Array.isArray(a)&&a.length)?a:null; }
+function saveRoastMachines(){
+  lsSet('aurora_rmachines',roastMachines||[]);
+  storeSave('rmachines',roastMachines||[]); }
+function rmList(){ return roastMachines||ROAST_MACHINES; }
+function rmOwn(){
+  if(!roastMachines) roastMachines=JSON.parse(JSON.stringify(ROAST_MACHINES));
+  return roastMachines; }
+// A make with a model is one entry; the label is what gets typed into a bean.
+function rmLabel(m){
+  return String((m&&m.n)||'').trim()+(m&&m.m?(' '+String(m.m).trim()):''); }
+function roastMachineInfo(name){
+  var v=String(name||'').trim().toLowerCase(); if(!v) return null;
+  // the typed value usually carries a model after the make -- the longest make
+  // that starts it is the one meant
+  var best=null, bestLen=0;
+  rmList().forEach(function(m){
+    var k=rmLabel(m).toLowerCase(); if(!k) return;
+    if(v.indexOf(k)===0&&k.length>bestLen){ best=m; bestLen=k.length; } });
+  if(best) return best;
+  // nothing matched the whole label, so fall back to the make alone -- someone
+  // who types only the make still means the make
+  rmList().forEach(function(m){
+    var k=String(m.n||'').trim().toLowerCase(); if(!k) return;
+    if(v.indexOf(k)===0&&k.length>bestLen){ best=m; bestLen=k.length; } });
+  return best; }
+function roastTypeFor(name){ var m=roastMachineInfo(name); return (m&&m.t)||''; }
 function beanRoastMachine(b){ var ex=(b&&b.extras)||{};
   return String(ex.roastMachine||'').trim(); }
 // What the shelf already holds comes first: a list of famous machines is only
@@ -10344,9 +10472,134 @@ function roastMachineList(){
   var seen={}, out=[];
   (beans||[]).forEach(function(b){ var m=beanRoastMachine(b); if(!m) return;
     var k=m.toLowerCase(); if(seen[k]) return; seen[k]=1; out.push(m); });
-  ROAST_MACHINE_SEEDS.forEach(function(m){
-    if(!seen[m.toLowerCase()]) out.push(m); });
+  rmList().forEach(function(m){
+    var lab=rmLabel(m); if(!lab) return;
+    if(!seen[lab.toLowerCase()]) out.push(lab); });
   return out; }
+function beanRoastType(b){ var ex=(b&&b.extras)||{};
+  return String(ex.roastType||'').trim(); }
+// What is shown is what was written down, or failing that what the catalogue
+// says the machine usually is.
+function beanRoastTypeShown(b){
+  return beanRoastType(b)||roastTypeFor(beanRoastMachine(b)); }
+function roastTypeSelHtml(id,cur,onchange){
+  return '<select id="'+id+'"'+(onchange?' onchange="'+onchange+'"':'')+'>'
+    +'<option value="">'+escapeHtml(t('roastTypeNone'))+'</option>'
+    +ROAST_TYPES.map(function(x){
+      return '<option value="'+escapeAttr(x)+'"'+(x===cur?' selected':'')+'>'
+        +escapeHtml(x)+'</option>'; }).join('')+'</select>'; }
+// Choosing a machine suggests its type; it never overwrites one already set.
+var _rmQ='', _rmOpen=-1;
+function openRoastMachines(){
+  _rmQ=''; _rmOpen=-1;
+  var fe=document.getElementById('rmFind'); if(fe) fe.value='';
+  renderRoastMachines();
+  document.getElementById('rmOverlay').classList.add('show'); }
+function rmSetQuery(v){ _rmQ=String(v||''); _rmOpen=-1; renderRoastMachines(); }
+function rmToggle(i){ _rmOpen=(_rmOpen===i)?-1:i; renderRoastMachines(); }
+// How many coffees on the shelf were roasted on it -- the thing worth knowing
+// before deleting a row.
+function rmUses(m){
+  var lab=rmLabel(m).toLowerCase(); if(!lab) return 0;
+  var n=0;
+  (beans||[]).forEach(function(b){
+    var v=beanRoastMachine(b).toLowerCase();
+    if(v&&v.indexOf(lab)===0) n++; });
+  return n; }
+// Sorted into methods, with anything the catalogue cannot place left last.
+function rmRows(){
+  var q=_rmQ.trim().toLowerCase();
+  var rows=rmList().map(function(m,i){ return {m:m,i:i}; });
+  if(q) rows=rows.filter(function(r){
+    return [r.m.n,r.m.m,r.m.h,r.m.t,r.m.d].join(' ').toLowerCase().indexOf(q)>=0; });
+  var ord={}; ROAST_TYPES.forEach(function(x,k){ ord[x]=k; });
+  rows.sort(function(a,b){
+    var ka=(a.m.t in ord)?ord[a.m.t]:99, kb=(b.m.t in ord)?ord[b.m.t]:99;
+    return (ka-kb)||rmLabel(a.m).localeCompare(rmLabel(b.m)); });
+  return rows; }
+function rmSet(i,field,v){
+  var l=rmOwn(); if(!l[i]) return;
+  l[i][field]=String(v==null?'':v).trim();
+  saveRoastMachines(); rmRefreshPickers();
+  // the summary line and the grouping both read from what just changed
+  if(field==='n'||field==='m'||field==='t'||field==='h') renderRoastMachines(); }
+function rmAdd(){
+  var l=rmOwn();
+  l.push({n:'',m:'',h:'',t:'',d:''});
+  _rmQ=''; var fe=document.getElementById('rmFind'); if(fe) fe.value='';
+  _rmOpen=l.length-1;                      // a new row opens where it is made
+  saveRoastMachines(); renderRoastMachines();
+  var el=document.querySelector('#rmList .rm-row.open input');
+  if(el){ el.focus(); el.scrollIntoView({block:'center'}); } }
+function rmRemove(i){
+  var l=rmOwn(); if(i<0||i>=l.length) return;
+  var used=rmUses(l[i]);
+  var ask=t('rmRemoveAsk').replace('{n}',rmLabel(l[i])||t('rmUnnamed'))
+        +(used?('\n'+t('rmRemoveUsed').replace('{n}',used)):'');
+  if(!confirm(ask)) return;
+  l.splice(i,1); _rmOpen=-1;
+  saveRoastMachines(); renderRoastMachines(); rmRefreshPickers(); }
+function rmReset(){
+  if(!confirm(t('rmResetAsk'))) return;
+  roastMachines=null; _rmOpen=-1; _rmQ='';
+  var fe=document.getElementById('rmFind'); if(fe) fe.value='';
+  saveRoastMachines(); renderRoastMachines(); rmRefreshPickers(); }
+// the datalists behind the bean editors are built from this list
+function rmRefreshPickers(){
+  var d1=document.getElementById('bgRmList');
+  if(d1) d1.innerHTML=roastMachineList().map(function(x){
+    return '<option value="'+escapeAttr(x)+'"></option>'; }).join('');
+  if(typeof mbFillRmList==='function') try{ mbFillRmList(); }catch(_){} }
+var RM_HEATS=['\uac00\uc2a4','\uc804\uae30','\uac00\uc2a4\u00b7\uc804\uae30'];
+function rmHeatSelHtml(i,cur){
+  return '<select onchange="rmSet('+i+',\'h\',this.value)">'
+    +'<option value="">'+escapeHtml(t('rmHeatNone'))+'</option>'
+    +RM_HEATS.map(function(x){
+      return '<option value="'+escapeAttr(x)+'"'+(x===cur?' selected':'')+'>'
+        +escapeHtml(x)+'</option>'; }).join('')
+    +(cur&&RM_HEATS.indexOf(cur)<0
+      ?'<option value="'+escapeAttr(cur)+'" selected>'+escapeHtml(cur)+'</option>':'')
+    +'</select>'; }
+function renderRoastMachines(){
+  var box=document.getElementById('rmList'); if(!box) return;
+  var rows=rmRows(), out=[], grp=null;
+  rows.forEach(function(r){
+    var m=r.m, i=r.i, open=(_rmOpen===i);
+    var ty=m.t||'';
+    if(ty!==grp){ grp=ty;
+      out.push('<div class="rm-grp">'+escapeHtml(ty||t('rmUngrouped'))+'</div>'); }
+    var used=rmUses(m), lab=rmLabel(m)||t('rmUnnamed');
+    out.push('<div class="rm-row'+(open?' open':'')+'">'
+      +'<button type="button" class="rm-sum" onclick="rmToggle('+i+')">'
+        +'<span class="rm-nm'+(rmLabel(m)?'':' none')+'">'+escapeHtml(lab)+'</span>'
+        +'<span class="rm-meta">'+escapeHtml([m.h,used?t('rmUsed').replace('{n}',used):'']
+            .filter(Boolean).join('  \u00b7  '))+'</span>'
+        +'<span class="rm-car">'+(open?'\u25b4':'\u25be')+'</span>'
+      +'</button>'
+      +(open?('<div class="rm-edit">'
+        +'<div class="rm-line">'
+          +'<label>'+escapeHtml(t('roastMachine'))+'<input value="'+escapeAttr(m.n||'')+'" onchange="rmSet('+i+',\'n\',this.value)"></label>'
+          +'<label>'+escapeHtml(t('rmModel'))+'<input value="'+escapeAttr(m.m||'')+'" onchange="rmSet('+i+',\'m\',this.value)"></label>'
+        +'</div>'
+        +'<div class="rm-line">'
+          +'<label>'+escapeHtml(t('roastType'))+roastTypeSelHtml('rmT'+i,m.t||'','rmSet('+i+',\'t\',this.value)')+'</label>'
+          +'<label>'+escapeHtml(t('rmHeat'))+rmHeatSelHtml(i,m.h||'')+'</label>'
+        +'</div>'
+        +'<label class="rm-wide">'+escapeHtml(t('rmNote'))+'<input value="'+escapeAttr(m.d||'')+'" onchange="rmSet('+i+',\'d\',this.value)"></label>'
+        +'<div class="rm-acts"><button class="m-btn rm-del" onclick="rmRemove('+i+')">'
+          +escapeHtml(t('rmRemove'))+'</button></div>'
+      +'</div>'):'')
+    +'</div>'); });
+  box.innerHTML=out.join('')
+    ||('<div class="set-desc">'+escapeHtml(t(_rmQ.trim()?'rmFindNone':'rmNone'))+'</div>');
+  var c=document.getElementById('rmCount');
+  if(c) c.textContent=t('rmCount').replace('{n}',rows.length).replace('{m}',rmList().length); }
+function roastMachinePicked(pfx){
+  var mi=document.getElementById(pfx+'RoastMachine');
+  var ti=document.getElementById(pfx+'RoastType');
+  if(!mi||!ti||ti.value) return;
+  var guess=roastTypeFor(mi.value);
+  if(guess) ti.value=guess; }
 function daysSinceRoast(b){ if(!b||!b.roastDate) return null;
   var d=new Date(b.roastDate); if(isNaN(d)) return null;
   return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000)); }
@@ -10551,7 +10804,11 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'</div>'
       +'<div id="bgPics"></div>'
       +'<div class="field-row"><div class="field"><label>'+t('roaster')+'</label><input id="bgRoaster" value="'+escapeAttr(o.roaster||'')+'"></div><div class="field"><label>'+t('name')+'</label><input id="bgName" value="'+escapeAttr(o.name||'')+'"></div></div>'
-      +'<div class="field"><label>'+t('roastMachine')+'</label><input id="bgRoastMachine" list="bgRmList" value="'+escapeAttr(beanRoastMachine(o))+'" placeholder="Probat UG22"></div>'
+      +'<div class="field-row"><div class="field"><label class="bk-lab">'+t('roastMachine')
+        +'<button type="button" class="bk-manage" aria-label="'+escapeAttr(t('rmListTitle'))+'" onclick="openRoastMachines()">\u2630</button></label>'
+        +'<input id="bgRoastMachine" list="bgRmList" value="'+escapeAttr(beanRoastMachine(o))+'" placeholder="\uae30\uc13c W15" oninput="roastMachinePicked(\'bg\')" onchange="roastMachinePicked(\'bg\')"></div>'
+        +'<div class="field"><label>'+t('roastType')+'</label>'
+        +roastTypeSelHtml('bgRoastType',beanRoastTypeShown(o))+'</div></div>'
       +dl('bgRmList',roastMachineList())
       +batchPicker(o)
       +'<div class="field-row"><div class="field"><label>'+t('roastDate')+'</label><input id="bgRoastDate" type="date" value="'+escapeAttr(isoDay(batch.roastDate))+'"></div><div class="field"><label>'+t('roastLevel')+'</label><input id="bgRoast" value="'+escapeAttr(batch.roastLevel||'')+'" placeholder="light / medium / dark"></div></div>'
@@ -11138,6 +11395,7 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
   var blend=bgBlendForSave();
   if(blend) ex.blend=blend; else delete ex.blend;
   var bgRm=v('bgRoastMachine'); if(bgRm) ex.roastMachine=bgRm; else delete ex.roastMachine;
+  var bgRt=v('bgRoastType'); if(bgRt) ex.roastType=bgRt; else delete ex.roastType;
   body.extras=Object.keys(ex).length?ex:null;
   // With parts to answer for it, the bean's own origin fields would only
   // contradict them, so they are cleared rather than left behind a hidden form.
@@ -11738,7 +11996,7 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
       function put(id,v){ var el=document.getElementById(id); if(el&&v){ el.value=v; } }
       put('bgRoaster',data.roaster); put('bgName',data.name);
       put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
-      put('bgRoastMachine',data.roastMachine);
+      put('bgRoastMachine',data.roastMachine); roastMachinePicked('bg');
       var scanned=aiBlendParts(data);
       if(scanned){
         // The label says several coffees, so the form says several coffees: the
@@ -11908,7 +12166,7 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     set('mbProcess',data.processing); set('mbProducer',data.producer);
     set('mbDecafProcess',data.decafProcess); set('mbVariety',(data.variety||[]).join(', '));
     set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
-    set('mbRoastMachine',data.roastMachine);
+    set('mbRoastMachine',data.roastMachine); roastMachinePicked('mb');
     // A label the model did not read as a blend is not a statement that this
     // coffee is not one. Parts already entered stay; only found parts replace.
     var scanned=aiBlendParts(data);
@@ -11944,6 +12202,7 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
     // Unticking is a statement too: the record stops being a blend.
     else delete ex.blend;
     var mbRm=v('mbRoastMachine'); if(mbRm) ex.roastMachine=mbRm; else delete ex.roastMachine;
+    var mbRt=v('mbRoastType'); if(mbRt) ex.roastType=mbRt; else delete ex.roastType;
     body.extras=Object.keys(ex).length?ex:null;
     body.decaf=saveBlend
       ? saveBlend.some(function(c){ return !!c.decafProcess; })
@@ -14400,6 +14659,7 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
       chipList(chips,t('region'),bean.region);
       chipList(chips,t('process'),bean.processing);
       chip(t('roastMachine'),beanRoastMachine(bean));
+      chip(t('roastType'),beanRoastTypeShown(bean));
       if(batch&&batch.roastLevel) chip(t('roastLevel'),batch.roastLevel);
       if(batch&&batch.roastDate) chip(t('roastDate'),isoDay(batch.roastDate));
       chipList(chips,t('variety'),bean.variety);
@@ -14944,7 +15204,7 @@ function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return
   var tds=parseFloat(document.getElementById('dyeTds').value)||null; var ey=parseFloat(document.getElementById('dyeEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1)); // EY% = TDS*beverage/dose
   var ta=tasteAnn(state.dyeTaste||{},document.getElementById('dyeNotes').value,
-    null,beanRoastMachine(currentBean()));
+    null,shotRoastMachine({workflow:{context:context}}));
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
     enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
   api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast(t('tShotLogged'),'ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast(t('tLogFailed'),'err'); }); }
@@ -14984,7 +15244,9 @@ function slMatches(s){
   if(!needle) return true;
   var pr=(s.workflow&&s.workflow.profile)||{}, cx=(s.workflow&&s.workflow.context)||{};
   var an=s.annotations||{};
+  var rb=shotBeanOf(s);
   return [pr.title,cx.coffeeName,cx.coffeeRoaster,cx.grinderModel,cx.grinderSetting,
+          beanRoastMachine(rb),beanRoastTypeShown(rb),
           shotBasket(s),an.notes,fmtShotDate(s)].join(' ').toLowerCase().indexOf(needle)>=0; }
 function renderShotList(){ var list=document.getElementById('slList'); if(!list) return; list.innerHTML='';
   if(!shotList.length){ list.innerHTML=slLoading?'<div class="ep-group-head">Loading…</div>':'<div class="ep-placeholder">'+t('noShots2')+'</div>'; return; }
@@ -15173,9 +15435,10 @@ function tasteWords(v){
 function basketNoteLine(basket){
   basket=String(basket||'').trim();
   return basket?(t('basketLabel')+': '+basket):''; }
-function roastMachineNoteLine(m){
-  m=String(m||'').trim();
-  return m?(t('roastMachine')+': '+m):''; }
+function roastMachineNoteLine(m,ty){
+  m=String(m||'').trim(); ty=String(ty||'').trim();
+  if(!m) return ty?(t('roastType')+': '+ty):'';
+  return t('roastMachine')+': '+m+(ty?(' ('+ty+')'):''); }
 // The bean this shot was pulled with, not the bean on the counter now.
 function beanKeyName(v){ return String(v==null?'':v).trim().replace(/\s+/g,' ').toLowerCase(); }
 function batchById(id){
@@ -15202,10 +15465,13 @@ function shotBeanOf(sh){
 function shotBatchOf(sh){
   var cx=(sh&&sh.workflow&&sh.workflow.context)||{};
   return batchById(cx.beanBatchId); }
-function shotRoastMachine(sh){ return beanRoastMachine(shotBeanOf(sh)); }
+function shotRoastMachine(sh){
+  var b=shotBeanOf(sh); if(!b) return null;
+  var m=beanRoastMachine(b), ty=beanRoastTypeShown(b);
+  return (m||ty)?{m:m,t:ty}:null; }
 function tasteCompose(v,note,basket,machine){
   var parts=[String(note||'').trim(), tasteWords(v).join(' \u00b7 '),
-    basketNoteLine(basket), roastMachineNoteLine(machine)]
+    basketNoteLine(basket), roastMachineNoteLine(machine&&machine.m,machine&&machine.t)]
     .filter(Boolean);
   return parts.length?parts.join('\n'):null; }
 function tasteAnn(v,note,basket,machine){
@@ -16610,15 +16876,21 @@ function mbFill(o){
   set('mbRoaster',o.roaster); set('mbName',o.name); set('mbCountry',o.country); set('mbRegion',o.region);
   set('mbProcess',o.processing); set('mbProducer',o.producer); set('mbDecafProcess',o.decafProcess);
   set('mbVariety',(o.variety||[]).join(', ')); set('mbAltitude',fmtAltitude(o.altitude));
-  set('mbRoastMachine',beanRoastMachine(o)); set('mbNotes',o.notes);
+  set('mbRoastMachine',beanRoastMachine(o)); set('mbRoastType',beanRoastTypeShown(o));
+  set('mbNotes',o.notes);
   bgBlend=blendOf(o);
   var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=!!bgBlend;
   bgBlendRender();
   var box=document.getElementById('mbFields'); if(box) box.style.display='block'; }
 function mbFillRmList(){
-  var dlist=document.getElementById('mbRmList'); if(!dlist) return;
-  dlist.innerHTML=roastMachineList().map(function(m){
-    return '<option value="'+escapeAttr(m)+'"></option>'; }).join(''); }
+  var dlist=document.getElementById('mbRmList'); if(dlist)
+    dlist.innerHTML=roastMachineList().map(function(m){
+      return '<option value="'+escapeAttr(m)+'"></option>'; }).join('');
+  var sel=document.getElementById('mbRoastType');
+  if(sel&&!sel.options.length){
+    sel.innerHTML='<option value="">'+escapeHtml(t('roastTypeNone'))+'</option>'
+      +ROAST_TYPES.map(function(x){
+        return '<option value="'+escapeAttr(x)+'">'+escapeHtml(x)+'</option>'; }).join(''); } }
 function mbRenderBatches(){
   var box=document.getElementById('mbBatchRow'); if(!box) return;
   if(!mbBean){ box.innerHTML=''; _picsKeyShown.mb=''; renderBeanPics('mb'); return; }
@@ -16659,7 +16931,8 @@ function mbPickBean(id){
   loadBeanBatches().then(function(){ mbRenderBatches(); showBeanPics('mb'); }); }
 function mbClearFields(){
   ['mbRoaster','mbName','mbCountry','mbRegion','mbProcess','mbProducer','mbDecafProcess',
-   'mbVariety','mbAltitude','mbNotes','mbRoastDate','mbRoast','mbRoastMachine'].forEach(function(id){
+   'mbVariety','mbAltitude','mbNotes','mbRoastDate','mbRoast','mbRoastMachine',
+   'mbRoastType'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value=''; });
   bgBlend=null; var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=false;
   bgBlendRender();
@@ -17335,7 +17608,7 @@ document.addEventListener('DOMContentLoaded', function(){
   else if(phoneSized()&&!viewForcedTablet()){ bootPhone('status'); return; }
   skinStableCheck();
   bindDoseGestures(); thermoInit();
-  fitStage(); tickHdrClock(); loadFavs(); loadAiLangs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); loadGrinderBurrs(); loadBaskets(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
+  fitStage(); tickHdrClock(); loadFavs(); loadAiLangs(); loadPrefs(); applyFx(); loadPresets(); loadGrinderBrands(); loadGrinderSpeeds(); loadGrinderBurrs(); loadBaskets(); loadRoastMachines(); hydrateFromStore(); initWebSockets();   applyActionMode(); applyCam(); syncRecipe(); updateShotBtn(); drawChart();
   loadMachineSettings(); loadMachineInfo(); loadDevices();
   loadBattery(); setInterval(loadBattery,60000);
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
