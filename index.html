@@ -139,7 +139,7 @@ body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
    watch it, so unlike the clock it is allowed to keep moving. */
 #lockTiles{position:absolute;inset:0;z-index:-2;display:grid;pointer-events:none;overflow:hidden}
 #lockTiles::after{content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(58% 50% at 50% 45%,rgba(10,8,20,.86),rgba(10,8,20,.5) 64%,rgba(10,8,20,.24))}
+  background:radial-gradient(54% 46% at 50% 45%,rgba(10,8,20,.84),rgba(10,8,20,.36) 62%,rgba(10,8,20,.08))}
 .lt-cell{position:relative;opacity:0;overflow:hidden;
   transition:opacity 2.2s ease-in-out;will-change:opacity}
 .lt-l{position:absolute;inset:0;background-size:cover;background-position:center;
@@ -5327,7 +5327,7 @@ function wakeFromSleep(){ endSleepUI();
 // far enough apart that no pixel carries the same glyph for long.
 var LT_CELL_CAP=60, LT_TICK=[650,1300];
 var LT_SWAP_MAX=2, LT_BLOOM=1400, LT_KEYS=12, LT_POOL_MAX=30, LT_ENOUGH=16;
-var LT_PEAK=[0.16,0.30];
+var LT_PEAK=[0.26,0.44];
 var LT_SAMPLE_URL='sample-bags.json';
 var _ltOwn=null, _ltPending=null, _ltFill=null, _ltFillPend=null;
 var _ltTimers=[], _ltNext=null, _ltCells=[];
