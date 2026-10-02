@@ -4144,6 +4144,38 @@ function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window
   document.body.classList.toggle('scaled',scaled); }
 document.addEventListener('visibilitychange',function(){
   if(!document.hidden&&typeof maybeAutoScanDosing==='function') maybeAutoScanDosing(); });
+var RESUME_AFTER=15000, _hiddenAt=0;
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){ _hiddenAt=Date.now(); return; }
+  if(!_hiddenAt||Date.now()-_hiddenAt<RESUME_AFTER) return;
+  _hiddenAt=0; resumeResync(); });
+// A page restored from the back/forward cache never ran its boot either.
+window.addEventListener('pageshow',function(e){ if(e&&e.persisted) resumeResync(); });
+function resyncSockets(){
+  Object.keys(_wsOpen).forEach(function(name){
+    if(_wsParked[name]) return;            // parked for sleep on purpose
+    try{ if(sockets[name]) sockets[name].close(); }catch(_){}
+    sockets[name]=null;
+    try{ _wsOpen[name](); }catch(_){} }); }
+function resumeResync(){
+  resyncSockets();
+  if(!_asleep) restoreBrightness();
+  // what the gateway holds
+  api('GET','/api/v1/settings').then(function(x){ gwSettings=x||{};
+    syncWakeLock(); if(spOpen()) renderSpContent(); }).catch(function(){});
+  api('GET','/api/v1/display').then(function(x){ displayState=x||{};
+    if(spOpen()) renderSpContent(); }).catch(function(){});
+  api('GET','/api/v1/machine/info').then(function(x){ machineInfo=x||{};
+    if(spOpen()) renderSpContent(); }).catch(function(){});
+  loadMachineSettings(); loadDevices(); loadWorkflow(); loadBattery();
+  // and what another device may have changed in the store
+  try{
+    hydrateFromStore().then(function(){
+      applyFx(); applyNight(); applyI18n(); applyActionMode(); applyCam();
+      if(!state.shotRunning&&!state.steamRunning&&!state.waterRunning) syncRecipe();
+      if(spOpen()) renderSpContent();
+    },function(){});
+  }catch(_){} }
 var _resizeT=null;
 window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requestAnimationFrame(function(){ _resizeT=null; fitStage(); _chartBgKey=null; drawChart(); }); });
 
@@ -5430,7 +5462,15 @@ function beginSleepUI(){ _asleep=true; document.body.classList.add('asleep'); do
   // Dim the panel while asleep (a dark, low-brightness screen resists burn-in and
   // saves power). Remember the level so it can be restored on wake.
   if(prefs.sleepDim){ if(displayState&&displayState.brightness!=null) _preSleepBrightness=displayState.brightness;
+    if(_preSleepBrightness!=null) lsSet('aurora_presleep',_preSleepBrightness);
     api('PUT','/api/v1/display/brightness',{brightness:prefs.sleepBrightness||20}).catch(function(){}); } }
+// Whatever the panel was on before it was dimmed, wherever that was written.
+function restoreBrightness(){
+  var b=_preSleepBrightness;
+  if(b==null){ var st=lsGet('aurora_presleep'); if(st!=null&&isFinite(+st)) b=+st; }
+  _preSleepBrightness=null; lsSet('aurora_presleep',null);
+  if(b==null) return;
+  api('PUT','/api/v1/display/brightness',{brightness:b}).catch(function(){}); }
 // Called on both wake paths. Clears the flag/clock, then repaints the live UI once
 // so everything reflects the current state after the sleep gap.
 function endSleepUI(){ _asleep=false;
@@ -5445,7 +5485,7 @@ function endSleepUI(){ _asleep=false;
   ltStop();
   var sh=document.getElementById('lockShift'); if(sh) sh.style.transform='';
   // Restore pre-sleep brightness.
-  if(_preSleepBrightness!=null){ var b=_preSleepBrightness; _preSleepBrightness=null; api('PUT','/api/v1/display/brightness',{brightness:b}).catch(function(){}); }
+  restoreBrightness();
   updateMachineUI(); updateWaterUI(); updateScaleUI(); _chartBgKey=null; drawChart(); }
 function enterSleep(){ beginSleepUI();
   api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast(t('tSleepFailed'),'err'); }); }
@@ -17856,6 +17896,10 @@ document.addEventListener('DOMContentLoaded', function(){
   api('GET','/api/v1/grinders').then(function(g){ grinders=g||[]; updateGrindRow(); }).catch(function(){});
   Promise.all([api('GET','/api/v1/beans').catch(function(){return[];}), loadBeanBatches()])
     .then(function(r){ beans=r[0]||[]; updateBeanInfo(); });
+  // A reload while the lock screen was up leaves the panel dimmed and the
+  // variable that remembered its level gone. Once the first snapshot has said
+  // whether the machine is actually asleep, put it back.
+  setTimeout(function(){ if(!_asleep) restoreBrightness(); },2500);
   loadLastShot();
   // load profiles first, then workflow so we can match the current profile to a real list entry
   loadProfiles();
