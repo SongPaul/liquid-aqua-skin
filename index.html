@@ -5437,7 +5437,7 @@ function doseSourceWeight(){
   return (state.scaleConnected&&state.scaleWeight!==null)?state.scaleWeight:null; }
 function doseFromScale(){ var w=doseSourceWeight();
   if(w===null){ toast(t('doseNoScale'),'err'); return; }
-  settings.doseIn=parseFloat(w.toFixed(1)); syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
+  setDoseIn(w); syncRecipe(); pushRecipe(); toast(t('doseFromScaleOk'),'ok'); }
 function doTare(){
   if(!state.scaleConnected){ toast(t('doseNoScale'),'err'); return; }
   api('PUT','/api/v1/scale/tare').then(function(){toast(t('tared'),'ok');}).catch(function(e){toast(e.message,'err');}); }
@@ -6110,7 +6110,14 @@ function syncAuxPanel(){
   syncAux(); }
 
 // ── Recipe / ratio ──────────────────────────────────────────────────
-function adjust(key,delta){ settings[key]=parseFloat((settings[key]+delta).toFixed(1)); var c={doseIn:[5,30],doseOut:[10,80]}[key]; if(c) settings[key]=Math.max(c[0],Math.min(c[1],settings[key])); syncRecipe(); pushRecipe(); }
+function setDoseIn(v){
+  var r=(settings.doseIn>0&&settings.doseOut>0)?(settings.doseOut/settings.doseIn):null;
+  settings.doseIn=Math.max(5,Math.min(30,parseFloat((+v).toFixed(1))));
+  if(r){ settings.doseOut=Math.max(10,Math.min(80,
+    parseFloat((settings.doseIn*r).toFixed(1)))); } }
+function adjust(key,delta){
+  if(key==='doseIn'){ setDoseIn(settings.doseIn+delta); syncRecipe(); pushRecipe(); return; }
+  settings[key]=parseFloat((settings[key]+delta).toFixed(1)); var c={doseIn:[5,30],doseOut:[10,80]}[key]; if(c) settings[key]=Math.max(c[0],Math.min(c[1],settings[key])); syncRecipe(); pushRecipe(); }
 // Adjust the ratio directly -> recompute yield from current dose.
 function adjustRatio(delta){ var r=settings.doseIn>0?(settings.doseOut/settings.doseIn):2; r=Math.max(1,Math.min(4,parseFloat((r+delta).toFixed(2))));
   settings.doseOut=parseFloat((settings.doseIn*r).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); syncRecipe(); pushRecipe(); }
@@ -6744,6 +6751,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   var c=KP_CFG[KP.field];
   v=Math.max(c.min,Math.min(c.max,v));
   if(KP.field==='ratio'){ settings.doseOut=parseFloat((settings.doseIn*v).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); }
+  else if(KP.field==='doseIn'){ setDoseIn(v); }
   else { settings[KP.field]=parseFloat(v.toFixed(1)); }
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
