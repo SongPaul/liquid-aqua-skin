@@ -5422,6 +5422,7 @@ function lockOffMs(){ return Math.max(10,Math.min(300,+prefs.lockOff||50))*1000;
 var LT_PEAK=[0.26,0.44];
 var LT_SAMPLE_URL='sample-bags.json';
 var _ltOwn=null, _ltPending=null, _ltFill=null, _ltFillPend=null;
+var _ltOwnAt=0, _ltKeysSig=null, LT_STALE_MS=5*60*1000;
 var _ltTimers=[], _ltNext=null, _ltCells=[];
 function ltRand(r){ return r[0]+Math.random()*(r[1]-r[0]); }
 function ltPick(a){ return a[Math.random()*a.length|0]; }
@@ -5433,21 +5434,26 @@ function ltLater(fn,ms){
 // opened. One key is a bag and up to three photographs of it, which is
 // already enough variety for a grid that shows one tile at a time.
 function ltLoadOwn(){
-  if(_ltOwn) return Promise.resolve(_ltOwn);
   if(_ltPending) return _ltPending;
   _ltPending=api('GET','/api/v1/store/'+PIC_NS).catch(function(){ return null; })
     .then(function(keys){
-      if(!Array.isArray(keys)||!keys.length) return [];
+      keys=Array.isArray(keys)?keys:[];
+      var sig=keys.slice().sort().join('|');
+      var moved=(_ltKeysSig!==null&&sig!==_ltKeysSig);
+      var old=(Date.now()-_ltOwnAt)>LT_STALE_MS;
+      if(_ltOwn&&!moved&&!old) return _ltOwn;   // nothing has changed hands
+      _ltKeysSig=sig;
+      if(!keys.length) return [];
       var pick=keys.slice();
       for(var i=pick.length-1;i>0;i--){ var j=Math.random()*(i+1)|0, t=pick[i]; pick[i]=pick[j]; pick[j]=t; }
-      return Promise.all(pick.slice(0,LT_KEYS).map(function(k){ return loadBeanPics(k); }))
+      return Promise.all(pick.slice(0,LT_KEYS).map(function(k){ return loadBeanPics(k,true); }))
         .then(function(sets){
           var out=[];
           (sets||[]).forEach(function(set){ (set||[]).forEach(function(p){
             if(p&&p.d&&out.length<LT_POOL_MAX) out.push(p.d); }); });
           return out; }); })
-    .catch(function(){ return []; })
-    .then(function(out){ _ltOwn=out||[]; _ltPending=null; return _ltOwn; });
+    .catch(function(){ return _ltOwn||[]; })
+    .then(function(out){ _ltOwn=out||[]; _ltOwnAt=Date.now(); _ltPending=null; return _ltOwn; });
   return _ltPending; }
 // Shipped with the skin, fetched only when the wall would otherwise have gaps,
 // and kept by the service worker once it has been.
@@ -11556,7 +11562,7 @@ function loadBeanPics(id,fresh){
       return _beanPics[id]; });
   return _picPend[id]; }
 function putBeanPics(id,pics){
-  _beanPics[id]=pics; _ltOwn=null;
+  _beanPics[id]=pics; _ltOwn=null; _ltOwnAt=0; _ltKeysSig=null;
   return pics.length ? api('POST',picUrl(id),{v:1,pics:pics},30000)
                      : api('DELETE',picUrl(id)).catch(function(){}); }
 // One fixed quality fits some bags and not others, so it is narrowed and
