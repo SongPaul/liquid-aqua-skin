@@ -3498,6 +3498,7 @@ var I18N={
     rmFind:'Search', rmFindNone:'Nothing matches.', rmUngrouped:'Method not set',
     rmUsed:'{n} coffees', rmRemove:'Remove', rmCount:'{n} of {m} shown',
     rmHeatNone:'\u2014 not set \u2014',
+    rmSize:'Batch size', rmSizeNone:'\u2014 not set \u2014', rmCountry:'Country',
     rmRemoveUsed:'{n} coffees on the shelf name it.',
     rmUnnamed:'this entry', rmRemoveAsk:'Remove {n} from the list?',
     rmResetAsk:'Throw away your edits and go back to the list the skin ships with?',
@@ -3895,6 +3896,7 @@ var I18N={
     rmFind:'검색', rmFindNone:'일치하는 게 없습니다.', rmUngrouped:'방식 지정 안 함',
     rmUsed:'원두 {n}', rmRemove:'삭제', rmCount:'{m}개 중 {n}개 표시',
     rmHeatNone:'— 지정 안 함 —',
+    rmSize:'용량', rmSizeNone:'— 지정 안 함 —', rmCountry:'나라',
     rmRemoveUsed:'원두 {n}개가 이 로스터기를 가리키고 있습니다.',
     rmAdd:'+ 추가', rmReset:'기본 목록으로 되돌리기', rmNone:'목록이 비어 있습니다.',
     rmUnnamed:'이 항목', rmRemoveAsk:'{n} 을(를) 목록에서 지울까요?',
@@ -6298,7 +6300,7 @@ function hydrateFromStore(){
       lsSet('aurora_baskets',basketNames); }
     else if(basketNames) storePut('baskets',basketNames);
     if(Array.isArray(all.rmachines)&&all.rmachines.length){
-      roastMachines=all.rmachines.filter(function(x){ return x&&typeof x==='object'; });
+      roastMachines=rmRepair(all.rmachines.filter(function(x){ return x&&typeof x==='object'; }));
       lsSet('aurora_rmachines',roastMachines); }
     else if(roastMachines) storePut('rmachines',roastMachines);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
@@ -10491,30 +10493,51 @@ function toIsoDate(v){
   return '';
 }
 var ROAST_TYPES=['\uc5f4\ud48d\uc2dd','\ubc18\uc5f4\ud48d\uc2dd','\uc9c1\ud654\uc2dd','\ud558\uc774\ube0c\ub9ac\ub4dc','\uc804\ub3c4\u00b7\ubcf5\uc0ac\uc2dd'];
-// n 이름 · c 나라 · h 열원 · t 방식(비우면 모델마다 다름) · d 비고
+var ROAST_SIZES=['\uc0d8\ud50c','\uc18c\ud615','\uc911\ud615','\ub300\ud615'];
+// n \uc774\ub984 \u00b7 m \ubaa8\ub378 \u00b7 c \ub098\ub77c \u00b7 h \uc5f4\uc6d0 \u00b7 v \uc6a9\ub7c9 \u00b7 t \ubc29\uc2dd \u00b7 d \ube44\uace0
 var ROAST_MACHINES=[
- {n:'\ub85c\ub9c1',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',t:'\uc5f4\ud48d\uc2dd',d:'\ub4dc\ub7fc \ube44\uac00\uc5f4 \u00b7 \ub300\ud615 \ub85c\uc2a4\ud130\ub9ac \uc704\uc8fc'},
- {n:'IMF',c:'\uc774\ud0c8\ub9ac\uc544',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uac04\uc811 \ud654\uc5fc \u00b7 \ud0c0\uacf5 \ub4dc\ub7fc \u00b7 \uc5f4\ud48d \uc7ac\uc21c\ud658'},
- {n:'\uc774\uce74\uc640',c:'\uc601\uad6d',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35 \u00b7 \uc0d8\ud50c \ub85c\uc2a4\ud305'},
- {n:'\ub274\ud074\ub9ac\uc5b4\uc2a4',m:'\ub9c1\ud06c',c:'\ud638\uc8fc',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35 \u00b7 50~100g \uc0d8\ud50c'},
- {n:'\ub85c\uc2a4\ud2b8',c:'\ub178\ub974\uc6e8\uc774',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\ub4dc\ub7fc \ube44\uac00\uc5f4 \u00b7 \uc0d8\ud50c'},
- {n:'\uce74\ud398\ub85c\uc9c1',m:'\ub098\ub178 7',c:'\ub274\uc9c8\ub79c\ub4dc',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35'},
- {n:'\ube48\ubcf8',m:'BB100+',c:'\ub300\ub9cc',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\ud648\ub85c\uc2a4\ud130 \u00b7 120g'},
- {n:'\uc81c\ub124\uce74\ud398',c:'\ud55c\uad6d',h:'\uc804\uae30',t:'\uc5f4\ud48d\uc2dd',d:'\ud68c\uc804 \ucc54\ubc84 \u00b7 \ud648\ub85c\uc2a4\ud130'},
- {n:'\ud504\ub85c\ubc0b',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uad6d\ub0b4\ub294 \ub9e4\uc7a5\uc6a9 \uc704\uc8fc'},
- {n:'\uae30\uc13c',c:'\ub124\ub35c\ub780\ub4dc',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uc774\uc911\ubcbd \ub4dc\ub7fc'},
- {n:'\ub514\ub4dc\ub9ac\ud788',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'IR \ubc84\ub108 + \uc5f4\uad50\ud658'},
- {n:'\ud0dc\ud658',m:'\ud504\ub85c\uc544\uc2a4\ud130',c:'\ud55c\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:''},
- {n:'\uc774\uc9c0\uc2a4\ud130',c:'\ud55c\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:''},
- {n:'\ud6c4\uc9c0\ub85c\uc584',c:'\uc77c\ubcf8',h:'\uac00\uc2a4',t:'',d:'\ubaa8\ub378\ub9c8\ub2e4 \ub2e4\ub984 \u00b7 \uc9c1\ud654\uc2dd \ub300\ud45c \uae30\uc885'},
- {n:'\uce7c\ub514',c:'\ud55c\uad6d',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'',d:'\ub77c\uc778\uc5c5\ubcc4\ub85c \ub2e4\ub984'},
- {n:'\uc2a4\ud2b8\ub871\ud640\ub4dc',c:'\ud55c\uad6d',h:'\uc804\uae30',t:'\ud558\uc774\ube0c\ub9ac\ub4dc',d:'\ud560\ub85c\uac90 + \uc5f4\ud48d + \ub4dc\ub7fc \ud788\ud130'},
- {n:'\ub9ac\uc624\ub098\uc774',m:'\ucee4\uc11c',c:'\ud55c\uad6d',h:'\uc804\uae30',t:'\ud558\uc774\ube0c\ub9ac\ub4dc',d:'\uc138\ub77c\ubbf9 \uc6d0\uc801\uc678\uc120 + \uc5f4\ud48d \u00b7 12\uac01 \ub4dc\ub7fc'},
- {n:'\uc544\uc77c\ub9ac\uc624',m:'\ubd88\ub9bf',c:'\ub300\ub9cc',h:'\uc804\uae30',t:'\uc804\ub3c4\u00b7\ubcf5\uc0ac\uc2dd',d:'IH \ub4dc\ub7fc'}];
+ {n:'\ub85c\ub9c1',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',t:'\uc5f4\ud48d\uc2dd',d:'\uc5f4\ud48d \uc7ac\uc21c\ud658 \u00b7 \ub4dc\ub7fc\uc740 \ub3cc\ub9ac\uae30\ub9cc \ud558\uace0 \uac00\uc5f4\ud558\uc9c0 \uc54a\uc74c \u00b7 \uc804\ub3c4 \uc2a4\ucf54\uce6d\uc774 \uc5c6\uc5b4 \ubc1d\uc740 \uc0b0\ubbf8\uc640 \uaf43\ud5a5\uc744 \uc9c0\ud0a4\ub824\ub294 \uc57d~\uc911\ubc30\uc804, \uae68\ub057\ud55c \ucef5\uc744 \uc694\uad6c\ud558\ub294 \uc2f1\uae00\u00b7\ub9c8\uc774\ud06c\ub85c\ub78f\uc5d0 \uc500'},
+ {n:'\ub85c\ub9c1',m:'S7 \ub098\uc774\ud2b8\ud638\ud06c',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',v:'\uc911\ud615',t:'\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 1.4~7kg'},
+ {n:'\ub85c\ub9c1',m:'S15 \ud314\ucf58',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',v:'\uc911\ud615',t:'\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 3~15kg'},
+ {n:'\ub85c\ub9c1',m:'S35 \ucf00\uc2a4\ud2b8\ub810',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',v:'\ub300\ud615',t:'\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 7~35kg'},
+ {n:'\ub85c\ub9c1',m:'S70 \ud398\ub808\uadf8\ub9b0',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',v:'\ub300\ud615',t:'\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 14~70kg'},
+ {n:'IMF',c:'\uc774\ud0c8\ub9ac\uc544',h:'\uac00\uc2a4\u00b7\uc804\uae30',v:'\ub300\ud615',t:'\uc5f4\ud48d\uc2dd',d:'\uac04\uc811 \ud654\uc5fc \u00b7 \ud0c0\uacf5 \ub4dc\ub7fc \u00b7 \uc5f4\ud48d \uc7ac\uc21c\ud658 \u00b7 \uc560\ud504\ud130\ubc84\ub108 \uc77c\uccb4\ud615 \u00b7 \ub85c\ub9c1\uacfc \uac19\uc740 \uacb0\ub85c \uc5f0\uae30 \ub9db\uc744 \ud53c\ud558\uba74\uc11c \ub300\ub7c9\uc744 \ub3cc\ub9b4 \ub54c'},
+ {n:'\uc774\uce74\uc640',c:'\uc601\uad6d',h:'\uc804\uae30',v:'\uc0d8\ud50c',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35 \u00b7 \ud504\ub85c\ud30c\uc77c\uc744 \uadf8\ub300\ub85c \uc7ac\ud604\ud574\uc11c \uc0dd\ub450 \ud3c9\uac00\uc640 \uc0d8\ud50c \ub85c\uc2a4\ud305\uc758 \uae30\uc900\uae30\ub85c \uc4f0\uc784'},
+ {n:'\ub274\ud074\ub9ac\uc5b4\uc2a4',m:'\ub9c1\ud06c',c:'\ud638\uc8fc',h:'\uc804\uae30',v:'\uc0d8\ud50c',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35 \u00b7 \ubc30\uce58 50~100g \u00b7 \ucee4\ud551\uc6a9 \uc0d8\ud50c'},
+ {n:'\ub85c\uc2a4\ud2b8',c:'\ub178\ub974\uc6e8\uc774',h:'\uc804\uae30',v:'\uc0d8\ud50c',t:'\uc5f4\ud48d\uc2dd',d:'\ub4dc\ub7fc \ube44\uac00\uc5f4 \u00b7 \uc0d8\ud50c \ub85c\uc2a4\ud305 \u00b7 \ud504\ub85c\ud30c\uc77c \uae30\ub85d\uacfc \uc7ac\ud604 \uc911\uc2ec'},
+ {n:'\uce74\ud398\ub85c\uc9c1',m:'\ub098\ub178 7',c:'\ub274\uc9c8\ub79c\ub4dc',h:'\uc804\uae30',v:'\uc0d8\ud50c',t:'\uc5f4\ud48d\uc2dd',d:'\uc720\ub3d9\uce35 \u00b7 \uc0d8\ud50c\u00b7\uc18c\ub7c9 \u00b7 \uad6d\ub0b4 \uc815\uc2dd \ucd9c\uc2dc'},
+ {n:'\ube48\ubcf8',m:'BB100+',c:'\ub300\ub9cc',h:'\uc804\uae30',v:'\uc18c\ud615',t:'\uc5f4\ud48d\uc2dd',d:'\ud648\ub85c\uc2a4\ud130 \u00b7 \ubc30\uce58 120g'},
+ {n:'\uc81c\ub124\uce74\ud398',c:'\ud55c\uad6d',h:'\uc804\uae30',v:'\uc18c\ud615',t:'\uc5f4\ud48d\uc2dd',d:'\ud68c\uc804 \ucc54\ubc84 \u00b7 \ud648\ub85c\uc2a4\ud130 \u00b7 \uc18c\ub7c9 \uc790\uac00 \ub85c\uc2a4\ud305'},
+ {n:'\ud504\ub85c\ubc27',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uc8fc\ubb3c \ub4dc\ub7fc \u00b7 \uc804\ub3c4\uc5f4\uacfc \ubcf5\uc0ac\uc5f4\ub85c \uc18d\uae4c\uc9c0 \uc5f4\uc744 \uc804\ud568 \u00b7 \ubc00\ud3d0\ud615 \ubc84\ub108\ub85c \ud654\ub825\uc774 \uc77c\uc815 \u00b7 \ub2e8\ub9db\uc758 \uc5ec\uc6b4\uacfc \ubb35\uc9c1\ud55c \ub9c8\uc6b0\uc2a4\ud544\uc744 \ub0b4\ub824\ub294 \uc911~\uc911\uac15\ubc30\uc804 \ube14\ub80c\ub4dc, \ub300\ub7c9 \uc0dd\uc0b0\uc5d0 \uc500'},
+ {n:'\ud504\ub85c\ubc27',m:'P05',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',v:'\uc18c\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 0.8~1.2kg \u00b7 \uc2dc\uac04\ub2f9 4kg'},
+ {n:'\ud504\ub85c\ubc27',m:'P12',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',v:'\uc911\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 1~6kg \u00b7 \uc2dc\uac04\ub2f9 17kg'},
+ {n:'\ud504\ub85c\ubc27',m:'P25',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',v:'\uc911\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 1~15kg \u00b7 \uc2dc\uac04\ub2f9 40kg'},
+ {n:'\ud504\ub85c\ubc27',m:'P60',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',v:'\ub300\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 35~60kg \u00b7 \uc2dc\uac04\ub2f9 215kg \u00b7 \ub300\ub7c9 \uc0dd\uc0b0 \ub77c\uc778'},
+ {n:'\ud504\ub85c\ubc27',m:'UG15',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',v:'\uc911\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 7~15kg \u00b7 \uc2dc\uac04\ub2f9 30~65kg'},
+ {n:'\ud504\ub85c\ubc27',m:'UG22',c:'\ub3c5\uc77c',h:'\uac00\uc2a4',v:'\ub300\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 8~25kg \u00b7 \uc2dc\uac04\ub2f9 50~100kg'},
+ {n:'\uae30\uc13c',c:'\ub124\ub35c\ub780\ub4dc',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uc774\uc911\ubcbd \ub4dc\ub7fc \u00b7 \ubcf5\uc0ac\uc5f4\uacfc \uc804\ub3c4\uc5f4 \ube44\uc911\uc774 \ud07c \u00b7 \ub2e8\ub9db\uacfc \ubc14\ub514\ub97c \uc0b4\ub9ac\uba74\uc11c \ub4dc\ub7fc \ub450\uaed8\ub85c \uc548\uc815\uc801\uc778 \ub85c\uc2a4\ud305'},
+ {n:'\uae30\uc13c',m:'W1A',c:'\ub124\ub35c\ub780\ub4dc',h:'\uac00\uc2a4\u00b7\uc804\uae30',v:'\uc18c\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 \ucd5c\ub300 1.5kg'},
+ {n:'\uae30\uc13c',m:'W6A',c:'\ub124\ub35c\ub780\ub4dc',h:'\uac00\uc2a4\u00b7\uc804\uae30',v:'\uc911\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 \ucd5c\ub300 6kg'},
+ {n:'\uae30\uc13c',m:'W15A',c:'\ub124\ub35c\ub780\ub4dc',h:'\uac00\uc2a4\u00b7\uc804\uae30',v:'\uc911\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 7.5~15kg'},
+ {n:'\uae30\uc13c',m:'W30A',c:'\ub124\ub35c\ub780\ub4dc',h:'\uac00\uc2a4\u00b7\uc804\uae30',v:'\ub300\ud615',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\ubc30\uce58 15~30kg'},
+ {n:'\ub514\ub4dc\ub9ac\ud788',c:'\ubbf8\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'IR \ubc84\ub108 + \uc5f4\uad50\ud658 \u00b7 \ubcf5\uc0ac\uc5f4 \ube44\uc911\uc774 \ud07c \u00b7 \uc9c1\ud654\uc758 \uac70\uce5c \ub9db \uc5c6\uc774 \ub2e8\ub9db\uc744 \ub04c\uc5b4\ub0b4\ub294 \ucabd'},
+ {n:'\ud0dc\ud658',m:'\ud504\ub85c\uc544\uc2a4\ud130',c:'\ud55c\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uad6d\ub0b4 \ub9e4\uc7a5\uc6a9\uc73c\ub85c \ub110\ub9ac \uc4f0\uc784 \u00b7 \ubc18\uc5f4\ud48d \ub4dc\ub7fc'},
+ {n:'\uc774\uc9c0\uc2a4\ud130',c:'\ud55c\uad6d',h:'\uac00\uc2a4',t:'\ubc18\uc5f4\ud48d\uc2dd',d:'\uad6d\ub0b4 \uc18c\ud615 \ub9e4\uc7a5\uc6a9 \u00b7 \uc2a4\ud399 \ud655\uc778 \ud544\uc694'},
+ {n:'\ud6c4\uc9c0\ub85c\uc584',c:'\uc77c\ubcf8',h:'\uac00\uc2a4',t:'',d:'\ubaa8\ub378\ub9c8\ub2e4 \uc9c1\ud654\uc2dd\uacfc \ubc18\uc5f4\ud48d\uc2dd\uc774 \uac08\ub9bc \u00b7 \uc9c1\ud654\uc2dd \ub300\ud45c \uae30\uc885 \u00b7 \uc9c1\ud654\ub294 \uac1c\uc131\uacfc \uac70\uce5c \uc9c8\uac10, \ubc18\uc5f4\ud48d\uc740 \uade0\uc77c\ud568'},
+ {n:'\uce7c\ub514',c:'\ud55c\uad6d',h:'\uac00\uc2a4\u00b7\uc804\uae30',t:'',d:'\ub77c\uc778\uc5c5\ubcc4\ub85c \ub2e4\ub984 \u00b7 \uac00\uc2a4\ub294 \uc9c1\ud654\u00b7\ubc18\uc5f4\ud48d, \uc804\uae30\ub294 \uc5f4\ud48d \uc720\ub3d9\uce35 \u00b7 \uc18c\ub7c9 \uc790\uac00 \ub85c\uc2a4\ud305'},
+ {n:'\uc2a4\ud2b8\ub871\ud640\ub4dc',c:'\ud55c\uad6d',h:'\uc804\uae30',v:'\uc18c\ud615',t:'\ud558\uc774\ube0c\ub9ac\ub4dc',d:'\ud560\ub85c\uac90 + \uc5f4\ud48d + \ub4dc\ub7fc \ud788\ud130\ub97c \ub530\ub85c \uc81c\uc5b4 \u00b7 \uc138 \uc5f4\uc6d0\uc744 \uc11e\uc5b4 \ud504\ub85c\ud30c\uc77c\uc744 \uc9dc\ub294 \uc18c\ub7c9 \uc815\ubc00 \ub85c\uc2a4\ud305'},
+ {n:'\ub9ac\uc624\ub098\uc774',m:'\ucee4\uc11c',c:'\ud55c\uad6d',h:'\uc804\uae30',v:'\uc18c\ud615',t:'\ud558\uc774\ube0c\ub9ac\ub4dc',d:'\uc138\ub77c\ubbf9 \uc6d0\uc801\uc678\uc120 \ubcf5\uc0ac + \uc5f4\ud48d \u00b7 12\uac01 \ub4dc\ub7fc \u00b7 \uc81c\uc5f0 \ud544\ud130 \u00b7 AI \ub85c\uc2a4\ud305'},
+ {n:'\uc544\uc77c\ub9ac\uc624',m:'\ubd88\ub9bf',c:'\ub300\ub9cc',h:'\uc804\uae30',v:'\uc18c\ud615',t:'\uc804\ub3c4\u00b7\ubcf5\uc0ac\uc2dd',d:'IH \ub4dc\ub7fc \u00b7 \uc804\ub3c4\uc640 \ubcf5\uc0ac \uc704\uc8fc, \ub300\ub958 \ube44\uc911\uc774 \ub0ae\uc74c \u00b7 \ud648\u00b7\uc0d8\ud50c\uc6a9'}];
 var roastMachines=null;
+function rmRepair(list){
+  if(!Array.isArray(list)) return list;
+  var hit=false;
+  list.forEach(function(m){
+    if(m&&m.n==='\ud504\ub85c\ubc0b'){ m.n='\ud504\ub85c\ubc27'; hit=true; } });
+  return hit?list:list; }
 function loadRoastMachines(){
   var a=lsGet('aurora_rmachines');
-  roastMachines=(Array.isArray(a)&&a.length)?a:null; }
+  roastMachines=(Array.isArray(a)&&a.length)?rmRepair(a):null; }
 function saveRoastMachines(){
   lsSet('aurora_rmachines',roastMachines||[]);
   storeSave('rmachines',roastMachines||[]); }
@@ -10541,6 +10564,13 @@ function roastMachineInfo(name){
     if(v.indexOf(k)===0&&k.length>bestLen){ best=m; bestLen=k.length; } });
   return best; }
 function roastTypeFor(name){ var m=roastMachineInfo(name); return (m&&m.t)||''; }
+function roastMachineAbout(name){
+  var m=roastMachineInfo(name); if(!m) return '';
+  var out=[m.c,m.h,m.v,m.d];
+  if(m.m){                                   // a model also inherits its make
+    var make=rmList().filter(function(x){ return x.n===m.n&&!x.m; })[0];
+    if(make) out.push(make.d); }
+  return out.filter(Boolean).join(' '); }
 function beanRoastMachine(b){ var ex=(b&&b.extras)||{};
   return String(ex.roastMachine||'').trim(); }
 // What the shelf already holds comes first: a list of famous machines is only
@@ -10588,7 +10618,7 @@ function rmRows(){
   var q=_rmQ.trim().toLowerCase();
   var rows=rmList().map(function(m,i){ return {m:m,i:i}; });
   if(q) rows=rows.filter(function(r){
-    return [r.m.n,r.m.m,r.m.h,r.m.t,r.m.d].join(' ').toLowerCase().indexOf(q)>=0; });
+    return [r.m.n,r.m.m,r.m.c,r.m.h,r.m.v,r.m.t,r.m.d].join(' ').toLowerCase().indexOf(q)>=0; });
   var ord={}; ROAST_TYPES.forEach(function(x,k){ ord[x]=k; });
   rows.sort(function(a,b){
     var ka=(a.m.t in ord)?ord[a.m.t]:99, kb=(b.m.t in ord)?ord[b.m.t]:99;
@@ -10599,7 +10629,7 @@ function rmSet(i,field,v){
   l[i][field]=String(v==null?'':v).trim();
   saveRoastMachines(); rmRefreshPickers();
   // the summary line and the grouping both read from what just changed
-  if(field==='n'||field==='m'||field==='t'||field==='h') renderRoastMachines(); }
+  if(field==='n'||field==='m'||field==='t'||field==='h'||field==='v') renderRoastMachines(); }
 function rmAdd(){
   var l=rmOwn();
   l.push({n:'',m:'',h:'',t:'',d:''});
@@ -10628,6 +10658,12 @@ function rmRefreshPickers(){
     return '<option value="'+escapeAttr(x)+'"></option>'; }).join('');
   if(typeof mbFillRmList==='function') try{ mbFillRmList(); }catch(_){} }
 var RM_HEATS=['\uac00\uc2a4','\uc804\uae30','\uac00\uc2a4\u00b7\uc804\uae30'];
+function rmSizeSelHtml(i,cur){
+  return '<select onchange="rmSet('+i+',\'v\',this.value)">'
+    +'<option value="">'+escapeHtml(t('rmSizeNone'))+'</option>'
+    +ROAST_SIZES.map(function(x){
+      return '<option value="'+escapeAttr(x)+'"'+(x===cur?' selected':'')+'>'
+        +escapeHtml(x)+'</option>'; }).join('')+'</select>'; }
 function rmHeatSelHtml(i,cur){
   return '<select onchange="rmSet('+i+',\'h\',this.value)">'
     +'<option value="">'+escapeHtml(t('rmHeatNone'))+'</option>'
@@ -10649,7 +10685,7 @@ function renderRoastMachines(){
     out.push('<div class="rm-row'+(open?' open':'')+'">'
       +'<button type="button" class="rm-sum" onclick="rmToggle('+i+')">'
         +'<span class="rm-nm'+(rmLabel(m)?'':' none')+'">'+escapeHtml(lab)+'</span>'
-        +'<span class="rm-meta">'+escapeHtml([m.h,used?t('rmUsed').replace('{n}',used):'']
+        +'<span class="rm-meta">'+escapeHtml([m.v,m.h,used?t('rmUsed').replace('{n}',used):'']
             .filter(Boolean).join('  \u00b7  '))+'</span>'
         +'<span class="rm-car">'+(open?'\u25b4':'\u25be')+'</span>'
       +'</button>'
@@ -10661,6 +10697,10 @@ function renderRoastMachines(){
         +'<div class="rm-line">'
           +'<label>'+escapeHtml(t('roastType'))+roastTypeSelHtml('rmT'+i,m.t||'','rmSet('+i+',\'t\',this.value)')+'</label>'
           +'<label>'+escapeHtml(t('rmHeat'))+rmHeatSelHtml(i,m.h||'')+'</label>'
+        +'</div>'
+        +'<div class="rm-line">'
+          +'<label>'+escapeHtml(t('rmSize'))+rmSizeSelHtml(i,m.v||'')+'</label>'
+          +'<label>'+escapeHtml(t('rmCountry'))+'<input value="'+escapeAttr(m.c||'')+'" onchange="rmSet('+i+',\'c\',this.value)"></label>'
         +'</div>'
         +'<label class="rm-wide">'+escapeHtml(t('rmNote'))+'<input value="'+escapeAttr(m.d||'')+'" onchange="rmSet('+i+',\'d\',this.value)"></label>'
         +'<div class="rm-acts"><button class="m-btn rm-del" onclick="rmRemove('+i+')">'
@@ -15324,6 +15364,7 @@ function slMatches(s){
   var rb=shotBeanOf(s);
   return [pr.title,cx.coffeeName,cx.coffeeRoaster,cx.grinderModel,cx.grinderSetting,
           beanRoastMachine(rb),beanRoastTypeShown(rb),
+          roastMachineAbout(beanRoastMachine(rb)),
           shotBasket(s),an.notes,fmtShotDate(s)].join(' ').toLowerCase().indexOf(needle)>=0; }
 function renderShotList(){ var list=document.getElementById('slList'); if(!list) return; list.innerHTML='';
   if(!shotList.length){ list.innerHTML=slLoading?'<div class="ep-group-head">Loading…</div>':'<div class="ep-placeholder">'+t('noShots2')+'</div>'; return; }
