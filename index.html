@@ -4144,13 +4144,21 @@ function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window
   document.body.classList.toggle('scaled',scaled); }
 document.addEventListener('visibilitychange',function(){
   if(!document.hidden&&typeof maybeAutoScanDosing==='function') maybeAutoScanDosing(); });
-var RESUME_AFTER=15000, _hiddenAt=0;
+var RESUME_AFTER=15000, RESUME_THROTTLE=20000, _hiddenAt=0, _lastResume=0;
+function maybeResume(force){
+  if(document.visibilityState==='hidden') return;
+  var now=Date.now();
+  if(!force&&now-_lastResume<RESUME_THROTTLE) return;
+  _lastResume=now; resumeResync(); }
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){ _hiddenAt=Date.now(); return; }
-  if(!_hiddenAt||Date.now()-_hiddenAt<RESUME_AFTER) return;
-  _hiddenAt=0; resumeResync(); });
-// A page restored from the back/forward cache never ran its boot either.
-window.addEventListener('pageshow',function(e){ if(e&&e.persisted) resumeResync(); });
+  var away=_hiddenAt&&(Date.now()-_hiddenAt>RESUME_AFTER);
+  _hiddenAt=0; maybeResume(!!away); });
+window.addEventListener('focus',function(){ maybeResume(false); });
+window.addEventListener('pageshow',function(e){ maybeResume(!!(e&&e.persisted)); });
+setInterval(function(){
+  if(_asleep||document.visibilityState==='hidden') return;
+  maybeResume(false); },90000);
 function resyncSockets(){
   Object.keys(_wsOpen).forEach(function(name){
     if(_wsParked[name]) return;            // parked for sleep on purpose
@@ -4168,7 +4176,9 @@ function resumeResync(){
   api('GET','/api/v1/machine/info').then(function(x){ machineInfo=x||{};
     if(spOpen()) renderSpContent(); }).catch(function(){});
   loadMachineSettings(); loadDevices(); loadWorkflow(); loadBattery();
-  // and what another device may have changed in the store
+  // and what another device may have changed in the store -- unless a switch
+  // here was flipped a moment ago and has not landed there yet
+  if(Date.now()-_prefsTouchedAt<PREF_EDIT_GUARD) return;
   try{
     hydrateFromStore().then(function(){
       applyFx(); applyNight(); applyI18n(); applyActionMode(); applyCam();
@@ -4270,7 +4280,8 @@ function openWs(name,path,onMsg,opts){ var url=GATEWAY.ws+path;
     if(sockets[name]&&sockets[name].readyState<=1) return; var ws=new WebSocket(url); sockets[name]=ws;
     ws.onopen=function(){ everOpened=true; misses=0;
       if(name==='display'){ _wakeHeld=null; syncWakeLock(); } };
-    ws.onmessage=function(e){ try{ onMsg(JSON.parse(e.data)); }catch(_){} };
+    ws.onmessage=function(e){ _wsSeen[name]=Date.now();
+      try{ onMsg(JSON.parse(e.data)); }catch(_){} };
     // The reconnect is what keeps a dropped socket alive, so parking has to be
     // checked here too or a socket closed for sleep would come straight back.
     ws.onclose=function(){ if(_wsParked[name]) return;
@@ -4283,6 +4294,15 @@ function openWs(name,path,onMsg,opts){ var url=GATEWAY.ws+path;
 // group head is noticed. Water levels are not on the lock screen and cost a
 // packet a second; the other three send nothing and only hold connections open.
 var SLEEP_PARK=['water','scale','dosing','devices','display','update'];
+var _wsSeen={}, WS_STALE=45000, _lastWsKick=0;
+setInterval(function(){
+  if(_asleep||document.visibilityState==='hidden') return;
+  if(!state.connected) return;              // nothing is expected to be talking
+  var seen=_wsSeen.water; if(!seen) return; // it has never worked; not stale
+  var now=Date.now();
+  if(now-seen<WS_STALE||now-_lastWsKick<60000) return;
+  _lastWsKick=now;
+  if(typeof resyncSockets==='function') resyncSockets(); },15000);
 function parkSockets(on){
   SLEEP_PARK.forEach(function(name){
     if(on){ _wsParked[name]=true;
@@ -6845,7 +6865,8 @@ function prefEq(a,b){ try{ return JSON.stringify(a)===JSON.stringify(b); }catch(
 function prefCopy(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(_){ return v; } }
 function snapshotPrefsBase(){ _prefsBase={};
   for(var k in prefs){ _prefsBase[k]=prefCopy(prefs[k]); } }
-function savePrefs(){ lsSet('aurora_prefs',prefs);
+var PREF_EDIT_GUARD=6000, _prefsTouchedAt=0;
+function savePrefs(){ _prefsTouchedAt=Date.now(); lsSet('aurora_prefs',prefs);
   for(var k in prefs){
     if(prefEq(_prefsBase[k],prefs[k])) continue;
     _prefsBase[k]=prefCopy(prefs[k]);
