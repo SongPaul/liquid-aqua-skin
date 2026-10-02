@@ -898,6 +898,25 @@ body.night .viz-row{background:rgba(255,255,255,.06)}
 .bk-manage:active{transform:scale(.92)}
 .lm-seg{flex:none}
 .lm-seg button{white-space:nowrap}
+.mp-bar{margin-bottom:12px}
+.mp-row{padding:10px 0}
+.mp-row+.mp-row{border-top:1px solid var(--glass-line)}
+.mp-row.base{background:var(--field);border-radius:11px;padding:10px 12px;margin-bottom:4px}
+.mp-h{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+.mp-n{font-size:13px;font-weight:800;color:var(--ink)}
+.mp-n.none{color:var(--ink-mute);font-style:italic;font-weight:600}
+.mp-s{font-size:11px;font-weight:600;color:var(--ink-mute)}
+.mp-cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--accent)}
+.mp-cells{display:flex;gap:6px}
+.mp-c{flex:1;min-width:0;text-align:center;padding:6px 3px;border-radius:9px;background:var(--glass-hi)}
+.mp-row.base .mp-c{background:rgba(255,255,255,.55)}
+.mp-c .v{font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap}
+.mp-c .l{font-size:9px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;
+  letter-spacing:.03em;margin-top:2px}
+.mp-d{font-size:10px;font-weight:800;margin-left:3px}
+.mp-d.up{color:var(--amber)}
+.mp-d.dn{color:var(--steam)}
+body.night .mp-row.base .mp-c{background:rgba(255,255,255,.08)}
 .rm-bar{display:flex;gap:8px;margin-bottom:10px}
 .rm-bar input{flex:1;min-width:0;min-height:40px;padding:0 12px;border-radius:11px;
   border:1px solid var(--edge);background:var(--field);color:var(--ink);
@@ -2803,10 +2822,22 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div>
 </div>
 
+<div class="overlay" id="mpOverlay" onclick="closeModal(event,'mpOverlay')">
+  <div class="modal"><div class="modal-head">
+    <div class="modal-title" data-i18n="mpTitle">By roasting machine</div>
+    <button class="modal-close" onclick="closeModal(null,'mpOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="mp-bar" id="mpTabs"></div>
+    <div id="mpBody"></div>
+    <div class="set-desc" style="margin-top:12px" data-i18n="mpHint"></div>
+  </div></div>
+</div>
+
 <!-- ── Shot Log history full page ──────────────────────────────── -->
 <div class="editpage" id="shotLogPage">
   <div class="ep-head">
     <div class="ep-title" data-i18n="shotLog">Shot Log</div>
+    <button class="m-btn" style="margin-left:auto;margin-right:10px" onclick="openMachinePanel()" data-i18n="mpOpen">By machine</button>
     <button class="ep-close" onclick="closeShotLog()">✕ <span data-i18n="close">Close</span></button>
   </div>
   <div class="ep-body">
@@ -3499,6 +3530,11 @@ var I18N={
     rmUsed:'{n} coffees', rmRemove:'Remove', rmCount:'{n} of {m} shown',
     rmHeatNone:'\u2014 not set \u2014',
     rmSize:'Batch size', rmSizeNone:'\u2014 not set \u2014', rmCountry:'Country',
+    mpOpen:'By machine', mpTitle:'By roasting machine',
+    mpByMachine:'Machine', mpByType:'Heat transfer', mpBySize:'Batch size',
+    mpAll:'Every shot', mpShots:'{n} shots', mpNone:'not recorded',
+    mpBusyMsg:'Reading the log\u2026',
+    mpHint:'What you dialled in, not a verdict on the machine: a roastery picks the machine to suit the coffee and the roast, and all three arrive together. Read it as where to start when a bag like that is opened.',
     rmRemoveUsed:'{n} coffees on the shelf name it.',
     rmUnnamed:'this entry', rmRemoveAsk:'Remove {n} from the list?',
     rmResetAsk:'Throw away your edits and go back to the list the skin ships with?',
@@ -3897,6 +3933,11 @@ var I18N={
     rmUsed:'원두 {n}', rmRemove:'삭제', rmCount:'{m}개 중 {n}개 표시',
     rmHeatNone:'— 지정 안 함 —',
     rmSize:'용량', rmSizeNone:'— 지정 안 함 —', rmCountry:'나라',
+    mpOpen:'로스터기별', mpTitle:'로스터기별 추출 설정',
+    mpByMachine:'로스터기', mpByType:'방식', mpBySize:'용량',
+    mpAll:'전체', mpShots:'{n}샷', mpNone:'기록 없음',
+    mpBusyMsg:'기록을 읽는 중…',
+    mpHint:'기계에 대한 평가가 아니라 직접 맞춘 값입니다. 로스터리는 커피와 배전도에 맞춰 기계를 고르고, 그 셋은 같이 옵니다. 그런 봉투를 딸을 때 어디서 시작할지로 읽으세요.',
     rmRemoveUsed:'원두 {n}개가 이 로스터기를 가리키고 있습니다.',
     rmAdd:'+ 추가', rmReset:'기본 목록으로 되돌리기', rmNone:'목록이 비어 있습니다.',
     rmUnnamed:'이 항목', rmRemoveAsk:'{n} 을(를) 목록에서 지울까요?',
@@ -15356,6 +15397,89 @@ function slSetQuery(v){ slQuery=String(v||'');
     el.setSelectionRange(el.value.length,el.value.length); } } }
 // A shot is found by what it was pulled with, not only by its profile: the bean
 // and the grinder are what anyone actually remembers about one.
+var MP_BY=[['machine','mpByMachine'],['type','mpByType'],['size','mpBySize']];
+var _mpBy='machine', _mpRows=null, _mpBusy=false;
+function openMachinePanel(){
+  document.getElementById('mpOverlay').classList.add('show');
+  renderMachinePanel();
+  if(_mpRows||_mpBusy) return;
+  _mpBusy=true; renderMachinePanel();
+  // the list behind the page holds fifty; a comparison wants everything the
+  // gateway will give at once
+  api('GET','/api/v1/shots?limit=100').then(function(r){
+    _mpRows=(r&&(r.items||r.shots))||[]; })
+    .catch(function(){ _mpRows=[]; })
+    .then(function(){ _mpBusy=false; renderMachinePanel(); }); }
+function mpSetBy(v){ _mpBy=v; renderMachinePanel(); }
+function mpKeyOf(sh){
+  var b=shotBeanOf(sh), m=beanRoastMachine(b);
+  if(_mpBy==='type') return beanRoastTypeShown(b)||'';
+  if(_mpBy==='size'){ var i=roastMachineInfo(m); return (i&&i.v)||''; }
+  return m||''; }
+function mpSub(key){
+  if(_mpBy!=='machine') return '';
+  var i=roastMachineInfo(key); if(!i) return '';
+  return [i.t,i.v].filter(Boolean).join('  \u00b7  '); }
+function mpGroups(){
+  var rows=_mpRows||shotList||[], by={};
+  rows.forEach(function(sh){
+    var k=mpKeyOf(sh)||'\u0000';
+    (by[k]=by[k]||[]).push(sh); });
+  return Object.keys(by).map(function(k){
+    return {key:(k==='\u0000'?'':k), rows:by[k], st:beanStatsFrom(by[k])}; })
+    .sort(function(a,b){
+      if(!a.key!==!b.key) return a.key?-1:1;     // unrecorded last
+      return b.rows.length-a.rows.length; }); }
+function mpNum(v,dp,suffix){
+  return (v==null)?'\u2014':((Math.round(v*Math.pow(10,dp))/Math.pow(10,dp)).toFixed(dp)+(suffix||'')); }
+// A group reads against the whole log: the useful fact is not 0.9 but
+// "coarser than usual by half a notch".
+function mpDelta(v,base,dp){
+  if(v==null||base==null) return '';
+  var d=v-base;
+  if(Math.abs(d)<Math.pow(10,-dp)/2) return '';
+  return '<span class="mp-d '+(d>0?'up':'dn')+'">'+(d>0?'+':'\u2212')
+    +Math.abs(d).toFixed(dp)+'</span>'; }
+function mpCell(v,base,dp,suffix,lab){
+  return '<div class="mp-c"><div class="v">'+mpNum(v,dp,suffix)+mpDelta(v,base,dp)+'</div>'
+    +'<div class="l">'+escapeHtml(lab)+'</div></div>'; }
+function renderMachinePanel(){
+  var tabs=document.getElementById('mpTabs'); if(!tabs) return;
+  tabs.innerHTML='<div class="ep-pump-toggle">'+MP_BY.map(function(o){
+    return '<button class="'+(_mpBy===o[0]?'on':'')+'" onclick="mpSetBy(\''+o[0]+'\')">'
+      +escapeHtml(t(o[1]))+'</button>'; }).join('')+'</div>';
+  var box=document.getElementById('mpBody'); if(!box) return;
+  if(_mpBusy&&!_mpRows){ box.innerHTML='<div class="set-desc">'+escapeHtml(t('mpBusyMsg'))+'</div>'; return; }
+  var all=_mpRows||shotList||[];
+  if(!all.length){ box.innerHTML='<div class="set-desc">'+escapeHtml(t('noShots2'))+'</div>'; return; }
+  var base=beanStatsFrom(all)||{};
+  var gs=mpGroups();
+  var h='<div class="mp-row base"><div class="mp-h"><span class="mp-n">'
+    +escapeHtml(t('mpAll'))+'</span><span class="mp-cnt">'
+    +t('mpShots').replace('{n}',all.length)+'</span></div>'
+    +'<div class="mp-cells">'
+      +mpCell(base.grind==null?null:parseFloat(base.grind),null,2,'',t('avgGrind'))
+      +mpCell(base.dose,null,1,'g',t('avgDose'))
+      +mpCell(base.yield,null,1,'g',t('avgYield'))
+      +mpCell(base.ratio,null,2,'',t('avgRatio'))
+      +mpCell(base.stars,null,1,'',t('tcTitle'))
+    +'</div></div>';
+  gs.forEach(function(g){
+    var st=g.st||{};
+    var sub=mpSub(g.key);
+    h+='<div class="mp-row"><div class="mp-h">'
+      +'<span class="mp-n'+(g.key?'':' none')+'">'+escapeHtml(g.key||t('mpNone'))+'</span>'
+      +(sub?'<span class="mp-s">'+escapeHtml(sub)+'</span>':'')
+      +'<span class="mp-cnt">'+t('mpShots').replace('{n}',g.rows.length)+'</span></div>'
+      +'<div class="mp-cells">'
+        +mpCell(st.grind==null?null:parseFloat(st.grind),
+                 base.grind==null?null:parseFloat(base.grind),2,'',t('avgGrind'))
+        +mpCell(st.dose,base.dose,1,'g',t('avgDose'))
+        +mpCell(st.yield,base.yield,1,'g',t('avgYield'))
+        +mpCell(st.ratio,base.ratio,2,'',t('avgRatio'))
+        +mpCell(st.stars,base.stars,1,'',t('tcTitle'))
+      +'</div></div>'; });
+  box.innerHTML=h; }
 function slMatches(s){
   var needle=slNeedle();
   if(!needle) return true;
