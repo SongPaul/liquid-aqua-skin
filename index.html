@@ -141,9 +141,9 @@ body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 #lockTiles::after{content:'';position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(54% 46% at 50% 45%,rgba(10,8,20,.84),rgba(10,8,20,.36) 62%,rgba(10,8,20,.08))}
 .lt-cell{position:relative;opacity:0;overflow:hidden;
-  transition:opacity 2.2s ease-in-out;will-change:opacity}
+  transition:opacity 2.2s ease-in-out}
 .lt-l{position:absolute;inset:0;background-size:cover;background-position:center;
-  opacity:0;transition:opacity 2.2s ease-in-out;will-change:opacity}
+  opacity:0;transition:opacity 2.2s ease-in-out}
 @media (prefers-reduced-motion: reduce){
   .lt-cell,.lt-l{transition:opacity .01s linear} }
 /* Faint drifting sheen behind the clock so the background pixels also cycle. */
@@ -896,6 +896,8 @@ body.night .viz-row{background:rgba(255,255,255,.06)}
   font-family:var(--font);font-size:13px;line-height:1;color:var(--ink-mute);
   -webkit-appearance:none;transition:transform .1s}
 .bk-manage:active{transform:scale(.92)}
+.lm-seg{flex:none}
+.lm-seg button{white-space:nowrap}
 .rm-bar{display:flex;gap:8px;margin-bottom:10px}
 .rm-bar input{flex:1;min-width:0;min-height:40px;padding:0 12px;border-radius:11px;
   border:1px solid var(--edge);background:var(--field);color:var(--ink);
@@ -3489,6 +3491,10 @@ var I18N={
     roastType:'Heat transfer', roastTypeNone:'\u2014 not set \u2014',
     rmListTitle:'Roasting machines', rmModel:'Model', rmHeat:'Heat source', rmNote:'Note',
     rmAdd:'+ Add', rmReset:'Restore the built-in list', rmNone:'The list is empty.',
+    lockMotion:'Motion', lockMotionAlways:'Always', lockMotionBurst:'In bursts', lockMotionStill:'Still',
+    lockMotionDesc:'A fade running anywhere keeps the whole screen being redrawn, so what costs power is whether anything is moving at all \u2014 not how fast. Bursts let it go quiet in between.',
+    lockOn:'Moving for', lockOnDesc:'How long a burst of changes lasts.',
+    lockOff:'Then still for', lockOffDesc:'How long the wall is left alone afterwards. Nothing is drawn at all during this.',
     rmFind:'Search', rmFindNone:'Nothing matches.', rmUngrouped:'Method not set',
     rmUsed:'{n} coffees', rmRemove:'Remove', rmCount:'{n} of {m} shown',
     rmHeatNone:'\u2014 not set \u2014',
@@ -3610,6 +3616,10 @@ var I18N={
     lowBatt:'저전력 밝기 제한', lowBattDesc:'배터리가 낮을 때 밝기를 제한.',
     lockPics:'절전 화면에 봉투 사진',
     lockPicsDesc:'직접 찍은 봉투 사진이 절전 화면을 채웁니다. 모자랄 때는 그려 넣은 봉투 그림 12장이 빈 자리를 메웁니다.',
+    lockMotion:'움직임', lockMotionAlways:'계속', lockMotionBurst:'띄엄띄엄', lockMotionStill:'정지',
+    lockMotionDesc:'한 칸이라도 페이드 중이면 화면 전체를 다시 그립니다. 전력을 쓰는 건 얼마나 빠르냐가 아니라 무언가 움직이고 있느냐입니다 — 띄엄띄엄은 그 사이에 화면을 재웁니다.',
+    lockOn:'움직이는 시간', lockOnDesc:'한 번에 얼마나 바뀔다 멈추는지.',
+    lockOff:'쉬는 시간', lockOffDesc:'그 뒤 얼마나 가만히 있는지. 이 동안에는 아무것도 그리지 않습니다.',
     sleepDim:'절전 시 화면 어둡게', sleepDimDesc:'절전 화면이 표시되는 동안 밝기를 낮춥니다 (액정 잔상·배터리 보호).', sleepBright:'절전 밝기', sleepBrightDesc:'절전 중 사용할 밝기 레벨.',
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCalNow:'현재 수위',
@@ -5402,6 +5412,13 @@ function wakeFromSleep(){ endSleepUI();
 // far enough apart that no pixel carries the same glyph for long.
 var LT_CELL_CAP=60, LT_TICK=[650,1300];
 var LT_SWAP_MAX=2, LT_BLOOM=1400, LT_KEYS=12, LT_POOL_MAX=30, LT_ENOUGH=16;
+var LT_FADE_MS=2200;
+var _ltMoving=true, _ltPhaseEnd=0;
+function lockMotion(){
+  var m=prefs.lockMotion;
+  return (m==='always'||m==='still'||m==='burst')?m:'burst'; }
+function lockOnMs(){ return Math.max(5,Math.min(60,+prefs.lockOn||10))*1000; }
+function lockOffMs(){ return Math.max(10,Math.min(300,+prefs.lockOff||50))*1000; }
 var LT_PEAK=[0.26,0.44];
 var LT_SAMPLE_URL='sample-bags.json';
 var _ltOwn=null, _ltPending=null, _ltFill=null, _ltFillPend=null;
@@ -5530,16 +5547,37 @@ function ltStart(){
       if(!_asleep||!r) return;
       if(!r.own.length&&!r.fill.length) return;
       ltBuild(r.own.length||r.fill.length);
-      box.hidden=false; ltFillAll(r.own,r.fill); ltSchedule(); }); }
+      box.hidden=false; ltFillAll(r.own,r.fill);
+      _ltMoving=true; _ltPhaseEnd=Date.now()+lockOnMs();
+      ltSchedule(); }); }
 // The wall is always full; what changes is which bag is in which square. One
 // or two go over at a time, chosen at random, for as long as the machine is
 // asleep.
 function ltSchedule(){
   if(!_asleep) return;
-  _ltNext=setTimeout(function(){ _ltNext=null;
-    var n=1+Math.round(Math.random()*(LT_SWAP_MAX-1));
-    for(var i=0;i<n;i++) ltSwapOne();
-    ltSchedule(); },ltRand(LT_TICK)); }
+  var mode=lockMotion();
+  if(mode==='still') return;                     // laid once, then left alone
+  if(mode==='always'){
+    _ltNext=setTimeout(function(){ _ltNext=null;
+      var n=1+Math.round(Math.random()*(LT_SWAP_MAX-1));
+      for(var i=0;i<n;i++) ltSwapOne();
+      ltSchedule(); },ltRand(LT_TICK));
+    return; }
+  var now=Date.now();
+  if(now>=_ltPhaseEnd){
+    _ltMoving=!_ltMoving;
+    _ltPhaseEnd=now+(_ltMoving?lockOnMs():lockOffMs());
+    if(_ltMoving) ltSwapOne(); }
+  if(!_ltMoving){
+    // one timer for the whole rest, so nothing wakes up in between
+    _ltNext=setTimeout(function(){ _ltNext=null; ltSchedule(); },
+      Math.max(300,_ltPhaseEnd-Date.now()));
+    return; }
+  // stop starting fades early enough that the rest really is a rest
+  if(_ltPhaseEnd-now>LT_FADE_MS){
+    var k=1+Math.round(Math.random()*(LT_SWAP_MAX-1));
+    for(var j=0;j<k;j++) ltSwapOne(); }
+  _ltNext=setTimeout(function(){ _ltNext=null; ltSchedule(); },ltRand(LT_TICK)); }
 var LOCK_SHIFTS=[[0,0],[11,-7],[-9,9],[7,11],[-12,-8],[13,5],[-7,-12],[5,-4]];
 var _lockShiftI=0;
 function shiftLockScreen(){ var el=document.getElementById('lockShift'); if(!el) return;
@@ -6296,6 +6334,9 @@ function applyPrefsObject(p){
   else if(p.monAuto&&typeof p.monAuto==='object') prefs.monAuto=p.monAuto;
   if(typeof p.sleepDim==='boolean') prefs.sleepDim=p.sleepDim;
   if(typeof p.lockPics==='boolean') prefs.lockPics=p.lockPics;
+  if(p.lockMotion==='always'||p.lockMotion==='burst'||p.lockMotion==='still') prefs.lockMotion=p.lockMotion;
+  if(isFinite(+p.lockOn)) prefs.lockOn=+p.lockOn;
+  if(isFinite(+p.lockOff)) prefs.lockOff=+p.lockOff;
   if(typeof p.sleepBrightness==='number') prefs.sleepBrightness=p.sleepBrightness;
   // the setting used to name the source; now it only says on or off
   if(p.guide==='off'||p.guide==='on') prefs.guide=p.guide;
@@ -6598,7 +6639,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ lockPics:true, autoDye:true, monClose:{}, night:false, nightAuto:false, geminiKey:'', claudeKey:'', openaiKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
+var prefs={ lockPics:true, lockMotion:'burst', lockOn:10, lockOff:50, autoDye:true, monClose:{}, night:false, nightAuto:false, geminiKey:'', claudeKey:'', openaiKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
   // Which scale this skin weighs a dose on. The gateway holds it open on request and attaches no meaning to it, so the choice lives here.
   dosingScaleId:'',
   // 'on' | 'off'. guideSrc is not chosen in settings: loading a profile makes
@@ -6959,6 +7000,20 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     var pCam=h; h=pScreen;
     h+=row('fx','fxDesc',sw('setFx',!!prefs.fx,'setFx(this.checked)'));
     h+=row('lockPics','lockPicsDesc',sw('setLockPics',prefs.lockPics!==false,'setLockPics(this.checked)'));
+    if(prefs.lockPics!==false){
+      var lm=lockMotion();
+      h+=row('lockMotion','lockMotionDesc',
+        '<div class="ep-pump-toggle lm-seg">'
+        +[['always','lockMotionAlways'],['burst','lockMotionBurst'],['still','lockMotionStill']]
+          .map(function(o){ return '<button class="'+(lm===o[0]?'on':'')
+            +'" onclick="setLockMotion(\''+o[0]+'\')">'+escapeHtml(t(o[1]))+'</button>'; }).join('')
+        +'</div>');
+      if(lm==='burst'){
+        var on=Math.max(5,Math.min(60,+prefs.lockOn||10));
+        var off=Math.max(10,Math.min(300,+prefs.lockOff||50));
+        h+=row('lockOn','lockOnDesc','<div class="opt-ctrl"><input type="range" class="slider" min="5" max="60" step="1" value="'+on+'" oninput="setLockOn(this.value,true)" onchange="setLockOn(this.value)"><span class="opt-val" id="lockOnVal">'+on+'s</span></div>');
+        h+=row('lockOff','lockOffDesc','<div class="opt-ctrl"><input type="range" class="slider" min="10" max="300" step="5" value="'+off+'" oninput="setLockOff(this.value,true)" onchange="setLockOff(this.value)"><span class="opt-val" id="lockOffVal">'+off+'s</span></div>');
+      } }
     h+=row('sleepDim','sleepDimDesc',sw('setSleepDim',!!prefs.sleepDim,'setSleepDim(this.checked)'));
     var sb=prefs.sleepBrightness||20;
     h+=row('sleepBright','sleepBrightDesc','<div class="opt-ctrl"><input type="range" class="slider" min="1" max="60" step="1" value="'+sb+'" oninput="setSleepBright(this.value,true)" onchange="setSleepBright(this.value,false)"><span class="opt-val" id="sbVal">'+sb+'</span></div>');
@@ -7259,7 +7314,23 @@ function setScalePowerMode(v){ gwSettings.scalePowerMode=v;
 function setLowBatt(on){ gwSettings.lowBatteryBrightnessLimit=on; api('POST','/api/v1/settings',{lowBatteryBrightnessLimit:on}).catch(function(e){ spFailed(e); }); }
 function setSleepDim(on){ prefs.sleepDim=!!on; savePrefs(); }
 function setLockPics(on){ prefs.lockPics=!!on; savePrefs();
+  if(spOpen()) renderSpContent();
   if(_asleep){ if(prefs.lockPics) ltStart(); else ltStop(); } }
+function ltRestart(){ if(_asleep&&prefs.lockPics!==false) ltStart(); }
+function setLockMotion(m){
+  prefs.lockMotion=m; savePrefs();
+  if(spOpen()) renderSpContent();
+  ltRestart(); }
+function setLockOn(v,live){
+  prefs.lockOn=Math.max(5,Math.min(60,parseInt(v,10)||10));
+  var el=document.getElementById('lockOnVal'); if(el) el.textContent=prefs.lockOn+'s';
+  if(live) return;
+  savePrefs(); ltRestart(); }
+function setLockOff(v,live){
+  prefs.lockOff=Math.max(10,Math.min(300,parseInt(v,10)||50));
+  var el=document.getElementById('lockOffVal'); if(el) el.textContent=prefs.lockOff+'s';
+  if(live) return;
+  savePrefs(); ltRestart(); }
 // The monitor covers the screen, and steam or a flush is over before it is
 // worth reading; a shot is the one worth watching from the first drop. So the
 // actions that open it are picked rather than all or none.
