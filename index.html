@@ -1796,16 +1796,16 @@ body.night .sl-stop.ok{color:#5eead4} body.night .sl-stop.warn{color:#fbbf24} bo
 .mon-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--mg);min-height:0}
 /* With a camera the picture takes the right-hand side and the two graphs stay
    stacked on the left, so neither has to be read sideways. */
-.mon-body.cam{grid-template-columns:minmax(0,1fr) auto}
+.mon-body.cam{grid-template-columns:minmax(0,6fr) minmax(0,4fr)}
 .mon-chart-card{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;min-width:0}
 .mon-chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0}
-/* A stretched picture is a lie about the shot, so the pane keeps the shape the
-   stream actually has -- four by three until the first frame says otherwise --
-   and the column is only ever as wide as that shape makes it. */
+/* The pane fills its side of the split top to bottom. A stretched picture
+   would still be a lie about the shot, so the picture inside is fitted to the
+   pane rather than pulled to it. */
 .mon-cam-host{display:none;min-width:0;min-height:0}
-.mon-cam-host.on{display:flex;align-items:center;justify-content:center}
-.mon-cam-host .cam-pane{position:relative;inset:auto;flex:none;margin:0;min-height:0;
-  width:100%;max-width:100%;max-height:100%;aspect-ratio:var(--cam-ar,4 / 3);border-radius:18px}
+.mon-cam-host.on{display:block}
+.mon-cam-host .cam-pane{position:relative;inset:auto;flex:none;margin:0;
+  width:100%;height:100%;min-height:0;max-height:none;border-radius:18px}
 .mon-chart-wrap{position:relative;flex:3;min-height:0}
 .mon-temp-wrap{position:relative;flex:2;min-height:0}
 .mon-chart-wrap canvas,.mon-temp-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -4193,7 +4193,7 @@ function resumeResync(){
     },function(){});
   }catch(_){} }
 var _resizeT=null;
-window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requestAnimationFrame(function(){ _resizeT=null; fitStage(); monCamFit(); _chartBgKey=null; drawChart(); }); });
+window.addEventListener('resize', function(){ if(_resizeT) return; _resizeT=requestAnimationFrame(function(){ _resizeT=null; fitStage(); _chartBgKey=null; drawChart(); }); });
 
 var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='http://'+h+':8080'; return {http:b,ws:b.replace('http','ws')}; })();
 
@@ -8070,8 +8070,9 @@ function camQrShow(noteKey){
 function camApplyView(){
   var pane=document.getElementById('camPane'); if(!pane||pane.hidden) return;
   var r=pane.getBoundingClientRect(); if(!r.width||!r.height) return;
-  var inAlbum=!!(pane.parentElement&&pane.parentElement.classList
-    &&pane.parentElement.classList.contains('album'));
+  var host=pane.parentElement, hc=host&&host.classList;
+  var inAlbum=!!(hc&&hc.contains('album'));
+  var inMon=!!(hc&&hc.contains('mon-cam-host'));
   var rot=prefs.camRotate|0, quarter=(rot===90||rot===270);
   var w=quarter?r.height:r.width, h=quarter?r.width:r.height;
   var t='translate(-50%,-50%) rotate('+rot+'deg) scale('+(prefs.camZoom||1)+')'
@@ -8079,7 +8080,7 @@ function camApplyView(){
   ['camVideo','camImg'].forEach(function(id){ var el=document.getElementById(id); if(!el) return;
     el.style.position='absolute'; el.style.left='50%'; el.style.top='50%';
     el.style.width=w+'px'; el.style.height=h+'px';
-    el.style.objectFit=(inAlbum||prefs.camFit==='cover')?'cover':'contain';
+    el.style.objectFit=(inAlbum||inMon||prefs.camFit==='cover')?'cover':'contain';
     el.style.transform=t; });
   camFitCard(); }
 var _camRO=null;
@@ -8103,27 +8104,11 @@ function camFitCard(){
   var live=v&&!v.hidden&&v.videoWidth;
   var w=live?v.videoWidth:(i?i.naturalWidth:0), h=live?v.videoHeight:(i?i.naturalHeight:0);
   var rot=prefs.camRotate|0; if(w&&h&&(rot===90||rot===270)){ var sw=w; w=h; h=sw; }
-  if(mon){ pane.style.maxHeight='';
-    host.style.setProperty('--cam-ar',(w&&h)?(w+' / '+h):'4 / 3');
-    monCamFit(); return; }
+  if(mon){ pane.style.maxHeight=''; return; }
   if(!w||!h){ pane.style.maxHeight=''; return; }
   var width=pane.getBoundingClientRect().width||0; if(!width) return;
   pane.style.maxHeight=Math.round(width*h/w)+'px'; }
-// Beside the graphs the picture is given the height of the row and whatever
-// width its own shape asks for -- up to a share of the screen, because past
-// that the graphs stop being graphs.
-var MON_CAM_SHARE=0.46;
-function monCamFit(){
-  var host=document.getElementById('monCamHost');
-  if(!host||!host.classList.contains('on')) return;
-  var body=host.parentElement; if(!body) return;
-  var r=body.getBoundingClientRect(); if(!r.width||!r.height){ host.style.width=''; return; }
-  var ar=(host.style.getPropertyValue('--cam-ar')||'4 / 3').split('/');
-  var a=parseFloat(ar[0]), b=parseFloat(ar[1]);
-  if(!(a>0&&b>0)){ a=4; b=3; }
-  var gap=parseFloat(getComputedStyle(body).columnGap)||0;
-  var cap=Math.max(180,(r.width-gap)*MON_CAM_SHARE);
-  host.style.width=Math.round(Math.min(cap,r.height*a/b))+'px'; }
+
 function setCamRotate(v){ prefs.camRotate=parseInt(v,10)||0; savePrefs(); camApplyView(); }
 function setCamFit(on){ prefs.camFit=on?'cover':'contain'; savePrefs(); camApplyView(); }
 function setCamZoom(v,live){ prefs.camZoom=Math.max(1,Math.min(3,parseFloat(v)||1));
@@ -8144,10 +8129,8 @@ function camToMonitor(on){
   host.classList.toggle('on',want);
   var body=document.getElementById('monBody');
   if(body) body.classList.toggle('cam',want);
-  if(!want) host.style.width='';
   camPlace();
-  camApplyView();
-  monCamFit(); }
+  camApplyView(); }
 // The pane is one element wherever it is shown, so where it belongs is decided
 // in one place: the monitor while a shot is on screen, the profile card while
 // a camera is on, and its own card -- drawn by nothing -- the rest of the time.
