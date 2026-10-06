@@ -579,6 +579,8 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .th-val.tap:active{transform:scale(.95);background:rgba(99,102,241,.16)}
 .dose-block{text-align:center;min-width:0;flex:none}
 .dose-adj{display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0}
+.dose-adj.two{gap:4px}
+.dose-adj.two .ms-btn{width:auto;min-width:30px;padding:0 6px;font-size:13px;font-weight:800}
 .dose-num{font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--accent);min-width:0;flex:1}
 .dose-lbl{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:3px;min-height:14px;line-height:14px;display:flex;align-items:center;justify-content:center;gap:5px}
 .dose-lbl .lu,.dose-lbl .dose-live{text-transform:none}
@@ -675,6 +677,10 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .live-grid{display:grid;gap:6px}
 .live-cell{text-align:center;min-width:0}
 .live-grid.wide .live-adj{max-width:184px;margin:0 auto}
+.live-grid.wide .live-adj.two{max-width:none}
+.live-grid .live-adj.two{gap:5px}
+.live-grid .live-adj.two .ms-btn{width:auto;min-width:0;padding:0 6px;font-size:13px;font-weight:800}
+.live-grid .live-adj.two .live-num{font-size:20px;padding:0 2px}
 .live-grid:not(.wide) .ms-btn{width:36px}
 .live-adj{display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0}
 .live-num{flex:1;min-width:0;font-size:24px;font-weight:800;letter-spacing:-.03em;color:var(--accent)}
@@ -1793,6 +1799,30 @@ body.night .sl-stop.ok{color:#5eead4} body.night .sl-stop.warn{color:#fbbf24} bo
 .mon-top .mon-gauge .gauge-val{font-size:clamp(24px,5.9vh,44px)}
 .mon-top .mon-gauge .gauge-val .u{font-size:clamp(11px,2.2vh,16px)}
 .mon-top .mon-recipe{display:flex;flex-direction:column;justify-content:center}
+.mon-top.aux{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,3.4fr)}
+.mon-sub{font-size:clamp(10px,1.9vh,13px);font-weight:700;color:var(--ink-mute);margin-top:1px}
+.mon-sub:empty{display:none}
+.live-left{font-size:15px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.live-left:empty{display:none}
+.mon-aux-live{margin-top:5px}
+.mon-aux-live .live-num{font-size:clamp(17px,3.5vh,26px)}
+.mon-aux-live .live-lbl{font-size:10px;margin-top:1px}
+.mon-aux-live .live-grid .ms-btn{width:clamp(30px,5.4vh,38px);height:clamp(30px,5.4vh,38px);font-size:clamp(15px,2.6vh,19px)}
+.mon-aux-live .live-grid .live-adj.two .ms-btn{width:auto;min-width:0;height:clamp(30px,5.4vh,38px);
+  padding:0 clamp(4px,.6vw,7px);font-size:clamp(12px,2.1vh,15px)}
+.mon-aux-live .live-adj.two .live-num{font-size:clamp(16px,3.1vh,23px)}
+/* A short or narrow screen cannot give four buttons and a three-digit number
+   the room they want, so the buttons give it up rather than the number. */
+@media (max-height:680px),(max-width:1120px){
+  .mon-aux-live .live-grid .ms-btn{width:26px;height:26px;font-size:13px}
+  .mon-aux-live .live-grid .live-adj.two .ms-btn{width:auto;height:26px;padding:0 4px;font-size:11px}
+  .mon-aux-live .live-num{font-size:16px}
+  .mon-aux-live .live-adj.two .live-num{font-size:15px}
+  .mon-aux-live .live-lbl{font-size:9px}
+}
+.mon-aux-live .live-num.tap{cursor:pointer;border-radius:10px;padding:3px 2px;
+  transition:background .15s,transform .1s}
+.mon-aux-live .live-num.tap:active{transform:scale(.95);background:rgba(99,102,241,.16)}
 .mon-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--mg);min-height:0}
 /* With a camera the picture takes the right-hand side and the two graphs stay
    stacked on the left, so neither has to be read sideways. */
@@ -2514,9 +2544,11 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
             </div>
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="oDuration"></span><span class="lu">s</span></div>
-              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('steamDur',-1)">−</button>
+              <div class="dose-adj two"><button class="ms-btn" onclick="auxAdj('steamDur',-10)">−10</button>
+                <button class="ms-btn" onclick="auxAdj('steamDur',-5)">−5</button>
                 <div class="dose-num tap" onclick="auxKeypad('steamDur')"><span id="steamDurV">0</span></div>
-                <button class="ms-btn" onclick="auxAdj('steamDur',1)">+</button></div>
+                <button class="ms-btn" onclick="auxAdj('steamDur',5)">+5</button>
+                <button class="ms-btn" onclick="auxAdj('steamDur',10)">+10</button></div>
             </div>
             <div class="dose-block">
               <div class="dose-lbl dose-cap"><span data-i18n="flow"></span></div>
@@ -2626,8 +2658,9 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   <div class="mon-top">
       <div class="mon-cell"><div class="mon-lbl" data-i18n="monWeight">Weight</div>
         <div class="mon-big" id="monWeight">0.0<span class="mon-u" id="monWeightU">g</span></div></div>
-      <div class="mon-cell"><div class="mon-lbl" data-i18n="monElapsed">Elapsed</div>
-        <div class="mon-big" id="monTimer">0:00</div></div>
+      <div class="mon-cell"><div class="mon-lbl" id="monTimerLbl" data-i18n="monElapsed">Elapsed</div>
+        <div class="mon-big" id="monTimer">0:00</div>
+        <div class="mon-sub" id="monTimerSub"></div></div>
       <div class="gauge mon-gauge">
         <div class="mon-lbl mon-glbl" data-i18n="pressure">Pressure</div>
         <svg class="gs" id="monPressureScene" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"></svg>
@@ -2645,6 +2678,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           <span><b id="monYield">—</b> g</span><span class="mon-ratio" id="monRatio">—</span>
         </div>
         <div class="mon-aux-row" id="monAuxRow" style="display:none">—</div>
+        <div class="mon-aux-live" id="monAuxLive" style="display:none"></div>
       </div>
   </div>
   <div class="mon-body" id="monBody">
@@ -3499,7 +3533,7 @@ var I18N={
     monAuto:'Full-screen monitor', monAutoDesc:'Which actions open the monitor by themselves. Tap the graph to open it at any time.',
     monClose:'Close it when the action ends',
     monCloseDesc:'Which actions take the monitor away again the moment they finish. The rest leave it up to be read, and it goes when it is closed.',
-    stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRecipe:'Recipe', monNoProfile:'No profile',
+    stopped:'Stopped', stopFailed:'Stop failed', espresso:'Espresso', tempGraph:'Temperature', monitor:'Monitor', monWeight:'Weight', monElapsed:'Elapsed', monRemain:'Remaining', monRecipe:'Recipe', monNoProfile:'No profile',
     flushGraph:'Flush Graph',
     rating:'Rating', cmpAll:'All', cmpAdd:'Add to comparison', cmpMax:'Compare up to {n} shots', cmpHead:'Comparing shots', cmpSub:'{n} shots overlaid', cmpClear:'Clear',
     tuneTitle:'Tune this profile', tuneRun:'Tune from these shots', tuneWorking:'Reading the shots\u2026',
@@ -3907,7 +3941,7 @@ var I18N={
     monClose:'동작이 끝나면 바로 닫기',
     monCloseDesc:'어떤 동작이 끝나는 즉시 모니터를 닫을지 선택합니다. 고르지 않은 동작은 읽을 수 있도록 남아 있다가 닫을 때 사라집니다.',
     monAuto:'전체화면 모니터', monAutoDesc:'어떤 동작에서 모니터를 자동으로 열지 선택합니다. 그래프를 누르면 언제든 열 수 있습니다.',
-    stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRecipe:'레시피', monNoProfile:'프로파일 없음',
+    stopped:'중지됨', stopFailed:'중지 실패', espresso:'에스프레소', tempGraph:'온도', monitor:'모니터', monWeight:'무게', monElapsed:'경과', monRemain:'남은 시간', monRecipe:'레시피', monNoProfile:'프로파일 없음',
     flushGraph:'플러시 그래프',
     rating:'평점', cmpAll:'전체', cmpAdd:'비교에 추가', cmpMax:'최대 {n}개까지 비교할 수 있습니다', cmpHead:'추출 비교', cmpSub:'{n}개 겹쳐보기', cmpClear:'해제',
     tuneTitle:'이 프로파일 다듬기', tuneRun:'이 샷들로 다듬기', tuneWorking:'샷을 읽는 중…',
@@ -4871,13 +4905,32 @@ function syncConnDosing(){
   document.getElementById('lblDosing').textContent=d.name||t('dosingScale'); }
 
 // ── Timer & chart ───────────────────────────────────────────────────
-function startTimer(){ state.shotStart=Date.now(); state.shotPourEnd=null; if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
+function startTimer(){ state.shotStart=Date.now(); state.shotPourEnd=null; _auxStopSent=false; if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
 function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
+function mmss(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+var AUX_DUR_KEY={steam:'steamDur',flush:'flushDur',water:'waterDur'};
+function auxDur(kind){ var k=AUX_DUR_KEY[kind]; return k?(+settings[k]||0):0; }
+var _auxStopSent=false;
+function auxTimeUp(){
+  if(_auxStopSent) return; _auxStopSent=true;
+  api('PUT','/api/v1/machine/state/idle').catch(function(){}); }
 function tick(){ if(!state.shotStart) return;
   var s=Math.floor(((state.shotPourEnd||Date.now())-state.shotStart)/1000);
-  var txt=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  var txt=mmss(s);
   document.getElementById('timerBig').textContent=txt;
-  var m=document.getElementById('monTimer'); if(m) m.textContent=txt; }
+  var run=auxRunning(), dur=run?auxDur(run):0;
+  var counting=!!(run&&dur>0&&!state.shotPourEnd);
+  var left=counting?(dur-s):0;
+  var m=document.getElementById('monTimer');
+  if(m) m.textContent=counting?mmss(left):txt;
+  var lbl=document.getElementById('monTimerLbl');
+  if(lbl) lbl.textContent=t(counting?'monRemain':'monElapsed');
+  var sb=document.getElementById('monTimerSub');
+  if(sb) sb.textContent=counting?(t('monElapsed')+' '+txt):'';
+  var ll=document.getElementById('liveLeft');
+  if(ll) ll.textContent=counting?mmss(left):'';
+  // the group head owns stopping on a machine that has one
+  if(counting&&left<=0&&!state.ghc) auxTimeUp(); }
 var _chartRAF=null;
 // The monitor is a full-screen page, but it is the one page that exists to show
 // the graph, so it does not suppress drawing the way the others do.
@@ -6017,7 +6070,7 @@ function optChange(key,val){ var v=parseFloat(val); var map={steamTemp:'steamTem
 var AUX_KINDS={
   steam:{ico:'💨',state:'steam',act:'doSteamAction',open:'openSteamModal',sync:'syncSteamModal',cols:3,
     fields:[{k:'steamTemp',step:1,min:0,max:165,dec:0,unit:'tempShort'},
-            {k:'steamDur',step:5,min:0,max:120,dec:0,unit:'secShort'},
+            {k:'steamDur',step:5,step2:10,min:0,max:120,dec:0,unit:'secShort'},
             {k:'steamFlow',step:0.1,min:0,max:2.5,dec:1,unit:'flowShort'}]},
   flush:{ico:'🚿',state:'flush',act:'doFlushAction',open:'openFlushModal',sync:'syncFlushModal',cols:3,
     fields:[{k:'flushTemp',step:1,min:60,max:95,dec:0,unit:'tempShort'},
@@ -6029,6 +6082,23 @@ var AUX_KINDS={
             {k:'waterDur',step:5,min:0,max:120,dec:0,unit:'secShort'},
             {k:'waterFlow',step:0.5,min:1,max:10,dec:1,unit:'flowShort'}]}
 };
+// A field with a second step gets four buttons, so its buttons carry the
+// number they move by and its column is given the room for them.
+function auxBtn(kind,f,d){
+  var lbl=f.step2?((d>0?'+':'\u2212')+Math.abs(d)):(d>0?'+':'\u2212');
+  return '<button class="ms-btn" onclick="adjustAux(\''+kind+'\',\''+f.k+'\','+d+')">'+lbl+'</button>'; }
+function auxAdjRow(kind,f,id){
+  return '<div class="live-adj'+(f.step2?' two':'')+'">'
+    +(f.step2?auxBtn(kind,f,-f.step2):'')
+    +auxBtn(kind,f,-f.step)
+    +'<div class="live-num tap" id="'+id+'" onclick="auxKeypad(\''+f.k+'\')">'+auxNum(f)+'</div>'
+    +auxBtn(kind,f,f.step)
+    +(f.step2?auxBtn(kind,f,f.step2):'')
+    +'</div>'; }
+function auxTmpl(def){
+  var w=[],c; for(c=0;c<def.cols;c++) w.push('minmax(0,1fr)');
+  def.fields.forEach(function(f,i){ if(f.step2) w[i%def.cols]='minmax(0,1.7fr)'; });
+  return w.join(' '); }
 function auxNum(f){ var v=settings[f.k]; return f.dec?(+v).toFixed(f.dec):String(Math.round(v)); }
 function auxSummary(kind){ return auxHeat(kind)+' · '+auxPour(kind); }
 function auxHeat(kind){
@@ -6067,7 +6137,9 @@ function syncAux(){
     if(el) el.textContent=auxSummary(kind);
     if(_monOpen) syncMonitorHead(); });
   if(_auxLiveKind){ var def=AUX_KINDS[_auxLiveKind];
-    def.fields.forEach(function(f){ var el=document.getElementById('live_'+f.k); if(el) el.textContent=auxNum(f); }); }
+    def.fields.forEach(function(f){
+      ['live_','mlive_'].forEach(function(p){
+        var el=document.getElementById(p+f.k); if(el) el.textContent=auxNum(f); }); }); }
   syncPresetChips(); }
 // The workflow endpoint does not debounce, so the trailing edge is ours to keep.
 var _auxPushT=null, _auxPushSet={};
@@ -6095,16 +6167,24 @@ function auxRunning(){ var st=state.machine.state;
   return st==='steam'?'steam':st==='flush'?'flush':st==='hotWater'?'water':null; }
 function renderAuxLive(kind){
   var def=AUX_KINDS[kind], box=document.getElementById('recipeLive');
-  box.innerHTML='<div class="live-grid'+(def.cols===2?' wide':'')+'" style="grid-template-columns:repeat('+def.cols+',1fr)">'
+  box.innerHTML='<div class="live-grid'+(def.cols===2?' wide':'')+'" style="grid-template-columns:'+auxTmpl(def)+'">'
     +def.fields.map(function(f){
-      return '<div class="live-cell"><div class="live-adj">'
-        +'<button class="ms-btn" onclick="adjustAux(\''+kind+'\',\''+f.k+'\','+(-f.step)+')">−</button>'
-        +'<div class="live-num" id="live_'+f.k+'">'+auxNum(f)+'</div>'
-        +'<button class="ms-btn" onclick="adjustAux(\''+kind+'\',\''+f.k+'\','+f.step+')">+</button>'
-        +'</div><div class="live-lbl">'+escapeHtml(t(f.unit))+'</div></div>'; }).join('')
+      return '<div class="live-cell">'+auxAdjRow(kind,f,'live_'+f.k)
+        +'<div class="live-lbl">'+escapeHtml(t(f.unit))+'</div></div>'; }).join('')
     +'</div>'
     +'<div class="live-bar"><div class="live-kind"><span>'+def.ico+'</span><span>'+escapeHtml(t(kind))+'</span></div>'
+    +'<span class="live-left" id="liveLeft"></span>'
     +'<button class="m-btn" onclick="'+def.act+'()">'+escapeHtml(t('stop'))+'</button></div>'; }
+var _monAuxKind=null;
+function renderMonAuxLive(kind){
+  var def=AUX_KINDS[kind], box=document.getElementById('monAuxLive');
+  if(!box) return;
+  box.innerHTML='<div class="live-grid'+(def.cols===2?' wide':'')
+    +'" style="grid-template-columns:'+auxTmpl(def)+'">'
+    +def.fields.map(function(f){
+      return '<div class="live-cell">'+auxAdjRow(kind,f,'mlive_'+f.k)
+        +'<div class="live-lbl">'+escapeHtml(t(f.unit))+'</div></div>'; }).join('')
+    +'</div>'; }
 function syncAuxPanel(){
   var kind=auxRunning();
   if(kind!==_auxLiveKind){
@@ -16844,10 +16924,20 @@ function syncMonitorHead(){
     document.getElementById('monState').textContent=MON_STATES[st]?t(st):'';
   }
   var lbl=document.getElementById('monSetLbl'), rec=document.getElementById('monRecipeRow'),
-      aux=document.getElementById('monAuxRow');
-  if(kind){ lbl.textContent=auxLabel(kind); rec.style.display='none';
+      aux=document.getElementById('monAuxRow'), live=document.getElementById('monAuxLive');
+  // Running is what decides, not which graph is up: a steam graph still on
+  // screen after the wand has stopped has nothing left to drive.
+  var run=auxRunning(), bar=document.querySelector('.mon-top');
+  if(bar) bar.classList.toggle('aux',!!run);
+  if(run){
+    lbl.textContent=t(run)+' \u00b7 '+t('liveAdjust');
+    rec.style.display='none'; aux.style.display='none'; live.style.display='';
+    if(_monAuxKind!==run){ _monAuxKind=run; renderMonAuxLive(run); } }
+  else if(kind){ _monAuxKind=null; live.style.display='none';
+    lbl.textContent=auxLabel(kind); rec.style.display='none';
     aux.style.display=''; aux.textContent=auxSummary(kind); }
-  else { lbl.textContent=t('monRecipe'); rec.style.display=''; aux.style.display='none'; }
+  else { _monAuxKind=null; live.style.display='none';
+    lbl.textContent=t('monRecipe'); rec.style.display=''; aux.style.display='none'; }
   // Close is its own button in the head and is always there. This one only
   // stops, so it is only here when there is something to stop and the group
   // head is not the one in charge of stopping it.
@@ -16873,6 +16963,7 @@ function openMonitor(auto){
   // the two canvases are different sizes, so the cached backing-store dimensions
   // and the mode-keyed legend both have to be re-derived
   _chartDims.w=0; _chartDims.h=0; _chartLegendMode=null; _tempDims.w=0; _tempDims.h=0; _tempBgKey=null;
+  _monAuxKind=null;
   syncMonitorHead(); syncMonitorLive(); syncRecipe();
   applyGauges('monPressure','monFlow');
   tick(); drawChart(); }
