@@ -682,6 +682,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
   font-size:12px;font-weight:900;line-height:1;font-family:var(--font);
   box-shadow:0 2px 8px rgba(245,158,11,.38);animation:rcpulse 2.4s ease-in-out infinite}
 .rc-alert[hidden]{display:none}
+.ls-alert{position:static;margin-right:7px;flex:none}
 .rc-alert:active{transform:scale(.92)}
 @keyframes rcpulse{0%,100%{box-shadow:0 2px 8px rgba(245,158,11,.38)}
   50%{box-shadow:0 2px 14px rgba(245,158,11,.75)}}
@@ -2653,6 +2654,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     <div class="lastshot-card glass">
       <div class="last-shot" id="lastShot">
         <div class="ls-head">
+          <button class="rc-alert ls-alert" id="lsAlert" onclick="openAiGuide('read')" hidden>!</button>
           <div class="ls-profile" id="lsProfile"></div>
           <span class="ls-acts">
             <button class="cur-browse" onclick="viewLastShotGraph()"><span id="lsGraphLbl">View Graph</span> <span id="lsGraphIco">↗</span></button>
@@ -2720,7 +2722,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <!-- ── The reading that is waiting on the next shot ───────── -->
 <div class="overlay" id="aiGuideOverlay" onclick="closeModal(event,'aiGuideOverlay')">
   <div class="modal ag-modal">
-    <div class="modal-head"><div class="modal-title" data-i18n="aiGuideTitle">AI guidance</div>
+    <div class="modal-head"><div class="modal-title" id="agTitle">AI guidance</div>
       <button class="modal-close" onclick="closeModal(null,'aiGuideOverlay')">×</button></div>
     <div class="modal-body"><div id="aiGuideBody"></div></div>
   </div>
@@ -3581,6 +3583,19 @@ var I18N={
     aiMemoryEmpty:'Nothing remembered yet. Mark a suggestion in a shot reading.',
     aiMemoryClear:'Forget all', aiMemoryCleared:'Forgotten',
     aiPin:'Use next time', aiPinned:'Waiting on the next shot', aiPinnedElsewhere:'Saved \u2014 the mark shows when {n} is loaded again', aiGuideTitle:'AI guidance', aiApply:'apply', aiApplied:'Applied', aiApplyAll:'Apply all', aiGuideClear:'Clear', aiGuideCleared:'Cleared', aiNoApply:'Nothing here to set on the card', aiApplyNoProfile:'Load a profile first',
+    rsTitle:'Shot reading', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends the curve is read here, with no model and no network. A reading opens as a page, or waits behind the mark on the shot card.',
+    rsModeModal:'Open it', rsModeIcon:'Mark only', rsModeOff:'Off',
+    rsResist:'Puck resistance averaged {r} bar per ml/s', rsYieldShort:'It stopped at {p}% of the target yield', rsYieldOver:'It poured {g}g past the target',
+    rsVOk:'The curve looks ordinary', rsVChannel:'This one channelled', rsVMixed:'The curve pulls both ways', rsMixed:'It fell short of its pressure early and its flow later, so the grind is not the thing to move on this one.', rsVCoarse:'The puck let the water through too easily', rsVFine:'The puck held the water back',
+    rsTime:'The shot took {s}s', rsTimePlan:'The shot took {s}s, against {m}s planned', rsFirstDrop:'First drop at {s}s', rsRatio:'Poured 1:{r}, against {g}',
+    rsChannel:'At {t}s the flow jumped {f} ml/s while the pressure fell {p} bar',
+    rsChannelFix:'Work on distribution and tamp', rsChannelWhy:'Water found a way through the puck instead of soaking it.',
+    rsCoarse:'Pressure ran {p} bar under target at a mean flow of {f} ml/s',
+    rsCoarseFix:'Grind one step finer', rsCoarseWhy:'The machine asked for more pressure than the puck could hold back.',
+    rsFine:'Flow ran {f} ml/s under target with the pressure at {p} bar',
+    rsFineFix:'Grind one step coarser', rsFineWhy:'The pressure was at its limit and the water still would not come.',
+    rsGrindAssume:'Taken as lower-is-finer on this dial.',
+    rsTempHigh:'The group ran {d} degrees above the profile', rsTempLow:'The group ran {d} degrees below the profile',
     aiAnalysis:'AI reading', aiRun:'Analyse', aiAgain:'Again', aiReading:'Reading the shot…', aiNoResult:'No analysis came back', aiFailed:'Analysis failed:',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
@@ -3990,6 +4005,20 @@ var I18N={
     aiMemoryEmpty:'아직 기억한 것이 없습니다. 샷 분석의 조언에 표시해 보세요.',
     aiMemoryClear:'모두 지우기', aiMemoryCleared:'지웠습니다',
     aiPin:'다음 추출에 반영', aiPinned:'다음 추출에 반영됩니다', aiPinnedElsewhere:'저장됐습니다 — {n} 을(를) 다시 불러오면 표시됩니다', aiGuideTitle:'AI 가이드', aiApply:'적용', aiApplied:'적용됨', aiApplyAll:'전부 적용', aiGuideClear:'지우기', aiGuideCleared:'지웠습니다', aiNoApply:'카드에 설정할 값이 없습니다', aiApplyNoProfile:'프로파일을 먼저 불러오세요',
+    rsTitle:'추출 분석', rsSetting:'추출 후 분석', rsSettingDesc:'추출이 끝나면 곡선을 여기서 직접 읽습니다. 모델도 네트워크도 쓰지 않습니다. 바로 띄우거나, 샷 카드의 느낌표 뒤에서 기다리게 할 수 있습니다.',
+    rsModeModal:'바로 띄우기', rsModeIcon:'느낌표만', rsModeOff:'사용 안 함',
+    rsResist:'퍽 저항 평균 {r} bar·s/ml', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
+    rsVOk:'곡선에 특별히 걸리는 것이 없습니다', rsVMixed:'곡선이 양쪽으로 당깁니다', rsMixed:'초반에는 압력이, 후반에는 유량이 모자랐습니다. 이번 샷은 분쇄도로 건드릴 일이 아닙니다.', rsVChannel:'채널링이 생겼습니다',
+    rsVCoarse:'퍽이 물을 너무 쉽게 보냈습니다', rsVFine:'퍽이 물을 막았습니다',
+    rsTime:'추출 {s}초', rsTimePlan:'추출 {s}초 · 프로파일 계획 {m}초', rsFirstDrop:'첫 방울 {s}초', rsRatio:'실제 1:{r}, 목표 {g}',
+    rsChannel:'{t}초에 유량이 {f} ml/s 뛰는 동안 압력은 {p} bar 떨어졌습니다',
+    rsChannelFix:'분배와 탬핑을 다시 보세요', rsChannelWhy:'물이 퍽을 골고루 적시지 않고 길을 뚫었습니다.',
+    rsCoarse:'압력이 목표보다 평균 {p} bar 낮았고 유량은 평균 {f} ml/s였습니다',
+    rsCoarseFix:'분쇄도를 한 단계 가늘게', rsCoarseWhy:'머신이 요구한 압력을 퍽이 버티지 못했습니다.',
+    rsFine:'유량이 목표보다 평균 {f} ml/s 적었고 압력은 {p} bar에 붙어 있었습니다',
+    rsFineFix:'분쇄도를 한 단계 구게', rsFineWhy:'압력은 한계였는데도 물이 나오지 않았습니다.',
+    rsGrindAssume:'이 다이얼은 숫자가 낮을수록 가늘다고 보았습니다.',
+    rsTempHigh:'그룹 온도가 프로파일보다 {d}도 높았습니다', rsTempLow:'그룹 온도가 프로파일보다 {d}도 낮았습니다',
     aiAnalysis:'AI 추출 분석', aiRun:'분석', aiAgain:'다시 분석', aiReading:'추출을 읽는 중…', aiNoResult:'분석 결과가 없습니다', aiFailed:'분석 실패:',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
@@ -4568,7 +4597,9 @@ function onMachineState(ms,prev){
     chart.targetMix.push(state.targetMixTemp||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); if(chart.targetMix.length>chart.max)chart.targetMix.shift(); drawChart(); }
 }
-function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){ if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); } loadLastShot(); }).catch(function(){}); }
+function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){
+  if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); runShotRead(s.id); }
+  loadLastShot(); }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
 // A pressure step targets its own pressure, and a flow step's limiter is the
@@ -6513,6 +6544,7 @@ function hydrateFromStore(){
       presets.steam=all.presets.steam||presets.steam; presets.flush=all.presets.flush||presets.flush;
       presets.water=all.presets.water||presets.water; lsSet('aurora_presets',presets); changed=true; }
     else storePut('presets',presets);
+    if(all.shotread!==undefined){ lsSet('aurora_shotread',all.shotread||null); syncShotRead(); }
     if(all.aipin!==undefined){ lsSet('aurora_aipin',all.aipin||null); syncAiPin(); }
     else { var lp=aiPinGet(); if(lp) storePut('aipin',lp); }
     if(all.shotai&&typeof all.shotai==='object') lsSet('aurora_shotai',all.shotai);
@@ -6546,6 +6578,7 @@ function applyPrefsObject(p){
   if(typeof p.geminiKey==='string') prefs.geminiKey=p.geminiKey;
   if(typeof p.claudeKey==='string') prefs.claudeKey=p.claudeKey;
   if(typeof p.openaiKey==='string') prefs.openaiKey=p.openaiKey;
+  if(p.shotRead==='modal'||p.shotRead==='icon'||p.shotRead==='off') prefs.shotRead=p.shotRead;
   if(AI_PROVIDERS.indexOf(p.aiProvider)>=0) prefs.aiProvider=p.aiProvider;
   if(Array.isArray(p.mainTags)) prefs.mainTags=p.mainTags.filter(function(k){ return typeof k==='string'; });
   else if(p.mainTags===null) prefs.mainTags=null;
@@ -6877,7 +6910,7 @@ function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'k
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
 
 // ── Preferences & settings ──────────────────────────────────────────
-var prefs={ lockPics:true, lockMotion:'burst', lockOn:10, lockOff:50, autoDye:true, monClose:{}, night:false, nightAuto:false, geminiKey:'', claudeKey:'', openaiKey:'', aiProvider:'gemini', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
+var prefs={ lockPics:true, lockMotion:'burst', lockOn:10, lockOff:50, autoDye:true, monClose:{}, night:false, nightAuto:false, geminiKey:'', claudeKey:'', openaiKey:'', aiProvider:'gemini', shotRead:'modal', qrHost:'', lang:'auto', tempUnit:'C', weightUnit:'g', refillKitFull:'auto', monAuto:{espresso:true}, sleepDim:true, sleepBrightness:20,
   // Which scale this skin weighs a dose on. The gateway holds it open on request and attaches no meaning to it, so the choice lives here.
   dosingScaleId:'',
   // 'on' | 'off'. guideSrc is not chosen in settings: loading a profile makes
@@ -7212,6 +7245,8 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=row('lowBatt','lowBattDesc',sw('setLowBatt',!!gwSettings.lowBatteryBrightnessLimit,'setLowBatt(this.checked)'));
     h+='<div class="set-row"><div class="set-info" style="max-width:46%"><div class="set-name">'+t('monAuto')+'</div>'+'<div class="set-desc">'+t('monAutoDesc')+'</div></div>'+monAutoChips()+'</div>';
     h+='<div class="set-row"><div class="set-info" style="max-width:46%"><div class="set-name">'+t('monClose')+'</div>'+'<div class="set-desc">'+t('monCloseDesc')+'</div></div>'+monCloseChips()+'</div>';
+    h+='<div class="set-row"><div class="set-info" style="max-width:46%"><div class="set-name">'+t('rsSetting')+'</div>'
+      +'<div class="set-desc">'+t('rsSettingDesc')+'</div></div>'+shotReadChips()+'</div>';
     h+=row('guideLine','guideLineDesc',sw('setGuide',guideOn(),'setGuideOn(this.checked)'));
     if(guideOn()){
       // the source is never chosen here -- it is whatever was picked last
@@ -7588,6 +7623,12 @@ function toggleMonAuto(k){
   if(!prefs.monAuto||typeof prefs.monAuto!=='object') prefs.monAuto={};
   if(prefs.monAuto[k]) delete prefs.monAuto[k]; else prefs.monAuto[k]=true;
   savePrefs(); renderSpContent(); }
+function shotReadChips(){
+  var cur=shotReadMode();
+  return '<div class="optset">'+[['modal','rsModeModal'],['icon','rsModeIcon'],['off','rsModeOff']]
+    .map(function(a){ var on=(cur===a[0]);
+      return '<button class="optchip'+(on?' on':'')+'" role="switch" aria-checked="'+on+'"'
+        +' onclick="setShotRead(\''+a[0]+'\')">'+escapeHtml(t(a[1]))+'</button>'; }).join('')+'</div>'; }
 function monAutoChips(){
   return '<div class="optset">'+MON_AUTO_ACTS.map(function(a){ var on=monAutoOn(a[0]);
     return '<button class="optchip'+(on?' on':'')+'" role="switch" aria-checked="'+on+'"'
@@ -15033,6 +15074,7 @@ function loadLastShot(){
   var box=document.getElementById('lsStats'); if(!box) return;
   var profEl=document.getElementById('lsProfile');
   lastShotSummary=items.length?items[0]:null;
+  syncShotRead();
   if(!items.length){ box.innerHTML='<div class="ls-empty">'+t('noShots')+'</div>'; if(profEl) profEl.innerHTML=''; return; }
   var s=items[0], an=s.annotations||{};
   // Show which profile produced this shot (group prefix dimmed if present).
@@ -16597,7 +16639,7 @@ function aiFbPromptBlock(){
     +'said worked, and do not repeat one they said did not; their notes describe their own machine, '
     +'grinder and taste. If the numbers in this shot point the other way, follow the numbers and say '
     +'plainly why you differ.\nFEEDBACK: '+JSON.stringify(rows)+'\n'; }
-function shotAiPrompt(digests,lang){
+function shotAiPrompt(digests,lang,measured){
   return 'You are an espresso dial-in assistant. Answer in '+(lang==='ko'?'Korean':'English')+'.\n'
     +(digests.length>1
       ? 'Compare these recorded shots. Say what actually differs between them, what the curves show, and what to pull next.\n'
@@ -16617,7 +16659,17 @@ function shotAiPrompt(digests,lang){
     +'ratio is the number after 1:, temp is degrees Celsius. One field per suggestion.\n'
     +'At most 4 observations and 3 suggestions.\n'
     +aiFbPromptBlock()
+    +((measured&&measured.length&&measured.some(function(x){ return x&&x.length; }))
+      ? ('\nALREADY MEASURED off the same curves, by arithmetic rather than judgement. '
+         +'Treat these as given; do not recompute them and do not contradict them without '
+         +'saying which numbers you are reading differently.\n'
+         +JSON.stringify(measured))
+      : '')
     +'\nSHOTS: '+JSON.stringify(digests); }
+// What the reader found for each shot, in the order the digests are in.
+function aiMeasuredFor(shots){
+  return (shots||[]).map(function(sh){
+    try{ var r=readShot(sh); return (r&&r.findings)||[]; }catch(_){ return []; } }); }
 function aiPanelHtml(){
   var body='';
   if(slAiBusy) body='<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>';
@@ -16732,6 +16784,23 @@ function aiApplyOf(x){
   var lim=AI_LIM[f]; if(lim&&(n<lim[0]||n>lim[1])) return null;
   return {field:f,to:n}; }
 function aiPinGet(){ var v=lsGet('aurora_aipin'); return (v&&v.suggestions)?v:null; }
+function shotReadGet(){ var v=lsGet('aurora_shotread'); return (v&&v.suggestions)?v:null; }
+function shotReadSet(v){ lsSet('aurora_shotread',v||null); storeSave('shotread',v||null); syncShotRead(); }
+var _agKind='pin';
+function agObj(){ return _agKind==='read'?shotReadGet():aiPinGet(); }
+function agSave(o){ if(_agKind==='read') shotReadSet(o); else aiPinSet(o); }
+function shotReadMode(){
+  var m=prefs.shotRead;
+  return (m==='icon'||m==='off')?m:'modal'; }
+function setShotRead(v){ prefs.shotRead=(v==='icon'||v==='off')?v:'modal'; savePrefs(); renderSpContent(); }
+function shotReadFits(){
+  var r=shotReadGet();
+  return !!(r&&lastShotSummary&&r.shotId===lastShotSummary.id); }
+function syncShotRead(){
+  var b=document.getElementById('lsAlert'); if(!b) return;
+  var on=shotReadFits();
+  b.hidden=!on;
+  b.setAttribute('aria-label',t('rsTitle')); }
 function aiMatchKey(bean,prof){ return beanKeyName(bean||'')+'|'+beanKeyName(prof||''); }
 function aiNowKey(){
   return aiMatchKey([context.coffeeRoaster,context.coffeeName].filter(Boolean).join(' \u00b7 '),
@@ -16763,8 +16832,10 @@ function syncAiPin(){
   var left=on?pin.suggestions.filter(function(x){ return !x.done; }).length:0;
   b.hidden=!on;
   b.setAttribute('aria-label',t('aiGuideTitle')+(left?(' ('+left+')'):'')); }
-function openAiGuide(){
-  if(!aiPinFits(aiPinGet())) return;
+function openAiGuide(kind){
+  _agKind=(kind==='read')?'read':'pin';
+  if(_agKind==='pin'&&!aiPinFits(aiPinGet())) return;
+  if(_agKind==='read'&&!shotReadGet()) return;
   renderAiGuide();
   document.getElementById('aiGuideOverlay').classList.add('show'); }
 function aiFieldLabel(f){
@@ -16776,7 +16847,9 @@ function aiTargetText(a){
   if(a.field==='grind') return String(a.to);
   return (+a.to).toFixed(1)+'g'; }
 function renderAiGuide(){
-  var pin=aiPinGet(), box=document.getElementById('aiGuideBody');
+  var pin=agObj(), box=document.getElementById('aiGuideBody');
+  var ttl=document.getElementById('agTitle');
+  if(ttl) ttl.textContent=t(_agKind==='read'?'rsTitle':'aiGuideTitle');
   if(!box) return;
   if(!pin){ box.innerHTML=''; return; }
   var any=pin.suggestions.some(function(x){ return x.apply&&!x.done; });
@@ -16796,10 +16869,20 @@ function renderAiGuide(){
         +'<div class="ag-w">'+escapeHtml(x.why)+'</div>'
         +'<div class="ag-foot">'+foot+'</div></div>'; }).join('')+'</div>'
     +'<div class="ag-acts">'
+      // A reading of the shot just pulled can be carried forward as a pin, so
+      // it is still there once the card has moved on to the next one.
+      +(_agKind==='read'?('<button class="m-btn" onclick="pinShotRead()">\u2757 '
+        +escapeHtml(t('aiPin'))+'</button>'):'')
       +(any?'<button class="m-btn" onclick="applyAiAll()">'+escapeHtml(t('aiApplyAll'))+'</button>':'')
       +'<button class="m-btn" onclick="clearAiGuide()">'+escapeHtml(t('aiGuideClear'))+'</button>'
     +'</div>'; }
-function clearAiGuide(){ aiPinSet(null); closeModal(null,'aiGuideOverlay'); toast(t('aiGuideCleared'),'ok'); }
+function pinShotRead(){
+  var r=shotReadGet(); if(!r) return;
+  pinAiGuide({ verdict:r.verdict, observations:r.observations,
+    suggestions:r.suggestions.map(function(x){ return {change:x.change,why:x.why,apply:x.apply}; }),
+    _ctx:{b:r.bean||'',p:r.profile||''} });
+  closeModal(null,'aiGuideOverlay'); }
+function clearAiGuide(){ agSave(null); closeModal(null,'aiGuideOverlay'); toast(t('aiGuideCleared'),'ok'); }
 // Each one is written the same way the card writes it, so a value applied here
 // and a value dialled by hand reach the machine by the same road.
 function aiApplyOne(a){
@@ -16815,17 +16898,244 @@ function aiApplyOne(a){
   else return false;
   syncRecipe(); pushRecipe(); return true; }
 function applyAiSug(i){
-  var pin=aiPinGet(); if(!pin) return;
+  var pin=agObj(); if(!pin) return;
   var x=pin.suggestions[i]; if(!x||!x.apply||x.done) return;
   if(!aiApplyOne(x.apply)) return;
-  x.done=true; aiPinSet(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
+  x.done=true; agSave(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
 function applyAiAll(){
-  var pin=aiPinGet(); if(!pin) return;
+  var pin=agObj(); if(!pin) return;
   var n=0;
   pin.suggestions.forEach(function(x){
     if(x.apply&&!x.done&&aiApplyOne(x.apply)){ x.done=true; n++; } });
   if(!n) return;
-  aiPinSet(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
+  agSave(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
+// ── reading the shot that just finished ───────────────────────────────
+function runShotRead(id){
+  if(!id||shotReadMode()==='off') return Promise.resolve(null);
+  return withFullShots([{id:id}]).then(function(full){
+    var sh=full&&full[0]; if(!sh) return;
+    var r=readShot(sh); if(!r) return;
+    var c=r._ctx||{};
+    shotReadSet({ shotId:id, at:new Date().toISOString(),
+      verdict:r.verdict, observations:r.observations, findings:r.findings,
+      bean:String(c.b||''), profile:String(c.p||''),
+      suggestions:r.suggestions.map(function(x){
+        return { change:x.change, why:x.why, apply:aiApplyOf(x), done:false }; }) });
+    loadLastShot();
+    // One modal at a time: if the log is already up, the mark on the card is
+    // how the reading waits.
+    if(shotReadMode()==='modal'&&!document.querySelector('.overlay.show')) openAiGuide('read');
+  }).catch(function(){}); }
+// ── Reading a shot without asking anyone ────────────────────────────
+// Everything below is read off the curve the machine recorded. A rule that
+// cannot be decided from the numbers does not fire, and nothing here guesses
+// at taste: it reports what the puck did and what the machine was asked for.
+//
+// The one thing the numbers cannot say is which way a grinder's dial turns.
+// Preset grinders are listed fine to coarse in the grinder editor, so their
+// order is the answer; a numeric dial is taken as lower-is-finer, which is how
+// most of them read, and the assumption is said out loud wherever it is used.
+var RS_CH_DF=0.8, RS_CH_DP=-0.4;      // ml/s up and bar down inside one second
+var RS_P_SHORT=1.0, RS_P_FAST=2.2;    // bar under target while the flow runs on
+var RS_F_SHORT=0.5, RS_P_PINNED=8.5;  // ml/s under target while pressure pins
+var RS_DRIP=0.3;
+// The group reading sits below the profile for most of a shot by how the
+// machine measures it, so a couple of degrees is the ordinary state of things
+// and says nothing. It is worth a word only when it is far enough out to be a
+// fault rather than a reading.
+var RS_TEMP=10;
+// Puck resistance, in bar per ml/s. The gateway's own machine model defines it
+// that way round -- pressure is flow times resistance -- so the same convention
+// holds here. It is the one measure that does not care which kind of target the
+// profile happened to be holding at the time.
+var RS_R_LOW=3.0, RS_R_HIGH=6.5;
+var RS_FAST=18, RS_SLOW=45, RS_YIELD_SHORT=0.85, RS_YIELD_FULL=0.9, RS_YIELD_OVER=1.15;
+var RS_SETTLE=3;   // seconds of pour given over to reaching the target
+function rsNum(v){ return (v==null||!isFinite(v))?null:v; }
+function rsMean(a){ if(!a.length) return null; var s=0,i; for(i=0;i<a.length;i++) s+=a[i]; return s/a.length; }
+function rsCv(a){ var m=rsMean(a); if(m==null||m<=0.05) return null;
+  var v=0; a.forEach(function(x){ v+=(x-m)*(x-m); }); return Math.sqrt(v/a.length)/m; }
+function rsPoints(sh){
+  var m=shotSlice(sh), out=[];
+  if(m.length<2) return out;
+  var t0=Date.parse((m[0].machine||{}).timestamp)||0;
+  m.forEach(function(pt){ var o=pt.machine||{};
+    out.push({ t:((Date.parse(o.timestamp)||0)-t0)/1000,
+      p:rsNum(o.pressure), f:rsNum(o.flow),
+      tp:rsNum(o.targetPressure), tf:rsNum(o.targetFlow),
+      g:rsNum(o.groupTemperature),
+      w:(pt.scale&&pt.scale.weight!=null)?rsNum(pt.scale.weight):null,
+      sub:((o.state||{}).substate)||'' }); });
+  return out; }
+// Which way one notch goes, and whether it can be named at all.
+function rsGrindStep(sh,dir){
+  var c=(sh&&sh.workflow&&sh.workflow.context)||{};
+  var cur=c.grinderSetting;
+  if(cur==null||cur==='') return null;
+  var gr=(typeof grinderByName==='function'&&grinderByName(c.grinderModel))||null;
+  if(gr&&gr.settingType==='preset'){
+    var vals=gr.settingValues||[]; var i=vals.indexOf(String(cur));
+    if(i<0) return null;
+    var j=i+dir; if(j<0||j>=vals.length) return null;
+    return String(vals[j]); }
+  var step=(gr&&gr.settingSmallStep)?gr.settingSmallStep:0.1;
+  var n=parseFloat(cur); if(isNaN(n)) return null;
+  var v=Math.max(0,parseFloat((n+dir*step).toFixed(2)));
+  if(v===n) return null;
+  return String(v); }
+function rsSug(change,why,apply){ return {change:change,why:why,apply:apply||null}; }
+function readShot(sh){
+  var pts=rsPoints(sh);
+  if(pts.length<6) return null;
+  var pour=pts.filter(function(x){ return x.sub==='pouring'; });
+  var body=(pour.length>=5)?pour:pts;
+  var obs=[], sug=[], find=[], flags={};
+  var secs=body.length?Math.max(0,body[body.length-1].t-body[0].t):0;
+  var total=Math.max(0,pts[pts.length-1].t-pts[0].t);
+  var plan=0;
+  (((sh.workflow&&sh.workflow.profile)||{}).steps||[]).forEach(function(st){
+    if(st&&st.seconds>0) plan+=st.seconds; });
+
+  // ── a jump in flow that the pressure paid for ──
+  var jump=null, jumpN=0, j=0, armed=false;
+  for(var i=0;i<body.length;i++){
+    var cur=body[i];
+    if(!armed&&cur.p!=null&&cur.p>=Math.max(5,(cur.tp!=null&&cur.tp>0?cur.tp*0.7:5))) armed=true;
+    if(!armed) continue;
+    while(j<i&&body[j].t<body[i].t-1.0) j++;
+    var a=body[Math.max(0,j-1)], b=cur;
+    if(a.f==null||b.f==null||a.p==null||b.p==null) continue;
+    var dt=b.t-a.t; if(dt<0.6||dt>1.6) continue;
+    if(a.tp!=null&&b.tp!=null&&(b.tp-a.tp)<-0.2) continue;
+    if(a.tf!=null&&b.tf!=null&&(b.tf-a.tf)>0.2) continue;
+    if((b.f-a.f)>=RS_CH_DF&&(b.p-a.p)<=RS_CH_DP){
+      jumpN++;
+      if(!jump) jump={t:b.t,df:b.f-a.f,dp:b.p-a.p}; } }
+  if(jump){
+    flags.channel=true;
+    obs.push(t('rsChannel').replace('{t}',jump.t.toFixed(1))
+      .replace('{f}',jump.df.toFixed(1)).replace('{p}',Math.abs(jump.dp).toFixed(1)));
+    find.push('flow jumped '+jump.df.toFixed(1)+' ml/s while pressure fell '
+      +Math.abs(jump.dp).toFixed(1)+' bar at '+jump.t.toFixed(1)+'s ('+jumpN+' such moments)');
+    sug.push(rsSug(t('rsChannelFix'),t('rsChannelWhy'),null)); }
+
+  // ── asked for a pressure it never reached, and poured fast doing it ──
+  var pd=[], pf=[];
+  body.forEach(function(x){ if(x.t>=RS_SETTLE&&x.tp!=null&&x.tp>0.5&&x.p!=null){
+    pd.push(x.tp-x.p); if(x.f!=null) pf.push(x.f); } });
+  var pdM=(pd.length>=10)?rsMean(pd):null, pfM=rsMean(pf);
+  var fd0=[], fp0=[];
+  body.forEach(function(x){ if(x.t>=RS_SETTLE&&x.tf!=null&&x.tf>0.2&&x.f!=null){
+    fd0.push(x.tf-x.f); if(x.p!=null) fp0.push(x.p); } });
+  var fdM0=(fd0.length>=10)?rsMean(fd0):null, fpM0=rsMean(fp0);
+
+  // ── what the puck itself was worth ──
+  var res=[];
+  body.forEach(function(x){ if(x.t>=RS_SETTLE&&x.f!=null&&x.f>0.3&&x.p!=null&&x.p>1)
+    res.push(x.p/x.f); });
+  var rM=(res.length>=10)?rsMean(res):null;
+  if(rM!=null){
+    obs.push(t('rsResist').replace('{r}',rM.toFixed(1)));
+    find.push('puck resistance averaged '+rM.toFixed(1)+' bar per ml/s'); }
+
+  // ── what came out of it ──
+  var ctx0=(sh.workflow&&sh.workflow.context)||{}, an0=sh.annotations||{};
+  var last0=null; for(var q0=body.length-1;q0>=0;q0--){ if(body[q0].w!=null){ last0=body[q0].w; break; } }
+  var yld0=(an0.actualYield!=null?an0.actualYield:last0);
+  var want0=(ctx0.targetYield>0)?ctx0.targetYield:null;
+  var share=(yld0>0&&want0)?(yld0/want0):null;
+  if(share!=null&&share<RS_YIELD_SHORT){
+    obs.push(t('rsYieldShort').replace('{p}',Math.round(share*100)));
+    find.push('stopped at '+Math.round(share*100)+'% of the target yield'); }
+  else if(share!=null&&share>RS_YIELD_OVER){
+    obs.push(t('rsYieldOver').replace('{g}',(yld0-want0).toFixed(1)));
+    find.push('poured '+(yld0-want0).toFixed(1)+'g past the target yield'); }
+
+  // ── the grind is decided by vote, not by one reading ──
+  // Each of the three is taken a different way: against what the profile asked
+  // for, against the puck itself, and against the clock and the cup. Two of
+  // them agreeing with nothing on the other side is a case worth acting on.
+  // One alone is a coincidence waiting to happen.
+  var cv1=(pdM!=null&&pdM>=RS_P_SHORT&&pfM!=null&&pfM>=RS_P_FAST);
+  var fv1=(fdM0!=null&&fdM0>=RS_F_SHORT&&fpM0!=null&&fpM0>=RS_P_PINNED);
+  var cv2=(rM!=null&&rM<RS_R_LOW), fv2=(rM!=null&&rM>RS_R_HIGH);
+  var quick=(plan>0)?(total<plan*0.5):(total>0&&total<RS_FAST);
+  var slow=(plan>0)?(total>plan*1.5):(total>RS_SLOW);
+  var cv3=(quick&&share!=null&&share>=RS_YIELD_FULL);
+  var fv3=slow||(share!=null&&share<RS_YIELD_SHORT&&(plan>0?(total>=plan):(total>30)));
+  var cN=(cv1?1:0)+(cv2?1:0)+(cv3?1:0), fN=(fv1?1:0)+(fv2?1:0)+(fv3?1:0);
+  var coarseOn=(cN>=2&&fN===0), fineOn=(fN>=2&&cN===0);
+  if(!coarseOn&&!fineOn&&cN>0&&fN>0) flags.mixed=true;
+  if(cN||fN) find.push('readings for a looser puck: '+cN+', for a tighter one: '+fN);
+
+  // The measurement is reported whenever it was taken; only the advice waits
+  // for the vote.
+  if(cv1){
+    obs.push(t('rsCoarse').replace('{p}',pdM.toFixed(1)).replace('{f}',pfM.toFixed(1)));
+    find.push('pressure ran '+pdM.toFixed(1)+' bar under target at a mean flow of '
+      +pfM.toFixed(1)+' ml/s'); }
+  if(fv1){
+    obs.push(t('rsFine').replace('{f}',fdM0.toFixed(1)).replace('{p}',fpM0.toFixed(1)));
+    find.push('flow ran '+fdM0.toFixed(1)+' ml/s under target while pressure held at '
+      +fpM0.toFixed(1)+' bar'); }
+  if(coarseOn){
+    flags.coarse=true;
+    var finer=rsGrindStep(sh,-1);
+    sug.push(rsSug(t('rsCoarseFix'),t('rsCoarseWhy')+(finer?(' '+t('rsGrindAssume')):''),
+      finer?{field:'grind',to:finer}:null)); }
+  if(fineOn){
+    flags.fine=true;
+    var coarser=rsGrindStep(sh,1);
+    sug.push(rsSug(t('rsFineFix'),t('rsFineWhy')+(coarser?(' '+t('rsGrindAssume')):''),
+      coarser?{field:'grind',to:coarser}:null)); }
+
+  // ── the first drop, when there was a scale to see it ──
+  var drip=null;
+  for(var k=0;k<body.length;k++){ if(body[k].w!=null&&body[k].w>=RS_DRIP){ drip=body[k].t; break; } }
+  if(drip!=null){
+    obs.push(t('rsFirstDrop').replace('{s}',drip.toFixed(1)));
+    find.push('first drop at '+drip.toFixed(1)+'s'); }
+
+  // ── what came out against what was asked for ──
+  var ctx=(sh.workflow&&sh.workflow.context)||{}, an=sh.annotations||{};
+  var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:ctx.targetDoseWeight);
+  var last=null; for(var q=body.length-1;q>=0;q--){ if(body[q].w!=null){ last=body[q].w; break; } }
+  var yld=(an.actualYield!=null?an.actualYield:last);
+  if(dose>0&&yld>0){
+    var got=yld/dose, want=(ctx.targetYield>0&&ctx.targetDoseWeight>0)?(ctx.targetYield/ctx.targetDoseWeight):null;
+    obs.push(t('rsRatio').replace('{r}',got.toFixed(1))
+      .replace('{g}',want?('1:'+want.toFixed(1)):'\u2014'));
+    find.push('poured 1:'+got.toFixed(1)+(want?(' against a target of 1:'+want.toFixed(1)):'')); }
+
+  // ── the temperature it actually brewed at ──
+  var gT=[]; body.forEach(function(x){ if(x.g!=null&&x.g>50) gT.push(x.g); });
+  var gM=rsMean(gT);
+  var want2=profileFirstTemp((sh.workflow&&sh.workflow.profile)||null);
+  if(gM!=null&&want2!=null&&Math.abs(gM-want2)>=RS_TEMP){
+    obs.push(t(gM>want2?'rsTempHigh':'rsTempLow').replace('{d}',Math.abs(gM-want2).toFixed(1)));
+    find.push('group ran at '+gM.toFixed(1)+'C against a target of '+want2.toFixed(1)+'C'); }
+
+  if(total>0){
+    obs.unshift(plan>0
+      ? t('rsTimePlan').replace('{s}',total.toFixed(1)).replace('{m}',String(Math.round(plan)))
+      : t('rsTime').replace('{s}',total.toFixed(1)));
+    find.unshift('the shot took '+total.toFixed(1)+'s'
+      +(plan>0?(', against a profile that plans '+Math.round(plan)+'s'):'')
+      +(secs>0?(', of which '+secs.toFixed(1)+'s was pouring'):'')); }
+
+  if(flags.mixed){
+    obs.push(t('rsMixed'));
+    find.push('the curve missed its pressure target early and its flow target later, '
+      +'so neither reading is clear enough to act on'); }
+  var verdict=flags.channel?t('rsVChannel')
+    :flags.coarse?t('rsVCoarse')
+    :flags.fine?t('rsVFine')
+    :flags.mixed?t('rsVMixed')
+    :t('rsVOk');
+  // Everything measured is worth showing; the cap is only there so a strange
+  // shot cannot fill the page.
+  return { verdict:verdict, observations:obs.slice(0,8), suggestions:sug.slice(0,3),
+    findings:find, _ctx:aiCtxOf(shotDigestForAi(sh)) }; }
 function aiCacheKey(rows){ return rows.map(function(r){ return r.id; }).sort().join(','); }
 function loadShotAi(rows){ if(!rows||!rows.length) return null;
   var all=lsGet('aurora_shotai')||{};
@@ -16845,7 +17155,7 @@ function analyzeShots(){
   var ctx=null;
   return withFullShots(rows).then(function(shots){
       var digests=shots.map(shotDigestForAi); ctx=aiCtxOf(digests[0]);
-      return aiJson(key,[{text:shotAiPrompt(digests,_lang)}],0.2); })
+      return aiJson(key,[{text:shotAiPrompt(digests,_lang,aiMeasuredFor(shots))}],0.2); })
     .then(function(res){
       slAi=(res&&(res.verdict||res.observations||res.suggestions))?res:null;
       if(slAi){ slAi._ctx=ctx; saveShotAi(rows,slAi); } else toast(t('aiNoResult'),'err'); })
@@ -18068,7 +18378,7 @@ function phAiRun(id){
   var pctx=null;
   withFullShots([row]).then(function(full){
       var d=shotDigestForAi(full[0]); pctx=aiCtxOf(d);
-      return aiJson(key,[{text:shotAiPrompt([d],_lang)}],0.2); })
+      return aiJson(key,[{text:shotAiPrompt([d],_lang,aiMeasuredFor(full))}],0.2); })
     .then(function(r){
       if(r&&(r.verdict||r.observations||r.suggestions)){ r._ctx=pctx; _phAi=r; saveShotAi([row],r); }
       else toast(t('aiNoResult'),'err'); })
