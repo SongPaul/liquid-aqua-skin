@@ -674,6 +674,28 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bean-row{display:flex;align-items:center;gap:9px;flex:none;min-height:38px}
 .bean-ico{width:30px;height:30px;border-radius:10px;background:rgba(249,115,22,.14);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .rc-live{font-size:11px;font-weight:800;color:var(--accent);text-transform:none;letter-spacing:0}
+/* margin-right:auto rather than space-between, so the row still ends where it
+   did when there is nothing waiting. */
+.recipe{position:relative}
+.rc-alert{position:absolute;left:9px;top:5px;z-index:2;width:19px;height:19px;border-radius:50%;border:none;cursor:pointer;
+  -webkit-appearance:none;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;
+  font-size:12px;font-weight:900;line-height:1;font-family:var(--font);
+  box-shadow:0 2px 8px rgba(245,158,11,.38);animation:rcpulse 2.4s ease-in-out infinite}
+.rc-alert[hidden]{display:none}
+.rc-alert:active{transform:scale(.92)}
+@keyframes rcpulse{0%,100%{box-shadow:0 2px 8px rgba(245,158,11,.38)}
+  50%{box-shadow:0 2px 14px rgba(245,158,11,.75)}}
+.ag-modal{max-width:520px}
+.ag-sugs{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.ag-sug{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:14px;padding:12px 14px}
+.ag-sug.done{opacity:.62}
+.ag-c{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.ag-w{font-size:12px;font-weight:600;color:var(--ink-mute);line-height:1.5;margin-top:3px}
+.ag-foot{margin-top:9px}
+.ag-done{font-size:12px;font-weight:800;color:var(--green)}
+.ag-none{font-size:11px;font-weight:600;color:var(--ink-mute)}
+.ag-apply{font-size:13px}
+.ag-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 .live-grid{display:grid;gap:6px}
 .live-cell{text-align:center;min-width:0}
 .live-grid.wide .live-adj{max-width:184px;margin:0 auto}
@@ -2484,7 +2506,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     </div>
 
     <div class="recipe glass">
-        <div class="recipe-title"><span class="rc-live" id="recipeLiveTag"></span></div>
+        <div class="recipe-title"><button class="rc-alert" id="rcAlert" onclick="openAiGuide()" hidden>!</button><span class="rc-live" id="recipeLiveTag"></span></div>
         <div id="recipeNormal">
         <div class="recipe-grid">
         <div class="rg-main">
@@ -2695,6 +2717,15 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 </div>
 
 <!-- ── Same bean again: batch or new bean ──────────────────────── -->
+<!-- ── The reading that is waiting on the next shot ───────── -->
+<div class="overlay" id="aiGuideOverlay" onclick="closeModal(event,'aiGuideOverlay')">
+  <div class="modal ag-modal">
+    <div class="modal-head"><div class="modal-title" data-i18n="aiGuideTitle">AI guidance</div>
+      <button class="modal-close" onclick="closeModal(null,'aiGuideOverlay')">×</button></div>
+    <div class="modal-body"><div id="aiGuideBody"></div></div>
+  </div>
+</div>
+
 <div class="overlay" id="beanListOverlay" onclick="closeModal(event,'beanListOverlay')">
   <div class="modal bl-modal">
     <div class="modal-head"><div class="modal-title" id="blTitle">—</div><button class="modal-close" onclick="closeModal(null,'beanListOverlay')">×</button></div>
@@ -3549,6 +3580,7 @@ var I18N={
     aiMemory:'What the reader remembers', aiMemoryDesc:'Your reactions to earlier suggestions are sent with the next reading, so it stops repeating what did not work. Nothing here trains the model; it is a note passed along, and removing one removes it from the next reading.',
     aiMemoryEmpty:'Nothing remembered yet. Mark a suggestion in a shot reading.',
     aiMemoryClear:'Forget all', aiMemoryCleared:'Forgotten',
+    aiPin:'Use next time', aiPinned:'Waiting on the next shot', aiPinnedElsewhere:'Saved \u2014 the mark shows when {n} is loaded again', aiGuideTitle:'AI guidance', aiApply:'apply', aiApplied:'Applied', aiApplyAll:'Apply all', aiGuideClear:'Clear', aiGuideCleared:'Cleared', aiNoApply:'Nothing here to set on the card', aiApplyNoProfile:'Load a profile first',
     aiAnalysis:'AI reading', aiRun:'Analyse', aiAgain:'Again', aiReading:'Reading the shot…', aiNoResult:'No analysis came back', aiFailed:'Analysis failed:',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
@@ -3957,6 +3989,7 @@ var I18N={
     aiMemory:'분석이 기억하는 것', aiMemoryDesc:'이전 조언에 남긴 반응을 다음 분석에 함께 보냅니다. 통하지 않았던 조언을 되풀이하지 않게 하기 위해서입니다. 모델을 학습시키는 것은 아니며 그때마다 전달하는 메모이므로, 여기서 지우면 다음 분석에서 빠집니다.',
     aiMemoryEmpty:'아직 기억한 것이 없습니다. 샷 분석의 조언에 표시해 보세요.',
     aiMemoryClear:'모두 지우기', aiMemoryCleared:'지웠습니다',
+    aiPin:'다음 추출에 반영', aiPinned:'다음 추출에 반영됩니다', aiPinnedElsewhere:'저장됐습니다 — {n} 을(를) 다시 불러오면 표시됩니다', aiGuideTitle:'AI 가이드', aiApply:'적용', aiApplied:'적용됨', aiApplyAll:'전부 적용', aiGuideClear:'지우기', aiGuideCleared:'지웠습니다', aiNoApply:'카드에 설정할 값이 없습니다', aiApplyNoProfile:'프로파일을 먼저 불러오세요',
     aiAnalysis:'AI 추출 분석', aiRun:'분석', aiAgain:'다시 분석', aiReading:'추출을 읽는 중…', aiNoResult:'분석 결과가 없습니다', aiFailed:'분석 실패:',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
@@ -6418,7 +6451,7 @@ function syncRecipe(){
   syncThermo();
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
   document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
-  syncShotSum();
+  syncShotSum(); syncAiPin();
   var md=document.getElementById('monDose');
   if(md){ md.textContent=settings.doseIn.toFixed(1);
     document.getElementById('monYield').textContent=settings.doseOut.toFixed(1);
@@ -6480,6 +6513,8 @@ function hydrateFromStore(){
       presets.steam=all.presets.steam||presets.steam; presets.flush=all.presets.flush||presets.flush;
       presets.water=all.presets.water||presets.water; lsSet('aurora_presets',presets); changed=true; }
     else storePut('presets',presets);
+    if(all.aipin!==undefined){ lsSet('aurora_aipin',all.aipin||null); syncAiPin(); }
+    else { var lp=aiPinGet(); if(lp) storePut('aipin',lp); }
     if(all.shotai&&typeof all.shotai==='object') lsSet('aurora_shotai',all.shotai);
     else { var local=lsGet('aurora_shotai'); if(local&&Object.keys(local).length) storePut('shotai',local); }
     if(Array.isArray(all.aifb)) lsSet('aurora_aifb',all.aifb);
@@ -16574,7 +16609,12 @@ function shotAiPrompt(digests,lang){
     +'motorSpeedDial0to10, when it is there, is that grinder\'s own motor speed knob on its 0-10 scale. '
     +'It is not the grind size and never stands in for it. Treat it as a lever you may suggest moving, '
     +'and when you do, say that you mean the speed dial and what you expect it to change.\n'
-    +'Reply as JSON: {"verdict":"one sentence","observations":["..."],"suggestions":[{"change":"short imperative","why":"one sentence"}]}\n'
+    +'Reply as JSON: {"verdict":"one sentence","observations":["..."],'
+    +'"suggestions":[{"change":"short imperative","why":"one sentence",'
+    +'"apply":{"field":"grind|dose|yield|ratio|temp","to":number}}]}\n'
+    +'Add "apply" only when the change is exactly one of those five and you can name the value to go to; '
+    +'otherwise leave it out. grind is this grinder\'s own dial, dose and yield are grams, '
+    +'ratio is the number after 1:, temp is degrees Celsius. One field per suggestion.\n'
     +'At most 4 observations and 3 suggestions.\n'
     +aiFbPromptBlock()
     +'\nSHOTS: '+JSON.stringify(digests); }
@@ -16587,6 +16627,8 @@ function aiPanelHtml(){
     +'<button class="m-btn" onclick="analyzeShots()"'+(slAiBusy?' disabled aria-busy="true"':'')+'>'
     +(slAiBusy?escapeHtml(t('aiReading')):'\u2728 '+escapeHtml(slAi?t('aiAgain'):t('aiRun')))
     +'</button>'
+    +(slAi&&!slAiBusy?('<button class="m-btn primary" onclick="pinAiGuide(slAi)">\u2757 '
+      +escapeHtml(t('aiPin'))+'</button>'):'')
     +'<button class="m-btn" onclick="tuneFromShots()"'+(slAiBusy?' disabled':'')+'>\u2699 '
       +escapeHtml(t('tuneBtn'))+'</button>'
     +'</div></div>'+body+'</div>'; }
@@ -16677,6 +16719,113 @@ function aiFbListHtml(){
     +'</div><div style="margin-top:12px"><button class="m-btn" onclick="aiFbClear()">'
     +escapeHtml(t('aiMemoryClear'))+'</button></div>'; }
 function renderAiFbBox(){ var box=document.getElementById('aiFbBox'); if(box) box.innerHTML=aiFbListHtml(); }
+var AI_FIELDS={grind:1,dose:1,yield:1,ratio:1,temp:1};
+var AI_LIM={dose:[5,30],yield:[10,80],ratio:[1,4],temp:[TH_ABS_MIN,TH_ABS_MAX]};
+// Whatever the model put in "apply" is a claim, not an instruction: it is kept
+// only if it names one of the five fields and a value the card could hold.
+function aiApplyOf(x){
+  var a=x&&x.apply; if(!a||typeof a!=='object') return null;
+  var f=String(a.field||'').toLowerCase();
+  if(!AI_FIELDS[f]) return null;
+  if(f==='grind'){ var g=String(a.to==null?'':a.to).trim(); return g?{field:f,to:g}:null; }
+  var n=parseFloat(a.to); if(!isFinite(n)) return null;
+  var lim=AI_LIM[f]; if(lim&&(n<lim[0]||n>lim[1])) return null;
+  return {field:f,to:n}; }
+function aiPinGet(){ var v=lsGet('aurora_aipin'); return (v&&v.suggestions)?v:null; }
+function aiMatchKey(bean,prof){ return beanKeyName(bean||'')+'|'+beanKeyName(prof||''); }
+function aiNowKey(){
+  return aiMatchKey([context.coffeeRoaster,context.coffeeName].filter(Boolean).join(' \u00b7 '),
+    (curProfileObj&&curProfileObj.profile&&curProfileObj.profile.title)||''); }
+function aiPinFits(pin){
+  return !!(pin&&pin.for!=null&&pin.for===aiNowKey()); }
+function aiPinSet(v){ lsSet('aurora_aipin',v||null); storeSave('aipin',v||null); syncAiPin(); }
+function aiPinFrom(r){
+  if(!r) return null;
+  var c=(r&&r._ctx)||{};
+  return { at:new Date().toISOString(), verdict:String(r.verdict||''),
+    bean:String(c.b||''), profile:String(c.p||''), for:aiMatchKey(c.b,c.p),
+    observations:(r.observations||[]).map(String).slice(0,4),
+    suggestions:(r.suggestions||[]).slice(0,3).map(function(x){
+      return { change:String((x&&x.change)||''), why:String((x&&x.why)||''),
+        apply:aiApplyOf(x), done:false }; }) }; }
+function pinAiGuide(r){
+  var pin=aiPinFrom(r); if(!pin||!pin.suggestions.length){ toast(t('aiNoResult'),'err'); return; }
+  aiPinSet(pin);
+  // Saying which coffee it is waiting for is the whole point of it waiting.
+  toast(t(aiPinFits(pin)?'aiPinned':'aiPinnedElsewhere')
+    .replace('{n}',pin.bean||pin.profile||'\u2014'),'ok'); }
+function syncAiPin(){
+  var b=document.getElementById('rcAlert'); if(!b) return;
+  var pin=aiPinGet();
+  // steam, flush and water have their own head in that corner, and a reading
+  // of an espresso has nothing to say about them
+  var on=aiPinFits(pin)&&(typeof recipeMode==='undefined'||recipeMode==='espresso');
+  var left=on?pin.suggestions.filter(function(x){ return !x.done; }).length:0;
+  b.hidden=!on;
+  b.setAttribute('aria-label',t('aiGuideTitle')+(left?(' ('+left+')'):'')); }
+function openAiGuide(){
+  if(!aiPinFits(aiPinGet())) return;
+  renderAiGuide();
+  document.getElementById('aiGuideOverlay').classList.add('show'); }
+function aiFieldLabel(f){
+  return t({grind:'grind',dose:'doseG',yield:'yieldG',ratio:'ratio',temp:'brewTemp'}[f]||f); }
+function aiTargetText(a){
+  if(!a) return '';
+  if(a.field==='ratio') return '1:'+(+a.to).toFixed(1);
+  if(a.field==='temp') return (+a.to).toFixed(1)+'\u00b0';
+  if(a.field==='grind') return String(a.to);
+  return (+a.to).toFixed(1)+'g'; }
+function renderAiGuide(){
+  var pin=aiPinGet(), box=document.getElementById('aiGuideBody');
+  if(!box) return;
+  if(!pin){ box.innerHTML=''; return; }
+  var any=pin.suggestions.some(function(x){ return x.apply&&!x.done; });
+  box.innerHTML=(pin.verdict?'<div class="ai-verdict">'+escapeHtml(pin.verdict)+'</div>':'')
+    +(pin.observations.length?'<ul class="ai-list">'+pin.observations.map(function(o){
+        return '<li>'+escapeHtml(o)+'</li>'; }).join('')+'</ul>':'')
+    +'<div class="ag-sugs">'+pin.suggestions.map(function(x,i){
+      var foot;
+      if(!x.apply) foot='<span class="ag-none">'+escapeHtml(t('aiNoApply'))+'</span>';
+      else if(x.done) foot='<span class="ag-done">\u2713 '+escapeHtml(t('aiApplied'))
+        +' \u00b7 '+escapeHtml(aiFieldLabel(x.apply.field))+' '+escapeHtml(aiTargetText(x.apply))+'</span>';
+      else foot='<button class="m-btn primary ag-apply" onclick="applyAiSug('+i+')">'
+        +escapeHtml(aiFieldLabel(x.apply.field))+' \u2192 '+escapeHtml(aiTargetText(x.apply))
+        +' '+escapeHtml(t('aiApply'))+'</button>';
+      return '<div class="ag-sug'+(x.done?' done':'')+'">'
+        +'<div class="ag-c">'+escapeHtml(x.change)+'</div>'
+        +'<div class="ag-w">'+escapeHtml(x.why)+'</div>'
+        +'<div class="ag-foot">'+foot+'</div></div>'; }).join('')+'</div>'
+    +'<div class="ag-acts">'
+      +(any?'<button class="m-btn" onclick="applyAiAll()">'+escapeHtml(t('aiApplyAll'))+'</button>':'')
+      +'<button class="m-btn" onclick="clearAiGuide()">'+escapeHtml(t('aiGuideClear'))+'</button>'
+    +'</div>'; }
+function clearAiGuide(){ aiPinSet(null); closeModal(null,'aiGuideOverlay'); toast(t('aiGuideCleared'),'ok'); }
+// Each one is written the same way the card writes it, so a value applied here
+// and a value dialled by hand reach the machine by the same road.
+function aiApplyOne(a){
+  if(!a) return false;
+  if(a.field==='grind'){ setGrind(String(a.to)); return true; }
+  if(a.field==='temp'){
+    if(brewTempC()==null){ toast(t('aiApplyNoProfile'),'err'); return false; }
+    setBrewTempC(+a.to); return true; }
+  if(a.field==='dose'){ setDoseIn(+a.to); }
+  else if(a.field==='yield'){ settings.doseOut=Math.max(10,Math.min(80,parseFloat((+a.to).toFixed(1)))); }
+  else if(a.field==='ratio'){
+    settings.doseOut=Math.max(10,Math.min(80,parseFloat((settings.doseIn*(+a.to)).toFixed(1)))); }
+  else return false;
+  syncRecipe(); pushRecipe(); return true; }
+function applyAiSug(i){
+  var pin=aiPinGet(); if(!pin) return;
+  var x=pin.suggestions[i]; if(!x||!x.apply||x.done) return;
+  if(!aiApplyOne(x.apply)) return;
+  x.done=true; aiPinSet(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
+function applyAiAll(){
+  var pin=aiPinGet(); if(!pin) return;
+  var n=0;
+  pin.suggestions.forEach(function(x){
+    if(x.apply&&!x.done&&aiApplyOne(x.apply)){ x.done=true; n++; } });
+  if(!n) return;
+  aiPinSet(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
 function aiCacheKey(rows){ return rows.map(function(r){ return r.id; }).sort().join(','); }
 function loadShotAi(rows){ if(!rows||!rows.length) return null;
   var all=lsGet('aurora_shotai')||{};
@@ -17916,10 +18065,12 @@ function phAiRun(id){
   var key=aiKey();
   if(!key){ toast(tAi('aiNeedKey'),'err'); phoneGo('set'); return; }
   _phAiBusy=true; _phAi=null; renderPhoneLog();
+  var pctx=null;
   withFullShots([row]).then(function(full){
-      return aiJson(key,[{text:shotAiPrompt([shotDigestForAi(full[0])],_lang)}],0.2); })
+      var d=shotDigestForAi(full[0]); pctx=aiCtxOf(d);
+      return aiJson(key,[{text:shotAiPrompt([d],_lang)}],0.2); })
     .then(function(r){
-      if(r&&(r.verdict||r.observations||r.suggestions)){ _phAi=r; saveShotAi([row],r); }
+      if(r&&(r.verdict||r.observations||r.suggestions)){ r._ctx=pctx; _phAi=r; saveShotAi([row],r); }
       else toast(t('aiNoResult'),'err'); })
     .catch(function(e){ toast(t('aiFailed')+' '+((e&&e.message)||'error'),'err'); })
     .then(function(){ _phAiBusy=false; renderPhoneLog(); }); }
@@ -17975,6 +18126,9 @@ function renderPhoneLog(){
           +'<button type="button" class="m-btn mb-analyze"'+(_phAiBusy?' disabled aria-busy="true"':'')
             +' onclick="event.stopPropagation();phAiRun(\''+sh.id+'\')">\u2728 '
             +escapeHtml(t(_phAi?'aiRerun':'aiRun'))+'</button>'
+          +(_phAi&&!_phAiBusy?('<button type="button" class="m-btn primary"'
+            +' onclick="event.stopPropagation();pinAiGuide(_phAi)">\u2757 '
+            +escapeHtml(t('aiPin'))+'</button>'):'')
         +'</div>')
         // A shot that is on Visualizer has an address there, whichever side of
         // the switch it was read from.
