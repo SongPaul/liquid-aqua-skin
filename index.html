@@ -683,6 +683,19 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
   box-shadow:0 2px 8px rgba(245,158,11,.38);animation:rcpulse 2.4s ease-in-out infinite}
 .rc-alert[hidden]{display:none}
 .ls-alert{position:static;margin-right:7px;flex:none}
+/* Laid over the yield block rather than added to it, so the card is the height
+   it was. */
+.dose-block{position:relative}
+.rc-warn{position:absolute;right:0;top:-3px;z-index:2;width:18px;height:18px;border-radius:50%;
+  border:none;cursor:pointer;-webkit-appearance:none;background:var(--amber);color:#fff;
+  font-size:11px;font-weight:900;line-height:1;font-family:var(--font);padding:0;
+  box-shadow:0 1px 5px rgba(245,158,11,.5)}
+.rc-warn[hidden]{display:none}
+/* A certainty and a likelihood should not look the same. */
+.rc-warn.soft{background:var(--ink-mute);box-shadow:0 1px 5px rgba(100,100,120,.35)}
+.rc-warn:active{transform:scale(.92)}
+.cut-what{font-size:14px;font-weight:700;color:var(--ink);line-height:1.6}
+.cut-else{font-size:12px;font-weight:600;color:var(--ink-mute);line-height:1.6;margin-top:10px}
 .rc-alert:active{transform:scale(.92)}
 @keyframes rcpulse{0%,100%{box-shadow:0 2px 8px rgba(245,158,11,.38)}
   50%{box-shadow:0 2px 14px rgba(245,158,11,.75)}}
@@ -2526,6 +2539,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </div>
           <div class="dose-block">
             <div class="dose-lbl dose-cap"><span data-i18n="yieldG">Yield</span><span class="lu" id="doseOutUnit">g</span></div>
+            <button class="rc-warn" id="rcWarn" onclick="openProfileCut()" hidden>!</button>
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseOut',-0.5)">−</button>
               <div class="dose-num tap" id="doseOut" onclick="openKeypad('doseOut')"><span id="doseOutVal">36.0</span></div>
               <button class="ms-btn" onclick="adjust('doseOut',0.5)">+</button></div>
@@ -2720,6 +2734,14 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 
 <!-- ── Same bean again: batch or new bean ──────────────────────── -->
 <!-- ── The reading that is waiting on the next shot ───────── -->
+<div class="overlay" id="cutOverlay" onclick="closeModal(event,'cutOverlay')">
+  <div class="modal ag-modal">
+    <div class="modal-head"><div class="modal-title" id="cutTitle">The profile stops first</div>
+      <button class="modal-close" onclick="closeModal(null,'cutOverlay')">×</button></div>
+    <div class="modal-body"><div id="cutBody"></div></div>
+  </div>
+</div>
+
 <div class="overlay" id="aiGuideOverlay" onclick="closeModal(event,'aiGuideOverlay')">
   <div class="modal ag-modal">
     <div class="modal-head"><div class="modal-title" id="agTitle">AI guidance</div>
@@ -3585,6 +3607,7 @@ var I18N={
     aiPin:'Use next time', aiPinned:'Waiting on the next shot', aiPinnedElsewhere:'Saved \u2014 the mark shows when {n} is loaded again', aiGuideTitle:'AI guidance', aiApply:'apply', aiApplied:'Applied', aiApplyAll:'Apply all', aiGuideClear:'Clear', aiGuideCleared:'Cleared', aiNoApply:'Nothing here to set on the card', aiApplyNoProfile:'Load a profile first',
     rsTitle:'Shot reading', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends the curve is read here, with no model and no network. A reading opens as a page, or waits behind the mark on the shot card.',
     rsModeModal:'Open it', rsModeIcon:'Mark only', rsModeOff:'Off',
+    cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutWeight:'This profile ends itself at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
     rsResist:'Puck resistance averaged {r} bar per ml/s', rsYieldShort:'It stopped at {p}% of the target yield', rsYieldOver:'It poured {g}g past the target',
     rsVOk:'The curve looks ordinary', rsVChannel:'This one channelled', rsVMixed:'The curve pulls both ways', rsMixed:'It fell short of its pressure early and its flow later, so the grind is not the thing to move on this one.', rsVCoarse:'The puck let the water through too easily', rsVFine:'The puck held the water back',
     rsTime:'The shot took {s}s', rsTimePlan:'The shot took {s}s, against {m}s planned', rsFirstDrop:'First drop at {s}s', rsRatio:'Poured 1:{r}, against {g}',
@@ -4007,6 +4030,7 @@ var I18N={
     aiPin:'다음 추출에 반영', aiPinned:'다음 추출에 반영됩니다', aiPinnedElsewhere:'저장됐습니다 — {n} 을(를) 다시 불러오면 표시됩니다', aiGuideTitle:'AI 가이드', aiApply:'적용', aiApplied:'적용됨', aiApplyAll:'전부 적용', aiGuideClear:'지우기', aiGuideCleared:'지웠습니다', aiNoApply:'카드에 설정할 값이 없습니다', aiApplyNoProfile:'프로파일을 먼저 불러오세요',
     rsTitle:'추출 분석', rsSetting:'추출 후 분석', rsSettingDesc:'추출이 끝나면 곡선을 여기서 직접 읽습니다. 모델도 네트워크도 쓰지 않습니다. 바로 띄우거나, 샷 카드의 느낌표 뒤에서 기다리게 할 수 있습니다.',
     rsModeModal:'바로 띄우기', rsModeIcon:'느낌표만', rsModeOff:'사용 안 함',
+    cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutWeight:'이 프로파일은 {a}g에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
     rsResist:'퍽 저항 평균 {r} bar·s/ml', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
     rsVOk:'곡선에 특별히 걸리는 것이 없습니다', rsVMixed:'곡선이 양쪽으로 당깁니다', rsMixed:'초반에는 압력이, 후반에는 유량이 모자랐습니다. 이번 샷은 분쇄도로 건드릴 일이 아닙니다.', rsVChannel:'채널링이 생겼습니다',
     rsVCoarse:'퍽이 물을 너무 쉽게 보냈습니다', rsVFine:'퍽이 물을 막았습니다',
@@ -6260,8 +6284,101 @@ function syncAuxPanel(){
   syncAux(); }
 
 // ── Recipe / ratio ──────────────────────────────────────────────────
+function recipeRatioRaw(){
+  return (settings.doseIn>0&&settings.doseOut>0)?(settings.doseOut/settings.doseIn):0; }
+function ratioFits(r,dp){
+  var v=parseFloat(r.toFixed(dp));
+  return Math.abs(settings.doseIn*v-settings.doseOut)<=0.05; }
+function recipeRatio(){
+  var r=recipeRatioRaw(); if(!r) return 0;
+  return parseFloat(r.toFixed(ratioFits(r,1)?1:2)); }
+function recipeRatioText(){
+  var r=recipeRatioRaw(); if(!r) return '\u2014';
+  return r.toFixed(ratioFits(r,1)?1:2); }
+var recentShots=[];
+// What the profile can pour in the time it allots, when that can be bounded at
+// all. Null means the question cannot be answered from the profile alone.
+function profileFlowCap(){
+  var pr=curProfileObj&&curProfileObj.profile; if(!pr) return null;
+  var st=pr.steps||[]; if(!st.length) return null;
+  var cap=0, sawPour=false;
+  for(var i=0;i<st.length;i++){
+    var x=st[i], secs=parseFloat(x.seconds)||0;
+    if(secs<=0) return null;                 // an open-ended step bounds nothing
+    var pump=String(x.pump||'').toLowerCase();
+    var f=parseFloat(x.flow)||0;
+    if(pump==='pressure'||(!pump&&parseFloat(x.pressure)>0)) return null;
+    if(f<=0) continue;                       // a step that pours nothing
+    sawPour=true;
+    var vol=parseFloat(x.volume)||0;
+    cap+=Math.min(f*secs, vol>0?vol:Infinity); }
+  return sawPour?cap:null; }
+// Shots on this profile that the profile itself ended before the target.
+function profileRanOut(){
+  var pr=curProfileObj&&curProfileObj.profile; if(!pr) return 0;
+  var title=String(pr.title||''); if(!title) return 0;
+  var want=settings.doseOut;
+  return (recentShots||[]).filter(function(sh){
+    var p=(sh.workflow&&sh.workflow.profile)||{};
+    if(String(p.title||'')!==title) return false;
+    if(sh.stopReason!=='profileAdvance'&&sh.stopReason!=='profileSkip') return false;
+    var c=(sh.workflow&&sh.workflow.context)||{};
+    var ty=parseFloat(c.targetYield)||0;
+    return !(ty>0&&ty<want-1);               // a smaller target then says little now
+  }).length; }
+function profileCut(){
+  var pr=curProfileObj&&curProfileObj.profile; if(!pr) return null;
+  var want=settings.doseOut; if(!(want>0)) return null;
+  var slack=0.2;
+  var tw=parseFloat(pr.target_weight)||0;
+  if(tw>0&&tw<want-slack) return {kind:'weight',at:tw};
+  var tv=parseFloat(pr.target_volume)||0;
+  if(tv>0&&tv<want-slack) return {kind:'volume',at:tv};
+  // Only the last step ends the shot. An earlier step exiting on weight just
+  // hands over to the next one.
+  var st=pr.steps||[], lastStep=st.length?st[st.length-1]:null;
+  var sw=lastStep?(parseFloat(lastStep.weight)||0):0;
+  if(sw>0&&sw<want-slack) return {kind:'step',at:sw};
+  var cap=profileFlowCap();
+  if(cap!=null&&cap>0&&cap<want-slack) return {kind:'time',at:cap,soft:true};
+  var ran=profileRanOut();
+  if(ran>0) return {kind:'past',at:ran,soft:true};
+  return null; }
+function syncProfileCut(){
+  var b=document.getElementById('rcWarn'); if(!b) return;
+  var c=profileCut();
+  b.hidden=!c;
+  b.classList.toggle('soft',!!(c&&c.soft));
+  if(c) b.setAttribute('aria-label',t(c.soft?'cutMayTitle':'cutTitle')); }
+var CUT_TEXT={weight:'cutWeight',volume:'cutVolume',step:'cutStep',time:'cutTime',past:'cutPast'};
+function cutText(c){
+  return t(CUT_TEXT[c.kind]||'cutWeight')
+    .replace('{a}',c.kind==='past'?String(c.at):(+c.at).toFixed(1))
+    .replace('{n}',String(c.at))
+    .replace('{b}',settings.doseOut.toFixed(1)); }
+function openProfileCut(){
+  var c=profileCut(); if(!c) return;
+  document.getElementById('cutTitle').textContent=t(c.soft?'cutMayTitle':'cutTitle');
+  document.getElementById('cutBody').innerHTML=
+    '<div class="cut-what">'+escapeHtml(cutText(c))+'</div>'
+    +'<div class="cut-else">'+escapeHtml(t('cutElse'))+'</div>'
+    +'<div class="ag-acts">'
+      +((c.kind==='weight'||c.kind==='step')
+        ? ('<button class="m-btn primary" onclick="cutMatch('+(+c.at)+')">'
+           +escapeHtml(t('cutFix').replace('{a}',(+c.at).toFixed(1)))+'</button>')
+        : '')
+      +'<button class="m-btn" onclick="closeModal(null,\'cutOverlay\')">'
+      +escapeHtml(t('close'))+'</button>'
+    +'</div>';
+  document.getElementById('cutOverlay').classList.add('show'); }
+// Matching the recipe to the profile is one of the two ways out, and the only
+// one this card can take; the other is in the profile editor.
+function cutMatch(g){
+  settings.doseOut=Math.max(10,Math.min(80,parseFloat((+g).toFixed(1))));
+  syncRecipe(); pushRecipe();
+  closeModal(null,'cutOverlay'); toast(t('tRecipeMatched'),'ok'); }
 function setDoseIn(v){
-  var r=(settings.doseIn>0&&settings.doseOut>0)?(settings.doseOut/settings.doseIn):null;
+  var r=recipeRatio()||null;
   settings.doseIn=Math.max(5,Math.min(30,parseFloat((+v).toFixed(1))));
   if(r){ settings.doseOut=Math.max(10,Math.min(80,
     parseFloat((settings.doseIn*r).toFixed(1)))); } }
@@ -6269,7 +6386,9 @@ function adjust(key,delta){
   if(key==='doseIn'){ setDoseIn(settings.doseIn+delta); syncRecipe(); pushRecipe(); return; }
   settings[key]=parseFloat((settings[key]+delta).toFixed(1)); var c={doseIn:[5,30],doseOut:[10,80]}[key]; if(c) settings[key]=Math.max(c[0],Math.min(c[1],settings[key])); syncRecipe(); pushRecipe(); }
 // Adjust the ratio directly -> recompute yield from current dose.
-function adjustRatio(delta){ var r=settings.doseIn>0?(settings.doseOut/settings.doseIn):2; r=Math.max(1,Math.min(4,parseFloat((r+delta).toFixed(2))));
+// Stepping the ratio lands on a ratio worth stepping to: a yield set by hand
+// leaves 2.01, and one press of + should give 2.1, not 2.11.
+function adjustRatio(delta){ var r=recipeRatio()||2; r=Math.max(1,Math.min(4,parseFloat((r+delta).toFixed(1))));
   settings.doseOut=parseFloat((settings.doseIn*r).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); syncRecipe(); pushRecipe(); }
 // A DE1 profile has no single brew temperature: every step carries its own.
 // The card shows the first step's, and a change shifts them all by the same
@@ -6481,12 +6600,12 @@ function syncRecipe(){
     dl.textContent=(w===null)?'\u2014':(convWeight(w).toFixed(1)+weightUnitLabel()); }
   syncThermo();
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
-  document.getElementById('ratioTag').textContent=ratio?ratio.toFixed(1):'—';
-  syncShotSum(); syncAiPin();
+  document.getElementById('ratioTag').textContent=ratio?recipeRatioText():'—';
+  syncShotSum(); syncAiPin(); syncProfileCut();
   var md=document.getElementById('monDose');
   if(md){ md.textContent=settings.doseIn.toFixed(1);
     document.getElementById('monYield').textContent=settings.doseOut.toFixed(1);
-    document.getElementById('monRatio').textContent=ratio?('1:'+ratio.toFixed(1)):'—'; } }
+    document.getElementById('monRatio').textContent=ratio?('1:'+recipeRatioText()):'—'; } }
 
 // ── Settings that survive an update ─────────────────────────────────
 // The gateway serves each skin generation from its own port, so every update
@@ -15074,6 +15193,7 @@ function loadLastShot(){
   var box=document.getElementById('lsStats'); if(!box) return;
   var profEl=document.getElementById('lsProfile');
   lastShotSummary=items.length?items[0]:null;
+  recentShots=items; syncProfileCut();
   syncShotRead();
   if(!items.length){ box.innerHTML='<div class="ls-empty">'+t('noShots')+'</div>'; if(profEl) profEl.innerHTML=''; return; }
   var s=items[0], an=s.annotations||{};
@@ -16950,6 +17070,10 @@ var RS_TEMP=10;
 // profile happened to be holding at the time.
 var RS_R_LOW=3.0, RS_R_HIGH=6.5;
 var RS_FAST=18, RS_SLOW=45, RS_YIELD_SHORT=0.85, RS_YIELD_FULL=0.9, RS_YIELD_OVER=1.15;
+// Endings that were not the puck's doing. What landed in the cup after one of
+// these says nothing about how the coffee was ground.
+var RS_YIELD_MOOT={profileAdvance:1,profileSkip:1,apiStop:1,appStop:1,machineEnded:1,
+  noScale:1,error:1,disconnected:1,stoppingBackstop:1};
 var RS_SETTLE=3;   // seconds of pour given over to reaching the target
 function rsNum(v){ return (v==null||!isFinite(v))?null:v; }
 function rsMean(a){ if(!a.length) return null; var s=0,i; for(i=0;i<a.length;i++) s+=a[i]; return s/a.length; }
@@ -17044,6 +17168,14 @@ function readShot(sh){
   var yld0=(an0.actualYield!=null?an0.actualYield:last0);
   var want0=(ctx0.targetYield>0)?ctx0.targetYield:null;
   var share=(yld0>0&&want0)?(yld0/want0):null;
+  var why=sh&&sh.stopReason;
+  var yieldMeans=!(why&&RS_YIELD_MOOT[why]);
+  if(share!=null&&share<RS_YIELD_SHORT&&!yieldMeans){
+    var said=t('stop_'+why);
+    if(said!=='stop_'+why) obs.push(said);
+    find.push('it stopped at '+Math.round(share*100)+'% of the target yield, but the '
+      +'machine gave "'+why+'" as the reason, so the cup is not evidence about the puck');
+    share=null; }
   if(share!=null&&share<RS_YIELD_SHORT){
     obs.push(t('rsYieldShort').replace('{p}',Math.round(share*100)));
     find.push('stopped at '+Math.round(share*100)+'% of the target yield'); }
