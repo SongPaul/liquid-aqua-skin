@@ -3608,7 +3608,8 @@ var I18N={
     rsTitle:'Shot reading', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends the curve is read here, with no model and no network. A reading opens as a page, or waits behind the mark on the shot card.',
     rsModeModal:'Open it', rsModeIcon:'Mark only', rsModeOff:'Off',
     cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutWeight:'This profile ends itself at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
-    rsResist:'Puck resistance averaged {r} bar per ml/s', rsYieldShort:'It stopped at {p}% of the target yield', rsYieldOver:'It poured {g}g past the target',
+    rsYield:'The cup held {y}g, against {w}g', rsYieldOnly:'The cup held {y}g', rsStopOther:'The machine ended the shot ({r}), so the cup is not the puck\u2019s doing', rsVShort:'It came up short of the yield',
+    rsResist:'Puck resistance averaged {r}, normalised to 9 bar', rsNoScale:'No scale on this shot, so nothing was weighed', rsEy:'Extraction yield measured {e}%', rsEyLow:'Extraction yield measured {e}%, under the usual window', rsEyHigh:'Extraction yield measured {e}%, over the usual window', rsYieldShort:'It stopped at {p}% of the target yield', rsYieldOver:'It poured {g}g past the target',
     rsVOk:'The curve looks ordinary', rsVChannel:'This one channelled', rsVMixed:'The curve pulls both ways', rsMixed:'It fell short of its pressure early and its flow later, so the grind is not the thing to move on this one.', rsVCoarse:'The puck let the water through too easily', rsVFine:'The puck held the water back',
     rsTime:'The shot took {s}s', rsTimePlan:'The shot took {s}s, against {m}s planned', rsFirstDrop:'First drop at {s}s', rsRatio:'Poured 1:{r}, against {g}',
     rsChannel:'At {t}s the flow jumped {f} ml/s while the pressure fell {p} bar',
@@ -4031,7 +4032,8 @@ var I18N={
     rsTitle:'추출 분석', rsSetting:'추출 후 분석', rsSettingDesc:'추출이 끝나면 곡선을 여기서 직접 읽습니다. 모델도 네트워크도 쓰지 않습니다. 바로 띄우거나, 샷 카드의 느낌표 뒤에서 기다리게 할 수 있습니다.',
     rsModeModal:'바로 띄우기', rsModeIcon:'느낌표만', rsModeOff:'사용 안 함',
     cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutWeight:'이 프로파일은 {a}g에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
-    rsResist:'퍽 저항 평균 {r} bar·s/ml', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
+    rsYield:'추출량 {y}g · 목표 {w}g', rsYieldOnly:'추출량 {y}g', rsStopOther:'머신이 샷을 끝냈습니다({r}). 컵은 퍽이 결정한 것이 아닙니다', rsVShort:'목표보다 적게 나왔습니다',
+    rsResist:'퍽 저항 평균 {r} (9 bar 환산)', rsNoScale:'이 샷은 저울이 없어 무게를 읽지 못했습니다', rsEy:'추출 수율 {e}%', rsEyLow:'추출 수율 {e}% · 통상 범위보다 낮습니다', rsEyHigh:'추출 수율 {e}% · 통상 범위보다 높습니다', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
     rsVOk:'곡선에 특별히 걸리는 것이 없습니다', rsVMixed:'곡선이 양쪽으로 당깁니다', rsMixed:'초반에는 압력이, 후반에는 유량이 모자랐습니다. 이번 샷은 분쇄도로 건드릴 일이 아닙니다.', rsVChannel:'채널링이 생겼습니다',
     rsVCoarse:'퍽이 물을 너무 쉽게 보냈습니다', rsVFine:'퍽이 물을 막았습니다',
     rsTime:'추출 {s}초', rsTimePlan:'추출 {s}초 · 프로파일 계획 {m}초', rsFirstDrop:'첫 방울 {s}초', rsRatio:'실제 1:{r}, 목표 {g}',
@@ -4040,7 +4042,7 @@ var I18N={
     rsCoarse:'압력이 목표보다 평균 {p} bar 낮았고 유량은 평균 {f} ml/s였습니다',
     rsCoarseFix:'분쇄도를 한 단계 가늘게', rsCoarseWhy:'머신이 요구한 압력을 퍽이 버티지 못했습니다.',
     rsFine:'유량이 목표보다 평균 {f} ml/s 적었고 압력은 {p} bar에 붙어 있었습니다',
-    rsFineFix:'분쇄도를 한 단계 구게', rsFineWhy:'압력은 한계였는데도 물이 나오지 않았습니다.',
+    rsFineFix:'분쇄도를 한 단계 굵게', rsFineWhy:'압력은 한계였는데도 물이 나오지 않았습니다.',
     rsGrindAssume:'이 다이얼은 숫자가 낮을수록 가늘다고 보았습니다.',
     rsTempHigh:'그룹 온도가 프로파일보다 {d}도 높았습니다', rsTempLow:'그룹 온도가 프로파일보다 {d}도 낮았습니다',
     aiAnalysis:'AI 추출 분석', aiRun:'분석', aiAgain:'다시 분석', aiReading:'추출을 읽는 중…', aiNoResult:'분석 결과가 없습니다', aiFailed:'분석 실패:',
@@ -17069,6 +17071,9 @@ var RS_TEMP=10;
 // holds here. It is the one measure that does not care which kind of target the
 // profile happened to be holding at the time.
 var RS_R_LOW=3.0, RS_R_HIGH=6.5;
+// The classic window, kept wide: a short ratio reads low and a long one high
+// without either being a fault, so only the plainly-out cases vote.
+var RS_EY_LOW=17, RS_EY_HIGH=23;
 var RS_FAST=18, RS_SLOW=45, RS_YIELD_SHORT=0.85, RS_YIELD_FULL=0.9, RS_YIELD_OVER=1.15;
 // Endings that were not the puck's doing. What landed in the cup after one of
 // these says nothing about how the coffee was ground.
@@ -17144,19 +17149,25 @@ function readShot(sh){
     sug.push(rsSug(t('rsChannelFix'),t('rsChannelWhy'),null)); }
 
   // ── asked for a pressure it never reached, and poured fast doing it ──
+  var tPour=body.length?body[0].t:0;
   var pd=[], pf=[];
-  body.forEach(function(x){ if(x.t>=RS_SETTLE&&x.tp!=null&&x.tp>0.5&&x.p!=null){
+  body.forEach(function(x){ if(x.t-tPour>=RS_SETTLE&&x.tp!=null&&x.tp>0.5&&x.p!=null){
     pd.push(x.tp-x.p); if(x.f!=null) pf.push(x.f); } });
   var pdM=(pd.length>=10)?rsMean(pd):null, pfM=rsMean(pf);
   var fd0=[], fp0=[];
-  body.forEach(function(x){ if(x.t>=RS_SETTLE&&x.tf!=null&&x.tf>0.2&&x.f!=null){
+  body.forEach(function(x){ if(x.t-tPour>=RS_SETTLE&&x.tf!=null&&x.tf>0.2&&x.f!=null){
     fd0.push(x.tf-x.f); if(x.p!=null) fp0.push(x.p); } });
   var fdM0=(fd0.length>=10)?rsMean(fd0):null, fpM0=rsMean(fp0);
 
   // ── what the puck itself was worth ──
   var res=[];
-  body.forEach(function(x){ if(x.t>=RS_SETTLE&&x.f!=null&&x.f>0.3&&x.p!=null&&x.p>1)
-    res.push(x.p/x.f); });
+  // Resistance read straight off as pressure over flow is not a property of
+  // the puck alone: flow through a puck goes roughly as the root of pressure,
+  // so the same coffee reads looser the gentler the profile. Normalising to
+  // nine bar -- 3*sqrt(p)/f, which is exactly p/f when p is nine -- takes the
+  // profile back out of it, and the bands mean the same thing at any pressure.
+  body.forEach(function(x){ if(x.t-tPour>=RS_SETTLE&&x.f!=null&&x.f>0.3&&x.p!=null&&x.p>1)
+    res.push(3*Math.sqrt(x.p)/x.f); });
   var rM=(res.length>=10)?rsMean(res):null;
   if(rM!=null){
     obs.push(t('rsResist').replace('{r}',rM.toFixed(1)));
@@ -17164,19 +17175,37 @@ function readShot(sh){
 
   // ── what came out of it ──
   var ctx0=(sh.workflow&&sh.workflow.context)||{}, an0=sh.annotations||{};
-  var last0=null; for(var q0=body.length-1;q0>=0;q0--){ if(body[q0].w!=null){ last0=body[q0].w; break; } }
+  var dose0=(an0.actualDoseWeight!=null?an0.actualDoseWeight:ctx0.targetDoseWeight);
+  // What landed in the cup, not what had landed by the time the pump stopped:
+  // the last of it arrives during pouringDone and it is still the shot.
+  var last0=null, all0=sh.measurements||[];
+  for(var q0=all0.length-1;q0>=0;q0--){
+    var w0=all0[q0]&&all0[q0].scale&&all0[q0].scale.weight;
+    if(w0!=null){ last0=w0; break; } }
   var yld0=(an0.actualYield!=null?an0.actualYield:last0);
   var want0=(ctx0.targetYield>0)?ctx0.targetYield:null;
   var share=(yld0>0&&want0)?(yld0/want0):null;
   var why=sh&&sh.stopReason;
   var yieldMeans=!(why&&RS_YIELD_MOOT[why]);
+  var sawScale=(sh.measurements||[]).some(function(m){
+    return m&&m.scale&&m.scale.weight!=null; });
+  if(!sawScale&&an0.actualYield==null) obs.push(t('rsNoScale'));
+  if(yld0>0){
+    obs.push(want0
+      ? t('rsYield').replace('{y}',(+yld0).toFixed(1)).replace('{w}',(+want0).toFixed(1))
+      : t('rsYieldOnly').replace('{y}',(+yld0).toFixed(1)));
+    find.push('the cup held '+(+yld0).toFixed(1)+'g'
+      +(want0?(' against a target of '+(+want0).toFixed(1)+'g'):'')); }
   if(share!=null&&share<RS_YIELD_SHORT&&!yieldMeans){
+    // Whether or not there are words for it, the reason is named: silence here
+    // is what let a short cup read as an ordinary shot.
     var said=t('stop_'+why);
-    if(said!=='stop_'+why) obs.push(said);
+    obs.push(said!=='stop_'+why?said:t('rsStopOther').replace('{r}',String(why)));
     find.push('it stopped at '+Math.round(share*100)+'% of the target yield, but the '
       +'machine gave "'+why+'" as the reason, so the cup is not evidence about the puck');
     share=null; }
-  if(share!=null&&share<RS_YIELD_SHORT){
+  else if(share!=null&&share<RS_YIELD_SHORT){
+    flags.short=true;
     obs.push(t('rsYieldShort').replace('{p}',Math.round(share*100)));
     find.push('stopped at '+Math.round(share*100)+'% of the target yield'); }
   else if(share!=null&&share>RS_YIELD_OVER){
@@ -17191,11 +17220,18 @@ function readShot(sh){
   var cv1=(pdM!=null&&pdM>=RS_P_SHORT&&pfM!=null&&pfM>=RS_P_FAST);
   var fv1=(fdM0!=null&&fdM0>=RS_F_SHORT&&fpM0!=null&&fpM0>=RS_P_PINNED);
   var cv2=(rM!=null&&rM<RS_R_LOW), fv2=(rM!=null&&rM>RS_R_HIGH);
+  var ey=parseFloat(an0.drinkEy);
+  if(!(ey>0)&&an0.drinkTds>0&&yld0>0&&dose0>0) ey=(an0.drinkTds*yld0)/dose0;
+  var eyLow=(ey>0&&ey<RS_EY_LOW), eyHigh=(ey>0&&ey>RS_EY_HIGH);
+  if(ey>0){
+    obs.push(t(eyLow?'rsEyLow':eyHigh?'rsEyHigh':'rsEy').replace('{e}',ey.toFixed(1)));
+    find.push('measured extraction yield '+ey.toFixed(1)+'%'); }
   var quick=(plan>0)?(total<plan*0.5):(total>0&&total<RS_FAST);
   var slow=(plan>0)?(total>plan*1.5):(total>RS_SLOW);
   var cv3=(quick&&share!=null&&share>=RS_YIELD_FULL);
   var fv3=slow||(share!=null&&share<RS_YIELD_SHORT&&(plan>0?(total>=plan):(total>30)));
-  var cN=(cv1?1:0)+(cv2?1:0)+(cv3?1:0), fN=(fv1?1:0)+(fv2?1:0)+(fv3?1:0);
+  var cN=(cv1?1:0)+(cv2?1:0)+(cv3?1:0)+(eyLow?1:0);
+  var fN=(fv1?1:0)+(fv2?1:0)+(fv3?1:0)+(eyHigh?1:0);
   var coarseOn=(cN>=2&&fN===0), fineOn=(fN>=2&&cN===0);
   if(!coarseOn&&!fineOn&&cN>0&&fN>0) flags.mixed=true;
   if(cN||fN) find.push('readings for a looser puck: '+cN+', for a tighter one: '+fN);
@@ -17229,10 +17265,9 @@ function readShot(sh){
     find.push('first drop at '+drip.toFixed(1)+'s'); }
 
   // ── what came out against what was asked for ──
-  var ctx=(sh.workflow&&sh.workflow.context)||{}, an=sh.annotations||{};
+  var ctx=ctx0, an=an0;
   var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:ctx.targetDoseWeight);
-  var last=null; for(var q=body.length-1;q>=0;q--){ if(body[q].w!=null){ last=body[q].w; break; } }
-  var yld=(an.actualYield!=null?an.actualYield:last);
+  var yld=yld0;
   if(dose>0&&yld>0){
     var got=yld/dose, want=(ctx.targetYield>0&&ctx.targetDoseWeight>0)?(ctx.targetYield/ctx.targetDoseWeight):null;
     obs.push(t('rsRatio').replace('{r}',got.toFixed(1))
@@ -17263,6 +17298,7 @@ function readShot(sh){
     :flags.coarse?t('rsVCoarse')
     :flags.fine?t('rsVFine')
     :flags.mixed?t('rsVMixed')
+    :flags.short?t('rsVShort')
     :t('rsVOk');
   // Everything measured is worth showing; the cap is only there so a strange
   // shot cannot fill the page.
