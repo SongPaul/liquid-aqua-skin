@@ -3607,7 +3607,7 @@ var I18N={
     aiPin:'Use next time', aiPinned:'Waiting on the next shot', aiPinnedElsewhere:'Saved \u2014 the mark shows when {n} is loaded again', aiGuideTitle:'AI guidance', aiApply:'apply', aiApplied:'Applied', aiApplyAll:'Apply all', aiGuideClear:'Clear', aiGuideCleared:'Cleared', aiNoApply:'Nothing here to set on the card', aiApplyNoProfile:'Load a profile first',
     rsTitle:'Shot reading', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends the curve is read here, with no model and no network. A reading opens as a page, or waits behind the mark on the shot card.',
     rsModeModal:'Open it', rsModeIcon:'Mark only', rsModeOff:'Off',
-    cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutWeight:'This profile ends itself at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
+    cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTight:'In the time this profile allows it can pour about {a}g, which is the {b}g asked for and not a drop more. Any shortfall in flow and it misses.', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutWeight:'This profile ends itself at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
     rsYield:'The cup held {y}g, against {w}g', rsYieldOnly:'The cup held {y}g', rsStopOther:'The machine ended the shot ({r}), so the cup is not the puck\u2019s doing', rsVShort:'It came up short of the yield',
     rsResist:'Puck resistance averaged {r}, normalised to 9 bar', rsNoScale:'No scale on this shot, so nothing was weighed', rsEy:'Extraction yield measured {e}%', rsEyLow:'Extraction yield measured {e}%, under the usual window', rsEyHigh:'Extraction yield measured {e}%, over the usual window', rsYieldShort:'It stopped at {p}% of the target yield', rsYieldOver:'It poured {g}g past the target',
     rsVOk:'The curve looks ordinary', rsVChannel:'This one channelled', rsVMixed:'The curve pulls both ways', rsMixed:'It fell short of its pressure early and its flow later, so the grind is not the thing to move on this one.', rsVCoarse:'The puck let the water through too easily', rsVFine:'The puck held the water back',
@@ -4031,7 +4031,7 @@ var I18N={
     aiPin:'다음 추출에 반영', aiPinned:'다음 추출에 반영됩니다', aiPinnedElsewhere:'저장됐습니다 — {n} 을(를) 다시 불러오면 표시됩니다', aiGuideTitle:'AI 가이드', aiApply:'적용', aiApplied:'적용됨', aiApplyAll:'전부 적용', aiGuideClear:'지우기', aiGuideCleared:'지웠습니다', aiNoApply:'카드에 설정할 값이 없습니다', aiApplyNoProfile:'프로파일을 먼저 불러오세요',
     rsTitle:'추출 분석', rsSetting:'추출 후 분석', rsSettingDesc:'추출이 끝나면 곡선을 여기서 직접 읽습니다. 모델도 네트워크도 쓰지 않습니다. 바로 띄우거나, 샷 카드의 느낌표 뒤에서 기다리게 할 수 있습니다.',
     rsModeModal:'바로 띄우기', rsModeIcon:'느낌표만', rsModeOff:'사용 안 함',
-    cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutWeight:'이 프로파일은 {a}g에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
+    cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTight:'이 프로파일이 정해진 시간 안에 낼 수 있는 양은 약 {a}g으로, 목표 {b}g와 딱 같고 여유가 없습니다. 유량이 조금만 못 나와도 닿지 못합니다.', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutWeight:'이 프로파일은 {a}g에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
     rsYield:'추출량 {y}g · 목표 {w}g', rsYieldOnly:'추출량 {y}g', rsStopOther:'머신이 샷을 끝냈습니다({r}). 컵은 퍽이 결정한 것이 아닙니다', rsVShort:'목표보다 적게 나왔습니다',
     rsResist:'퍽 저항 평균 {r} (9 bar 환산)', rsNoScale:'이 샷은 저울이 없어 무게를 읽지 못했습니다', rsEy:'추출 수율 {e}%', rsEyLow:'추출 수율 {e}% · 통상 범위보다 낮습니다', rsEyHigh:'추출 수율 {e}% · 통상 범위보다 높습니다', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
     rsVOk:'곡선에 특별히 걸리는 것이 없습니다', rsVMixed:'곡선이 양쪽으로 당깁니다', rsMixed:'초반에는 압력이, 후반에는 유량이 모자랐습니다. 이번 샷은 분쇄도로 건드릴 일이 아닙니다.', rsVChannel:'채널링이 생겼습니다',
@@ -6303,14 +6303,14 @@ var recentShots=[];
 function profileFlowCap(){
   var pr=curProfileObj&&curProfileObj.profile; if(!pr) return null;
   var st=pr.steps||[]; if(!st.length) return null;
+  var from=Math.max(0,parseInt(pr.target_volume_count_start,10)||0);
   var cap=0, sawPour=false;
-  for(var i=0;i<st.length;i++){
+  for(var i=from;i<st.length;i++){
     var x=st[i], secs=parseFloat(x.seconds)||0;
-    if(secs<=0) return null;                 // an open-ended step bounds nothing
     var pump=String(x.pump||'').toLowerCase();
     var f=parseFloat(x.flow)||0;
     if(pump==='pressure'||(!pump&&parseFloat(x.pressure)>0)) return null;
-    if(f<=0) continue;                       // a step that pours nothing
+    if(f<=0||secs<=0) continue;              // a frame of no length pours nothing
     sawPour=true;
     var vol=parseFloat(x.volume)||0;
     cap+=Math.min(f*secs, vol>0?vol:Infinity); }
@@ -6343,6 +6343,7 @@ function profileCut(){
   if(sw>0&&sw<want-slack) return {kind:'step',at:sw};
   var cap=profileFlowCap();
   if(cap!=null&&cap>0&&cap<want-slack) return {kind:'time',at:cap,soft:true};
+  if(cap!=null&&cap>0&&cap<want*1.05) return {kind:'tight',at:cap,soft:true};
   var ran=profileRanOut();
   if(ran>0) return {kind:'past',at:ran,soft:true};
   return null; }
@@ -6352,7 +6353,7 @@ function syncProfileCut(){
   b.hidden=!c;
   b.classList.toggle('soft',!!(c&&c.soft));
   if(c) b.setAttribute('aria-label',t(c.soft?'cutMayTitle':'cutTitle')); }
-var CUT_TEXT={weight:'cutWeight',volume:'cutVolume',step:'cutStep',time:'cutTime',past:'cutPast'};
+var CUT_TEXT={weight:'cutWeight',volume:'cutVolume',step:'cutStep',time:'cutTime',tight:'cutTight',past:'cutPast'};
 function cutText(c){
   return t(CUT_TEXT[c.kind]||'cutWeight')
     .replace('{a}',c.kind==='past'?String(c.at):(+c.at).toFixed(1))
