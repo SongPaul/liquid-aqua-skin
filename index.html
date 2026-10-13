@@ -153,14 +153,14 @@ body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 body.asleep-settled .wave-path,body.asleep-settled .wave-path2,body.asleep-settled .batt-fluid svg{animation-play-state:paused!important}
 
 /* ── Header: water tank + actions ────────────────────────────────── */
-header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 20px}
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill svg{position:absolute;top:-16px;left:0;width:100%;height:18px;display:block}
 .water-fill svg.bubbles{position:absolute;top:auto;bottom:0;left:0;width:100%;height:100%;pointer-events:none}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
-.brand{display:flex;align-items:center;gap:12px;flex:1 1 0;min-width:0}
+.brand{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0}
 /* Under the name sit the two things a machine on a counter gets asked
    without anyone touching it: the time, and whether the tablet is still
    running on its own power. */
@@ -260,9 +260,9 @@ header>*{position:relative;z-index:1}
 .conn-line.ing .status-dot{background:var(--amber)!important;transition:none;animation:blink .8s infinite}
 @keyframes breathe{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.25)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.hdr-group{display:flex;align-items:center;justify-content:flex-end;flex:1 1 0;gap:9px}
-.hdr-aux{position:relative;display:flex;align-items:stretch;gap:3px;padding:4px;border-radius:21px;background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift)}
-.hdr-aux .act-btn{border-radius:17px;border-color:transparent;background-color:transparent;background-image:none;box-shadow:none;padding:7px 15px}
+.hdr-group{display:flex;align-items:center;justify-content:flex-end;flex:1 1 auto;gap:9px}
+.hdr-aux{position:relative;display:flex;align-items:stretch;gap:7px;padding:5px;border-radius:21px;background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift)}
+.hdr-aux .act-btn{border-radius:17px;border-color:transparent;background-color:transparent;background-image:none;box-shadow:none;padding:7px 18px}
 .hdr-aux .act-btn.start{color:var(--accent)}
 /* Running fills the button the way it fills the other three. Without this the
    header's own pale treatment of the start button stays, and the white the
@@ -1808,6 +1808,69 @@ body.night .sl-stop.ok{color:#5eead4} body.night .sl-stop.warn{color:#fbbf24} bo
 .sl-metric{background-color:var(--pane-face);background-image:var(--ctl-sheen);box-shadow:var(--pane-lift);border:1px solid transparent;border-radius:12px;padding:12px 8px;text-align:center}
 .sl-metric .v{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
 .sl-metric .l{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
+.hdr-aux .act-btn.wf{color:var(--ink-mute)}
+.hdr-aux .act-btn.wf:hover{color:var(--accent)}
+.wfpage{padding:clamp(10px,2.57vh,18px) clamp(12px,1.75vw,22px);gap:clamp(8px,2vh,14px)}
+.wf-head{display:flex;align-items:flex-start;gap:18px;flex-shrink:0}
+.wf-id{min-width:0;flex:1}
+.wf-title{font-size:clamp(19px,4.3vh,30px);font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.wf-rail{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.wf-dot{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--ink-mute);
+  background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:4px 10px}
+.wf-dot.on{background:var(--accent);border-color:transparent;color:#fff}
+.wf-dot.done{color:var(--accent)}
+.wf-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.wf-foot{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.wf-sum{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--ink-mute);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-foot .m-btn{min-width:110px}
+.wf-foot .m-btn[hidden]{display:none}
+.wf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.wf-card{text-align:left;background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;
+  padding:14px 16px;cursor:pointer;-webkit-appearance:none;font-family:var(--font);
+  transition:border-color .15s,transform .1s,background .15s}
+.wf-card:hover{background:rgba(99,102,241,.08)}
+.wf-card:active{transform:scale(.985)}
+.wf-card.on{border-color:var(--accent);background:rgba(99,102,241,.12)}
+.wf-card .n{display:block;font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.wf-card .s{display:block;font-size:12px;font-weight:600;color:var(--ink-mute);margin-top:3px;line-height:1.5}
+.wf-card .big{font-size:26px;line-height:1;margin-bottom:6px;display:block}
+.wf-hist{margin-top:6px}
+.wf-hist-h{font-size:11px;font-weight:800;color:var(--ink-mute);letter-spacing:.06em;margin-bottom:7px}
+.wf-hist-f{margin-bottom:9px;justify-content:flex-start}
+.wf-hist-f .optchip .n{margin-left:6px;opacity:.65;font-variant-numeric:tabular-nums}
+.wf-hist-f .optchip.none{opacity:.45}
+.wf-hist-row{display:flex;align-items:stretch;gap:6px;margin-bottom:6px}
+.wf-hist-go{flex:1;min-width:0;text-align:left;background:var(--glass-hi);border:1px solid var(--glass-line);
+  border-radius:14px;padding:9px 13px;cursor:pointer;-webkit-appearance:none;font-family:var(--font);
+  display:flex;align-items:baseline;gap:10px;transition:background .15s,transform .1s}
+.wf-hist-go:hover{background:rgba(99,102,241,.08)}
+.wf-hist-go:active{transform:scale(.99)}
+.wf-hist-go .k{font-size:13px;font-weight:800;color:var(--accent);flex:none}
+.wf-hist-go .d{font-size:12px;font-weight:600;color:var(--ink-mute);min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-hist-x{flex:none;width:36px;border-radius:14px;border:1px solid var(--glass-line);
+  background:var(--glass-hi);color:var(--ink-mute);font-size:16px;font-weight:800;cursor:pointer;
+  -webkit-appearance:none;font-family:var(--font)}
+.wf-hist-x:hover{color:var(--red)}
+body.night .wf-hist-go,body.night .wf-hist-x{background:rgba(255,255,255,.06)}
+.wf-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.wf-row{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:16px;padding:12px 14px}
+.wf-row .l{font-size:11px;font-weight:800;color:var(--ink-mute);letter-spacing:.04em}
+.wf-row .dose-fn{margin-top:7px}
+.wf-note{font-size:12px;font-weight:600;color:var(--ink-mute);line-height:1.6}
+.wf-ready{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:18px;padding:16px 18px}
+.wf-ready .line{display:flex;justify-content:space-between;gap:14px;font-size:14px;font-weight:700;
+  color:var(--ink);padding:7px 0;border-bottom:1px solid var(--glass-line)}
+.wf-ready .line:last-child{border-bottom:0}
+.wf-ready .line .k{color:var(--ink-mute);font-weight:700;flex:none}
+.wf-ready .line .v{text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.wf-stage{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;color:var(--ink-mute);
+  margin-top:12px;flex-wrap:wrap}
+.wf-stage .st{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:100px;padding:6px 12px}
+.wf-stage .arr{color:var(--ink-mute);font-weight:800}
+body.night .wf-card,body.night .wf-row,body.night .wf-ready,body.night .wf-dot,
+body.night .wf-stage .st{background:rgba(255,255,255,.06)}
 .monpage{--mg:clamp(8px,2vh,14px);
   padding:clamp(10px,2.57vh,18px) clamp(12px,1.75vw,22px);gap:var(--mg)}
 .mon-head{display:flex;align-items:center;gap:18px;flex-shrink:0}
@@ -2391,6 +2454,12 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
       </button></div>
 
     <div class="hdr-aux">
+      <button class="act-btn wf" id="btnWorkflow" onclick="openWorkflow()">
+        <span class="ab-txt">
+          <span class="ab-head"><span class="ico">🧭</span><span class="ab-name" data-i18n="wfTitle">Workflow</span></span>
+          <span class="ab-sum" data-i18n="wfPickShort">Pick a drink</span>
+        </span>
+      </button>
       <button class="act-btn start" id="btnShot" disabled>
         <span class="ab-txt">
           <span class="ab-head"><span class="ico" id="shotIco">☕</span><span class="ab-name" id="shotLbl" data-i18n="actEspresso">Espresso</span><span class="ab-preset" id="shotPreset"></span></span>
@@ -2680,6 +2749,23 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div>
 
 </div>
+</div>
+
+<!-- ── Workflow: a drink, one decision at a time ──────── -->
+<div class="editpage wfpage" id="wfPage">
+  <div class="wf-head">
+    <div class="wf-id">
+      <div class="wf-title" id="wfTitle">—</div>
+      <div class="wf-rail" id="wfRail"></div>
+    </div>
+    <button class="ep-close" onclick="closeWorkflow()">✕ <span data-i18n="close">Close</span></button>
+  </div>
+  <div class="wf-body" id="wfBody"></div>
+  <div class="wf-foot">
+    <button class="m-btn" id="wfBack" onclick="wfGo(-1)"></button>
+    <div class="wf-sum" id="wfSum"></div>
+    <button class="m-btn primary" id="wfNext" onclick="wfGo(1)"></button>
+  </div>
 </div>
 
 <!-- ── Monitor: one action, full screen ────────────────────────── -->
@@ -3584,7 +3670,7 @@ var I18N={
     keyRefused:'{n} refused this key', keyNoNet:'Could not reach {n}',
     keyErr:'{n} answered with an error \u2014 {e}',
     keyEmpty:'No key to check', keyTimeout:'No answer in time',
-    actEspresso:'Espresso', actWater:'Hot water',
+    actEspresso:'Extract', actWater:'Hot water',
     monAuto:'Full-screen monitor', monAutoDesc:'Which actions open the monitor by themselves. Tap the graph to open it at any time.',
     monClose:'Close it when the action ends',
     monCloseDesc:'Which actions take the monitor away again the moment they finish. The rest leave it up to be read, and it goes when it is closed.',
@@ -3605,6 +3691,18 @@ var I18N={
     aiMemoryEmpty:'Nothing remembered yet. Mark a suggestion in a shot reading.',
     aiMemoryClear:'Forget all', aiMemoryCleared:'Forgotten',
     aiPin:'Use next time', aiPinned:'Waiting on the next shot', aiPinnedElsewhere:'Saved \u2014 the mark shows when {n} is loaded again', aiGuideTitle:'AI guidance', aiApply:'apply', aiApplied:'Applied', aiApplyAll:'Apply all', aiGuideClear:'Clear', aiGuideCleared:'Cleared', aiNoApply:'Nothing here to set on the card', aiApplyNoProfile:'Load a profile first',
+    wfTitle:'Workflow', wfPick:'What are you making?', wfPickShort:'Pick a drink',
+    wf_espresso:'Espresso', wf_espresso_d:'Bean, profile, grind, recipe.',
+    wf_americano:'Americano', wf_americano_d:'An espresso, then hot water.',
+    wf_latte:'Latte', wf_latte_d:'An espresso, then steamed milk.',
+    wfS_bean:'Bean', wfS_profile:'Profile', wfS_grinder:'Grind', wfS_recipe:'Recipe', wfS_water:'Water', wfS_milk:'Milk', wfS_go:'Ready',
+    wfBack:'Back', wfNext:'Next', wfBean:'Bean',
+    wfNoBeans:'No beans saved yet. The bean card on the main screen is where they are added.',
+    wfNoGrinders:'No grinders saved yet \u2014 the grind below is still written to the shot.',
+    wfRecipeNote:'Changing the dose carries the yield with it; changing the yield sets the ratio.',
+    wfWaterNote:'Poured at {t}\u00b0 and {f} ml/s, as the hot-water options are set.',
+    wfStage_espresso:'Espresso', wfStage_water:'Hot water', wfStage_steam:'Steam',
+    wfSaved:'Done', wfRecent:'Recent', wfLoaded:'Loaded', wfAll:'All', wfHistEmpty:'None of these yet', wfStartWhere:'Everything above is already set on the machine. Start it from Extract in the top bar, or from the group head.',
     rsTitle:'Shot reading', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends the curve is read here, with no model and no network. A reading opens as a page, or waits behind the mark on the shot card.',
     rsModeModal:'Open it', rsModeIcon:'Mark only', rsModeOff:'Off',
     cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTight:'In the time this profile allows it can pour about {a}g, which is the {b}g asked for and not a drop more. Any shortfall in flow and it misses.', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutWeight:'This profile ends itself at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
@@ -4008,7 +4106,7 @@ var I18N={
     keyRefused:'{n} 가 이 키를 거부했습니다', keyNoNet:'{n} 에 닿지 않습니다',
     keyErr:'{n} 가 오류를 돌려줍니다 — {e}',
     keyEmpty:'확인할 키가 없습니다', keyTimeout:'응답이 없습니다',
-    actEspresso:'에스프레소', actWater:'온수',
+    actEspresso:'추출', actWater:'온수',
     monClose:'동작이 끝나면 바로 닫기',
     monCloseDesc:'어떤 동작이 끝나는 즉시 모니터를 닫을지 선택합니다. 고르지 않은 동작은 읽을 수 있도록 남아 있다가 닫을 때 사라집니다.',
     monAuto:'전체화면 모니터', monAutoDesc:'어떤 동작에서 모니터를 자동으로 열지 선택합니다. 그래프를 누르면 언제든 열 수 있습니다.',
@@ -4029,6 +4127,18 @@ var I18N={
     aiMemoryEmpty:'아직 기억한 것이 없습니다. 샷 분석의 조언에 표시해 보세요.',
     aiMemoryClear:'모두 지우기', aiMemoryCleared:'지웠습니다',
     aiPin:'다음 추출에 반영', aiPinned:'다음 추출에 반영됩니다', aiPinnedElsewhere:'저장됐습니다 — {n} 을(를) 다시 불러오면 표시됩니다', aiGuideTitle:'AI 가이드', aiApply:'적용', aiApplied:'적용됨', aiApplyAll:'전부 적용', aiGuideClear:'지우기', aiGuideCleared:'지웠습니다', aiNoApply:'카드에 설정할 값이 없습니다', aiApplyNoProfile:'프로파일을 먼저 불러오세요',
+    wfTitle:'워크플로우', wfPick:'무엇을 만드실가요?', wfPickShort:'음료 고르기',
+    wf_espresso:'에스프레소', wf_espresso_d:'원두, 프로파일, 분쇄도, 레시피.',
+    wf_americano:'아메리카노', wf_americano_d:'에스프레소 뒤에 뜨거운 물.',
+    wf_latte:'라떼', wf_latte_d:'에스프레소 뒤에 스팀 우유.',
+    wfS_bean:'원두', wfS_profile:'프로파일', wfS_grinder:'분쇄도', wfS_recipe:'레시피', wfS_water:'물', wfS_milk:'우유', wfS_go:'준비 완료',
+    wfBack:'이전', wfNext:'다음', wfBean:'원두',
+    wfNoBeans:'저장된 원두가 없습니다. 메인 화면의 원두 카드에서 추가합니다.',
+    wfNoGrinders:'저장된 그라인더가 없습니다 — 아래 분쇄도는 그래도 샷에 기록됩니다.',
+    wfRecipeNote:'도징을 바꾸면 추출량이 비율을 따라가고, 추출량을 바꾸면 비율이 정해집니다.',
+    wfWaterNote:'온수 설정대로 {t}°, {f} ml/s로 내립니다.',
+    wfStage_espresso:'에스프레소', wfStage_water:'온수', wfStage_steam:'스팀',
+    wfSaved:'완료', wfRecent:'최근 워크플로우', wfLoaded:'불러왔습니다', wfAll:'전체', wfHistEmpty:'해당하는 기록이 없습니다', wfStartWhere:'위 내용은 이미 머신에 저장됐습니다. 상단의 추출 버튼이나 그룹헤드로 시작하세요.',
     rsTitle:'추출 분석', rsSetting:'추출 후 분석', rsSettingDesc:'추출이 끝나면 곡선을 여기서 직접 읽습니다. 모델도 네트워크도 쓰지 않습니다. 바로 띄우거나, 샷 카드의 느낌표 뒤에서 기다리게 할 수 있습니다.',
     rsModeModal:'바로 띄우기', rsModeIcon:'느낌표만', rsModeOff:'사용 안 함',
     cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTight:'이 프로파일이 정해진 시간 안에 낼 수 있는 양은 약 {a}g으로, 목표 {b}g와 딱 같고 여유가 없습니다. 유량이 조금만 못 나와도 닿지 못합니다.', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutWeight:'이 프로파일은 {a}g에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
@@ -5338,6 +5448,7 @@ function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/m
 // opens the keypad when there is not, so a dose can always be typed.
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
 function syncDoseTake(){
+  wfSyncScale();
   var fn=document.getElementById('doseFn'); if(!fn) return;
   var live=doseSourceWeight()!==null;
   var tarable=dosingHasReading();
@@ -5542,6 +5653,7 @@ function milkFromScale(){
   if(!dosingHasReading()){ toast(t('doseNoScale'),'err'); return; }
   setMilk(state.dosingWeight); }
 function renderMilkRow(){
+  wfSyncScale();
   var v=document.getElementById('milkVal'); if(!v) return;
   v.textContent=(milkG==null)?'\u2014':String(milkG);
   var live=dosingHasReading();
@@ -6666,6 +6778,8 @@ function hydrateFromStore(){
       presets.steam=all.presets.steam||presets.steam; presets.flush=all.presets.flush||presets.flush;
       presets.water=all.presets.water||presets.water; lsSet('aurora_presets',presets); changed=true; }
     else storePut('presets',presets);
+    if(Array.isArray(all.wfhist)) lsSet('aurora_wfhist',all.wfhist);
+    else { var wh=wfHist(); if(wh.length) storePut('wfhist',wh); }
     if(all.shotread!==undefined){ lsSet('aurora_shotread',all.shotread||null); syncShotRead(); }
     if(all.aipin!==undefined){ lsSet('aurora_aipin',all.aipin||null); syncAiPin(); }
     else { var lp=aiPinGet(); if(lp) storePut('aipin',lp); }
@@ -8564,11 +8678,16 @@ function useShotAsGuide(id){
   else { prefs.guide='on'; prefs.guideSrc='shot'; prefs.guideShot=id; }
   savePrefs(); _guideKey=null; _guide=null; _axisSpan=0;
   toast(t(back?'guideBackToProfile':'guideSet'),'ok');
-  if(!back) loadGuideProfile(id);
+  if(!back){ loadGuideProfile(id); offerGuideSettings(id); }
   if(slSel&&slSel.id===id) renderShotDetail(slSel);
   drawChart(); }
 // The guideline is a shape to chase; chasing it with another profile loaded is
 // chasing nothing, so the shot's own profile goes on the machine with it.
+// The guide shot is already named, so there is nothing to search for: the
+// offer is about this shot and no other.
+function offerGuideSettings(id){
+  offerLastShotSettings({ name:guideShotName()||'',
+    test:function(sh){ return sh&&sh.id===id; } }); }
 function loadGuideProfile(id){
   var shot=slFull[id]||(shotList||[]).filter(function(x){ return x.id===id; })[0];
   var pr=shot&&shot.workflow&&shot.workflow.profile;
@@ -10707,7 +10826,10 @@ function applyUseSettings(){
   if(picked.grind!=null) setGrind(picked.grind);
   if(picked.grinder!=null) ctxPatch.grinderModel=picked.grinder;
   if(picked.bean!=null){ var c=(_usShot&&_usShot.workflow&&_usShot.workflow.context)||{};
-    ctxPatch.coffeeName=c.coffeeName; ctxPatch.coffeeRoaster=c.coffeeRoaster||null; }
+    ctxPatch.coffeeName=c.coffeeName; ctxPatch.coffeeRoaster=c.coffeeRoaster||null;
+    // Without this the batch stays with the coffee being replaced, and the
+    // next shot is recorded against a bag it was not pulled from.
+    ctxPatch.beanBatchId=c.beanBatchId||null; }
   if(recipeTouched){ syncRecipe(); pushRecipe(); }
   if(Object.keys(ctxPatch).length){
     for(var k in ctxPatch) context[k]=ctxPatch[k];
@@ -17582,6 +17704,325 @@ function syncMonitorLive(){
   if(u) u.textContent=weightUnitLabel();
   var v=(!state.scaleConnected||state.scaleWeight===null)?0:state.scaleWeight;
   w.firstChild.nodeValue=convWeight(v).toFixed(1); }
+// ── Workflow: a drink, one decision at a time ───────────────────────
+// Nothing here is a second way to set anything. Each step writes through the
+// same call the ordinary screen uses, so a drink abandoned half way leaves the
+// machine exactly as the steps already taken left it, and the main screen is
+// already showing them.
+var WF_KINDS={
+  espresso: {ico:'\u2615',     steps:['bean','profile','grinder','recipe','go'],          after:[]},
+  americano:{ico:'\ud83e\udd64',steps:['bean','profile','grinder','recipe','water','go'],  after:['water']},
+  latte:    {ico:'\ud83e\udd5b',steps:['bean','profile','grinder','recipe','milk','go'],   after:['steam']}
+};
+var _wf=null;
+function wfDef(){ return _wf&&_wf.kind?WF_KINDS[_wf.kind]:null; }
+function wfSteps(){ var d=wfDef(); return d?d.steps:[]; }
+function wfStep(){ var st=wfSteps(); return st.length?st[Math.min(_wf.i,st.length-1)]:'kind'; }
+function openWorkflow(){
+  _wf={kind:null,i:0};
+  document.getElementById('wfPage').classList.add('show');
+  afterPageChange(); renderWf(); }
+function closeWorkflow(){
+  document.getElementById('wfPage').classList.remove('show');
+  _wf=null; afterPageChange(); }
+function wfPickKind(k){
+  if(!WF_KINDS[k]) return;
+  _wf.kind=k; _wf.i=0; renderWf(); }
+function wfGo(d){
+  if(!_wf) return;
+  if(!_wf.kind){ if(d<0) closeWorkflow(); return; }
+  var n=_wf.i+d;
+  if(n<0){ _wf.kind=null; _wf.i=0; renderWf(); return; }
+  if(n>=wfSteps().length) return;
+  _wf.i=n; renderWf(); }
+
+// ── each step, drawn ────────────────────────────────────────────────
+function wfCard(on,onclick,name,sub,big){
+  return '<button class="wf-card'+(on?' on':'')+'" onclick="'+onclick+'">'
+    +(big?('<span class="big">'+big+'</span>'):'')
+    +'<span class="n">'+escapeHtml(name)+'</span>'
+    +(sub?('<span class="s">'+escapeHtml(sub)+'</span>'):'')+'</button>'; }
+function wfStepper(label,unit,valText,dec,inc,tap,scale){
+  return '<div class="wf-row"><div class="l">'+escapeHtml(label)+(unit?(' '+escapeHtml(unit)):'')+'</div>'
+    +'<div class="dose-adj"><button class="ms-btn" onclick="'+dec+'">\u2212</button>'
+    +'<div class="dose-num'+(tap?' tap':'')+'"'+(tap?(' onclick="'+tap+'"'):'')+'>'+escapeHtml(valText)+'</div>'
+    +'<button class="ms-btn" onclick="'+inc+'">+</button></div>'
+    +(scale||'')+'</div>'; }
+// Tare, the live reading, and take -- the same row the recipe card wears.
+function wfScaleRow(which,take){
+  return '<div class="dose-fn" id="wf'+which+'Fn">'
+    +'<button class="dose-fn-b" id="wf'+which+'Ico" onclick="tareDosingScale()">\u2696</button>'
+    +'<span class="dose-fn-n" id="wf'+which+'Live">\u2014</span>'
+    +'<button class="dose-fn-b" id="wf'+which+'Take" onclick="'+take+'">\u2193</button></div>'; }
+// Whatever the scale is saying now, said in both places at once.
+function wfSyncScale(){
+  if(!_wf||!_wf.kind) return;
+  var live=doseSourceWeight(), tarable=dosingHasReading();
+  function row(which,val,on){
+    var fn=document.getElementById('wf'+which+'Fn'); if(!fn) return;
+    fn.classList.toggle('off',!on);
+    var z=document.getElementById('wf'+which+'Ico'); if(z) z.disabled=!tarable;
+    var k=document.getElementById('wf'+which+'Take'); if(k) k.disabled=!on;
+    var n=document.getElementById('wf'+which+'Live');
+    if(n) n.textContent=(val==null)?'\u2014':(Math.round(val*10)/10+'g'); }
+  row('Dose',live,live!==null);
+  row('Milk',dosingHasReading()?state.dosingWeight:null,dosingHasReading()); }
+// ── What was set up before ──────────────────────────────────────────
+// A drink that was worth setting up once is worth setting up again, and
+// setting it up again is four or five of the same decisions. So a finished
+// workflow is kept, and picking it back off the list writes the whole thing
+// through at once -- by the same calls the steps use, so there is still only
+// one way anything gets set.
+var WF_HIST_MAX=12;
+function wfHist(){ var v=lsGet('aurora_wfhist'); return (v&&v.length)?v:[]; }
+function wfHistSet(v){ lsSet('aurora_wfhist',v||[]); storeSave('wfhist',v||[]); }
+function wfSnapshot(){
+  if(!_wf||!_wf.kind) return null;
+  var pr=curProfileObj&&curProfileObj.profile;
+  var snap={ at:new Date().toISOString(), kind:_wf.kind,
+    bean:{ name:context.coffeeName||'', roaster:context.coffeeRoaster||'',
+           batchId:context.beanBatchId||null },
+    profile:{ id:(curProfileObj&&curProfileObj.id)||'', title:(pr&&pr.title)||'' },
+    grinder:{ id:context.grinderId||null, model:context.grinderModel||'',
+              setting:(context.grinderSetting!=null?String(context.grinderSetting):'') },
+    dose:settings.doseIn, yield:settings.doseOut };
+  if(_wf.kind==='americano') snap.water={ vol:settings.waterVol };
+  if(_wf.kind==='latte') snap.steam={ temp:settings.steamTemp, dur:settings.steamDur,
+    flow:settings.steamFlow, milk:(milkG==null?null:milkG) };
+  return snap; }
+// Two setups that would do the same thing are the same entry, however long
+// ago the first one was.
+function wfSig(h){
+  if(!h) return '';
+  return [h.kind,h.bean&&h.bean.name,h.bean&&h.bean.roaster,h.profile&&h.profile.title,
+    h.grinder&&h.grinder.model,h.grinder&&h.grinder.setting,
+    h.dose,h.yield,h.water&&h.water.vol,
+    h.steam&&[h.steam.temp,h.steam.dur,h.steam.flow,h.steam.milk].join('/')].join('|'); }
+function wfRemember(){
+  var snap=wfSnapshot(); if(!snap) return;
+  var list=wfHist().filter(function(x){ return wfSig(x)!==wfSig(snap); });
+  list.unshift(snap);
+  while(list.length>WF_HIST_MAX) list.pop();
+  wfHistSet(list); }
+function wfFinish(){ wfRemember(); closeWorkflow(); }
+function wfHistLine(h){
+  var bits=[];
+  if(h.bean&&h.bean.name) bits.push(h.bean.name);
+  if(h.profile&&h.profile.title) bits.push(splitTitle(h.profile.title).name);
+  if(h.grinder&&h.grinder.model) bits.push(h.grinder.model
+    +(h.grinder.setting?(' @'+h.grinder.setting):''));
+  bits.push((+h.dose).toFixed(1)+'\u2192'+(+h['yield']).toFixed(1)+'g');
+  return bits.join(' \u00b7 '); }
+var _wfFilter='all';
+function wfFilterSet(k){ _wfFilter=k; renderWf(); }
+function wfHistCount(k){
+  var all=wfHist();
+  return (k==='all')?all.length:all.filter(function(h){ return h.kind===k; }).length; }
+function wfHistHtml(){
+  var list=wfHist(); if(!list.length) return '';
+  var chips='<div class="optset wf-hist-f">'
+    +['all'].concat(Object.keys(WF_KINDS)).map(function(k){
+      var n=wfHistCount(k);
+      return '<button class="optchip'+(_wfFilter===k?' on':'')+(n?'':' none')+'"'
+        +' onclick="wfFilterSet(\''+k+'\')">'
+        +escapeHtml(k==='all'?t('wfAll'):t('wf_'+k))
+        +'<span class="n">'+n+'</span></button>'; }).join('')+'</div>';
+  var rows=list.map(function(h,i){ return {h:h,i:i}; })
+    .filter(function(x){ return _wfFilter==='all'||x.h.kind===_wfFilter; });
+  return '<div class="wf-hist"><div class="wf-hist-h">'+escapeHtml(t('wfRecent'))+'</div>'
+    +chips
+    +(rows.length?'':'<div class="wf-note">'+escapeHtml(t('wfHistEmpty'))+'</div>')
+    +rows.map(function(x){
+      var h=x.h, i=x.i;
+      return '<div class="wf-hist-row">'
+        +'<button class="wf-hist-go" onclick="wfHistApply('+i+')">'
+          +'<span class="k">'+escapeHtml(t('wf_'+h.kind))+'</span>'
+          +'<span class="d">'+escapeHtml(wfHistLine(h))+'</span></button>'
+        +'<button class="wf-hist-x" onclick="wfHistDel('+i+')" aria-label="'
+          +escapeAttr(t('delete'))+'">\u00d7</button></div>'; }).join('')+'</div>'; }
+function wfHistDel(i){
+  var list=wfHist(); if(i<0||i>=list.length) return;
+  list.splice(i,1); wfHistSet(list);
+  // Emptying the view by deleting is not the same as asking for an empty view.
+  if(_wfFilter!=='all'&&!wfHistCount(_wfFilter)) _wfFilter='all';
+  renderWf(); }
+// Everything goes back the way it came: the same context write, the same
+// profile load, the same recipe and aux pushes.
+function wfHistApply(i){
+  var h=wfHist()[i]; if(!h||!WF_KINDS[h.kind]) return;
+  _wf.kind=h.kind;
+  var ctx={};
+  if(h.bean&&h.bean.name){ ctx.coffeeName=h.bean.name;
+    ctx.coffeeRoaster=h.bean.roaster||null; ctx.beanBatchId=h.bean.batchId||null; }
+  if(h.grinder&&h.grinder.model){ ctx.grinderId=h.grinder.id||null;
+    ctx.grinderModel=h.grinder.model;
+    if(h.grinder.setting) ctx.grinderSetting=String(h.grinder.setting); }
+  if(Object.keys(ctx).length){
+    for(var k in ctx) context[k]=ctx[k];
+    api('PUT','/api/v1/workflow',{context:ctx}).catch(function(){});
+    updateBeanInfo(); updateGrindRow(); }
+  var p=(allProfiles||[]).filter(function(x){
+    return x.id===(h.profile&&h.profile.id)
+      ||(x.profile&&h.profile&&x.profile.title===h.profile.title); })[0];
+  if(p) selectProfile(p,false,false);
+  if(h.dose>0){ settings.doseIn=h.dose; }
+  if(h['yield']>0){ settings.doseOut=h['yield']; }
+  syncRecipe(); pushRecipe();
+  if(h.water&&h.water.vol>0) auxSet('waterVol',h.water.vol);
+  if(h.steam){
+    if(h.steam.temp>0) auxSet('steamTemp',h.steam.temp);
+    if(h.steam.dur>0) auxSet('steamDur',h.steam.dur);
+    if(h.steam.flow>0) auxSet('steamFlow',h.steam.flow);
+    if(h.steam.milk!=null) setMilk(h.steam.milk); }
+  _wf.i=wfSteps().length-1;      // straight to what it adds up to
+  renderWf();
+  toast(t('wfLoaded'),'ok'); }
+function wfKindHtml(){
+  return '<div class="wf-grid">'+Object.keys(WF_KINDS).map(function(k){
+    return wfCard(false,"wfPickKind('"+k+"')",t('wf_'+k),t('wf_'+k+'_d'),WF_KINDS[k].ico); }).join('')
+    +'</div>'+wfHistHtml(); }
+function wfBeanHtml(){
+  if(!(beans||[]).length) return '<div class="wf-note">'+escapeHtml(t('wfNoBeans'))+'</div>';
+  return '<div class="wf-grid">'+beans.map(function(b,i){
+    var on=(context.coffeeName===b.name&&String(context.coffeeRoaster||'')===String(b.roaster||''));
+    var bt=beanBatches[b.id], age=daysSinceRoast(bt);
+    var sub=[b.roaster||'',age!=null?t('daysOffRoast').replace('{n}',age):''].filter(Boolean).join(' \u00b7 ');
+    return wfCard(on,'wfSetBean('+i+')',b.name||'\u2014',sub); }).join('')+'</div>'; }
+function wfSetBean(i){
+  var b=(beans||[])[i]; if(!b) return;
+  var bt=beanBatches[b.id];
+  context.coffeeName=b.name; context.coffeeRoaster=b.roaster||'';
+  context.beanBatchId=(bt&&bt.id)||null;
+  api('PUT','/api/v1/workflow',{context:{coffeeName:b.name,coffeeRoaster:b.roaster||null,
+    beanBatchId:(bt&&bt.id)||null}}).catch(function(){});
+  updateBeanInfo(); renderWf(); }
+function wfProfiles(){
+  return (allProfiles||[]).filter(function(p){ return profileKind(p.profile)==='espresso'; }); }
+function wfProfHtml(){
+  var list=wfProfiles();
+  if(!list.length) return '<div class="wf-note">'+escapeHtml(t('noProfilesFound'))+'</div>';
+  return '<div class="wf-grid">'+list.map(function(p,i){
+    var st=splitTitle((p.profile&&p.profile.title)||'');
+    var on=!!(curProfileObj&&curProfileObj.id===p.id);
+    return wfCard(on,'wfSetProfile('+i+')',st.name||p.id,st.group||''); }).join('')+'</div>'; }
+function wfSetProfile(i){
+  var p=wfProfiles()[i]; if(!p) return;
+  selectProfile(p,false,false); renderWf(); }
+function wfGrindHtml(){
+  var gs=grinders||[];
+  var h=gs.length
+    ? ('<div class="wf-grid">'+gs.map(function(g,i){
+        var on=(context.grinderId===g.id)||(!context.grinderId&&context.grinderModel===g.model);
+        var sp=splitGrinderName(g);
+        return wfCard(on,'wfSetGrinder('+i+')',sp.model||g.model||'\u2014',
+          [sp.brand,g.burrs].filter(Boolean).join(' \u00b7 ')); }).join('')+'</div>')
+    : ('<div class="wf-note">'+escapeHtml(t('wfNoGrinders'))+'</div>');
+  var cur=(context.grinderSetting!=null&&context.grinderSetting!=='')?String(context.grinderSetting):'\u2014';
+  return h+'<div class="wf-rows">'
+    +wfStepper(t('grind'),'',cur,'adjustGrind(-1);renderWf()','adjustGrind(1);renderWf()',
+       'openGrindKeypad()')+'</div>'; }
+function wfSetGrinder(i){
+  var g=(grinders||[])[i]; if(!g) return;
+  context.grinderId=g.id||null; context.grinderModel=g.model;
+  var ctx={grinderId:g.id||null,grinderModel:g.model};
+  if(g.grinderSetting){ context.grinderSetting=String(g.grinderSetting); ctx.grinderSetting=String(g.grinderSetting); }
+  api('PUT','/api/v1/workflow',{context:ctx}).catch(function(){});
+  updateGrindRow(); renderWf(); }
+function wfRecipeHtml(){
+  return '<div class="wf-rows">'
+    +wfStepper(t('doseG'),'g',settings.doseIn.toFixed(1),
+       'adjust(\'doseIn\',-0.1);renderWf()','adjust(\'doseIn\',0.1);renderWf()','wfKp(\'doseIn\')',
+       wfScaleRow('Dose','doseFromScale();renderWf()'))
+    +wfStepper(t('ratio'),'','1:'+recipeRatioText(),
+       'adjustRatio(-0.1);renderWf()','adjustRatio(0.1);renderWf()','wfKp(\'ratio\')')
+    +wfStepper(t('yieldG'),'g',settings.doseOut.toFixed(1),
+       'adjust(\'doseOut\',-0.5);renderWf()','adjust(\'doseOut\',0.5);renderWf()','wfKp(\'doseOut\')')
+    +'</div><div class="wf-note">'+escapeHtml(t('wfRecipeNote'))+'</div>'; }
+// The keypad belongs to the card it came from, so it is opened the same way
+// and the page is redrawn once it has had its answer.
+function wfKp(field){
+  var c=KP_CFG[field]; if(!c) return;
+  var cur=(field==='ratio')?(recipeRatio()||2):settings[field];
+  openKeypadFor({ value:cur, dp:(field==='ratio'?2:1), min:c.min, max:c.max,
+    title:t(field==='ratio'?'kpRatio':field==='doseIn'?'kpDose':'kpYield'),
+    onOk:function(v){
+      if(field==='ratio'){ settings.doseOut=Math.max(10,Math.min(80,
+        parseFloat((settings.doseIn*v).toFixed(1)))); }
+      else if(field==='doseIn') setDoseIn(v);
+      else settings.doseOut=Math.max(10,Math.min(80,parseFloat(v.toFixed(1))));
+      syncRecipe(); pushRecipe(); renderWf(); } }); }
+function wfWaterHtml(){
+  return '<div class="wf-rows">'
+    +wfStepper(t('volume'),'ml',String(Math.round(settings.waterVol)),
+       'auxAdj(\'waterVol\',-10);renderWf()','auxAdj(\'waterVol\',10);renderWf()','wfAuxKp(\'waterVol\')')
+    +'</div><div class="wf-note">'+escapeHtml(t('wfWaterNote')
+       .replace('{t}',String(Math.round(settings.waterTemp)))
+       .replace('{f}',(+settings.waterFlow).toFixed(1)))+'</div>'; }
+function wfMilkHtml(){
+  return '<div class="wf-rows">'
+    +wfStepper(t('milkLbl'),'g',(milkG==null?'\u2014':String(milkG)),
+       'adjustMilk(-10);renderWf()','adjustMilk(10);renderWf()','openMilkKeypad()',
+       wfScaleRow('Milk','milkFromScale();renderWf()'))
+    +wfStepper(t('oTargetTemp'),'\u00b0',String(Math.round(settings.steamTemp)),
+       'auxAdj(\'steamTemp\',-1);renderWf()','auxAdj(\'steamTemp\',1);renderWf()','wfAuxKp(\'steamTemp\')')
+    +wfStepper(t('flow'),'ml/s',(+settings.steamFlow).toFixed(1),
+       'auxAdj(\'steamFlow\',-0.1);renderWf()','auxAdj(\'steamFlow\',0.1);renderWf()','wfAuxKp(\'steamFlow\')')
+    +wfStepper(t('oDuration'),'s',String(Math.round(settings.steamDur)),
+       'auxAdj(\'steamDur\',-5);renderWf()','auxAdj(\'steamDur\',5);renderWf()','wfAuxKp(\'steamDur\')')
+    +'</div>'; }
+function wfAuxKp(key){ auxKeypad(key); }
+function wfReadyHtml(){
+  var d=wfDef();
+  function line(k,v){ return '<div class="line"><span class="k">'+escapeHtml(k)+'</span>'
+    +'<span class="v">'+escapeHtml(v)+'</span></div>'; }
+  var pr=curProfileObj&&curProfileObj.profile;
+  var h='<div class="wf-ready">'
+    +line(t('wfBean'),context.coffeeName
+      ?[context.coffeeRoaster,context.coffeeName].filter(Boolean).join(' \u00b7 '):'\u2014')
+    +line(t('profile'),pr?(splitTitle(pr.title||'').name||'\u2014'):'\u2014')
+    +line(t('grind'),[context.grinderModel||'',
+      (context.grinderSetting!=null&&context.grinderSetting!=='')?('@'+context.grinderSetting):'']
+      .filter(Boolean).join(' ')||'\u2014')
+    +line(t('recipe'),settings.doseIn.toFixed(1)+'g \u2192 '+settings.doseOut.toFixed(1)
+      +'g \u00b7 1:'+recipeRatioText());
+  if(_wf.kind==='americano') h+=line(t('water'),Math.round(settings.waterVol)+'ml \u00b7 '
+    +Math.round(settings.waterTemp)+'\u00b0');
+  if(_wf.kind==='latte') h+=line(t('steam'),(milkG!=null?(milkG+'g \u00b7 '):'')
+    +Math.round(settings.steamTemp)+'\u00b0 \u00b7 '+Math.round(settings.steamDur)+'s \u00b7 '
+    +(+settings.steamFlow).toFixed(1)+' ml/s');
+  h+='</div>';
+  // The order the drink is made in, as a reminder of what to press. Nothing
+  // here starts anything.
+  var stages=['espresso'].concat(d.after);
+  h+='<div class="wf-stage">'+stages.map(function(st,i){
+    return (i?'<span class="arr">\u2192</span>':'')
+      +'<span class="st">'+escapeHtml(t('wfStage_'+st))+'</span>'; }).join('')+'</div>';
+  h+='<div class="wf-note" style="margin-top:10px">'+escapeHtml(t('wfStartWhere'))+'</div>';
+  return h; }
+var WF_BODY={kind:wfKindHtml,bean:wfBeanHtml,profile:wfProfHtml,grinder:wfGrindHtml,
+  recipe:wfRecipeHtml,water:wfWaterHtml,milk:wfMilkHtml,go:wfReadyHtml};
+function renderWf(){
+  if(!_wf) return;
+  var page=document.getElementById('wfPage'); if(!page||!page.classList.contains('show')) return;
+  var step=_wf.kind?wfStep():'kind';
+  document.getElementById('wfTitle').textContent=_wf.kind?t('wf_'+_wf.kind):t('wfPick');
+  var rail=document.getElementById('wfRail');
+  rail.innerHTML=_wf.kind?wfSteps().map(function(k,i){
+    var cls=(i<_wf.i)?' done':(i===_wf.i?' on':'');
+    return '<span class="wf-dot'+cls+'">'+escapeHtml(t('wfS_'+k))+'</span>'; }).join(''):'';
+  document.getElementById('wfBody').innerHTML=(WF_BODY[step]||wfKindHtml)();
+  wfSyncScale();
+  var back=document.getElementById('wfBack'), next=document.getElementById('wfNext');
+  back.textContent=t(_wf.kind?'wfBack':'cancel');
+  var last=_wf.kind&&_wf.i===wfSteps().length-1;
+  next.hidden=!_wf.kind;
+  if(last){ next.textContent=t('wfSaved'); next.onclick=wfFinish; }
+  else { next.textContent=t('wfNext'); next.onclick=function(){ wfGo(1); }; }
+  document.getElementById('wfSum').textContent=_wf.kind?wfSummaryLine():''; }
+function wfSummaryLine(){
+  return [context.coffeeName||'', (curProfileObj&&curProfileObj.profile)
+      ?splitTitle(curProfileObj.profile.title||'').name:'',
+    settings.doseIn.toFixed(1)+'\u2192'+settings.doseOut.toFixed(1)+'g'].filter(Boolean).join(' \u00b7 '); }
 function openMonitor(auto){
   if(_monOpen) return;
   _monOpen=true;
