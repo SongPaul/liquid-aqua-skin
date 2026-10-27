@@ -1,0 +1,137 @@
+// The recipe card's shape: two groups behind a rule, a caption sitting on
+// the number it names between the two buttons, and rows that line up across
+// the groups.
+
+test('every number block is one control row tall', function (T) {
+  T.all('.rg-cols .dose-block').forEach(function (b, i) {
+    if (b.offsetParent === null) return;
+    T.near(T.h(b), 42, 2, 'block ' + i + ' height');
+  });
+});
+
+test('the caption sits inside the button row, on the number', function (T) {
+  var stack = T.el('#doseIn').closest('.dose-stack');
+  T.ok(!!stack, 'number is inside a .dose-stack');
+  T.ok(stack.parentElement.classList.contains('dose-adj'),
+    'the stack is between the buttons');
+  var lbl = stack.querySelector('.dose-lbl');
+  T.ok(!!lbl, 'the caption is in the stack');
+  T.near(T.box(lbl).bottom, T.box(T.el('#doseIn')).top, 3,
+    'caption bottom meets number top');
+  var btn = stack.parentElement.querySelector('.ms-btn');
+  T.ok(T.box(btn).left < T.box(stack).left, 'minus is left of the stack');
+});
+
+test('the three columns are the same height', function (T) {
+  var secs = T.all('.rg-sec');
+  T.eq(secs.length, 2, 'section count');
+  var temp = T.el('.temp-col');
+  T.near(T.h(secs[0]), T.h(secs[1]), 1, 'scale vs grinder section');
+  T.near(T.h(secs[0]), T.h(temp), 1, 'scale section vs thermometer');
+});
+
+test('a rule separates the groups, as it does the thermometer', function (T) {
+  var second = T.all('.rg-sec')[1];
+  T.ok(parseFloat(T.css(second, 'borderLeftWidth')) > 0,
+    'grinder group has a left rule');
+  T.ok(parseFloat(T.css(T.el('.temp-col'), 'borderLeftWidth')) > 0,
+    'thermometer keeps its rule');
+});
+
+// The RPM row only stands while a linked grinder that takes an RPM is in
+// use, so the case puts one in place rather than hoping the gateway has one.
+function linkedRpmGrinder() {
+  state.devices = (state.devices || []).filter(function (d) { return d.type !== 'grinder'; });
+  state.devices.push({ id: 'plugin:test.card:grinder:one', name: 'Card Grinder', type: 'grinder',
+    state: 'connected', available: true });
+  grinders = [{ id: 'rec:card', model: 'Card Grinder', archived: false,
+    settingType: 'numeric', extras: { plugin: 'test.card:grinder' } }];
+  context.grinderId = 'rec:card';
+  grinderInfo = { deviceId: 'plugin:test.card:grinder:one', capabilities: ['grindSetting', 'rpmControl'],
+    controls: { grindSetting: { kind: 'numeric', min: 1, max: 80, step: 1 },
+                rpmControl: { kind: 'numeric', min: 60, max: 120, step: 10 } } };
+  grinderSnap = { state: 'idle', setting: '45', rpm: 90 };
+  syncGrinder();
+}
+
+test('the columns start on the same line', function (T) {
+  linkedRpmGrinder();
+  T.eq(T.el('#rpmRow').hidden, false, 'the RPM row is standing');
+  var scaleName = T.el('#devDose');
+  var grindName = T.el('#grindModelBtn');
+  T.near(T.top(scaleName), T.top(grindName), 1, 'device name rows');
+  T.near(T.top(T.el('#doseIn').closest('.dose-block')),
+    T.top(T.el('#grindRow')), 1, 'first number rows');
+  T.near(T.top(T.el('#ratioTag').closest('.dose-block')),
+    T.top(T.el('#rpmRow')), 1, 'second number rows');
+});
+
+test('an absent device still owes its line', function (T) {
+  devName('devDose', '');
+  var slot = T.el('#devDose');
+  T.eq(T.css(slot, 'display') === 'none', false,
+    'the empty name slot keeps its box');
+  T.eq(T.css(slot, 'visibility'), 'hidden', 'but says nothing');
+  T.near(T.h(slot), 14, 1, 'empty slot height');
+  T.near(T.top(slot), T.top(T.el('#grindModelBtn')), 1,
+    'still level with the grinder name');
+});
+
+test('a device name is shown whole, not clipped to a letter', function (T) {
+  var name = 'Acaia Lunar 2021 Black';
+  devName('devDose', name, '⚖︎');
+  devName('devYield', name, '⏱︎');
+  var dose = T.el('#devDose');
+  T.ok(dose.textContent.indexOf(name) >= 0, 'the whole name is in the slot');
+  T.ok(!T.clipped(dose), 'dosing scale name is not clipped');
+  T.ok(!T.clipped(T.el('#devYield')), 'brewing scale name is not clipped');
+});
+
+test('the grinder names itself across its own group', function (T) {
+  var btn = T.el('#grindModelBtn');
+  T.eq(T.css(btn, 'maxWidth'), 'none', 'the header is not capped');
+  // The group's own numbers are the width to match; the section's rect also
+  // carries the rule and the gutter beside it.
+  T.near(T.box(btn).width, T.box(T.el('#grindRow')).width, 2,
+    'name spans the numbers under it');
+});
+
+// 48px of number column fitted four narrow characters, which is less than
+// several ordinary values: a yield over 100g, a grinder that counts in
+// microns, a speed in the thousands.
+test('the longest ordinary value still fits', function (T) {
+  state.devices = (state.devices || []).filter(function (d) { return d.type !== 'grinder'; });
+  state.devices.push({ id: 'plugin:test.fit:grinder:one', name: 'Wide', type: 'grinder',
+    state: 'connected', available: true });
+  grinders = [{ id: 'rec:fit', model: 'Wide', archived: false,
+    settingType: 'numeric', extras: { plugin: 'test.fit:grinder' } }];
+  context.grinderId = 'rec:fit';
+  grinderInfo = { deviceId: 'plugin:test.fit:grinder:one', capabilities: ['grindSetting', 'rpmControl'],
+    controls: { grindSetting: { kind: 'numeric', min: 0, max: 999, step: 1 },
+                rpmControl: { kind: 'numeric', min: 500, max: 1500, step: 10 } } };
+  grinderSnap = { state: 'idle', setting: '999', rpm: 1500 };
+  syncGrinder();
+  T.el('#doseOutVal').textContent = '123.4';
+  T.el('#doseInVal').textContent = '18.0';
+  // A dash never clips; the case is only worth anything with the long values
+  // actually on the card.
+  T.eq(T.el('#grindVal').textContent, '999', 'the grinder’s 999 is on the card');
+  T.eq(T.el('#rpmVal').textContent, '1500', 'and its 1500');
+  [['#grindVal', '999'], ['#rpmVal', '1500'],
+   ['#doseIn', '18.0'], ['#doseOut', '123.4']].forEach(function (pair) {
+    var e = T.el(pair[0]);
+    T.ok(!T.clipped(e), pair[1] + ' fits in ' + pair[0]
+      + ' (wants ' + e.scrollWidth + ', has ' + e.clientWidth + ')');
+  });
+});
+
+test('the buttons keep the height a finger asks for', function (T) {
+  var b = T.el('.rg-cols .ms-btn');
+  T.near(T.h(b), 36, 1, 'minus/plus height');
+});
+
+test('the card stays short', function (T) {
+  devName('devDose', 'Acaia Lunar', '⚖︎');
+  devName('devYield', 'Acaia Lunar', '⏱︎');
+  T.atMost(T.h(T.el('.recipe')), 210, 'recipe card height with both scales');
+});
