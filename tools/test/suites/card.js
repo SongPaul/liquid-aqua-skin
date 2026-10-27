@@ -72,7 +72,7 @@ test('an absent device still owes its line', function (T) {
   T.eq(T.css(slot, 'display') === 'none', false,
     'the empty name slot keeps its box');
   T.eq(T.css(slot, 'visibility'), 'hidden', 'but says nothing');
-  T.near(T.h(slot), 14, 1, 'empty slot height');
+  T.near(T.h(slot), 12, 1, 'empty slot height');
   T.near(T.top(slot), T.top(T.el('#grindModelBtn')), 1,
     'still level with the grinder name');
 });
@@ -125,6 +125,48 @@ test('the longest ordinary value still fits', function (T) {
   });
 });
 
+// The three lines with a dosing scale reading, so the case is about real
+// text and not a dash.
+function withDosingReading(w) {
+  state.devices = (state.devices || []).filter(function (d) { return d.id !== 'CardBench'; });
+  state.devices.push({ id: 'CardBench', name: 'Bench', type: 'scale', state: 'connected',
+    available: true, connectionRole: 'auxiliary' });
+  prefs.dosingScaleId = 'CardBench';
+  state.dosingConnected = true; state.dosingWeight = w;
+  syncDoseTake();
+}
+function withoutDosing() {
+  state.devices = (state.devices || []).filter(function (d) { return d.id !== 'CardBench'; });
+  prefs.dosingScaleId = '';
+  state.dosingConnected = false; state.dosingWeight = null;
+  syncDoseTake();
+}
+
+test('the dose reads small caption, larger target, small reading', function (T) {
+  withDosingReading(117.84);
+  var stack = T.el('#doseIn').closest('.dose-stack');
+  var cap = parseFloat(T.css(stack.querySelector('.dose-lbl'), 'fontSize'));
+  var target = parseFloat(T.css(T.el('#doseIn'), 'fontSize'));
+  var now = parseFloat(T.css(T.el('#doseNow'), 'fontSize'));
+  var yieldNum = parseFloat(T.css(T.el('#doseOut'), 'fontSize'));
+  T.ok(target >= now * 2, 'the target is at least twice the reading');
+  T.ok(target > cap, 'and larger than its caption');
+  T.ok(target < yieldNum, 'yet smaller than a single-number block');
+  T.ok(T.box(T.el('#doseNow')).top >= T.box(T.el('#doseInVal')).bottom - 1, 'the reading sits under the target');
+  T.ok(!T.clipped(T.el('#doseIn')), 'nothing is cut off');
+  T.eq(T.el('#doseNow').textContent, '117.8g', 'a long reading, plain text');
+  T.near(T.h(stack.closest('.dose-block')), 42, 2, 'three lines in one control row');
+  T.near(T.h(stack.closest('.rg-sec')), T.h(T.all('.rg-sec')[1]), 1, 'and the columns stay level');
+  withoutDosing();
+});
+
+test('without a dosing scale the dose is two lines like its neighbours', function (T) {
+  withoutDosing();
+  var dose = T.el('#doseIn'), yieldNum = T.el('#doseOut');
+  T.eq(T.css(dose, 'fontSize'), T.css(yieldNum, 'fontSize'), 'the same size as the yield');
+  T.eq(T.oh(T.el('#doseNow')), 0, 'no reading line');
+});
+
 test('the buttons keep the height a finger asks for', function (T) {
   var b = T.el('.rg-cols .ms-btn');
   T.near(T.h(b), 36, 1, 'minus/plus height');
@@ -133,5 +175,7 @@ test('the buttons keep the height a finger asks for', function (T) {
 test('the card stays short', function (T) {
   devName('devDose', 'Acaia Lunar', '⚖︎');
   devName('devYield', 'Acaia Lunar', '⏱︎');
-  T.atMost(T.h(T.el('.recipe')), 210, 'recipe card height with both scales');
+  withDosingReading(18.2);
+  T.atMost(T.h(T.el('.recipe')), 182, 'recipe card height with both scales and a dosing reading');
+  withoutDosing();
 });

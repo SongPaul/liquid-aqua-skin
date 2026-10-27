@@ -298,7 +298,7 @@ header>*{position:relative;z-index:1}
 .live>.gauges{grid-area:recipe}
 .live-main{min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .live>.gauges{min-width:0;min-height:100px;padding:0 0 0 18px;border-left:1px solid var(--edge);align-self:stretch;margin-top:0}
-.right .recipe{padding:10px 14px;flex:none}
+.right .recipe{padding:8px 14px;flex:none}
 .live-top{align-self:stretch;display:flex;flex-direction:column;align-items:stretch;gap:0;margin-bottom:0}
 .lt-ico{font-size:17px;line-height:1;opacity:.7;flex-shrink:0}
 .lt-val{display:flex;align-items:baseline;gap:7px;flex:0 0 auto}
@@ -558,13 +558,13 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 /* What is weighed and what is ground are two things, and the card says so
    the way it already says it for temperature: with a rule. */
 .rg-cols{display:flex;align-items:stretch;min-width:0;flex:1}
-.rg-sec{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-start;gap:11px}
+.rg-sec{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-start;gap:5px}
 .rg-sec+.rg-sec{margin-left:14px;padding-left:14px;border-left:1px solid rgba(99,102,241,.13)}
 .rg-grp{display:flex;flex-direction:column;min-width:0}
 /* The device that feeds the numbers under it, named across the whole width
    rather than wedged into the caption. Takes no room when nothing is there. */
 .rg-dev{display:block;width:100%;text-align:center;font-size:10px;font-weight:700;
-  line-height:14px;min-height:14px;margin-bottom:1px;color:var(--ink-mute);opacity:.75;
+  line-height:12px;min-height:12px;margin-bottom:0;color:var(--ink-mute);opacity:.75;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   border:0;background:none;padding:0;font-family:var(--font)}
 .rg-dev.rg-off{visibility:hidden}
@@ -798,6 +798,14 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .recipe .dose-stack .dose-num.tap,.recipe .dose-stack .rv.tap,
 .recipe .dose-stack .grind-val{min-height:28px;padding:1px 6px;line-height:1}
 .rc-mode .dose-stack .dose-num.tap,.rc-mode .dose-stack .rv.tap{min-height:26px;padding:1px 4px}
+.dose-now{display:none}
+.dose-three .dose-lbl{font-size:9px;min-height:10px;line-height:10px}
+.dose-three .dose-cap{margin:0}
+.recipe .dose-three #doseIn.dose-num.tap{min-height:32px;padding:0 6px;font-size:22px;line-height:21px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.dose-three .dose-now{display:block;font-size:10px;font-weight:700;line-height:11px;letter-spacing:0;
+  color:var(--ink-mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dose-three .dose-now.on{color:var(--green)}
 .rc-mode .dose-num,.rc-mode .rv{line-height:1}
 .bean-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;flex:none}
 .bean-chips::-webkit-scrollbar{display:none}
@@ -2695,9 +2703,9 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
             <div class="rg-grp"><button class="rg-dev dev-tare rg-off" id="devDose" onclick="tareDosingScale()"></button>
           <div class="dose-block">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
-              <div class="dose-stack">
+              <div class="dose-stack" id="doseStack">
                 <div class="dose-lbl dose-cap"><span data-i18n="doseG">Dose</span><span class="lu" id="doseInUnit">g</span></div>
-                <div class="dose-num tap" id="doseIn"><span id="doseInVal">18.0</span></div>
+                <div class="dose-num tap" id="doseIn"><span id="doseInVal">18.0</span><span class="dose-now" id="doseNow"></span></div>
               </div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
           </div>
@@ -5829,8 +5837,14 @@ function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/m
 // A tap on the dose takes the scale when there is one reading to take, and
 // opens the keypad when there is not, so a dose can always be typed.
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
+function syncDoseNow(){
+  var el=document.getElementById('doseNow'), st=document.getElementById('doseStack'); if(!el||!st) return;
+  var on=!!dosingDevice(), live=dosingHasReading();
+  st.classList.toggle('dose-three',on);
+  el.classList.toggle('on',on&&live);
+  el.textContent=!on?'':live?(convWeight(state.dosingWeight).toFixed(1)+weightUnitLabel()):'\u2014'; }
 function syncDoseTake(){
-  wfSyncScale();
+  wfSyncScale(); syncDoseNow();
   var live=doseSourceWeight()!==null, tarable=dosingHasReading();
   var d=document.getElementById('devDose');
   if(d) d.disabled=!tarable;
@@ -5838,7 +5852,7 @@ function syncDoseTake(){
   if(el) el.title=live?t('doseTakeHint'):t('doseHoldHint'); }
 // A tap takes the reading, a hold types it. The scale is the usual source and
 // the keyboard is the exception, so the shorter gesture belongs to the scale.
-function doseHold(){ if(scaleHasReading()) doseFromScale(); else openKeypad('doseIn'); }
+function doseHold(){ if(doseSourceWeight()!==null) doseFromScale(); else openKeypad('doseIn'); }
 // Anything that can be pressed. A ripple on something that does nothing when
 // touched would be a lie about what just happened.
 var RIPPLE_SEL='button,.album,.tap,.kp-key,.m-btn,.ms-btn,'
@@ -5918,7 +5932,9 @@ function dosingFrame(m){
   if(m.status){ state.dosingConnected=(m.status==='connected');
     if(!state.dosingConnected) state.dosingWeight=null;
     syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); syncConnDosing(); return; }
-  if(m.weight!==undefined){ state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); syncConnDosing(); } }
+  if(m.weight!==undefined){ var fresh=state.dosingWeight===null;
+    state.dosingWeight=m.weight; syncDoseTake(); syncRecipe(); renderDosingRow(); renderMilkRow(); syncConnDosing();
+    if(fresh) syncDevNames(); } }
 // Opening the socket is what makes the reading appear, so it is opened only
 // once the gateway is actually holding the scale -- otherwise the socket would
 // be answered with "disconnected" and retried every two seconds for nothing.
