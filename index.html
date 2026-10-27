@@ -254,6 +254,7 @@ header>*{position:relative;z-index:1}
 .cglyph{font-size:15px;line-height:15px;color:var(--ink-mute);opacity:.5;transition:color .2s,opacity .2s}
 .cglyph.up{color:var(--green);opacity:1}
 .cglyph.ing{color:var(--amber);opacity:1;animation:blink .8s infinite}
+.cglyph.held{color:var(--amber);opacity:.9}
 .cglyph.gone{visibility:hidden}
 .conn-toggle:active{transform:scale(.96)}
 .conn-toggle.ing{border-color:var(--amber)}
@@ -2275,6 +2276,7 @@ body.night .ep-grid .gname{color:var(--ink)}
 .cn-line.up .cn-name{color:var(--green)}
 .cn-sub{font-size:10px;font-weight:600;color:var(--ink-mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cn-acts{display:flex;gap:6px;flex:none}
+.cn-rec{font-size:11px;font-weight:700;color:var(--ink-soft);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cn-btn{min-height:30px;padding:5px 10px;font-size:11px;border-radius:9px}
 .cn-none{font-size:11px;font-weight:600;color:var(--ink-mute);opacity:.65;padding:6px 0}
 /* Only what can grow scrolls; the held device stays put above the rule. */
@@ -3783,6 +3785,7 @@ var I18N={
     connStSeen:'found', connStAway:'remembered, out of range',
     connViaPlugin:'plugin', connOwned:'Held by the machine',
     connJoin:'Connect', connDrop:'Disconnect', connForget:'Forget',
+    cnRecord:'list: {g}', cnUse:'Use', cnNotUsed:'not in use, {g} is', cnNoGrinder:'no grinder',
     connJoined:'Connected', connDropped:'Disconnected', connForgot:'Forgotten',
     scalePickTitle:'Scales', scalePickDesc:'Which scale weighs the shot, and which one the dose.',
     scaleFree:'not in use', scaleUseBrew:'Brewing', scaleUseDosing:'Dosing',
@@ -4246,6 +4249,7 @@ var I18N={
     connStSeen:'찾음', connStAway:'기억됨, 범위 밖',
     connViaPlugin:'플러그인', connOwned:'머신이 가진 기기',
     connJoin:'연결', connDrop:'해제', connForget:'잊기',
+    cnRecord:'목록: {g}', cnUse:'사용', cnNotUsed:'사용 안 함 · 지금 {g} 사용 중', cnNoGrinder:'그라인더 없음',
     connJoined:'연결되었습니다', connDropped:'해제했습니다', connForgot:'잊었습니다',
     scalePickTitle:'저울', scalePickDesc:'어느 저울로 샷을 재고, 어느 저울로 도징을 재는지 고르세요.',
     scaleFree:'사용 안 함', scaleUseBrew:'추출용', scaleUseDosing:'도징용',
@@ -5322,11 +5326,20 @@ function grinderDevice(){
   return (state.devices||[]).filter(function(d){ return d.type==='grinder'; })
     .sort(function(a,b){ return (b.state==='connected')-(a.state==='connected'); })[0]||null; }
 var _grinderWas=null;
+function grinderUse(){
+  var d=grinderDevice();
+  if(!d||d.state!=='connected') return 'off';
+  return grinderLinked()?'linked':'held'; }
+function syncGrinderGlyph(){
+  var d=grinderDevice(), use=grinderUse();
+  var title=t('grinder')+((d&&d.name)?(' \u2014 '+d.name):'');
+  if(use==='linked') title+=' \u00b7 '+t('grInUse');
+  if(use==='held') title+=' \u00b7 '+t('cnNotUsed').replace('{g}',context.grinderModel||t('cnNoGrinder'));
+  cglyph('cgGrinder',use==='linked'?'up':use==='held'?'held':'',title); }
 function syncConnGrinder(){
   var d=grinderDevice();
   var now=(d&&d.state==='connected')?(d.id||'1'):null;
-  cglyph('cgGrinder',now?'up':'',
-    t('grinder')+((d&&d.name)?(' \u2014 '+d.name):''));
+  syncGrinderGlyph();
   if(now!==_grinderWas){
     _grinderWas=now;
     if(now) Promise.all([loadGrinderInfo(),loadGrinderState()]).then(ensurePluginGrinders);
@@ -6407,8 +6420,14 @@ function connElsewhere(kind,d){
     if(b&&b.id===d.id) return t('scaleBrew');
     if(d.id===brewScaleId()) return t('scaleBrew'); }
   return ''; }
+function connGrinderRecord(d){ return pluginRecordFor(pluginKeyOfDevice(d&&d.id)); }
+function connGrinderNote(d){
+  var rec=connGrinderRecord(d); if(!rec) return '';
+  return t('cnRecord').replace('{g}',rec.model||'')
+    +(rec.id===context.grinderId?' \u00b7 '+t('grInUse'):''); }
 function connJoinCall(kind,id){
   var q="'"+escapeArg(id)+"'";
+  if(kind==='grinder') return 'connJoinGrinder('+q+')';
   if(kind==='scaleBrew') return "connPick('brew',"+q+")";
   if(kind==='dosingScale') return "connPick('dosing',"+q+")";
   return 'connSet(\''+escapeArg(kind==='machine'?'machine':'grinder')+'\','+q+',true)'; }
@@ -6417,16 +6436,22 @@ function connDropCall(kind,id){
   if(kind==='scaleBrew') return "connPick('brew','')";
   if(kind==='dosingScale') return "connPick('dosing','')";
   return 'connSet(\''+escapeArg(kind==='machine'?'machine':'grinder')+'\','+q+',false)'; }
-function connLine(d,sub,actions,on){
+function connLine(d,sub,actions,on,rec){
   return '<div class="cn-line'+(on?' up':'')+'">'
     +'<div class="cn-line-t"><div class="cn-name">'+escapeHtml(d.name||d.id)+'</div>'
-    +'<div class="cn-sub">'+escapeHtml(sub)+'</div></div>'
+    +'<div class="cn-sub">'+escapeHtml(sub)+'</div>'
+    +(rec?'<div class="cn-rec">'+escapeHtml(rec)+'</div>':'')+'</div>'
     +'<div class="cn-acts">'+actions+'</div></div>'; }
 function connNowBlock(kind){
   var d=connCellNow(kind), busy=connLocked();
   if(!d) return '<div class="cn-none">'+escapeHtml(t('connNoneHeld'))+'</div>';
-  return connLine(d,[connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),
-    connBtn(t('connDrop'),connDropCall(kind,d.id),busy),true); }
+  var acts=connBtn(t('connDrop'),connDropCall(kind,d.id),busy), note='';
+  if(kind==='grinder'){
+    var rec=connGrinderRecord(d);
+    note=connGrinderNote(d);
+    if(rec&&rec.id!==context.grinderId)
+      acts=connBtn(t('cnUse'),"connUseGrinder('"+escapeArg(rec.id)+"')",busy)+acts; }
+  return connLine(d,[connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),acts,true,note); }
 function connPoolBlock(kind){
   var busy=connLocked(), pool=connCellPool(kind);
   if(!pool.length) return '<div class="cn-list"><div class="cn-none">'
@@ -6435,8 +6460,8 @@ function connPoolBlock(kind){
     var a=connBtn(t('connJoin'),connJoinCall(kind,d.id),busy||d.available===false);
     if(d.state!=='connected'&&d.available===false)
       a+=connBtn(t('connForget'),"connForget('"+escapeArg(d.id)+"')",busy);
-    return connLine(d,[connElsewhere(kind,d),connState(d),connVia(d)]
-      .filter(Boolean).join(' \u00b7 '),a,false); }).join('')+'</div>'; }
+    return connLine(d,[connElsewhere(kind,d),connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),
+      a,false,kind==='grinder'?connGrinderNote(d):''); }).join('')+'</div>'; }
 function connCell(c){
   return '<div class="cn-cell"><div class="cn-sec-h"><span class="cn-sec-g">'+c.glyph+'</span>'
     +escapeHtml(t(c.key))+'</div>'
@@ -6504,9 +6529,28 @@ function connSet(type,id,on){
       p=p.then(function(){ var o={}; o[pref]=null;
         return api('POST','/api/v1/settings',o).catch(function(){}); }); }
     p=p.then(function(){ return api('PUT','/api/v1/devices/disconnect',{deviceId:id},20000); }); }
-  p.then(function(){ toast(t(on?'connJoined':'connDropped'),'ok'); },
+  return p.then(function(){ toast(t(on?'connJoined':'connDropped'),'ok'); },
          function(e){ toast(apiErrorText(e),'err'); })
    .then(function(){ _connBusy=''; return refreshConnDevices(); }); }
+// The gateway holds one grinder at a time, so connecting one is choosing it:
+// its record goes in use, and the one it replaces is let go by the gateway.
+function connJoinGrinder(id){
+  if(connLocked()) return Promise.resolve();
+  return Promise.resolve(connSet('grinder',id,true)).then(function(){
+    var d=deviceById(id);
+    if(!d||d.state!=='connected') return;
+    return Promise.resolve(ensurePluginGrinders()).then(function(){
+      var rec=pluginRecordFor(pluginKeyOfDevice(id));
+      if(rec&&rec.id!==context.grinderId) return connUseGrinder(rec.id); }); }); }
+function connUseGrinder(id){
+  if(state.shotRunning) return Promise.resolve();
+  var rec=grinders.filter(function(g){ return g.id===id; })[0];
+  if(!rec) return Promise.resolve();
+  return api('PUT','/api/v1/workflow',{context:{grinderId:rec.id,grinderModel:rec.model}})
+    .then(function(){
+      context.grinderId=rec.id; context.grinderModel=rec.model;
+      toast(t('tGrinderSet'),'ok'); syncGrinder(); renderConnModal(); },
+      function(e){ toast(apiErrorText(e),'err'); }); }
 function connForget(id){
   if(connLocked()) return;
   _connBusy=id; renderConnModal();
@@ -16676,7 +16720,7 @@ function gSurfaces(){
 function loadGrinderState(){
   return api('GET','/api/v1/grinder/state').then(function(x){ grinderSnap=x||null; syncGrinder(); })
     .catch(function(){ grinderSnap=null; syncGrinder(); }); }
-function updateGrindRow(){ var row=document.getElementById('grindRow'); if(!row) return;
+function updateGrindRow(){ syncGrinderGlyph(); var row=document.getElementById('grindRow'); if(!row) return;
   row.style.display='';
   var live=grinderLive(), dev=grinderDevice();
   document.getElementById('grindModel').textContent=
