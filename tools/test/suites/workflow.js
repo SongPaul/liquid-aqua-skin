@@ -99,3 +99,55 @@ test('changing language renames the drink', function (T) {
   savePrefs();
   syncWorkflowBtn();
 });
+
+// Reading the workflow again keeps the profile covers when nothing changed.
+function workflowRead(profile) {
+  var real = api;
+  api = function (m, p) {
+    if (m === 'GET' && p === '/api/v1/workflow') return Promise.resolve({ profile: profile, context: context });
+    return Promise.resolve({});
+  };
+  loadFree('workflow');
+  loadWorkflow();
+  return new Promise(function (r) { setTimeout(r, 0); }).then(function () { api = real; },
+    function (e) { api = real; throw e; });
+}
+function stageCovers() { return Array.prototype.slice.call(T.el('#carouselStage').children); }
+
+test('the same profile read back keeps the covers as they are', function (T) {
+  if (!carItems.length || !curProfileObj || carItems.indexOf(curProfileObj) < 0) {
+    T.ok(true, 'no profiles on this gateway to test with'); return; }
+  var before = stageCovers();
+  return workflowRead(JSON.parse(JSON.stringify(curProfileObj.profile))).then(function () {
+    var after = stageCovers();
+    T.eq(after.length, before.length, 'as many covers');
+    T.ok(after.every(function (e, i) { return e === before[i]; }), 'the very same covers, not new ones');
+  });
+});
+
+test('a browsed strip is not snapped back by a re-read', function (T) {
+  if (carItems.length < 2 || !curProfileObj || carItems.indexOf(curProfileObj) < 0) {
+    T.ok(true, 'not enough profiles to browse'); return; }
+  var loaded = carItems.indexOf(curProfileObj);
+  carIndex = loaded === 0 ? 1 : 0;
+  renderCarousel();
+  var browsed = carIndex;
+  return workflowRead(JSON.parse(JSON.stringify(curProfileObj.profile))).then(function () {
+    T.eq(carIndex, browsed, 'still where it was browsed to');
+    carIndex = loaded; renderCarousel();
+  });
+});
+
+test('a different profile read back does rebuild, onto that profile', function (T) {
+  if (carItems.length < 2 || !curProfileObj || carItems.indexOf(curProfileObj) < 0) {
+    T.ok(true, 'not enough profiles to switch'); return; }
+  var was = curProfileObj;
+  var other = carItems.filter(function (p) { return p !== was && p.profile && p.profile.title; })[0];
+  var before = stageCovers();
+  return workflowRead(JSON.parse(JSON.stringify(other.profile))).then(function () {
+    T.eq(curProfileObj, other, 'the other profile is loaded');
+    T.ok(stageCovers()[0] !== before[0], 'the covers were made again');
+    T.eq(carItems[carIndex], other, 'and the strip is on it');
+    return workflowRead(JSON.parse(JSON.stringify(was.profile)));
+  });
+});

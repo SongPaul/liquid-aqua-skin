@@ -111,7 +111,7 @@ test('milk with no scale says so instead of offering a reading', function (T) {
     state.dosingWeight = null;
     renderMilkRow();
     T.eq(T.el('#devMilk').disabled, true, 'nothing to zero');
-    T.eq(T.css(T.el('#devMilk'), 'visibility'), 'hidden', 'and nothing to name');
+    T.ok(T.el('#devMilk').classList.contains('rg-idle'), 'and only its role to name, dimmed');
   });
 });
 

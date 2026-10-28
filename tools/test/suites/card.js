@@ -66,12 +66,14 @@ test('the columns start on the same line', function (T) {
     T.top(T.el('#rpmRow')), 1, 'second number rows');
 });
 
-test('an absent device still owes its line', function (T) {
-  devName('devDose', '');
+test('an absent device still owes its line, and names its role there', function (T) {
+  devName('devDose', '', '\u2696\ufe0e', t('dosingScale'));
   var slot = T.el('#devDose');
   T.eq(T.css(slot, 'display') === 'none', false,
     'the empty name slot keeps its box');
-  T.eq(T.css(slot, 'visibility'), 'hidden', 'but says nothing');
+  T.eq(T.css(slot, 'visibility'), 'visible', 'it is not a blank line');
+  T.ok(slot.textContent.indexOf(t('dosingScale')) >= 0, 'it names the role');
+  T.ok(parseFloat(T.css(slot, 'opacity')) < 0.5, 'dimmed, so it does not read as a device');
   T.near(T.h(slot), 12, 1, 'empty slot height');
   T.near(T.top(slot), T.top(T.el('#grindModelBtn')), 1,
     'still level with the grinder name');
@@ -242,4 +244,16 @@ test('no shots, no header count', function (T) {
     T.eq(T.el('#lsToday').textContent, '', 'empty');
     T.ok(!!T.el('#lsStats .ls-empty'), 'and the empty message');
   });
+});
+
+test('every column of the card starts at the same height', function (T) {
+  state.scaleConnected = false; state.dosingConnected = false;
+  prefs.dosingScaleId = '';
+  syncDevNames();
+  var tops = [T.el('#devDose'), T.el('#grindModelBtn'), T.el('.temp-col')].map(function (e) {
+    return Math.round(T.box(e).top); });
+  T.near(tops[0], tops[1], 1, 'scale and grinder columns');
+  T.near(tops[0], tops[2], 2, 'scale column and thermometer');
+  T.eq(T.css(T.el('#devDose'), 'visibility'), 'visible', 'the scale column does not open on a blank line');
+  T.eq(T.css(T.el('#devYield'), 'visibility'), 'visible', 'nor does the yield');
 });

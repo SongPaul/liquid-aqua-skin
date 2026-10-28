@@ -568,6 +568,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   border:0;background:none;padding:0;font-family:var(--font)}
 .rg-dev.rg-off{visibility:hidden}
+.rg-dev.rg-idle{opacity:.35;text-decoration:none!important;cursor:default}
 .rg-dev.gr-name{display:flex;width:100%;flex:none;max-width:none;justify-content:center}
 .rg-dev.dev-tare:not([disabled]){cursor:pointer;text-decoration:underline;
   text-decoration-style:dotted;text-underline-offset:2px}
@@ -4845,9 +4846,7 @@ function initWebSockets(){
     applyChargingState(m.charging);
     syncDosing();
     updateShotBtn(); });
-  openWs('grinder','/ws/v1/grinder/snapshot',function(m){
-    if(!m||typeof m!=='object') return;
-    grinderSnap=m; syncGrinder(); });
+  openWs('grinder','/ws/v1/grinder/snapshot',grinderFrame);
   openWs('display','/ws/v1/display',function(d){ if(d&&d.brightness!==undefined) displayState=d; });
   openWs('update','/ws/v1/update',function(m){
     if(m&&m.error){
@@ -5486,15 +5485,17 @@ function keepDeviceMemory(id,info){
 // The glyphs say whether, the card says which. A number that comes off a
 // device is worth naming the device beside -- the dose and the yield are
 // weighed, the grind is set on the grinder, and nothing else here is.
-function devName(el,name,glyph){
+function devName(el,name,glyph,idle){
   var e=document.getElementById(el); if(!e) return;
-  e.textContent=name?((glyph?(glyph+' '):'')+name):'';
+  var shown=name||idle||'';
+  e.textContent=shown?((glyph?(glyph+' '):'')+shown):'';
   e.title=name||'';
-  e.classList.toggle('rg-off',!name); }
+  e.classList.toggle('rg-idle',!name&&!!idle);
+  e.classList.toggle('rg-off',!shown); }
 function syncDevNames(){
   var dz=dosingDevice();
-  devName('devDose',(dz&&state.dosingConnected&&dz.name)?dz.name:'','⚖︎');
-  devName('devYield',(state.scaleConnected&&state.scaleName)?state.scaleName:'','⏱︎'); }
+  devName('devDose',(dz&&state.dosingConnected&&dz.name)?dz.name:'','⚖︎',t('dosingScale'));
+  devName('devYield',(state.scaleConnected&&state.scaleName)?state.scaleName:'','⏱︎',t('scaleBrew')); }
 // Held by the gateway is what puts the line on screen; a reading arriving is
 // what turns it green. The two are not the same moment, and the gap is worth
 // seeing -- it is exactly where a dosing scale goes quiet.
@@ -6064,7 +6065,7 @@ function renderMilkRow(){
   v.textContent=(milkG==null)?'\u2014':String(milkG);
   var live=dosingHasReading();
   var dz=dosingDevice();
-  devName('devMilk',(dz&&state.dosingConnected&&dz.name)?dz.name:'','\u2696\ufe0e');
+  devName('devMilk',(dz&&state.dosingConnected&&dz.name)?dz.name:'','\u2696\ufe0e',t('dosingScale'));
   var d=document.getElementById('devMilk');
   if(d){ d.disabled=!live; d.title=live?t('doseTareHint'):''; }
   var num=document.getElementById('milkNum');
@@ -9525,6 +9526,14 @@ function carTagFor(p){
   return tags.length?tags[0]:''; }
 // Rebuild the strip around what is loaded. While a shot is running the strip is
 // a single cover and the pin below holds it, so nothing is moved.
+// The workflow is read again on every focus, wake and reconnect, and most of
+// those times it still holds the profile already on the strip. Throwing the
+// covers away and making them again then only blinks the card and snaps a
+// browsed strip back, so the covers are kept and only the loaded one is told
+// -- its curve redrawn if the workflow's copy changed it.
+function carKeepLoaded(p,changed){
+  renderCarousel();
+  if(changed&&p._curveCv) drawSimCurve(p._curveCv,p.profile,true); }
 function carShowLoaded(){
   if(!brewLocked()&&curProfileObj
      &&!carItems.some(function(x){ return x.id===curProfileObj.id; }))
@@ -16622,9 +16631,11 @@ function adjustRpm(dir){
 function setRpm(v){
   v=Math.round(gClamp('rpmControl',v));
   if(grinderSnap) grinderSnap.rpm=v;
+  gHold('rpm',v);
   syncGrinder();
   clearTimeout(setRpm._t); setRpm._t=setTimeout(function(){
-    api('PUT','/api/v1/grinder/rpm',{rpm:v}).catch(function(e){ toast(apiErrorText(e),'err'); loadGrinderState(); }); },400); }
+    api('PUT','/api/v1/grinder/rpm',{rpm:v}).then(function(){ gLanded('rpm',v); },
+      function(e){ gDrop('rpm'); toast(apiErrorText(e),'err'); loadGrinderState(); }); },400); }
 function openRpmKeypad(){
   if(!gCan('rpmControl')) return;
   var cur=gRpm();
@@ -16691,7 +16702,7 @@ function closePluginPanel(){
   clearTimeout(_plgFallback);
   var o=document.getElementById('plgOverlay'); if(o) o.classList.remove('show');
   var f=document.getElementById('plgFrame'); if(f) f.src='about:blank';
-  _feedSentAt=0; loadMt80Feed(); }
+  _feedHold=null; loadMt80Feed(); }
 // The largest overlay the protocol allows: 1100x760, or 94% by 90% of the
 // screen, whichever is smaller.
 function plgMaxSize(){
@@ -16729,7 +16740,7 @@ window.addEventListener('message',pluginPanelMessage);
 //   POST /ui {commandId:'setSettings',
 //             params:{feedingRpm:N}}      -> {ok, result:{...}}  (ok:false is a refusal)
 var MT80_FEED={min:10,max:65,step:1};
-var mt80Feed=null, _feedPoll=null, _feedSentAt=0;
+var mt80Feed=null, _feedPoll=null, _feedHold=null;
 function feedShown(){ return grinderLive()&&isMt80(); }
 function mt80Url(q){ return '/api/v1/plugins/'+encodeURIComponent(MT80_ID)+'/ui'+(q||''); }
 function loadMt80Feed(){
@@ -16737,7 +16748,10 @@ function loadMt80Feed(){
   return api('GET',mt80Url('?state=1')).then(function(x){
     var v=x&&x.snapshot&&x.snapshot.feedingRpm;
     // a poll that left before a change landed does not put the old value back
-    if(typeof v==='number'&&Date.now()-_feedSentAt>1500) mt80Feed=v;
+    if(typeof v==='number'){
+      var h=_feedHold;
+      if(h&&(v===h.v||(h.landed&&Date.now()-h.landed>GRIND_ECHO_WAIT))) _feedHold=h=null;
+      if(!h) mt80Feed=v; }
     syncFeedRow(); return mt80Feed; },function(){ return mt80Feed; }); }
 function syncFeedRow(){
   var on=feedShown();
@@ -16752,11 +16766,12 @@ function syncFeedRow(){
 function setFeed(v){
   if(!feedShown()) return;
   v=Math.round(Math.min(MT80_FEED.max,Math.max(MT80_FEED.min,v)));
-  mt80Feed=v; _feedSentAt=Date.now(); syncFeedRow();
+  mt80Feed=v; _feedHold={ v:v, landed:0 }; syncFeedRow();
   clearTimeout(setFeed._t); setFeed._t=setTimeout(function(){
     api('POST',mt80Url(),{commandId:'setSettings',params:{feedingRpm:v}}).then(function(r){
-      if(r&&r.ok===false){ toast(r.error||t('feedFailed'),'err'); _feedSentAt=0; loadMt80Feed(); } },
-    function(e){ toast(apiErrorText(e),'err'); _feedSentAt=0; loadMt80Feed(); }); },350); }
+      if(r&&r.ok===false){ toast(r.error||t('feedFailed'),'err'); _feedHold=null; loadMt80Feed(); return; }
+      if(_feedHold&&_feedHold.v===v) _feedHold.landed=Date.now(); },
+    function(e){ toast(apiErrorText(e),'err'); _feedHold=null; loadMt80Feed(); }); },350); }
 function adjustFeed(dir){
   if(!feedShown()) return;
   setFeed((mt80Feed==null?MT80_FEED.min:mt80Feed)+dir*MT80_FEED.step); }
@@ -16772,8 +16787,29 @@ function gSurfaces(){
   var list=(grinderInfo&&grinderInfo.surfaces)||[];
   return list.filter(function(x){ return x&&x.href; }); }
 function loadGrinderState(){
-  return api('GET','/api/v1/grinder/state').then(function(x){ grinderSnap=x||null; syncGrinder(); })
+  return api('GET','/api/v1/grinder/state').then(function(x){ grinderSnap=x?gHeld(x):null; syncGrinder(); })
     .catch(function(){ grinderSnap=null; syncGrinder(); }); }
+function grinderFrame(m){
+  if(!m||typeof m!=='object') return;
+  grinderSnap=gHeld(m); syncGrinder(); }
+// A press is shown at once, sent after a short pause, and reaches the grinder
+// some time after that. Snapshots keep arriving the whole while, still holding
+// the old value, and each one used to put it back -- the number went back,
+// then forward again, and a second press counted from the old value. So a
+// value set here is held over the snapshots until the grinder reports it, or
+// until it has had GRIND_ECHO_WAIT after the command landed to do so. A refused
+// command lets go at once and reads the grinder again.
+var GRIND_ECHO_WAIT=2500, _gHold={};
+function gHold(k,v){ _gHold[k]={ v:v, landed:0 }; }
+function gLanded(k,v){ var h=_gHold[k]; if(h&&String(h.v)===String(v)) h.landed=Date.now(); }
+function gDrop(k){ delete _gHold[k]; }
+function gHeld(m){
+  Object.keys(_gHold).forEach(function(k){
+    var h=_gHold[k];
+    if(m[k]!=null&&String(m[k])===String(h.v)){ delete _gHold[k]; return; }
+    if(h.landed&&Date.now()-h.landed>GRIND_ECHO_WAIT){ delete _gHold[k]; return; }
+    m[k]=(k==='rpm')?Number(h.v):h.v; });
+  return m; }
 function updateGrindRow(){ syncGrinderGlyph(); var row=document.getElementById('grindRow'); if(!row) return;
   row.style.display='';
   var live=grinderLive(), dev=grinderDevice();
@@ -16822,13 +16858,16 @@ function adjustGrind(dir){ var gr=currentGrinder();
     n=Math.max(0,parseFloat((n+dir*step).toFixed(2))); setGrind(String(n)); } }
 function setGrind(v){
   context.grinderSetting=String(v);
-  if(gCan('grindSetting')&&grinderSnap) grinderSnap.setting=String(v);
+  var live=gCan('grindSetting');
+  if(live&&grinderSnap) grinderSnap.setting=String(v);
+  if(live) gHold('setting',String(v));
   updateGrindRow();
   clearTimeout(setGrind._t); setGrind._t=setTimeout(function(){
     api('PUT','/api/v1/workflow',{context:{grinderSetting:String(v)}}).catch(function(){});
-    if(gCan('grindSetting'))
+    if(live)
       api('PUT','/api/v1/grinder/setting',{setting:String(v)})
-        .catch(function(e){ toast(apiErrorText(e),'err'); loadGrinderState(); }); },500); }
+        .then(function(){ gLanded('setting',String(v)); },
+          function(e){ gDrop('setting'); toast(apiErrorText(e),'err'); loadGrinderState(); }); },500); }
 function openGrindKeypad(){ var gr=currentGrinder();
   if(gr&&gr.settingType==='preset'){ adjustGrind(1); return; } // preset: tapping cycles forward
   var cur=parseFloat(context.grinderSetting); KP.field='grind'; KP.unit=''; KP.fresh=true; KP.str=isNaN(cur)?'0':String(cur);
@@ -19102,10 +19141,16 @@ function loadWorkflow(){
   if(w.steamSettings){ if(w.steamSettings.targetTemperature) settings.steamTemp=w.steamSettings.targetTemperature; if(w.steamSettings.duration) settings.steamDur=w.steamSettings.duration; if(w.steamSettings.flow) settings.steamFlow=w.steamSettings.flow; }
   if(w.rinseData){ if(w.rinseData.targetTemperature) settings.flushTemp=w.rinseData.targetTemperature; if(w.rinseData.duration) settings.flushDur=w.rinseData.duration; if(w.rinseData.flow) settings.flushFlow=w.rinseData.flow; }
   if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.duration) settings.waterDur=w.hotWaterData.duration; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; }
-  if(w.profile){ curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
+  if(w.profile){ var prevId=curProfileObj&&curProfileObj.id;
+    curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
     var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; });
+    var before=match?JSON.stringify(match.profile):'';
     // the workflow's copy is the one that brews, temperature shifts and all
-    if(match){ match.profile=w.profile; curProfileObj=match; } if(carItems.length) carShowLoaded(); guideProfileChanged();
+    if(match){ match.profile=w.profile; curProfileObj=match; }
+    if(carItems.length){
+      if(match&&prevId===match.id&&carItems.indexOf(match)>=0) carKeepLoaded(match,before!==JSON.stringify(w.profile));
+      else carShowLoaded(); }
+    guideProfileChanged();
     restoreBrewTemp(w.profile); }
   syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow'); });
 }

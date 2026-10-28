@@ -462,6 +462,101 @@ test('a feed speed just set is not undone by a poll already on its way', functio
   });
 });
 
+// A grind or speed set on a connected grinder holds until the grinder says so.
+function grinderPuts(fail) {
+  var sent = [];
+  var fake = function (m, p, b) {
+    if (m === 'PUT' && p.indexOf('/api/v1/grinder/') === 0) {
+      sent.push(p + ' ' + JSON.stringify(b));
+      return fail ? Promise.reject(new Error('refused')) : Promise.resolve({}); }
+    if (m === 'GET' && p === '/api/v1/grinder/state') return Promise.resolve({ state: 'idle', setting: '45', rpm: 110 });
+    return Promise.resolve({});
+  };
+  fake.sent = sent;
+  return fake;
+}
+function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+test('a grind just set is not put back by snapshots on their way', function (T) {
+  _gHold = {};
+  asGrinder(XBLOOM, { state: 'idle', setting: '45', rpm: 110 });
+  var gw = grinderPuts();
+  return withApi(gw, function () {
+    adjustGrind(1);
+    T.eq(T.el('#grindVal').textContent, '46', 'shown at once');
+    grinderFrame({ state: 'idle', setting: '45', rpm: 110 });
+    T.eq(T.el('#grindVal').textContent, '46', 'a stale snapshot before it was sent does not undo it');
+    adjustGrind(1);
+    T.eq(T.el('#grindVal').textContent, '47', 'and a second press counts from 46, not 45');
+    return wait(600).then(function () {
+      T.eq(gw.sent.length, 1, 'one command for the two presses');
+      grinderFrame({ state: 'idle', setting: '45', rpm: 110 });
+      T.eq(T.el('#grindVal').textContent, '47', 'a stale snapshot after it landed does not undo it either');
+      grinderFrame({ state: 'idle', setting: '47', rpm: 110 });
+      grinderFrame({ state: 'idle', setting: '50', rpm: 110 });
+      T.eq(T.el('#grindVal').textContent, '50', 'once the grinder said 47, its own changes show again');
+    });
+  });
+});
+
+test('a grind the grinder never takes gives way after a while', function (T) {
+  _gHold = {};
+  asGrinder(XBLOOM, { state: 'idle', setting: '45', rpm: 110 });
+  return withApi(grinderPuts(), function () {
+    setGrind('46');
+    return wait(600).then(function () {
+      _gHold.setting.landed = Date.now() - GRIND_ECHO_WAIT - 1;
+      grinderFrame({ state: 'idle', setting: '45', rpm: 110 });
+      T.eq(T.el('#grindVal').textContent, '45', 'the grinder\u2019s word is final in the end');
+    });
+  });
+});
+
+test('a refused grind lets go at once', function (T) {
+  _gHold = {};
+  asGrinder(XBLOOM, { state: 'idle', setting: '45', rpm: 110 });
+  return withApi(grinderPuts(true), function () {
+    setGrind('46');
+    return wait(650).then(function () {
+      T.eq(_gHold.setting, undefined, 'nothing held');
+      T.eq(T.el('#grindVal').textContent, '45', 'and the grinder\u2019s value is read back');
+    });
+  });
+});
+
+test('an RPM just set holds the same way', function (T) {
+  _gHold = {};
+  asGrinder(XBLOOM, { state: 'idle', setting: '45', rpm: 110 });
+  return withApi(grinderPuts(), function () {
+    adjustRpm(1);
+    T.eq(T.el('#rpmVal').textContent, '120', 'shown at once');
+    grinderFrame({ state: 'idle', setting: '45', rpm: 110 });
+    T.eq(T.el('#rpmVal').textContent, '120', 'not put back');
+    adjustRpm(-1); adjustRpm(-1);
+    T.eq(T.el('#rpmVal').textContent, '100', 'counted from what is shown');
+  });
+});
+
+test('a feed speed holds past its first second, until the grinder has it', function (T) {
+  var feed = { value: 40 };
+  return withApi(feedApi(feed), function () {
+    asMt80Device();
+    setFeed(55);
+    return wait(400).then(function () { return wait(1600); }).then(function () {
+      return loadMt80Feed();
+    }).then(function () {
+      T.eq(mt80Feed, 55, 'a slow grinder still reporting 40 does not put it back');
+      feed.value = 55;
+      return loadMt80Feed();
+    }).then(function () {
+      feed.value = 33;
+      return loadMt80Feed();
+    }).then(function () {
+      T.eq(mt80Feed, 33, 'once it had 55, its own changes show again');
+    });
+  });
+});
+
 test('the keypad sets the feed speed too', function (T) {
   return withApi(feedApi({ value: 40 }), function () {
     asMt80Device();
