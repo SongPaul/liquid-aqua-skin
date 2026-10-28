@@ -1,3 +1,15 @@
+// Counted from before the page boots: how often the covers are made.
+var __carBuilds = 0;
+(function () {
+  var stage = document.getElementById('carouselStage');
+  if (!stage || typeof MutationObserver === 'undefined') return;
+  new MutationObserver(function (list) {
+    list.forEach(function (r) {
+      Array.prototype.forEach.call(r.addedNodes, function (n) {
+        if (n.classList && n.classList.contains('album') && stage.firstElementChild === n) __carBuilds++; }); });
+  }).observe(stage, { childList: true });
+})();
+
 // The workflow button is a header control like the others, and the others
 // all say what they are set to. Its setting is the drink.
 
@@ -138,7 +150,7 @@ test('a browsed strip is not snapped back by a re-read', function (T) {
   });
 });
 
-test('a different profile read back does rebuild, onto that profile', function (T) {
+test('a different profile read back moves the strip onto it', function (T) {
   if (carItems.length < 2 || !curProfileObj || carItems.indexOf(curProfileObj) < 0) {
     T.ok(true, 'not enough profiles to switch'); return; }
   var was = curProfileObj;
@@ -146,8 +158,66 @@ test('a different profile read back does rebuild, onto that profile', function (
   var before = stageCovers();
   return workflowRead(JSON.parse(JSON.stringify(other.profile))).then(function () {
     T.eq(curProfileObj, other, 'the other profile is loaded');
-    T.ok(stageCovers()[0] !== before[0], 'the covers were made again');
     T.eq(carItems[carIndex], other, 'and the strip is on it');
+    T.ok(stageCovers()[0] === before[0], 'from the same pile, without making the covers again');
+    T.ok(other._el.classList.contains('loaded'), 'marked as the loaded one');
     return workflowRead(JSON.parse(JSON.stringify(was.profile)));
+  });
+});
+
+test('a fresh page makes the covers once, on the loaded profile', function (T) {
+  return new Promise(function (r) { setTimeout(r, 3000); }).then(function () {
+    if (!carItems.length) { T.ok(true, 'no profiles on this gateway'); return; }
+    T.eq(__carBuilds, 1, 'made once, not once per thing that loaded');
+    if (curProfileObj && carItems.indexOf(curProfileObj) >= 0)
+      T.eq(carItems[carIndex], curProfileObj, 'and opened on the loaded profile');
+  });
+});
+
+test('re-applying the camera setting keeps the covers', function (T) {
+  if (!carItems.length) { T.ok(true, 'no profiles on this gateway'); return; }
+  var before = stageCovers();
+  applyCam(); applyCam();
+  T.ok(stageCovers().every(function (e, i) { return e === before[i]; }), 'the same covers');
+});
+
+test('a real change to the strip still makes the covers again', function (T) {
+  if (carItems.length < 2) { T.ok(true, 'not enough profiles'); return; }
+  var p = carItems[carItems.length - 1], was = !!favIds[p.id];
+  var before = stageCovers();
+  favIds[p.id] = !was;
+  buildCarousel();
+  T.ok(stageCovers()[0] !== before[0], 'starring a profile rebuilt the strip');
+  if (was) favIds[p.id] = true; else delete favIds[p.id];
+  buildCarousel();
+});
+
+test('with the list in before the workflow, the first covers still open on the loaded profile', function (T) {
+  if (allProfiles.length < 2) { T.ok(true, 'not enough profiles'); return; }
+  var list = JSON.parse(JSON.stringify(allProfiles.map(function (p) {
+    return { id: p.id, profile: p.profile, metadata: p.metadata, isDefault: p.isDefault, visibility: p.visibility }; })));
+  var target = list.filter(function (p) { return p.profile && p.profile.title && !favIds[p.id]; })[0] || list[1];
+  var real = api, release = null;
+  var wfGate = new Promise(function (r) { release = r; });
+  api = function (m, p) {
+    if (m === 'GET' && p.indexOf('/api/v1/profiles') === 0) return Promise.resolve(list);
+    if (m === 'GET' && p === '/api/v1/workflow') return wfGate.then(function () { return { profile: target.profile, context: context }; });
+    return Promise.resolve({});
+  };
+  _wfSeen = false; _carDeferred = false; _carSig = null; carItems = []; curProfileObj = null; carTag = '';
+  T.el('#carouselStage').innerHTML = '';
+  var builds = __carBuilds;
+  loadFree('workflow');
+  return loadProfiles().then(function () {
+    T.eq(__carBuilds, builds, 'no covers yet, the workflow is on its way');
+    loadWorkflow(); release();
+    return new Promise(function (r) { setTimeout(r, 50); });
+  }).then(function () {
+    api = real;
+    T.eq(__carBuilds - builds, 1, 'made once');
+    T.eq(carItems[carIndex] && carItems[carIndex].id, target.id, 'on the loaded profile');
+  }, function (e) { api = real; throw e; }).then(function () {
+    loadProfiles(); loadFree('workflow'); loadWorkflow();
+    return new Promise(function (r) { setTimeout(r, 300); });
   });
 });

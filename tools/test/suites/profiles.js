@@ -265,3 +265,50 @@ test('closing puts both views away', function (T) {
   T.eq(document.body.classList.contains('ep-wide'), false, 'no select class left');
   T.eq(T.el('#editPage').classList.contains('show'), false, 'the page is down');
 });
+
+// In the list a tap loads, and the pencil edits.
+function cardOf(p) { return (epItemEls[p.id] || [])[0] || null; }
+function withLoads(run) {
+  var real = selectProfile, loads = [];
+  selectProfile = function (p) { loads.push(p.id); curProfileObj = p; };
+  try { run(loads); } finally { selectProfile = real; }
+  return loads;
+}
+function anotherProfile() {
+  return (allProfiles || []).filter(function (p) {
+    return p.visibility !== 'deleted' && !(curProfileObj && curProfileObj.id === p.id); })[0] || null;
+}
+
+test('a tap on a profile in the list loads it and stays on the list', function (T) {
+  var was = curProfileObj, p = anotherProfile();
+  T.ok(!!p, 'there is a profile to load');
+  openEditPage();
+  var loads = withLoads(function () { cardOf(p).click(); });
+  T.eq(loads.join(), p.id, 'that profile was loaded');
+  T.eq(document.body.classList.contains('ep-list'), true, 'still on the list');
+  T.ok(cardOf(p).classList.contains('loaded'), 'and the card says it is in use');
+  T.eq(T.css(cardOf(p).querySelector('.ep-loaded'), 'display') !== 'none', true, 'with its badge showing');
+  curProfileObj = was; shut();
+});
+
+test('the pencil on a profile opens the editor without loading it', function (T) {
+  var p = anotherProfile();
+  openEditPage();
+  var btn = cardOf(p).querySelector('.ep-editbtn');
+  T.ok(!!btn, 'each profile has an edit button');
+  var loads = withLoads(function () { btn.click(); });
+  T.eq(loads.length, 0, 'nothing loaded');
+  T.eq(document.body.classList.contains('ep-edit'), true, 'the editor is open');
+  T.eq(editing && editing.id, p.id, 'on that profile');
+  shut();
+});
+
+test('choosing several stays choosing, and does not load', function (T) {
+  var p = anotherProfile();
+  openEditPage();
+  epSetWide(true);
+  var loads = withLoads(function () { cardOf(p).click(); });
+  T.eq(loads.length, 0, 'nothing loaded');
+  T.ok(!!_epSel[p.id], 'it was picked');
+  epSetWide(false); shut();
+});

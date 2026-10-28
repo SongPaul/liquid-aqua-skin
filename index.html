@@ -1255,6 +1255,11 @@ body.night.scaled .ep-item.defp .ep-cbody,body.night.no-fx .ep-item.defp .ep-cbo
 .ep-item .fav-btn{margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:11px;border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);color:var(--ink-mute);font-size:15px;line-height:1;cursor:pointer;transition:all .15s;-webkit-appearance:none;display:flex;align-items:center;justify-content:center}
 .ep-item .fav-btn:hover{border-color:var(--amber);color:var(--amber)}
 .ep-item .fav-btn.on{color:var(--amber);border-color:var(--amber);background:rgba(245,158,11,.1)}
+.ep-item.ep-card.loaded{border-color:var(--green);box-shadow:0 0 0 2px rgba(34,197,94,.28)}
+.ep-loaded{display:none;margin-top:3px;padding:1px 7px;border-radius:100px;font-size:10px;font-weight:800;
+  color:var(--green);border:1px solid rgba(34,197,94,.45);background:rgba(34,197,94,.08)}
+.ep-card.loaded .ep-loaded{display:inline-block}
+.ep-card .ep-editbtn{color:var(--accent)}
 .ep-card .fav-btn,.ep-card .eye-btn{margin-left:0;flex-shrink:0;width:30px;height:30px;
   border-radius:9px;font-size:15px}
 .bg-tabs{display:flex;gap:6px;margin-bottom:10px;position:sticky;top:0;background:var(--sheet);padding:2px 0 6px;z-index:1}
@@ -3564,7 +3569,7 @@ var I18N={
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', brewTemp:'Brew temp', noProfile:'No profile loaded',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight (total)', target:'Target',
-    lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastTime:'Time', lsToday:'Today {n}', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
+    lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastTime:'Time', profInUse:'In use', lsToday:'Today {n}', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
     currentlyLoaded:'● Currently loaded', loadedIs:'● Loaded: {n} · tap center to change', tapCenter:'Tap center card to load', noBean:'No bean selected', tapEdit:'Tap edit to add beans & grinder', noGrinder:'No grinder', grind:'Grind',
     settings:'Settings', nightMode:'Night mode', nightModeDesc:'Dark theme for low-light environments.',
     autoNight:'Auto night mode', autoDyeName:'Auto-open shot log', autoDyeDesc:'Show the Log Your Espresso form as soon as a shot ends.',
@@ -4025,7 +4030,7 @@ var I18N={
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'누적 추출량', target:'목표',
-    lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'추출 비율', lastTime:'추출 시간', lsToday:'오늘 {n}샷', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
+    lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'추출 비율', lastTime:'추출 시간', profInUse:'사용 중', lsToday:'오늘 {n}샷', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
     currentlyLoaded:'● 현재 로드됨', loadedIs:'● 현재: {n} · 가운데 카드를 눌러 변경', tapCenter:'가운데 카드를 눌러 로드', noBean:'선택된 원두 없음', tapEdit:'편집을 눌러 원두·그라인더 추가', noGrinder:'그라인더 없음', grind:'분쇄도',
     settings:'설정', nightMode:'나이트 모드', nightModeDesc:'저조도 환경용 다크 테마.',
     autoNight:'자동 나이트 모드', autoDyeName:'샷 기록 자동 열기', autoDyeDesc:'샷이 끝나면 기록 폼을 자동으로 표시.',
@@ -9411,9 +9416,23 @@ function splitTitle(raw){ var t=String(raw||''); var i=t.indexOf('/'); if(i<0) r
 function profTitle(p){ return (p&&p.profile&&p.profile.title)||(p&&p.id)||''; }
 function loadFavs(){ try{ favIds=JSON.parse(localStorage.getItem('aurora_favs')||'{}'); }catch(_){ favIds={}; } }
 function saveFavs(){ lsSet('aurora_favs',favIds); storeSave('favs',favIds); }
+// On a fresh page the profile list and the workflow are asked for together.
+// Built from the list alone the strip would open on the favourites and jump to
+// the loaded profile's pile a moment later, so the first build waits for the
+// workflow -- not for long, and not at all once it has been read.
+var _wfSeen=false, _carDeferred=false, CAR_FIRST_WAIT=1500;
+function carFirstBuild(){ if(!_carDeferred) return; _carDeferred=false; carShowLoaded(); }
 function loadProfiles(){ return api('GET','/api/v1/profiles?includeHidden=true').then(function(data){ allProfiles=data||[];
   var stage=document.getElementById('carouselStage'); if(!stage) return;
   if(Object.keys(favIds).length===0){ allProfiles.filter(function(p){return p.isDefault;}).slice(0,5).forEach(function(p){ favIds[p.id]=true; }); saveFavs(); }
+  // a workflow read before the list could not be matched to it then
+  if(curProfileObj&&curProfileObj.id==='current'&&curProfileObj.profile){
+    var wp=curProfileObj.profile;
+    var m=allProfiles.find(function(p){ return p.profile&&p.profile.title===wp.title; });
+    if(m){ m.profile=wp; curProfileObj=m; } }
+  if(!_wfSeen&&!carItems.length){
+    if(!_carDeferred){ _carDeferred=true; setTimeout(carFirstBuild,CAR_FIRST_WAIT); }
+    return; }
   carShowLoaded(); }).catch(function(){ var stage=document.getElementById('carouselStage');
     if(stage) stage.innerHTML='<div class="car-empty">'+t('connectToLoad')+'</div>'; }); }
 
@@ -9550,10 +9569,30 @@ function carSetTag(k){
   // same debounced load the strip uses: flicking across chips settles into one
   // upload, and a pile already holding what is loaded writes nothing.
   loadCentered(); }
+// What the covers show, so a call that would make them again exactly as they
+// are -- the camera setting re-applied on every wake, the store re-read with
+// nothing in it for the strip -- keeps them instead of blinking the card.
+var _carSig=null, _carLoadedId=null;
+function carSignature(items){
+  return JSON.stringify([carTag,items.map(function(p){
+    return [p.id,!!favIds[p.id],p.profile||null,p.metadata||null]; })]); }
 function buildCarousel(){
   applyBrewLock(brewLocked());
-  carItems=carListProfiles();
+  var next=carListProfiles(), sig=carSignature(next);
   var stage=document.getElementById('carouselStage');
+  var loadedId=curProfileObj?curProfileObj.id:null;
+  if(stage&&sig===_carSig&&next.length&&next.every(function(p){ return p._el&&p._el.parentNode===stage; })){
+    carItems=next;
+    buildCarTags();
+    if(loadedId!==_carLoadedId){
+      _carLoadedId=loadedId;
+      var li=loadedId?carItems.findIndex(function(p){ return p.id===loadedId; }):-1;
+      if(li>=0) carIndex=li; }
+    carIndex=Math.max(0,Math.min(carItems.length-1,carIndex));
+    renderCarousel();
+    return; }
+  _carSig=sig; _carLoadedId=loadedId;
+  carItems=next;
   // The covers are thrown away and made again below, and the camera pane may
   // be living inside one of them. It is moved out of the way first, and put
   // back by renderCarousel once the new covers exist.
@@ -9799,7 +9838,7 @@ function refreshCarouselMark(){
   if(curProfileObj&&!carItems.some(function(x){ return x.id===curProfileObj.id; })){ carShowLoaded(); guideProfileChanged(); return; }
   var i=curProfileObj?carItems.findIndex(function(x){ return x.id===curProfileObj.id; }):-1;
   if(i>=0) carIndex=i;
-  renderCarousel(); guideProfileChanged(); }
+  renderCarousel(); guideProfileChanged(); epMarkLoaded(); }
 // In profile mode the guideline is a simulation of whatever is loaded, and it
 // is rebuilt on the next draw. Nothing redraws the graph while the machine is
 // idle, so loading a profile has to ask for it or the guide stays on the one
@@ -10399,7 +10438,7 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     if(!groups[key]){ groups[key]=[]; order.push(key); } groups[key].push({p:p,st:st}); });
   order.sort(function(a,b){ if(a==='Other') return 1; if(b==='Other') return -1; return a.localeCompare(b); });
   function addItem(p,st){ var author=(p.profile&&p.profile.author)||'';
-    var it=document.createElement('div'); it.className='ep-item ep-card'+(editing&&editing.id===p.id?' active':'')+(p.isDefault?' defp':'')+(_epSel[p.id]?' sel':'');
+    var it=document.createElement('div'); it.className='ep-item ep-card'+(editing&&editing.id===p.id?' active':'')+(curProfileObj&&curProfileObj.id===p.id?' loaded':'')+(p.isDefault?' defp':'')+(_epSel[p.id]?' sel':'');
     if(p.isDefault) it.title=t('defaultProfileNote');
     var th=document.createElement('div'); th.className='thmb'; var cv=document.createElement('canvas'); cv._profile=p.profile; th.appendChild(cv);
     var pc=colorOf(p); if(pc){ var dot=document.createElement('span'); dot.className='ep-dot'; dot.style.background=gradOf(pc); th.appendChild(dot); }
@@ -10411,7 +10450,8 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     body.innerHTML='<div class="mt">'
       +escapeHtml(author?author+' \u00b7 ':'')
       +((p.profile&&p.profile.steps&&p.profile.steps.length)||0)+' '+escapeHtml(t('stepsShort'))+'</div>'
-      +'<div class="nm">'+escapeHtml(st.name)+'</div>';
+      +'<div class="nm">'+escapeHtml(st.name)+'</div>'
+      +'<span class="ep-loaded">'+escapeHtml(t('profInUse'))+'</span>';
     var fav=document.createElement('button'); fav.className='fav-btn'+(favIds[p.id]?' on':''); fav.textContent=favIds[p.id]?'★':'☆'; fav.title=t('toggleFav');
     fav.onclick=function(e){ e.stopPropagation(); toggleFav(p.id); };
     var hid=(p.visibility==='hidden');
@@ -10423,6 +10463,9 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
     del.title=t(inTrash?'restoreProfile':'deleteProfile');
     del.onclick=function(e){ e.stopPropagation();
       if(inTrash) restoreProfile(p.id); else askDeleteProfile(p.id); };
+    var edit=document.createElement('button'); edit.className='eye-btn ep-editbtn'; edit.type='button';
+    edit.textContent='\u270e'; edit.title=t('edit');
+    edit.onclick=function(e){ e.stopPropagation(); epOpenEditor(p); };
     var foot=document.createElement('div'); foot.className='cfoot';
     var chips=document.createElement('div'); chips.className='ep-chips'; chips.innerHTML=tagHtml;
     foot.appendChild(chips);
@@ -10431,10 +10474,10 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
       pg.textContent='×'; pg.title=t('purgeProfile');
       pg.onclick=function(e){ e.stopPropagation(); purgeFromTrash(p.id); };
       foot.appendChild(del); foot.appendChild(pg); }
-    else { foot.appendChild(fav); foot.appendChild(eye); foot.appendChild(del); }
+    else { foot.appendChild(edit); foot.appendChild(fav); foot.appendChild(eye); foot.appendChild(del); }
     body.appendChild(foot);
     it.appendChild(th); it.appendChild(body);
-    it.onclick=function(){ epSelect(p); };
+    it.onclick=function(){ epTap(p); };
     list.appendChild(it); (epItemEls[p.id]=epItemEls[p.id]||[]).push(it);
     if(epCurveObserver) epCurveObserver.observe(cv); else drawSimCurve(cv,p.profile); }
   // A search looks for a profile, so what matched its name comes first and the
@@ -10782,7 +10825,20 @@ function epSelAll(on){
   renderEpList(); }
 // While the list is being worked on a cover is something to pick. Opening one
 // is editing it, which is the other mode.
-function epSelect(p){ if(_epWide){ epToggleSel(p.id); return; }
+function epSelect(p){ if(_epWide){ epToggleSel(p.id); return; } epOpenEditor(p); }
+// A tap on a cover loads it, as a cover in the strip does; the pencil on it is
+// the way into the editor. A profile in the bin is not something to brew, so a
+// tap there still opens it.
+function epTap(p){
+  if(_epWide){ epToggleSel(p.id); return; }
+  if(p.visibility==='deleted'){ epOpenEditor(p); return; }
+  if(!(curProfileObj&&curProfileObj.id===p.id)) selectProfile(p,false,true);
+  epMarkLoaded(); }
+function epMarkLoaded(){
+  var id=curProfileObj&&curProfileObj.id;
+  Object.keys(epItemEls).forEach(function(k){
+    epItemEls[k].forEach(function(el){ el.classList.toggle('loaded',k===id); }); }); }
+function epOpenEditor(p){
   editing=JSON.parse(JSON.stringify(p));
   epMark(p.id);
   renderEpEditor();
@@ -19152,7 +19208,8 @@ function loadWorkflow(){
       else carShowLoaded(); }
     guideProfileChanged();
     restoreBrewTemp(w.profile); }
-  syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow'); });
+  syncRecipe(); syncAux(); updateBeanInfo(); }).catch(function(){}).then(function(){ loadFree('workflow');
+    _wfSeen=true; carFirstBuild(); });
 }
 // The saved temperature is only real once the machine has it. A workflow that
 // came back holding the profile's own value -- a restart, another skin, a
