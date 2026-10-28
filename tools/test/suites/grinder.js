@@ -718,6 +718,126 @@ test('the workflow\u2019s grinder list says which is the plugin\u2019s', functio
   T.ok(!!niche && niche.querySelector('.bg-link') === null, 'the Niche is not');
 });
 
+// The editor's layout: pairs of fields in rows, nothing left half-empty.
+function editorRowsOk(T, o) {
+  editGrinder(o);
+  var ed = T.el('#bgEditor');
+  var pairs = [['#bgBrand', '#bgModel'], ['#bgSmallStep', '#bgBigStep']];
+  if (T.el('#bgFeedRpm')) pairs.push(['#bgGrindSpeed', '#bgFeedRpm']);
+  pairs.forEach(function (p) {
+    T.near(T.box(T.el(p[0])).top, T.box(T.el(p[1])).top, 1, p[0] + ' and ' + p[1] + ' share a row');
+  });
+  T.near(T.box(ed.querySelector('.bg-dialtype')).top, T.box(T.el('#bgGrindSetting')).top, 24,
+    'the dial type sits beside the current setting');
+  var col = T.el('#bgModel').closest('.bg-col');
+  ['#bgSmallStep', '#bgGrindSpeed'].forEach(function (q) {
+    T.ok(col.contains(T.el(q)), q + ' is in the grinder column');
+    T.ok(T.w(T.el(q)) >= T.w(T.el('#bgBrand')) - 2, q + ' is at least a half-column wide');
+  });
+  var cols = ed.querySelectorAll('.bg-col');
+  T.ok(Math.abs(T.h(cols[0]) - T.h(cols[1])) < 120, 'the two columns end near each other ('
+    + T.h(cols[0]) + ' vs ' + T.h(cols[1]) + ')');
+  var bar = ed.querySelector('.ep-save-bar');
+  T.ok(T.box(T.el('#bgGNotes')).bottom <= T.box(bar).top + 1 || ed.scrollHeight <= ed.clientHeight + 1,
+    'the notes are not under the save bar');
+  return ed;
+}
+
+test('the grinder editor is laid out in pairs', function (T) {
+  editorRowsOk(T, NICHE);
+  T.ok(!!T.el('#bgAiBtn'), 'a grinder of the user\u2019s own can be auto-filled');
+  T.el('#beanPage').classList.remove('show');
+});
+
+test('a plugin grinder\u2019s editor is laid out the same, without the AI fill', function (T) {
+  asMt80Device();
+  _pluginKeys = {}; _pluginKeys[MT80_KEY] = true;
+  var ed = editorRowsOk(T, LINKED_MT80);
+  T.eq(ed.querySelector('.g-ai'), null, 'no AI button among the fields');
+  T.ok(!!T.el('#bgAiBtn'), 'its burrs and notes can still be auto-filled');
+  var box = ed.querySelector('.bg-linkbox');
+  T.ok(T.h(box) <= 2.5 * T.h(T.el('#bgBrand')), 'the plugin box is a line and a sentence, not a panel (' + T.h(box) + ')');
+  T.el('#beanPage').classList.remove('show');
+});
+
+// Auto-fill: the grinder as sold when no burrs are named, the grinder and the
+// named burrs when they are. Answers come from a stand-in model.
+var STOCK = { burrBrand: 'Mazzer', burrModel: 'Kony', burrCoating: '', burrType: 'conical',
+  burrSize: 63, notes: 'Stock notes.' };
+function autoFillWith(rec, answers) {
+  var asked = [], realJson = aiJson, realKey = aiKey;
+  aiKey = function () { return 'k'; };
+  aiJson = function (key, parts) {
+    var p = parts[0].text; asked.push(p);
+    return Promise.resolve(p.indexOf('BURR SET:') >= 0 ? answers.burr : answers.grinder);
+  };
+  editGrinder(rec);
+  return grinderAutoFill().then(function () {
+    aiJson = realJson; aiKey = realKey; return { asked: asked, o: bgSel.obj };
+  }, function (e) { aiJson = realJson; aiKey = realKey; throw e; });
+}
+
+test('auto-fill sits in the button bar, and the burr question is gone', function (T) {
+  editGrinder(NICHE);
+  var bar = T.el('#bgEditor .ep-save-bar');
+  T.ok(bar.contains(T.el('#bgAiBtn')), 'in the button bar');
+  T.eq(T.el('#bgAiBtn').textContent, t('gAutoFill'), 'named for what it does');
+  T.eq(T.el('#bgEditor').innerHTML.indexOf('burrAiFill'), -1, 'no separate burr button');
+  T.el('#beanPage').classList.remove('show');
+});
+
+test('with no burrs named it fills the grinder as sold, stock burrs included', function (T) {
+  return autoFillWith({ id: 'n', model: 'Niche Zero', archived: false, settingType: 'numeric' },
+    { grinder: STOCK, burr: { known: true, notes: 'Burr notes.' } }).then(function (r) {
+    T.eq(r.asked.length, 1, 'one lookup, the grinder');
+    T.eq(r.o._burr.brand, 'Mazzer', 'stock burr brand');
+    T.eq(r.o._burr.model, 'Kony', 'stock burr model');
+    T.eq(r.o.burrSize, 63, 'size');
+    T.eq(r.o.notes, 'Stock notes.', 'grinder notes');
+    T.eq(T.el('#bgBurrBrand').value, 'Mazzer', 'and the form shows it');
+    T.el('#beanPage').classList.remove('show');
+  });
+});
+
+test('with burrs named it looks them up too, and leaves them as named', function (T) {
+  return autoFillWith({ id: 'n', model: 'Niche Zero', archived: false, settingType: 'numeric',
+      burrs: 'SSP MP' },
+    { grinder: STOCK, burr: { known: true, notes: 'Brighter, finer.' } }).then(function (r) {
+    T.eq(r.asked.length, 2, 'two lookups, grinder and burrs');
+    T.ok(r.asked[1].indexOf('SSP MP') >= 0, 'the burrs asked about are the ones named');
+    T.eq(r.o._burr.brand, 'SSP', 'the named burr brand stays');
+    T.eq(r.o._burr.model, 'MP', 'the named burr model stays');
+    T.eq(r.o._burr.notes, 'Brighter, finer.', 'what those burrs do is filled');
+    T.eq(r.o.notes, 'Stock notes.', 'and the grinder notes');
+    T.el('#beanPage').classList.remove('show');
+  });
+});
+
+test('half-named burrs are not completed with the stock ones', function (T) {
+  return autoFillWith({ id: 'n', model: 'Niche Zero', archived: false, settingType: 'numeric', burrs: 'SSP' },
+    { grinder: STOCK, burr: { known: false, notes: '' } }).then(function (r) {
+    T.eq(r.o._burr.brand, 'SSP', 'the brand named');
+    T.eq(r.o._burr.model, '', 'no stock model mixed into another maker’s burrs');
+    T.el('#beanPage').classList.remove('show');
+  });
+});
+
+test('auto-fill never overwrites what is there', function (T) {
+  return autoFillWith({ id: 'n', model: 'Niche Zero', archived: false, settingType: 'numeric',
+      burrs: 'SSP MP', burrSize: 64, burrType: 'flat', notes: 'Mine.' },
+    { grinder: STOCK, burr: { known: true, notes: 'Brighter.' } }).then(function (r) {
+    T.eq(r.o.notes, 'Mine.', 'grinder notes kept');
+    T.eq(r.o.burrType, 'flat', 'burr type kept');
+    T.eq(r.o.burrSize, 64, 'size kept');
+  }).then(function () {
+    return autoFillWith({ id: 'n', model: 'Niche Zero', archived: false, settingType: 'numeric',
+      burrs: 'SSP MP' }, { grinder: {}, burr: { known: false, notes: '' } });
+  }).then(function (r) {
+    T.eq(r.o._burr.notes || '', '', 'an unknown burr set writes nothing');
+    T.el('#beanPage').classList.remove('show');
+  });
+});
+
 test('grind speed is a number field, not a knob', function (T) {
   editGrinder({ id: 'niche', model: 'Niche Zero', archived: false, settingType: 'numeric' });
   T.ok(!!T.el('#bgGrindSpeed'), 'there is a field');

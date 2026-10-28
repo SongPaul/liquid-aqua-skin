@@ -766,11 +766,18 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bg-link{color:var(--accent);border:1px solid rgba(99,102,241,.35)}
 .bg-link.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .bg-using{color:var(--green);border:1px solid currentColor}
-.bg-linkbox{margin-top:12px;padding:12px 14px;border:1px solid var(--edge);border-radius:12px}
-.bg-linkrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.bg-linkbox{margin:2px 0 4px;padding:9px 12px;border:1px solid var(--edge);border-radius:12px}
+.bg-linkrow{display:flex;align-items:center;gap:8px;min-width:0}
+.bg-linkstate{flex:none;font-size:12px;font-weight:600;color:var(--ink-mute);max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bg-linkdesc{font-size:12px;color:var(--ink-mute);line-height:1.45;margin-top:5px}
+.bg-sub{margin-top:10px}
+.bg-dialtype{width:100%;display:flex}
+.bg-dialtype button{flex:1;min-width:0}
+.bg-notes{margin-top:0}
+#bgEditor .gs-hint{margin-top:4px}
 .bg-linkrow .bg-link{margin-left:0}
-#bgEditor input[readonly]{opacity:.7;cursor:default}
-.bg-linkname{flex:1 1 auto;min-width:170px;font-size:13px;font-weight:700;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bgEditor input[readonly]{background:transparent;border-style:dashed;color:var(--ink-soft);cursor:default}
+.bg-linkname{flex:1 1 auto;min-width:0;font-size:13px;font-weight:700;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The panel sizes itself from what the framed page reports; until it does,
    it is the 720px card the page draws in this view. The page draws its own
    card, background and shadow, so the box adds none of its own; its header
@@ -847,10 +854,14 @@ body.night .bl-card{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 .ls-profile{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;text-transform:none;letter-spacing:0}
 .ls-profile:empty{display:none}
 .ls-profile .grp{font-weight:600;color:var(--ink-mute)}
-.ls-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.ls-stat{text-align:center;background-color:var(--pane-face);background-image:var(--ctl-sheen);box-shadow:var(--pane-lift);border:1px solid transparent;border-radius:10px;padding:9px 4px}
-.ls-stat .v{font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
-.ls-stat .l{font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:2px}
+.ls-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.ls-stat{text-align:center;padding:2px 4px;min-width:0}
+.ls-stat+.ls-stat{border-left:1px solid rgba(99,102,241,.13)}
+.ls-stat .v{font-size:18px;font-weight:800;color:var(--accent);letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+.ls-stat .l{font-size:10px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;margin-top:1px;white-space:nowrap}
+.ls-stat .l .lu{text-transform:none;margin-left:2px;opacity:.8}
+.ls-today{flex:none;font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:none;letter-spacing:0}
+.ls-today:empty{display:none}
 .ls-empty{grid-column:1/-1;text-align:center;font-size:12px;color:var(--ink-mute);padding:8px 0}
 .bean-txt{flex:1;min-width:0}
 .bean-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2870,6 +2881,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="ls-head">
           <button class="rc-alert ls-alert" id="lsAlert" onclick="openAiGuide('read')" hidden>!</button>
           <div class="ls-profile" id="lsProfile"></div>
+          <span class="ls-today" id="lsToday"></span>
           <span class="ls-acts">
             <button class="cur-browse" onclick="viewLastShotGraph()"><span id="lsGraphLbl">View Graph</span> <span id="lsGraphIco">↗</span></button>
             <button class="cur-browse" onclick="openShotLog()"><span data-i18n="shotLog">Shot Log</span> ▤</button>
@@ -3542,7 +3554,7 @@ var I18N={
     grReads:'The grinder reads {v}',
     grAutoReg:'Added the “{n}” grinder from its plugin',
     grLinked:'Linked', grInUse:'In use', grLinkTitle:'Plugin grinder',
-    grLinkWhat:'This grinder belongs to the {p} plugin: its name and dial come from the plugin, and while it is in use the recipe card sets it directly. Burrs and notes are yours to fill in.',
+    grLinkWhat:'Name and dial follow the plugin; the recipe card sets it while in use. Burrs and notes are yours.',
     grLinkAway:'Not connected now', grLinkGone:'The {p} plugin that kept this grinder is not installed now, so the record can be edited by hand.',
     grSrcManualHint:'Recorded here only — hold for the grinder list',
     doseHoldHint:'Tap to type it, hold to take it off the scale',
@@ -3551,7 +3563,7 @@ var I18N={
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', brewTemp:'Brew temp', noProfile:'No profile loaded',
     extractionGraph:'Extraction Graph', steamGraph:'Steam Graph', hotWaterGraph:'Hot Water Graph', lastShotGraph:'Last Shot', shotLog:'Shot Log',
     weight:'Weight (total)', target:'Target',
-    lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
+    lastShot:'Last Shot', viewGraph:'View Graph', lastDose:'Dose', lastYield:'Yield', lastRatio:'Ratio', lastTime:'Time', lsToday:'Today {n}', lastStar:'Last ★', todaysShots:"Today's shots", noShots:'No shots recorded yet',
     currentlyLoaded:'● Currently loaded', loadedIs:'● Loaded: {n} · tap center to change', tapCenter:'Tap center card to load', noBean:'No bean selected', tapEdit:'Tap edit to add beans & grinder', noGrinder:'No grinder', grind:'Grind',
     settings:'Settings', nightMode:'Night mode', nightModeDesc:'Dark theme for low-light environments.',
     autoNight:'Auto night mode', autoDyeName:'Auto-open shot log', autoDyeDesc:'Show the Log Your Espresso form as soon as a shot ends.',
@@ -3648,12 +3660,14 @@ var I18N={
     basketDefaultTip:'Fill this in on shots that have no basket',
     basketRemove:'Take out of the list', basketUsed:'{n} of the last {m}',
     basketListHint:'This is the list the basket box offers. A star fills that basket in on shots that were never asked. Renaming puts the entry right here and leaves what each shot already recorded alone.',
-    brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Reading the grinder…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what was still empty', gAiKept:'Nothing was empty to fill', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
+    brand:'Brand', gAiFill:'Fill from AI', gAiWorking:'Looking it up…', gAiNeedModel:'Type a brand and model first', gAiFilled:'Filled what was still empty', gAiKept:'Nothing was empty to fill', gAiUnknown:'Nothing reliable known about that grinder', gAiFailed:'Lookup failed:', gAiHint:'Brand and model, then let AI fill the burrs',
+    gAutoFill:'Auto-fill grinder', gAutoHint:'Looks up the grinder by brand and model. With burrs entered it looks those up too; without, it fills the stock burrs. Only empty fields are filled.',
+    gAutoFilledBurr:'Filled the empty fields, the burrs you entered included',
     burrBrand:'Burr brand', burrModel:'Burr type', burrCoating:'Coating', burrGeom:'Geometry', burrSet:'Burrs',
     burrNotes:'What these burrs do', bAiFill:'Ask about these burrs', bAiWorking:'Reading the burrs…',
     bAiNeedSet:'Name the burr set first', bAiFilled:'Written from what is known about them',
     bAiUnknown:'This burr set is not known — write it yourself', bAiFailed:'Lookup failed:',
-    grindSpeed:'Grind speed', grindSpeedHint:'Its speed dial, or RPM. Leave empty if it has none.', feedLbl:'Feed RPM', feedHint:'How fast beans go into the burrs. Only grinders with a feeder.', feedFailed:'The grinder refused that feed speed', grindSpeedNone:'Not set', gsClear:'Unset',
+    grindSpeed:'Grind speed', grindSpeedHint:'A speed dial position or RPM. Leave empty if it has none.', speedSection:'Speed', feedLbl:'Feed RPM', feedHint:'How fast beans go into the burrs. Only grinders with a feeder.', feedFailed:'The grinder refused that feed speed', grindSpeedNone:'Not set', gsClear:'Unset',
     model:'Model', burrSize:'Size (mm)', current:'Current setting',
     scanAI:'✨ Scan label with AI', scanAIDesc:'Photograph or attach the bag; {n} fills the fields.', camera:'📷 Camera', attach:'🖼 Attach', usePhone:'📱 Use phone', analyze:'Analyze',
     qrNoLib:'QR library not loaded', qrNoLan:'The gateway did not report a LAN address. Enter the Wi-Fi/LAN address of the tablet so the phone can reach it.',
@@ -4001,7 +4015,7 @@ var I18N={
     grReads:'그라인더 표시값 {v}',
     grAutoReg:'“{n}” 플러그인 그라인더를 목록에 추가했습니다',
     grLinked:'연동', grInUse:'사용 중', grLinkTitle:'플러그인 그라인더',
-    grLinkWhat:'{p} 플러그인이 관리하는 그라인더입니다. 이름과 눈금 방식·간격은 플러그인에서 오고, 사용하는 동안 레시피 카드에서 직접 설정합니다. 버와 메모는 직접 입력하세요.',
+    grLinkWhat:'이름과 눈금은 플러그인을 따르고, 사용 중에는 레시피 카드에서 설정합니다. 버와 메모는 직접 입력하세요.',
     grLinkAway:'지금 연결되지 않음', grLinkGone:'이 그라인더를 관리하던 {p} 플러그인이 지금 설치돼 있지 않아 직접 편집할 수 있습니다.',
     grSrcManualHint:'여기에만 기록됩니다 — 길게 누르면 그라인더 목록',
     doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
@@ -4010,7 +4024,7 @@ var I18N={
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
     extractionGraph:'추출 그래프', steamGraph:'스팀 그래프', hotWaterGraph:'온수 그래프', lastShotGraph:'마지막 샷', shotLog:'샷 기록',
     weight:'누적 추출량', target:'목표',
-    lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'추출 비율', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
+    lastShot:'마지막 샷', viewGraph:'그래프 보기', lastDose:'도즈', lastYield:'추출량', lastRatio:'추출 비율', lastTime:'추출 시간', lsToday:'오늘 {n}샷', lastStar:'마지막 ★', todaysShots:'오늘 추출', noShots:'기록된 샷 없음',
     currentlyLoaded:'● 현재 로드됨', loadedIs:'● 현재: {n} · 가운데 카드를 눌러 변경', tapCenter:'가운데 카드를 눌러 로드', noBean:'선택된 원두 없음', tapEdit:'편집을 눌러 원두·그라인더 추가', noGrinder:'그라인더 없음', grind:'분쇄도',
     settings:'설정', nightMode:'나이트 모드', nightModeDesc:'저조도 환경용 다크 테마.',
     autoNight:'자동 나이트 모드', autoDyeName:'샷 기록 자동 열기', autoDyeDesc:'샷이 끝나면 기록 폼을 자동으로 표시.',
@@ -4112,12 +4126,14 @@ var I18N={
     basketDefaultTip:'바스켓이 비어 있는 기록에 채워 넣기',
     basketRemove:'목록에서 빼기', basketUsed:'최근 {m}샷 중 {n}회',
     basketListHint:'바스켓 칸이 제안하는 목록입니다. 별표를 달면 바스켓을 적지 않은 기록에 그 바스켓이 채워집니다. 이름을 고치면 이 목록에서만 바뀜니다 — 이미 기록된 샷의 내용은 그대로 둡니다.',
-    brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'그라인더를 찾는 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'비어 있던 칸을 채웠습니다', gAiKept:'비어 있는 칸이 없어 그대로 두었습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
+    brand:'브랜드', gAiFill:'AI로 채우기', gAiWorking:'조사 중…', gAiNeedModel:'브랜드와 모델명을 먼저 입력하세요', gAiFilled:'비어 있던 칸을 채웠습니다', gAiKept:'비어 있는 칸이 없어 그대로 두었습니다', gAiUnknown:'그 그라인더에 대해 확실히 알려진 정보가 없습니다', gAiFailed:'조회 실패:', gAiHint:'브랜드와 모델명을 넣고 AI로 나머지를 채우세요',
+    gAutoFill:'그라인더 자동입력', gAutoHint:'브랜드와 모델로 그라인더를 조사합니다. 버가 입력돼 있으면 그 버의 특징까지, 없으면 기본 버 정보를 채웁니다. 빈 칸만 채웁니다.',
+    gAutoFilledBurr:'입력한 버의 특징까지 빈 칸을 채웠습니다',
     burrBrand:'버 브랜드', burrModel:'버 타입', burrCoating:'코팅', burrGeom:'형상', burrSet:'버',
     burrNotes:'이 버가 하는 일', bAiFill:'이 버에 대해 묻기', bAiWorking:'버를 읽는 중…',
     bAiNeedSet:'버 세트를 먼저 적어주세요', bAiFilled:'알려진 내용으로 채웠습니다',
     bAiUnknown:'이 버 세트는 알지 못합니다 — 직접 적어주세요', bAiFailed:'조회 실패:',
-    grindSpeed:'분쇄 속도', grindSpeedHint:'속도 다이얼 눈금 또는 RPM. 속도 조절이 없으면 비워 두세요.', feedLbl:'이송 RPM', feedHint:'버로 원두를 넣는 속도. 피더가 있는 그라인더만.', feedFailed:'그라인더가 그 이송 속도를 거부했습니다', grindSpeedNone:'설정 안 함', gsClear:'비우기',
+    grindSpeed:'분쇄 속도', grindSpeedHint:'속도 다이얼 눈금 또는 RPM. 조절 기능이 없으면 비워 두세요.', speedSection:'속도', feedLbl:'이송 RPM', feedHint:'버로 원두를 넣는 속도. 피더가 있는 그라인더만.', feedFailed:'그라인더가 그 이송 속도를 거부했습니다', grindSpeedNone:'설정 안 함', gsClear:'비우기',
     model:'모델', burrSize:'크기 (mm)', current:'현재 값',
     scanAI:'✨ AI로 라벨 스캔', scanAIDesc:'봉투를 촬영하거나 첨부하면 {n}가 채워줍니다.', camera:'📷 카메라', attach:'🖼 첨부', usePhone:'📱 폰 사용', analyze:'분석',
     qrNoLib:'QR 라이브러리 로드 실패', qrNoLan:'게이트웨이가 LAN 주소를 알려주지 않았습니다. 폰이 접속할 태블릿의 Wi-Fi/LAN 주소를 입력하세요.',
@@ -7686,7 +7702,6 @@ function grinderAiPrompt(name,lang){
 // grinder. Asked about the burr set by name, told not to sell it, and given a
 // way to say it does not know, it either says something that changes what you
 // would do next or says nothing. Both are useful; the middle is not.
-var bAiBusy=false;
 function burrSetName(p,size){
   var n=joinBurrs(p,size);
   return n.trim(); }
@@ -7703,50 +7718,60 @@ function burrAiPrompt(name,lang){
     +'Leave out anything that depends on the grinder it is fitted to rather than the burrs themselves.\n'
     +'If you do not know this burr set, set known:false and leave notes empty. An empty answer is better than an invented one.\n\n'
     +'BURR SET: '+name; }
-function burrAiFill(){
-  if(bAiBusy||!bgSel||bgSel.type!=='grinder') return Promise.resolve();
-  bgReadGrinderForm();
-  var o=bgSel.obj, name=burrSetName(o._burr||burrPartsOf(o),o.burrSize);
-  if(!name){ toast(t('bAiNeedSet'),'err'); return Promise.resolve(); }
-  var key=aiKey();
-  if(!key){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
-  bAiBusy=true; renderBgEditor();
-  return aiJson(key,[{text:burrAiPrompt(name,_lang)}],0.1,{search:true}).then(function(r){
-    var note=(r&&typeof r.notes==='string')?r.notes.trim():'';
-    if(r&&r.known&&note){ o._burr=o._burr||burrPartsOf(o); o._burr.notes=note; toast(t('bAiFilled'),'ok'); }
-    else toast(t('bAiUnknown'),'err');
-  }).catch(function(e){ toast(t('bAiFailed')+' '+((e&&e.message)||'error'),'err'); })
-    .then(function(){ bAiBusy=false; renderBgEditor(); }); }
-function grinderAiFill(){
+// Fitted burrs are named by their brand or model; a size alone is the
+// grinder's, not a choice of burrs.
+function burrsNamed(p){ return !!(p&&(String(p.brand||'').trim()||String(p.model||'').trim())); }
+function grinderAutoFill(){
   if(gAiBusy||!bgSel||bgSel.type!=='grinder') return Promise.resolve();
   bgReadGrinderForm();
-  var name=String(bgSel.obj.model||'').trim();
+  var o=bgSel.obj, name=String(o.model||'').trim();
   if(!name){ toast(t('gAiNeedModel'),'err'); return Promise.resolve(); }
   var key=aiKey();
   if(!key){ toast(tAi('aiNeedKey'),'err'); openSettingsPage(); spSelect('ai'); return Promise.resolve(); }
+  var parts=o._burr||burrPartsOf(o), fitted=burrsNamed(parts);
+  function ask(prompt){ return aiJson(key,[{text:prompt}],0.1,{search:true}).catch(function(e){ return {__err:e}; }); }
+  var jobs=[ask(grinderAiPrompt(name,_lang))];
+  if(fitted) jobs.push(ask(burrAiPrompt(burrSetName(parts,o.burrSize),_lang)));
   gAiBusy=true; renderBgEditor();
-  return aiJson(key,[{text:grinderAiPrompt(name,_lang)}],0.1,{search:true}).then(function(r){
-    if(!r||typeof r!=='object') { toast(t('gAiUnknown'),'err'); return; }
-    var o=bgSel.obj, got=0, offered=0;
-    // It fills; it does not correct. A lookup describes the grinder as it is
-    // sold, and what is already in the form is what is actually fitted to this
-    // one -- so an answer only ever lands in a box that is empty.
-    function txt(v){ return String(v==null?'':v).trim(); }
-    function take(cur,val){ var w=txt(val); if(!w) return null; offered++;
-      if(txt(cur)) return null; got++; return w; }
-    var cur=o._burr||burrPartsOf(o), x;
-    var bp={ brand:txt(cur.brand), model:txt(cur.model), coating:txt(cur.coating), notes:String(cur.notes||'') };
+  return Promise.all(jobs).then(function(res){
+    var tally={got:0,offered:0};
+    var failed=res.filter(function(r){ return r&&r.__err; });
+    applyGrinderLookup(o,res[0],fitted,tally);
+    if(fitted) applyBurrLookup(o,res[1],tally);
+    if(failed.length===res.length){
+      toast(t('gAiFailed')+' '+((failed[0].__err&&failed[0].__err.message)||'error'),'err'); return; }
+    toast(tally.got?t(fitted?'gAutoFilledBurr':'gAiFilled'):(tally.offered?t('gAiKept'):t('gAiUnknown')),
+      (tally.got||tally.offered)?'ok':'err');
+  }).then(function(){ gAiBusy=false; renderBgEditor(); }); }
+// It fills; it does not correct. A lookup describes the grinder as it is sold,
+// and what is already in the form is what is actually fitted to this one -- so
+// an answer only ever lands in a box that is empty, and stock burrs are not
+// offered at all once other burrs are named.
+function applyGrinderLookup(o,r,fitted,tally){
+  if(!r||typeof r!=='object'||r.__err) return;
+  function txt(v){ return String(v==null?'':v).trim(); }
+  function take(cur,val){ var w=txt(val); if(!w) return null; tally.offered++;
+    if(txt(cur)) return null; tally.got++; return w; }
+  var cur=o._burr||burrPartsOf(o), x;
+  var bp={ brand:txt(cur.brand), model:txt(cur.model), coating:txt(cur.coating), notes:String(cur.notes||'') };
+  if(!fitted){
     if((x=take(bp.brand,r.burrBrand))) bp.brand=x;
     if((x=take(bp.model,r.burrModel))) bp.model=x;
-    if((x=take(bp.coating,r.burrCoating))) bp.coating=x;
-    o._burr=bp;
-    if((x=take(o.burrType,r.burrType))) o.burrType=x.toLowerCase();
-    var sz=(typeof r.burrSize==='number')?r.burrSize:parseFloat(r.burrSize);
-    if(!isNaN(sz)&&sz>0){ offered++; if(o.burrSize==null||o.burrSize===''){ o.burrSize=sz; got++; } }
-    if((x=take(o.notes,r.notes))) o.notes=x;
-    toast(got?t('gAiFilled'):(offered?t('gAiKept'):t('gAiUnknown')),got?'ok':(offered?'ok':'err'));
-  }).catch(function(e){ toast(t('gAiFailed')+' '+((e&&e.message)||'error'),'err'); })
-    .then(function(){ gAiBusy=false; renderBgEditor(); }); }
+    if((x=take(bp.coating,r.burrCoating))) bp.coating=x; }
+  o._burr=bp;
+  if((x=take(o.burrType,r.burrType))) o.burrType=x.toLowerCase();
+  var sz=(typeof r.burrSize==='number')?r.burrSize:parseFloat(r.burrSize);
+  if(!isNaN(sz)&&sz>0){ tally.offered++; if(o.burrSize==null||o.burrSize===''){ o.burrSize=sz; tally.got++; } }
+  if((x=take(o.notes,r.notes))) o.notes=x; }
+function applyBurrLookup(o,r,tally){
+  if(!r||typeof r!=='object'||r.__err) return;
+  var note=(typeof r.notes==='string')?r.notes.trim():'';
+  if(!(r.known&&note)) return;
+  tally.offered++;
+  var bp=Object.assign({},o._burr||burrPartsOf(o));
+  o._burr=bp;
+  if(String(bp.notes||'').trim()) return;
+  bp.notes=note; tally.got++; }
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
@@ -12205,21 +12230,19 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
         +'<div class="ep-section-title">'+escapeHtml(t('grinder'))+'</div>'
         +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('brand'))+'</label><input id="bgBrand" value="'+escapeAttr(gname.brand)+'" placeholder="Niche"'+ro+'></div>'
           +'<div class="field"><label>'+escapeHtml(t('model'))+'</label><input id="bgModel" value="'+escapeAttr(gname.model)+'" placeholder="Zero"'+ro+'></div></div>'
-        +'<div class="g-ai"><button class="ep-aibtn" id="bgAiBtn" onclick="grinderAiFill()"'+(gAiBusy?' disabled aria-busy="true"':'')+'>'
-          +escapeHtml(gAiBusy?t('gAiWorking'):('\u2728 '+t('gAiFill')))+'</button>'
-          +'<span class="g-ai-hint">'+escapeHtml(t('gAiHint'))+'</span></div>'
         +bgLinkHtml(o)
-        +'<div class="ep-section-title" style="margin-top:14px">'+t('grindSetting')+'</div>'
-        +'<div class="gset-cols"><div class="gset-main">'
-        +'<div class="field"><label>'+t('settingType')+'</label>'
-          +'<div class="ep-pump-toggle" style="width:fit-content"><button class="'+(isPreset?'':'on')+'" onclick="bgSetGrindType(\'numeric\')"'+(owned?' disabled':'')+'>'+t('numericDial')+'</button><button class="'+(isPreset?'on':'')+'" onclick="bgSetGrindType(\'preset\')"'+(owned?' disabled':'')+'>'+t('namedPresets')+'</button></div></div>'
+        +'<div class="ep-section-title bg-sub">'+t('grindSetting')+'</div>'
+        +'<div class="field-row">'
+          +'<div class="field"><label>'+t('settingType')+'</label>'
+            +'<div class="ep-pump-toggle bg-dialtype"><button class="'+(isPreset?'':'on')+'" onclick="bgSetGrindType(\'numeric\')"'+(owned?' disabled':'')+'>'+t('numericDial')+'</button><button class="'+(isPreset?'on':'')+'" onclick="bgSetGrindType(\'preset\')"'+(owned?' disabled':'')+'>'+t('namedPresets')+'</button></div></div>'
+          +(isPreset
+            ? '<div class="field"><label>'+t('currentSetting')+'</label><input id="bgGrindSetting" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="Medium"></div>'
+            : '<div class="field"><label>'+t('currentSettingDial')+'</label><input id="bgGrindSetting" type="text" inputmode="decimal" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="5.2"></div>')
+        +'</div>'
         +(isPreset
           ? '<div class="field"><label>'+t('presetPositions')+'</label><input id="bgSettingValues" value="'+escapeAttr((o.settingValues||[]).join(', '))+'" placeholder="Fine, Medium, Coarse"'+ro+'></div>'
-            +'<div class="field"><label>'+t('currentSetting')+'</label><input id="bgGrindSetting" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. Medium"></div>'
-          : '<div class="field-row"><div class="field"><label>'+t('fineStep')+'</label><input id="bgSmallStep" type="number" step="0.1" value="'+(o.settingSmallStep!=null?o.settingSmallStep:0.1)+'"'+ro+'></div><div class="field"><label>'+t('coarseStep')+'</label><input id="bgBigStep" type="number" step="0.1" value="'+(o.settingBigStep!=null?o.settingBigStep:1.0)+'"'+ro+'></div></div>'
-            +'<div class="field"><label>'+t('currentSettingDial')+'</label><input id="bgGrindSetting" type="text" inputmode="decimal" value="'+escapeAttr(o.grinderSetting||'')+'" placeholder="e.g. 5.2"></div>')
-        +'</div>'+bgSpeedFieldsHtml(o)+'</div>'
-        +'<div class="field" style="margin-top:12px"><label>'+t('notesLabel')+'</label><textarea id="bgGNotes" rows="3">'+escapeHtml(o.notes||'')+'</textarea></div>'
+          : '<div class="field-row"><div class="field"><label>'+t('fineStep')+'</label><input id="bgSmallStep" type="number" step="0.1" value="'+(o.settingSmallStep!=null?o.settingSmallStep:0.1)+'"'+ro+'></div><div class="field"><label>'+t('coarseStep')+'</label><input id="bgBigStep" type="number" step="0.1" value="'+(o.settingBigStep!=null?o.settingBigStep:1.0)+'"'+ro+'></div></div>')
+        +bgSpeedFieldsHtml(o)
       +'</div>'
       +'<div class="bg-col">'
         +'<div class="ep-section-title">'+escapeHtml(t('burrSet'))+'</div>'
@@ -12230,14 +12253,14 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
           +'<div class="field"><label>'+escapeHtml(t('burrSize'))+'</label><input id="bgBurrSize" type="number" step="0.5" value="'+(o.burrSize!=null?o.burrSize:'')+'" placeholder="98"></div>'
           +'<div class="field"><label>'+escapeHtml(t('burrCoating'))+'</label><input id="bgBurrCoating" list="dlBurrCoat" value="'+escapeAttr(bp.coating)+'" placeholder="Red Speed"></div></div>'
         +'<div class="field"><label>'+escapeHtml(t('burrGeom'))+'</label><input id="bgBurrType" list="dlBurrGeom" value="'+escapeAttr(o.burrType||'')+'" placeholder="flat / conical"></div>'
-        +'<div class="g-ai"><button class="ep-aibtn" onclick="burrAiFill()"'+(bAiBusy?' disabled aria-busy="true"':'')+'>'
-          +escapeHtml(bAiBusy?t('bAiWorking'):('\u2728 '+t('bAiFill')))+'</button></div>'
         +'<div class="field"><label>'+escapeHtml(t('burrNotes'))+'</label>'
-          +'<textarea id="bgBurrNotes" rows="7">'+escapeHtml(bp.notes||'')+'</textarea></div>'
+          +'<textarea id="bgBurrNotes" rows="3">'+escapeHtml(bp.notes||'')+'</textarea></div>'
+        +'<div class="ep-section-title bg-sub">'+t('notesLabel')+'</div>'
+        +'<div class="field bg-notes"><textarea id="bgGNotes" rows="3">'+escapeHtml(o.notes||'')+'</textarea></div>'
       +'</div>'
       +'</div>'
       +dl('dlBurrBrand',BURR_BRANDS)+dl('dlBurrModel',BURR_MODELS)+dl('dlBurrCoat',BURR_COATINGS)+dl('dlBurrGeom',['flat','conical'])
-      +'<div class="ep-save-bar">'+'<button class="m-btn" style="margin-right:auto" onclick="bgCloseEditor()">'+t('close')+'</button>'+((isNew||owned)?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteGrinder()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useGrinder()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveGrinder()">'+t('save')+'</button></div>';
+      +'<div class="ep-save-bar">'+'<button class="m-btn" style="margin-right:auto" onclick="bgCloseEditor()">'+t('close')+'</button>'+((isNew||owned)?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteGrinder()">'+t('delete')+'</button>')+'<button class="m-btn" id="bgAiBtn" onclick="grinderAutoFill()" title="'+escapeAttr(t('gAutoHint'))+'"'+(gAiBusy?' disabled aria-busy="true"':'')+'>'+escapeHtml(gAiBusy?t('gAiWorking'):t('gAutoFill'))+'</button><button class="m-btn" onclick="useGrinder()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveGrinder()">'+t('save')+'</button></div>';
   }
 }
 // -- Grind speed and feed speed -------------------------------------
@@ -12248,16 +12271,15 @@ function bgShowsFeed(o){
     ||grinderKeyOf(o).indexOf(MT80_ID+':')===0
     ||/mt\s?-?80/i.test(String(o.model||'')); }
 function bgSpeedFieldsHtml(o){
-  var h='<div class="gset-side"><div class="field"><label>'+escapeHtml(t('grindSpeed'))+'</label>'
+  var h='<div class="ep-section-title bg-sub">'+escapeHtml(t('speedSection'))+'</div>'
+    +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('grindSpeed'))+'</label>'
     +'<input id="bgGrindSpeed" type="number" inputmode="decimal" step="any" min="0"'
-    +' value="'+(o.grindSpeed!=null?o.grindSpeed:'')+'" placeholder="'+escapeAttr(t('grindSpeedNone'))+'">'
-    +'<div class="gs-hint">'+escapeHtml(t('grindSpeedHint'))+'</div></div>';
+    +' value="'+(o.grindSpeed!=null?o.grindSpeed:'')+'" placeholder="'+escapeAttr(t('grindSpeedNone'))+'"></div>';
   if(bgShowsFeed(o))
     h+='<div class="field"><label>'+escapeHtml(t('feedLbl'))+'</label>'
       +'<input id="bgFeedRpm" type="number" inputmode="numeric" step="1" min="0"'
-      +' value="'+(o.feedRpm!=null?o.feedRpm:'')+'" placeholder="'+escapeAttr(t('grindSpeedNone'))+'">'
-      +'<div class="gs-hint">'+escapeHtml(t('feedHint'))+'</div></div>';
-  return h+'</div>'; }
+      +' value="'+(o.feedRpm!=null?o.feedRpm:'')+'" placeholder="'+escapeAttr(t('grindSpeedNone'))+'"></div>';
+  return h+'</div><div class="gs-hint">'+escapeHtml(t('grindSpeedHint'))+'</div>'; }
 function dl(id,items){
   return '<datalist id="'+id+'">'+items.map(function(x){
     return '<option value="'+escapeAttr(x)+'"></option>'; }).join('')+'</datalist>'; }
@@ -15941,10 +15963,10 @@ function bgLinkHtml(o){
   var dv=grinderDevice();
   var lit=!!(dv&&dv.state==='connected'&&pluginKeyOfDevice(dv.id)===k);
   var pname=_pluginNames[k]||k.split(':')[0];
-  return '<div class="bg-linkbox"><div class="ep-section-title">'+escapeHtml(t('grLinkTitle'))+'</div>'
-    +'<div class="set-desc">'+escapeHtml(t(pluginOwned(o)?'grLinkWhat':'grLinkGone').replace('{p}',pname))+'</div>'
-    +'<div class="bg-linkrow"><span class="bg-link'+(lit?' on':'')+'">'+escapeHtml(t('grLinked'))+'</span>'
-    +'<span class="bg-linkname">'+escapeHtml(lit?(dv.name||pname):t('grLinkAway'))+'</span></div></div>'; }
+  return '<div class="bg-linkbox"><div class="bg-linkrow"><span class="bg-link'+(lit?' on':'')+'">'+escapeHtml(t('grLinked'))+'</span>'
+    +'<span class="bg-linkname">'+escapeHtml(pname)+'</span>'
+    +'<span class="bg-linkstate">'+escapeHtml(lit?(dv.name||t('connStUp')):t('grLinkAway'))+'</span></div>'
+    +'<div class="bg-linkdesc">'+escapeHtml(t(pluginOwned(o)?'grLinkWhat':'grLinkGone').replace('{p}',pname))+'</div></div>'; }
 function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
   api('PUT','/api/v1/workflow',{context:ctx}).then(function(){ toast(t('tGrinderSet'),'ok'); loadWorkflow();
     offerLastShotSettings({ name:o.model||'',
@@ -16018,6 +16040,18 @@ function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRo
           .filter(Boolean).join(', '):'');
         chip(t('decaf'),how||'✓'); } } }
   updateGrindRow(); }
+// The list carries no measurements, so how long the shot ran is read from the
+// shot itself, once per shot.
+var _lsSecs={};
+function lastShotSecsText(id){ var v=_lsSecs[id]; return (v>0)?String(Math.round(v)):'\u2014'; }
+function loadLastShotSecs(id){
+  if(!id||_lsSecs[id]!==undefined) return Promise.resolve();
+  _lsSecs[id]=null;
+  return api('GET','/api/v1/shots/'+encodeURIComponent(id)).then(function(f){
+    _lsSecs[id]=f?shotSeconds(f):0;
+  },function(){ delete _lsSecs[id]; }).then(function(){
+    var el=document.getElementById('lsTime');
+    if(el&&lastShotSummary&&lastShotSummary.id===id) el.textContent=lastShotSecsText(id); }); }
 // Populate the "Last Shot" mini panel + today's count from the shot history.
 function loadLastShot(){
   if(loadBusy('lastshot')) return;
@@ -16027,7 +16061,8 @@ function loadLastShot(){
   lastShotSummary=items.length?items[0]:null;
   recentShots=items; syncProfileCut();
   syncShotRead();
-  if(!items.length){ box.innerHTML='<div class="ls-empty">'+t('noShots')+'</div>'; if(profEl) profEl.innerHTML=''; return; }
+  var todayEl=document.getElementById('lsToday');
+  if(!items.length){ box.innerHTML='<div class="ls-empty">'+t('noShots')+'</div>'; if(profEl) profEl.innerHTML=''; if(todayEl) todayEl.textContent=''; return; }
   var s=items[0], an=s.annotations||{};
   // Show which profile produced this shot (group prefix dimmed if present).
   if(profEl){ var pr=(s.workflow&&s.workflow.profile)||{}; var stt=splitTitle(pr.title||''); 
@@ -16040,11 +16075,14 @@ function loadLastShot(){
   var dose=(an.actualDoseWeight!=null?an.actualDoseWeight:(ctx.targetDoseWeight!=null?ctx.targetDoseWeight:settings.doseIn));
   var yld=(an.actualYield!=null?an.actualYield:(ctx.targetYield!=null?ctx.targetYield:null));
   var ratio=(dose&&yld)?('1:'+(yld/dose).toFixed(1)):'—';
-  function stat(v,l){ return '<div class="ls-stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; }
-  box.innerHTML=stat(dose!=null?convWeight(dose).toFixed(1):'—',t('lastDose'))
-    +stat(yld!=null?(convWeight(yld).toFixed(1)+weightUnitLabel()):'—',t('lastYield'))
+  function stat(v,l,u,id){ return '<div class="ls-stat"><div class="v"'+(id?' id="'+id+'"':'')+'>'+v+'</div>'
+    +'<div class="l">'+escapeHtml(l)+(u?'<span class="lu">'+escapeHtml(u)+'</span>':'')+'</div></div>'; }
+  box.innerHTML=stat(dose!=null?convWeight(dose).toFixed(1):'—',t('lastDose'),weightUnitLabel())
+    +stat(yld!=null?convWeight(yld).toFixed(1):'—',t('lastYield'),weightUnitLabel())
     +stat(ratio,t('lastRatio'))
-    +stat(cnt,t('todaysShots'));
+    +stat(lastShotSecsText(s.id),t('lastTime'),'s','lsTime');
+  if(todayEl) todayEl.textContent=cnt?t('lsToday').replace('{n}',cnt):'';
+  loadLastShotSecs(s.id);
 }).catch(function(){}).then(function(){ loadFree('lastshot'); });
 }
 // ── Visualizer import ──────────────────────────────────────

@@ -179,3 +179,67 @@ test('the card stays short', function (T) {
   T.atMost(T.h(T.el('.recipe')), 182, 'recipe card height with both scales and a dosing reading');
   withoutDosing();
 });
+
+// The last shot: a line of readings, not buttons.
+function lastShotWith(items, full) {
+  var real = api, asked = [];
+  api = function (m, p) {
+    asked.push(m + ' ' + p);
+    if (p.indexOf('/api/v1/shots?') === 0) return Promise.resolve({ items: items });
+    if (p.indexOf('/api/v1/shots/') === 0) return Promise.resolve(full);
+    return Promise.resolve({});
+  };
+  loadFree('lastshot');
+  loadLastShot();
+  return new Promise(function (r) { setTimeout(r, 0); })
+    .then(function () { return new Promise(function (r) { setTimeout(r, 0); }); })
+    .then(function () { api = real; return asked; }, function (e) { api = real; throw e; });
+}
+function measured(seconds) {
+  var t0 = Date.parse('2026-10-27T10:00:00Z'), m = [];
+  for (var i = 0; i <= seconds; i++)
+    m.push({ machine: { timestamp: new Date(t0 + i * 1000).toISOString(), state: { substate: 'pouring' } } });
+  return m;
+}
+var NOW_SHOT = { id: 'ls-1', timestamp: new Date().toISOString(), createdAt: new Date().toISOString(),
+  workflow: { profile: { title: 'Default' }, context: {} }, annotations: { actualDoseWeight: 18, actualYield: 36.4 } };
+
+test('the last shot reads as figures, not buttons', function (T) {
+  return lastShotWith([NOW_SHOT], Object.assign({}, NOW_SHOT, { measurements: measured(27) })).then(function () {
+    var cells = T.all('#lsStats .ls-stat');
+    T.eq(cells.length, 4, 'four readings');
+    cells.forEach(function (c, i) {
+      T.eq(T.css(c, 'backgroundImage'), 'none', 'cell ' + i + ' has no button face');
+      T.eq(T.css(c, 'boxShadow'), 'none', 'cell ' + i + ' has no lift');
+      T.ok(T.h(c) <= 40, 'cell ' + i + ' is a line of text tall (' + T.h(c) + ')');
+    });
+    T.ok(parseFloat(T.css(cells[1], 'borderLeftWidth')) > 0, 'a rule between readings');
+  });
+});
+
+test('the readings carry their units on the caption, and the time is the shot\u2019s', function (T) {
+  var shot = Object.assign({}, NOW_SHOT, { id: 'ls-2' });
+  return lastShotWith([shot], Object.assign({}, shot, { measurements: measured(27) })).then(function (asked) {
+    var v = T.all('#lsStats .ls-stat .v').map(function (e) { return e.textContent; });
+    T.eq(v.join('|'), '18.0|36.4|1:2.0|27', 'dose, yield, ratio, seconds -- numbers only');
+    var l = T.all('#lsStats .ls-stat .l').map(function (e) { return e.textContent; });
+    T.ok(l[0].indexOf('g') > 0 && l[1].indexOf('g') > 0 && l[3].indexOf('s') > 0, 'units on the captions');
+    T.ok(asked.indexOf('GET /api/v1/shots/ls-2') >= 0, 'the time is read from the shot itself');
+    T.ok(T.el('#lsToday').textContent.indexOf('1') >= 0, 'today\u2019s count moved to the header');
+  });
+});
+
+test('the time of a shot is read once', function (T) {
+  var shot = Object.assign({}, NOW_SHOT, { id: 'ls-2' });
+  return lastShotWith([shot], Object.assign({}, shot, { measurements: measured(27) })).then(function (asked) {
+    T.eq(asked.filter(function (a) { return a === 'GET /api/v1/shots/ls-2'; }).length, 0, 'already known');
+    T.eq(T.el('#lsTime').textContent, '27', 'and still shown');
+  });
+});
+
+test('no shots, no header count', function (T) {
+  return lastShotWith([], null).then(function () {
+    T.eq(T.el('#lsToday').textContent, '', 'empty');
+    T.ok(!!T.el('#lsStats .ls-empty'), 'and the empty message');
+  });
+});
