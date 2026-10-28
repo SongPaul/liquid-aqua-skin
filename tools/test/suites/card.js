@@ -55,6 +55,7 @@ function linkedRpmGrinder() {
 }
 
 test('the columns start on the same line', function (T) {
+  withoutDosing();
   linkedRpmGrinder();
   T.eq(T.el('#rpmRow').hidden, false, 'the RPM row is standing');
   var scaleName = T.el('#devDose');
@@ -138,7 +139,7 @@ function withDosingReading(w) {
   syncDoseTake();
 }
 function withoutDosing() {
-  state.devices = (state.devices || []).filter(function (d) { return d.id !== 'CardBench'; });
+  state.devices = (state.devices || []).filter(function (d) { return d.connectionRole !== 'auxiliary'; });
   prefs.dosingScaleId = '';
   state.dosingConnected = false; state.dosingWeight = null;
   syncDoseTake();

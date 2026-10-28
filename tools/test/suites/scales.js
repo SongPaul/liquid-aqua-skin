@@ -113,3 +113,26 @@ test('the dosing scale\u2019s name comes up with its first reading', function (T
   T.ok(T.el('#devDose').textContent.indexOf('Bench') >= 0, 'named without waiting for a device refresh');
   state.dosingConnected = false; state.dosingWeight = null; syncDoseTake();
 });
+
+// A browser that never chose a dosing scale -- the app's own view, a fresh
+// tablet -- still reads the one the gateway is holding as the second scale.
+test('a scale the gateway already holds as the dosing scale is read without being chosen here', function (T) {
+  withScales([LUNAR, BENCH]);
+  prefs.dosingScaleId = '';
+  state.dosingConnected = false; state.dosingWeight = null;
+  T.eq(dosingId(), 'Bench', 'the gateway’s hold stands in for a choice');
+  T.eq(dosingDevice() && dosingDevice().id, 'Bench', 'and is the dosing device');
+  dosingFrame({ status: 'connected' });
+  dosingFrame({ weight: 18.2 });
+  T.eq(T.el('#doseNow').textContent, '18.2g', 'its reading shows on the dose');
+  T.ok(T.el('#doseStack').classList.contains('dose-three'), 'on its own line');
+});
+
+test('a choice made here still wins over another held scale', function (T) {
+  withScales([LUNAR, BENCH, SPARE]);
+  prefs.dosingScaleId = 'Spare';
+  T.eq(dosingId(), 'Spare', 'the local choice first');
+  prefs.dosingScaleId = '';
+  withScales([LUNAR, SPARE]);
+  T.eq(dosingId(), '', 'and nothing held, nothing chosen, is no dosing scale');
+});

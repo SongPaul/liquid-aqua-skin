@@ -428,6 +428,8 @@ test('no feed speed for any other grinder, or a manual one in use', function (T)
 });
 
 test('the feed row lines up with the yield row beside it', function (T) {
+  state.devices = (state.devices || []).filter(function (d) { return d.connectionRole !== 'auxiliary'; });
+  prefs.dosingScaleId = ''; syncDoseTake();
   asMt80Device();
   T.near(T.top(T.el('#feedRow')), T.top(T.el('#doseOut').closest('.dose-block')), 1,
     'third row of numbers on one line');

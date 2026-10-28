@@ -5927,7 +5927,10 @@ function probeDosingSupport(){
       var changed=(_dosingSupport!==ok); _dosingSupport=ok;
       if(changed){ renderDosingRow(); if(ok) syncDosing(); }
       return ok; }); }
-function dosingId(){ return prefs.dosingScaleId||''; }
+function dosingId(){
+  if(prefs.dosingScaleId) return prefs.dosingScaleId;
+  var held=scaleDevices().filter(function(d){ return d.connectionRole==='auxiliary'; })[0];
+  return held?held.id:''; }
 function scaleDevices(){ return (state.devices||[]).filter(function(d){ return d.type==='scale'; }); }
 function deviceById(id){ var f=(state.devices||[]).filter(function(d){ return d.id===id; }); return f[0]||null; }
 // The scale the shot is weighed on cannot also be held as the dosing scale.
