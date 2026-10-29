@@ -1061,3 +1061,128 @@ test('a failed install says so and can be tried again', function (T) {
     box.remove();
   }, function (e) { ensurePluginGrinders = realEnsure; box.remove(); throw e; });
 });
+
+// The linked grinder's speeds go into the workflow, so each shot keeps them and
+// the Visualizer upload can carry them.
+function workflowPuts() {
+  var sent = [];
+  var fake = function (m, p, b) {
+    if (m === 'PUT' && p === '/api/v1/workflow') sent.push(b);
+    if (m === 'GET' && p.indexOf('/ui?state=1') >= 0)
+      return Promise.resolve({ connected: true, snapshot: { feedingRpm: 40 } });
+    return Promise.resolve({});
+  };
+  fake.sent = sent;
+  return fake;
+}
+function speedPuts(sent) {
+  return sent.filter(function (b) { return b && b.context && b.context.extras; })
+    .map(function (b) { return b.context.extras; });
+}
+function speedsCleared() {
+  context.extras = Object.assign({}, context.extras || {}, { grinderRpm: null, grinderFeedRpm: null });
+}
+
+test('a linked grinder\u2019s RPM is kept with the workflow', function (T) {
+  speedsCleared(); state.shotRunning = false;
+  var gw = workflowPuts();
+  return withApi(gw, function () {
+    asGrinder(XBLOOM, { state: 'idle', setting: '45', rpm: 110 });
+    T.eq(context.extras.grinderRpm, 110, 'held in the context at once');
+    return wait(650).then(function () {
+      var last = speedPuts(gw.sent).pop();
+      T.ok(!!last, 'and written to the workflow');
+      T.eq(last && last.grinderRpm, 110, 'with the RPM');
+      T.eq(last && last.grinderFeedRpm, null, 'and no feed speed for a grinder without one');
+    });
+  });
+});
+
+test('the MT80\u2019s feed speed is kept with the workflow', function (T) {
+  speedsCleared(); state.shotRunning = false;
+  var gw = workflowPuts();
+  return withApi(gw, function () {
+    _feedHold = null;
+    asMt80Device();
+    return loadMt80Feed().then(function () { return wait(650); }).then(function () {
+      T.eq(context.extras.grinderFeedRpm, 40, 'held in the context');
+      T.eq((speedPuts(gw.sent).pop() || {}).grinderFeedRpm, 40, 'and written to the workflow');
+    });
+  });
+});
+
+test('a grinder that is not linked leaves no speeds behind', function (T) {
+  state.shotRunning = false;
+  context.extras = Object.assign({}, context.extras || {}, { grinderRpm: 110, grinderFeedRpm: 40 });
+  var gw = workflowPuts();
+  return withApi(gw, function () {
+    state.devices = (state.devices || []).filter(function (d) { return d.type !== 'grinder'; });
+    context.grinderId = null;
+    syncGrinder();
+    return wait(650).then(function () {
+      T.eq(context.extras.grinderRpm, null, 'the RPM is cleared');
+      T.eq(context.extras.grinderFeedRpm, null, 'and the feed speed');
+      var last = speedPuts(gw.sent).pop();
+      T.ok(!!last && last.grinderRpm === null && last.grinderFeedRpm === null, 'in the workflow too');
+    });
+  });
+});
+
+test('speeds are not rewritten while a shot is being pulled', function (T) {
+  speedsCleared();
+  var gw = workflowPuts();
+  return withApi(gw, function () {
+    state.shotRunning = true;
+    asGrinder(XBLOOM, { state: 'idle', setting: '45', rpm: 130 });
+    return wait(650).then(function () {
+      T.eq(context.extras.grinderRpm, null, 'the shot keeps what it started with');
+      T.eq(speedPuts(gw.sent).length, 0, 'nothing written');
+      state.shotRunning = false;
+    });
+  });
+});
+
+test('nothing is written when the speeds have not changed', function (T) {
+  state.shotRunning = false;
+  var gw = workflowPuts();
+  return withApi(gw, function () {
+    asGrinder(XBLOOM, { state: 'idle', setting: '45', rpm: 110 });
+    return wait(650).then(function () {
+      var before = speedPuts(gw.sent).length;
+      syncGrinder(); syncGrinder();
+      return wait(650).then(function () {
+        T.eq(speedPuts(gw.sent).length, before, 'no repeat writes');
+      });
+    });
+  });
+});
+
+// The shot log shows the speeds a shot was pulled at, and corrects them.
+function speedShot() {
+  return { id: 'speed-shot', timestamp: new Date().toISOString(), measurements: [],
+    annotations: {},
+    workflow: { profile: { title: 'P' }, context: { grinderModel: 'EG1', grinderSetting: '4',
+      extras: { grinderRpm: 1200, grinderFeedRpm: 40 } } } };
+}
+
+test('the shot log shows the grinder speeds of the shot', function (T) {
+  var s = speedShot();
+  slSel = s;
+  renderShotDetail(s);
+  T.eq(T.el('#slRpm').value, '1200', 'the RPM');
+  T.eq(T.el('#slFeed').value, '40', 'and the feed speed');
+});
+
+test('a corrected speed is written to the shot as data', function (T) {
+  var s = speedShot();
+  slSel = s;
+  renderShotDetail(s);
+  T.el('#slRpm').value = '1100';
+  T.el('#slFeed').value = '';
+  var edits = shotContextEdits();
+  T.ok(!!edits && !!edits.extras, 'the edit carries the speeds');
+  T.eq(edits.extras.grinderRpm, 1100, 'as a number');
+  T.eq(edits.extras.grinderFeedRpm, null, 'and an emptied one is cleared');
+  T.el('#slRpm').value = '1200'; T.el('#slFeed').value = '40';
+  T.eq(shotContextEdits(), null, 'unchanged speeds are no edit');
+});

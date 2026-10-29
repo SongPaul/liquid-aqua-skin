@@ -3553,7 +3553,7 @@ var I18N={
     milkConfirm:'Record {v}g of milk on the shot pulled at {w}?',
     milkNoteKey:'Milk', milkNote:'Milk {v}g',
     milkLogged:'Recorded on the {w} shot', milkFailed:'Could not record it:',
-    doseTakeHint:'Tap to take the reading, hold to type', rpmLbl:'RPM',
+    doseTakeHint:'Tap to take the reading, hold to type', rpmLbl:'RPM', grindRpmLbl:'Grind RPM',
     grSrcLiveHint:'Sets the connected grinder — hold for the grinder list',
     grPanelHint:'Tap for the grinder’s settings — hold for the grinder list',
     grSrcWatchHint:'This grinder only reports — the number is kept here; hold for the grinder list',
@@ -4014,7 +4014,7 @@ var I18N={
     milkConfirm:'{w} 에 내린 샷에 우유 {v}g 을 기록할까요?',
     milkNoteKey:'우유', milkNote:'우유 {v}g',
     milkLogged:'{w} 샷에 기록했습니다', milkFailed:'기록하지 못했습니다:',
-    doseTakeHint:'누르면 저울 값, 길게 누르면 직접 입력', rpmLbl:'RPM',
+    doseTakeHint:'누르면 저울 값, 길게 누르면 직접 입력', rpmLbl:'RPM', grindRpmLbl:'분쇄 RPM',
     grSrcLiveHint:'연결된 그라인더를 설정합니다 — 길게 누르면 그라인더 목록',
     grPanelHint:'누르면 그라인더 설정 — 길게 누르면 그라인더 목록',
     grSrcWatchHint:'이 그라인더는 읽기만 됩니다 — 숫자는 여기에 기록됩니다, 길게 누르면 그라인더 목록',
@@ -4994,7 +4994,7 @@ function onMachineState(ms,prev){
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); if(chart.targetMix.length>chart.max)chart.targetMix.shift(); drawChart(); }
 }
 function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){
-  if(s){ state.lastShotId=s.id; if(prefs.autoDye) openDyeModal(); runShotRead(s.id); }
+  if(s){ state.lastShotId=s.id; stampGrinderLine(s); if(prefs.autoDye) openDyeModal(); runShotRead(s.id); }
   loadLastShot(); }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
@@ -16816,6 +16816,7 @@ function syncFeedRow(){
   var on=feedShown();
   var g=document.getElementById('feedGrp'); if(g) g.hidden=!on;
   var e=document.getElementById('feedVal'); if(e) e.textContent=(mt80Feed==null)?'\u2014':String(mt80Feed);
+  adoptGrinderSpeeds();
   if(on&&!_feedPoll){
     _feedPoll=setInterval(function(){
       if(!feedShown()){ clearInterval(_feedPoll); _feedPoll=null; syncFeedRow(); return; }
@@ -16887,7 +16888,7 @@ function updateGrindRow(){ syncGrinderGlyph(); var row=document.getElementById('
   var shown=gSetting();
   var v=(shown!=null)?shown:((context.grinderSetting!=null&&context.grinderSetting!=='')?context.grinderSetting:null);
   document.getElementById('grindVal').textContent=(v==null)?'\u2014':v;
-  adoptGrindSetting(shown); }
+  adoptGrindSetting(shown); adoptGrinderSpeeds(); }
 // The grind can be changed somewhere this card is not: on the grinder's own
 // page, or on the grinder itself. The card showed the new number and went on
 // saving the old one with the shot, which is the worst of both. Only a
@@ -16901,6 +16902,22 @@ function adoptGrindSetting(v){
   clearTimeout(adoptGrindSetting._t);
   adoptGrindSetting._t=setTimeout(function(){
     api('PUT','/api/v1/workflow',{context:{grinderSetting:String(v)}}).catch(function(){}); },600); }
+// The speeds a linked grinder runs at are kept with the workflow beside its
+// setting, so each shot records them and the Visualizer upload carries them.
+// A grinder that is not linked contributes none, rather than leaving the last
+// one's numbers on the next shot.
+function grinderSpeedsNow(){
+  var rpm=gRpm(), feed=feedShown()?mt80Feed:null;
+  return { grinderRpm:(rpm==null?null:Math.round(rpm)), grinderFeedRpm:(feed==null?null:feed) }; }
+function adoptGrinderSpeeds(){
+  if(state.shotRunning) return;
+  var now=grinderSpeedsNow(), ex=context.extras||{};
+  if(ex.grinderRpm===now.grinderRpm&&ex.grinderFeedRpm===now.grinderFeedRpm) return;
+  if(ex.grinderRpm==null&&now.grinderRpm==null&&ex.grinderFeedRpm==null&&now.grinderFeedRpm==null) return;
+  context.extras=Object.assign({},ex,now);
+  clearTimeout(adoptGrinderSpeeds._t);
+  adoptGrinderSpeeds._t=setTimeout(function(){
+    api('PUT','/api/v1/workflow',{context:{extras:grinderSpeedsNow()}}).catch(function(){}); },600); }
 // Adjust the grind setting from the main screen and persist to the workflow.
 function adjustGrind(dir){ var gr=currentGrinder();
   var cur=(gSetting()!=null)?gSetting():context.grinderSetting;
@@ -16946,7 +16963,7 @@ function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return
   var tds=parseFloat(document.getElementById('dyeTds').value)||null; var ey=parseFloat(document.getElementById('dyeEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1)); // EY% = TDS*beverage/dose
   var ta=tasteAnn(state.dyeTaste||{},document.getElementById('dyeNotes').value,
-    null,shotRoastMachine({workflow:{context:context}}));
+    null,shotRoastMachine({workflow:{context:context}}),shotSpeeds({workflow:{context:context}}));
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
     enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
   api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast(t('tShotLogged'),'ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast(t('tLogFailed'),'err'); }); }
@@ -17199,6 +17216,10 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
           return '<option value="'+escapeAttr(g.model||'')+'"></option>'; }).join('')+'</datalist></div>'
       +'<div class="field"><label>'+escapeHtml(t('grindSetting'))+'</label>'
       +'<input id="slGrind" value="'+escapeAttr(ctx.grinderSetting!=null?String(ctx.grinderSetting):'')+'"></div></div>'
+    +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('grindRpmLbl'))+'</label>'
+      +'<input id="slRpm" type="text" inputmode="decimal" value="'+escapeAttr(shotSpeedShown(s,'grinderRpm'))+'"></div>'
+      +'<div class="field"><label>'+escapeHtml(t('feedLbl'))+'</label>'
+      +'<input id="slFeed" type="text" inputmode="decimal" value="'+escapeAttr(shotSpeedShown(s,'grinderFeedRpm'))+'"></div></div>'
     +'<div class="field-row"><div class="field" style="grid-column:1/-1">'
       +'<label class="bk-lab">'+escapeHtml(t('basketLabel'))
       +'<button type="button" class="bk-manage" title="'+escapeAttr(t('basketManage'))+'"'
@@ -17250,7 +17271,7 @@ function tasteOf(sh){
 function tasteNoteOf(sh){
   var an=(sh&&sh.annotations)||{}, ex=an.extras||{};
   if(Object.prototype.hasOwnProperty.call(ex,'lqNote')) return ex.lqNote==null?'':String(ex.lqNote);
-  return String(an.espressoNotes||''); }
+  return String(notesWithoutGrinderLine(an.espressoNotes)||''); }
 function tasteWords(v){
   var out=[];
   TASTE_ITEMS.forEach(function(it){ var n=v[it[0]]; if(!n) return;
@@ -17295,13 +17316,13 @@ function shotRoastMachine(sh){
   var b=shotBeanOf(sh); if(!b) return null;
   var m=beanRoastMachine(b), ty=beanRoastTypeShown(b);
   return (m||ty)?{m:m,t:ty}:null; }
-function tasteCompose(v,note,basket,machine){
-  var parts=[String(note||'').trim(), tasteWords(v).join(' \u00b7 '),
+function tasteCompose(v,note,basket,machine,speeds){
+  var parts=[String(notesWithoutGrinderLine(note)||'').trim(), tasteWords(v).join(' \u00b7 '),
     basketNoteLine(basket), roastMachineNoteLine(machine&&machine.m,machine&&machine.t)]
     .filter(Boolean);
-  return parts.length?parts.join('\n'):null; }
-function tasteAnn(v,note,basket,machine){
-  return { enjoyment:v.again||null, espressoNotes:tasteCompose(v,note,basket,machine),
+  return notesWithGrinderLine(parts.join('\n'),speeds); }
+function tasteAnn(v,note,basket,machine,speeds){
+  return { enjoyment:v.again||null, espressoNotes:tasteCompose(v,note,basket,machine,speeds),
     extras:{ lqTaste:v, lqNote:String(note||'').trim()||null } }; }
 var _tcOpen=null;
 function tasteCardHtml(id,v,mode){
@@ -17361,6 +17382,8 @@ function shotContextEdits(){
     var v=g(pair[0]); if(v===undefined) return;
     var old=was[pair[1]]; old=(old==null?'':String(old));
     if(v!==old){ out[pair[1]]=v; any=true; } });
+  var speeds=shotSpeedEdits(was);
+  if(speeds){ out.extras=speeds; any=true; }
   // untouched means unchanged: a shot whose id and names disagree is shown as
   // the id reads it, but nothing is written back until someone picks
   if(!_slBeanTouched||!document.getElementById('slBean')) return any?out:null;
@@ -17375,6 +17398,69 @@ function shotContextEdits(){
     var nv=(v==null?'':String(v));
     if(nv!==old){ out[key]=(nv===''?null:nv); any=true; } }
   cmp('coffeeName',wantName); cmp('coffeeRoaster',wantRoaster); cmp('beanBatchId',wantBatch);
+  return any?out:null; }
+// Visualizer has nowhere for a grinder's speeds, so they ride as one tagged
+// line under the notes. Back-sync returns the notes as Visualizer has them, so
+// the line is read back as data, and where it is present it is what the shot
+// says -- an edit made there arrives as nothing else.
+var GRINDER_TAG='[Grinder]', GRINDER_LINE_RE=/^[ \t]*\[Grinder\][^\n]*$/gim;
+function speedNum(v){
+  if(v==null||v==='') return null;
+  var n=Number(String(v).trim().replace(',','.'));
+  return isFinite(n)?n:null; }
+function grinderLine(sp){
+  var rpm=speedNum(sp&&sp.grinderRpm), feed=speedNum(sp&&sp.grinderFeedRpm), parts=[];
+  if(rpm!=null) parts.push((Math.round(rpm*10)/10)+' RPM');
+  if(feed!=null) parts.push('Feed '+(Math.round(feed*10)/10)+' RPM');
+  return parts.length?(GRINDER_TAG+' '+parts.join(' \u00b7 ')):''; }
+function grinderLinesOf(notes){ return String(notes||'').replace(/\r\n?/g,'\n').match(GRINDER_LINE_RE)||[]; }
+function notesWithoutGrinderLine(notes){
+  if(!grinderLinesOf(notes).length) return notes;
+  return String(notes).replace(/\r\n?/g,'\n').replace(GRINDER_LINE_RE,'').replace(/\n{3,}/g,'\n\n').trim(); }
+function parseGrinderLine(notes){
+  var lines=grinderLinesOf(notes); if(!lines.length) return null;
+  var out={grinderRpm:null,grinderFeedRpm:null};
+  lines[lines.length-1].trim().slice(GRINDER_TAG.length).split(/[\u00b7|;,]/).forEach(function(part){
+    var f=part.match(/^\s*feed\b\s*:?\s*(\d+(?:\.\d+)?)/i);
+    if(f){ out.grinderFeedRpm=Number(f[1]); return; }
+    var r=part.match(/^\s*(?:rpm\s*:?\s*)?(\d+(?:\.\d+)?)/i);
+    if(r&&out.grinderRpm==null) out.grinderRpm=Number(r[1]); });
+  return out; }
+function notesWithGrinderLine(notes,sp){
+  var base=String(notesWithoutGrinderLine(notes)||'').trim(), line=grinderLine(sp);
+  if(!line) return base||null;
+  return base?(base+'\n\n'+line):line; }
+function shotSpeeds(sh){
+  var fromNotes=parseGrinderLine(((sh&&sh.annotations)||{}).espressoNotes);
+  if(fromNotes) return fromNotes;
+  var ex=(sh&&sh.workflow&&sh.workflow.context&&sh.workflow.context.extras)||{};
+  return { grinderRpm:speedNum(ex.grinderRpm), grinderFeedRpm:speedNum(ex.grinderFeedRpm) }; }
+function shotSpeedShown(sh,k){ var v=shotSpeeds(sh)[k]; return v==null?'':String(v); }
+function shotSpeedsInForm(sh){
+  var sp=shotSpeeds(sh);
+  [['slRpm','grinderRpm'],['slFeed','grinderFeedRpm']].forEach(function(pair){
+    var el=document.getElementById(pair[0]); if(!el) return;
+    var raw=el.value.trim();
+    if(raw===''){ sp[pair[1]]=null; return; }
+    var v=speedNum(raw); if(v!=null) sp[pair[1]]=v; });
+  return sp; }
+// The uploader takes a finished shot a few seconds after it ends, so the line
+// written here is in the notes it uploads.
+function stampGrinderLine(sh){
+  if(!sh||!sh.id) return;
+  var was=((sh.annotations||{}).espressoNotes)||'';
+  var notes=notesWithGrinderLine(was,shotSpeeds(sh))||'';
+  if(notes===String(was)) return;
+  api('PUT','/api/v1/shots/'+encodeURIComponent(sh.id),{annotations:{espressoNotes:notes}}).catch(function(){}); }
+function shotSpeedText(ctx,k){ var v=ctx&&ctx.extras&&ctx.extras[k]; return (v==null||v==='')?'':String(v); }
+function shotSpeedEdits(was){
+  var out={}, any=false;
+  [['slRpm','grinderRpm'],['slFeed','grinderFeedRpm']].forEach(function(pair){
+    var el=document.getElementById(pair[0]); if(!el) return;
+    var raw=el.value.trim().replace(',','.'), v=(raw===''?null:parseFloat(raw));
+    if(v!==null&&!isFinite(v)) return;
+    var old=shotSpeedText(was,pair[1]);
+    if((v===null?'':String(v))!==old){ out[pair[1]]=v; any=true; } });
   return any?out:null; }
 // The uploader writes the id Visualizer gave a shot into the record's
 // bookkeeping. Its presence is what says this shot is up there to be updated.
@@ -17413,7 +17499,7 @@ function saveShotLog(id,quiet){ var dose=parseFloat(document.getElementById('slD
   var bEl=document.getElementById('slBasket'), basket=bEl?bEl.value.trim():'';
   var tv=(slSel&&slSel._taste)||{};
   var ta=tasteAnn(tv,document.getElementById('slNotes').value,
-    bEl?basket:shotBasket(slSel),shotRoastMachine(slSel));
+    bEl?basket:shotBasket(slSel),shotRoastMachine(slSel),shotSpeedsInForm(slSel));
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
     enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
   if(bEl){ ann.extras=ann.extras||{}; ann.extras.lqBasket=basket||null; noteBasket(basket); }
@@ -20060,7 +20146,7 @@ function phAnnPut(id,patch,after){
 function phTastePick(id,k,n){
   var row=phShotRow(id); if(!row) return;
   var v=tasteOf(row); v[k]=(v[k]===n)?null:n;
-  phAnnPut(id,tasteAnn(v,tasteNoteOf(row),shotBasket(row),shotRoastMachine(row)));
+  phAnnPut(id,tasteAnn(v,tasteNoteOf(row),shotBasket(row),shotRoastMachine(row),shotSpeeds(row)));
   _tcOpen=true; _tcCtx={mode:'ph',id:id}; tasteRedraw(); }
 
 // Typing redraws nothing. The model is updated as it goes and the write waits
@@ -20070,10 +20156,11 @@ function phNote(id,v){
   var row=phShotRow(id); if(!row) return;
   var tv=tasteOf(row);
   var an=row.annotations=row.annotations||{}; an.extras=an.extras||{};
-  an.extras.lqNote=v; an.espressoNotes=tasteCompose(tv,v,shotBasket(row),shotRoastMachine(row));
+  var sp=shotSpeeds(row);
+  an.extras.lqNote=v; an.espressoNotes=tasteCompose(tv,v,shotBasket(row),shotRoastMachine(row),sp);
   clearTimeout(_phNoteT);
   _phNoteT=setTimeout(function(){
-    phAnnPut(id,tasteAnn(tv,v,shotBasket(row),shotRoastMachine(row))); },700); }
+    phAnnPut(id,tasteAnn(tv,v,shotBasket(row),shotRoastMachine(row),sp)); },700); }
 // Redrawing the list throws the canvas away with it, so whatever is open is
 // drawn again afterwards -- otherwise asking for a reading blanked the graph
 // the reading was about.
