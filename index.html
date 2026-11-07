@@ -2939,7 +2939,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           </div>
         </div>
         <div class="rc-mode" id="recipeWater" style="display:none">
-          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="waterOptions">💧</span><div class="preset-chips" id="waterPresets"></div><span class="rc-sw-wrap" id="waterStopRow"><span class="rc-sw-l" data-i18n="stopAtWeight"></span><label class="switch rc-sw"><input type="checkbox" id="waterStopSw" onchange="setStopHotWaterAtWeight(this.checked)"><span class="track"></span></label></span></div>
+          <div class="rc-mode-head"><span class="rc-mode-t" data-i18n-title="waterOptions">💧</span><div class="preset-chips" id="waterPresets"></div></div>
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterTemp',-1)">−</button>
@@ -2950,11 +2950,6 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterVol',-5)">−</button>
                 <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="volume"></span><span class="lu">ml</span></div><div class="dose-num tap" onclick="auxKeypad('waterVol')"><span id="waterVolV">0</span></div></div>
                 <button class="ms-btn" onclick="auxAdj('waterVol',5)">+</button></div>
-            </div>
-            <div class="dose-block">
-              <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterDur',-1)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="oDuration"></span><span class="lu">s</span></div><div class="dose-num tap" onclick="auxKeypad('waterDur')"><span id="waterDurV">0</span></div></div>
-                <button class="ms-btn" onclick="auxAdj('waterDur',1)">+</button></div>
             </div>
             <div class="dose-block">
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterFlow',-0.5)">−</button>
@@ -5635,7 +5630,8 @@ function syncConnDosing(){
 function startTimer(){ state.shotStart=Date.now(); state.shotPourEnd=null; _auxStopSent=false; if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
 function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
 function mmss(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
-var AUX_DUR_KEY={steam:'steamDur',flush:'flushDur',water:'waterDur'};
+// Hot water ends on its volume or the scale, never on a clock the skin keeps.
+var AUX_DUR_KEY={steam:'steamDur',flush:'flushDur'};
 function auxDur(kind){ var k=AUX_DUR_KEY[kind]; return k?(+settings[k]||0):0; }
 var _auxStopSent=false;
 function auxTimeUp(){
@@ -6785,18 +6781,9 @@ function openWaterModal(){ syncWaterModal(); renderPresets('water');
 // gateway does that only outside full mode and only with a scale, so when
 // either is missing the control says which one rather than lying about it.
 function syncWaterStop(){
-  var sw=document.getElementById('waterStopSw');
-  if(!sw) return;
-  var hint=document.getElementById('waterStopHint');
-  var full=(gwSettings.gatewayMode==='full');
-  var on=(gwSettings.stopHotWaterAtWeight!==false);
-  var usable=!full&&state.scaleConnected;
-  sw.checked=usable&&on;
-  sw.disabled=!usable;
-  var why=full?t('stopNeedsTracking'):(!state.scaleConnected?t('stopNeedsScale'):t('stopAtWeightHint'));
-  if(hint) hint.textContent=why;
-  var row=document.getElementById('waterStopRow');
-  if(row){ row.style.opacity=usable?'':'0.5'; row.title=t('stopAtWeight')+' \u2014 '+why; } }
+  if(!gwSettings||gwSettings.stopHotWaterAtWeight!==false) return;
+  gwSettings.stopHotWaterAtWeight=true;
+  api('POST','/api/v1/settings',{stopHotWaterAtWeight:true}).catch(function(){}); }
 // The machine's own shot settings, as last reported.
 // Settings are a page of switches, and a toast for each one stacks notices over
 // the thing being changed. They report here instead: a line in the page's own
@@ -6846,7 +6833,7 @@ var _psCur={steam:-1,flush:-1,water:-1};
 function presetOn(kind,ps){
   if(kind==='steam') return auxClose(ps.temp,settings.steamTemp)&&auxClose(ps.dur,settings.steamDur)&&auxClose(ps.flow,settings.steamFlow,0.051);
   if(kind==='flush') return auxClose(ps.temp,settings.flushTemp)&&auxClose(ps.dur,settings.flushDur)&&auxClose(ps.flow,settings.flushFlow,0.051);
-  return auxClose(ps.temp,settings.waterTemp)&&auxClose(ps.vol,settings.waterVol)&&auxClose(ps.dur,settings.waterDur)&&auxClose(ps.flow,settings.waterFlow,0.051); }
+  return auxClose(ps.temp,settings.waterTemp)&&auxClose(ps.vol,settings.waterVol)&&auxClose(ps.flow,settings.waterFlow,0.051); }
 function syncPresetChips(kind){
   var kinds=kind?[kind]:['steam','flush','water'];
   kinds.forEach(function(k){
@@ -6891,7 +6878,7 @@ function presetPutNow(kind,i){
 function applyPreset(kind,ps){
   _psCur[kind]=(presets[kind]||[]).indexOf(ps);
   if(kind==='steam'){ auxSet('steamTemp',ps.temp); auxSet('steamDur',ps.dur); auxSet('steamFlow',ps.flow); }
-  else if(kind==='water'){ auxSet('waterTemp',ps.temp); auxSet('waterVol',ps.vol); auxSet('waterDur',ps.dur); auxSet('waterFlow',ps.flow); }
+  else if(kind==='water'){ auxSet('waterTemp',ps.temp); auxSet('waterVol',ps.vol); auxSet('waterFlow',ps.flow); }
   else { auxSet('flushTemp',ps.temp); auxSet('flushDur',ps.dur); auxSet('flushFlow',ps.flow); }
   toast(t('presetApplied').replace('{n}',ps.n),'ok'); }
 // ── editing one ──────────────────────────────────────────────────────────
@@ -6975,7 +6962,7 @@ function addPreset(kind){
   document.getElementById('presetOverlay').classList.add('show');
   if(el){ try{ el.focus(); el.select(); }catch(_){} } }
 function syncSteamModal(){ ['steamTemp','steamDur','steamFlow'].forEach(auxShow); }
-function syncWaterModal(){ ['waterTemp','waterVol','waterDur','waterFlow'].forEach(auxShow); }
+function syncWaterModal(){ ['waterTemp','waterVol','waterFlow'].forEach(auxShow); }
 function syncFlushModal(){ ['flushTemp','flushDur','flushFlow'].forEach(auxShow); }
 var AUX_NUM={
   steamTemp:{min:0,max:165,dp:0}, steamDur:{min:0,max:120,dp:0}, steamFlow:{min:0,max:2.5,dp:1},
@@ -7023,7 +7010,6 @@ var AUX_KINDS={
   water:{ico:'💧',state:'hotWater',act:'doWaterAction',open:'openWaterModal',sync:'syncWaterModal',cols:2,
     fields:[{k:'waterTemp',step:1,min:20,max:100,dec:0,unit:'tempShort'},
             {k:'waterVol',step:10,min:0,max:500,dec:0,unit:'mlShort'},
-            {k:'waterDur',step:5,min:0,max:120,dec:0,unit:'secShort'},
             {k:'waterFlow',step:0.5,min:1,max:10,dec:1,unit:'flowShort'}]}
 };
 // A field with a second step gets four buttons, so its buttons carry the
@@ -7048,7 +7034,7 @@ function auxSummary(kind){ return auxHeat(kind)+' · '+auxPour(kind); }
 function auxHeat(kind){
   if(kind==='steam') return settings.steamTemp+'° · '+settings.steamDur+'s';
   if(kind==='flush') return settings.flushTemp+'° · '+settings.flushDur+'s';
-  return settings.waterTemp+'° · '+settings.waterDur+'s'; }
+  return settings.waterTemp+'°'; }
 function auxPour(kind){
   if(kind==='steam') return (+settings.steamFlow).toFixed(1)+' ml/s';
   if(kind==='flush') return (+settings.flushFlow).toFixed(1)+' ml/s';
@@ -7059,7 +7045,7 @@ function auxLabel(kind){
   for(var i=0;i<list.length;i++){ var ps=list[i], hit=false;
     if(kind==='steam') hit=auxClose(ps.temp,settings.steamTemp)&&auxClose(ps.dur,settings.steamDur)&&auxClose(ps.flow,settings.steamFlow,0.051);
     else if(kind==='flush') hit=auxClose(ps.temp,settings.flushTemp)&&auxClose(ps.dur,settings.flushDur)&&auxClose(ps.flow,settings.flushFlow,0.051);
-    else hit=auxClose(ps.temp,settings.waterTemp)&&auxClose(ps.vol,settings.waterVol)&&auxClose(ps.dur,settings.waterDur)&&auxClose(ps.flow,settings.waterFlow,0.051);
+    else hit=auxClose(ps.temp,settings.waterTemp)&&auxClose(ps.vol,settings.waterVol)&&auxClose(ps.flow,settings.waterFlow,0.051);
     if(hit) return ps.n; }
   return t('custom'); }
 function shotSummary(){
@@ -7090,7 +7076,21 @@ var _auxPushT=null, _auxPushSet={};
 function auxBody(kind){
   if(kind==='steam') return {steamSettings:{targetTemperature:settings.steamTemp,duration:settings.steamDur,flow:settings.steamFlow}};
   if(kind==='flush') return {rinseData:{targetTemperature:settings.flushTemp,duration:settings.flushDur,flow:settings.flushFlow}};
-  return {hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:settings.waterDur,flow:settings.waterFlow}}; }
+  return {hotWaterData:{targetTemperature:settings.waterTemp,volume:settings.waterVol,duration:waterCapSecs(),flow:settings.waterFlow}}; }
+// The machine stops hot water at its time or its volume, whichever comes first,
+// and a time set by hand cut pours short. The volume and the flow decide the
+// pour; the time sent is only a cap with room to spare, twice the pour plus ten
+// seconds, never under a minute and never past the byte the machine keeps.
+function waterCapSecs(){
+  var v=+settings.waterVol||0, f=+settings.waterFlow||0;
+  var need=f>0?v/f:v/4;
+  return Math.min(255,Math.max(60,Math.ceil(need*2+10))); }
+// A time already in the workflow -- from an older skin, or set by hand -- is
+// written to the machine on every change, so one shorter than the cap is replaced.
+function fixWaterCap(hw){
+  if(!hw) return;
+  var d=parseFloat(hw.duration);
+  if(!(d>=waterCapSecs())) pushAux('water'); }
 function pushAux(kind){ _auxPushSet[kind]=1;
   if(_auxPushT) clearTimeout(_auxPushT);
   _auxPushT=setTimeout(function(){ _auxPushT=null;
@@ -20085,7 +20085,7 @@ function loadWorkflow(){
     if(w.context.targetDoseWeight) settings.doseIn=w.context.targetDoseWeight; if(w.context.targetYield) settings.doseOut=w.context.targetYield; }
   if(w.steamSettings){ if(w.steamSettings.targetTemperature) settings.steamTemp=w.steamSettings.targetTemperature; if(w.steamSettings.duration) settings.steamDur=w.steamSettings.duration; if(w.steamSettings.flow) settings.steamFlow=w.steamSettings.flow; }
   if(w.rinseData){ if(w.rinseData.targetTemperature) settings.flushTemp=w.rinseData.targetTemperature; if(w.rinseData.duration) settings.flushDur=w.rinseData.duration; if(w.rinseData.flow) settings.flushFlow=w.rinseData.flow; }
-  if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.duration) settings.waterDur=w.hotWaterData.duration; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; }
+  if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume) settings.waterVol=w.hotWaterData.volume; if(w.hotWaterData.flow) settings.waterFlow=w.hotWaterData.flow; fixWaterCap(w.hotWaterData); }
   if(w.profile){ var prevId=curProfileObj&&curProfileObj.id;
     curProfileObj={ id:'current', profile:w.profile, isDefault:false }; // match against loaded list for real id
     var match=allProfiles.find(function(p){ return p.profile&&p.profile.title===w.profile.title; });
