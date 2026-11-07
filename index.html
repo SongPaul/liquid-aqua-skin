@@ -736,6 +736,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .ag-more{margin-top:8px}
 .mcal-now{font-size:13px;color:var(--ink);margin:4px 0 10px}
 .mcal-next{color:var(--accent)}
+.mcal-last{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;font-weight:700;color:var(--ink);margin:0 0 10px}
 .mcal-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .fm-reset{margin-left:10px;min-height:36px;padding:0 12px;font-size:12px}
 .ag-more summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--ink-mute);min-height:32px;display:flex;align-items:center}
@@ -3738,7 +3739,7 @@ var I18N={
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
     waterCalNow:'Current reading',
     needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
-    flowCal:'Scale stop timing', flowCalDesc:'Seconds before the target that the gateway stops, to cover the scale\u2019s lag and the drops still falling. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}', fcReset:'Default', mcalTitle:'Machine flow calibration', mcalDesc:'Corrects the flow the DE1 measures itself. Use it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Amount set (ml)', mcalGot:'Amount measured (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Run hot water without stopping on the scale, then enter what was set and what actually came out.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', hwShort:'Hot water stopped at {w}g of {t}g. If you did not stop it, the machine stopped before the scale did.',
+    flowCal:'Scale stop timing', flowCalDesc:'Seconds before the target that the gateway stops, to cover the scale\u2019s lag and the drops still falling. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}', fcReset:'Default', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Machine estimate (ml)', mcalGot:'Weighed on the scale (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Pour hot water with the cup on a connected scale, as usual: the machine\u2019s estimate and the weight are taken during the pour and offered above. Without a connected scale, weigh the cup yourself and enter both numbers.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', mcalLast:'Last hot water: estimated {e}ml, weighed {g}g ({d})', mcalUse:'Use these', hwOff:'Hot water: the machine estimated {e}ml, the scale weighed {g}g. The machine flow calibration looks off.',
     refillKit:'Refill kit', refillKitDesc:'A plumbed machine refills itself, so its tank shows full and the low-water warning stays off. The machine reports whether the kit is fitted; set it here only to overrule a wrong reading.', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
     installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Install firmware {v}? The machine will restart; this takes several minutes.', updating:'Updating…',
@@ -4204,7 +4205,7 @@ var I18N={
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCalNow:'현재 수위',
     needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
-    flowCal:'저울 정지 보정', flowCalDesc:'저울로 멈출 때 저울의 늦음과 남은 방울만큼 목표보다 몇 초 먼저 멈출지 정합니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}', fcReset:'기본값', mcalTitle:'머신 유량 보정', mcalDesc:'DE1이 스스로 재는 유량을 바로잡는 값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'설정한 양 (ml)', mcalGot:'실제로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울 정지 없이 온수를 내린 뒤, 설정한 양과 컵에 실제로 나온 양을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', hwShort:'온수가 목표 {t}g 중 {w}g에서 멈췄습니다. 직접 멈춘 게 아니라면 머신이 저울보다 먼저 멈춘 것입니다.',
+    flowCal:'저울 정지 보정', flowCalDesc:'저울로 멈출 때 저울의 늦음과 남은 방울만큼 목표보다 몇 초 먼저 멈출지 정합니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}', fcReset:'기본값', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'머신이 추정한 양 (ml)', mcalGot:'저울로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울이 연결된 상태로 평소처럼 온수를 내리면, 머신이 추정한 양과 저울 무게를 그동안 재어 위에 보여 줍니다. 저울이 연결돼 있지 않으면 컵을 직접 재어 두 값을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', mcalLast:'마지막 온수: 머신 추정 {e}ml, 저울 {g}g ({d})', mcalUse:'이 값 쓰기', hwOff:'온수: 머신은 {e}ml로 추정했고 저울은 {g}g을 쟀습니다. 머신 유량 보정이 필요해 보입니다.',
     refillKit:'리필 키트', refillKitDesc:'배관 급수 머신은 스스로 물을 채우므로 탱크를 만수로 표시하고 저수위 경고를 띄우지 않습니다. 리필킷 장착 여부는 머신이 보고하며, 그 값이 틀렸을 때만 여기서 지정하세요.', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
     installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 {v}를 설치할까요? 머신이 재시작되며 몇 분 걸립니다.', updating:'업데이트 중…',
@@ -5081,9 +5082,10 @@ function onMachineState(ms,prev){
   if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
   if(!steaming&&state.steamRunning){ stopTimer(); drawChart(); }
   state.steamRunning=steaming;
+  hwMeasureTick(watering);
   // Hot water session lifecycle (records flow/pressure/water temp; no DYE)
   if(watering&&!state.waterRunning){ startTimer(); resetChart('water'); }
-  if(!watering&&state.waterRunning){ stopTimer(); drawChart(); setTimeout(hotWaterCheck,2500); }
+  if(!watering&&state.waterRunning){ stopTimer(); drawChart(); }
   state.waterRunning=watering;
   // Flush records the same three series as hot water; without this the monitor
   // would open on a flush and show an empty graph.
@@ -7570,6 +7572,7 @@ function hydrateFromStore(){
     else { var local=lsGet('aurora_shotai'); if(local&&Object.keys(local).length) storePut('shotai',local); }
     if(all.beanfav&&typeof all.beanfav==='object') lsSet('aurora_beanfav',all.beanfav);
     if(all.ranout&&typeof all.ranout==='object') lsSet('aurora_ranout',all.ranout);
+    if(all.hwmeasure&&typeof all.hwmeasure==='object') lsSet('aurora_hwmeasure',all.hwmeasure);
     if(all.grindmem&&typeof all.grindmem==='object') lsSet('aurora_grindmem',all.grindmem);
     if(Array.isArray(all.aifb)) lsSet('aurora_aifb',all.aifb);
     else { var lfb=aiFbAll(); if(lfb.length) storePut('aifb',lfb); }
@@ -8741,6 +8744,7 @@ function renderMachineCal(){
   box.innerHTML='<div class="set-desc" style="margin-bottom:8px">'+escapeHtml(t('mcalDesc'))+'</div>'
     +'<div class="mcal-now">'+escapeHtml(t('mcalNow'))+': <b>'+(cur==null?'\u2014':cur.toFixed(3))+'</b>'
       +(next!=null?' \u2192 <b class="mcal-next">'+next.toFixed(3)+'</b>':'')+'</div>'
+    +mcalLastHtml()
     +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('mcalSet'))+'</label>'
       +'<input id="mcalSet" type="number" inputmode="decimal" min="1" step="1" placeholder="200" value="'+escapeAttr(String(_mcal.set||''))+'"></div>'
       +'<div class="field"><label>'+escapeHtml(t('mcalGot'))+'</label>'
@@ -8748,6 +8752,15 @@ function renderMachineCal(){
     +'<div class="mcal-acts"><button class="m-btn" onclick="mcalCompute()"'+(cur==null?' disabled':'')+'>'+escapeHtml(t('mcalCalc'))+'</button>'
       +'<button class="m-btn primary" onclick="mcalSave()"'+(next==null?' disabled':'')+'>'+escapeHtml(t('mcalSave'))+'</button></div>'
     +'<div class="set-desc" style="margin-top:8px">'+escapeHtml(t('mcalHow'))+'</div>'; }
+function mcalLastHtml(){
+  var r=lsGet('aurora_hwmeasure'); if(!r||!(r.est>0)) return '';
+  return '<div class="mcal-last">'+escapeHtml(t('mcalLast').replace('{e}',String(Math.round(r.est))).replace('{g}',String(Math.round(r.got)))
+      .replace('{d}',fmtShotWhen({timestamp:new Date(r.at||Date.now()).toISOString()})))
+    +' <button class="m-btn mcal-use" onclick="mcalUseLast()"'+(_mcal.cur==null?' disabled':'')+'>'+escapeHtml(t('mcalUse'))+'</button></div>'; }
+function mcalUseLast(){
+  var r=lsGet('aurora_hwmeasure'); if(!r) return;
+  _mcal.set=String(r.est); _mcal.got=String(r.got);
+  _mcal.next=mcalFrom(_mcal.cur,r.est,r.got); renderMachineCal(); }
 function mcalCompute(){
   var a=document.getElementById('mcalSet'), b=document.getElementById('mcalGot');
   _mcal.set=a?a.value.trim():''; _mcal.got=b?b.value.trim():'';
@@ -8765,16 +8778,39 @@ function mcalSave(){
 function openMachineCal(set,got){
   _mcal.set=String(set||''); _mcal.got=String(got||'');
   openSettingsPage(); spSelect('machine'); spPaneGo('machine',1); }
-// Hot water stopped on the scale should land on its weight. One that ends well
-// short was stopped by the machine's own measurement first, which is what the
-// machine flow calibration corrects.
-function hotWaterCheck(){
-  var target=parseFloat(settings.waterVol), w=state.scaleWeight, g=gwSettings||{};
-  if(!state.scaleConnected||w==null||!(target>0)) return;
-  if(g.gatewayMode==='full'||g.stopHotWaterAtWeight===false) return;
-  if(w<20||w>=target*0.93||target-w<8) return;
-  toastActs(t('hwShort').replace('{w}',String(Math.round(w))).replace('{t}',String(Math.round(target))),
-    [{label:t('mcalOpen'),fn:function(){ openMachineCal(Math.round(target),Math.round(w*10)/10); }}],12000); }
+// The DE1 has no flow meter: it estimates flow from what the pump is doing.
+// Summed over a hot water pour that estimate is the water the machine thinks it
+// gave, and the scale weighs what actually came out -- hot water goes through
+// no puck, so the two should agree. The scale stop stays on; nothing is
+// switched off to take the measurement.
+var _hwm=null, HWM_GAP=1.0, HWM_MIN_ML=50, HWM_MIN_S=10, HWM_OFF=0.07;
+function hwMeasureTick(watering){
+  var now=state.snapTime||Date.now();
+  if(watering){
+    if(!_hwm) _hwm={t0:now,last:now,est:0,pour:0,base:null,gap:false,scale:!!state.scaleConnected};
+    var m=_hwm, dt=(now-m.last)/1000;
+    if(dt>HWM_GAP) m.gap=true;
+    else if(dt>0){ var f=state.flow>0?state.flow:0; m.est+=f*dt; if(f>0.2) m.pour+=dt; }
+    m.last=now;
+    if(!state.scaleConnected) m.scale=false;
+    // The scale is tared as the pour starts, so the lightest reading in its
+    // first seconds is what the cup weighed before any water.
+    if(now-m.t0<=3000&&state.scaleWeight!=null) m.base=(m.base==null)?state.scaleWeight:Math.min(m.base,state.scaleWeight);
+    return; }
+  if(_hwm){ var done=_hwm; _hwm=null; setTimeout(function(){ hwMeasureFinish(done); },2500); } }
+function hwMeasureFinish(m){
+  if(!m||m.gap||!m.scale||!state.scaleConnected||state.scaleWeight==null||m.base==null) return null;
+  var got=state.scaleWeight-m.base;
+  if(m.est<HWM_MIN_ML||m.pour<HWM_MIN_S||!(got>0)) return null;
+  var r={est:Math.round(m.est*10)/10,got:Math.round(got*10)/10,at:Date.now()};
+  lsSet('aurora_hwmeasure',r); storeSave('hwmeasure',r);
+  hotWaterCheck(r);
+  return r; }
+function hotWaterCheck(r){
+  if(!r||!(r.est>0)) return;
+  if(Math.abs(r.got/r.est-1)<=HWM_OFF) return;
+  toastActs(t('hwOff').replace('{e}',String(Math.round(r.est))).replace('{g}',String(Math.round(r.got))),
+    [{label:t('mcalOpen'),fn:function(){ openMachineCal(r.est,r.got); }}],12000); }
 // ── Firmware ────────────────────────────────────────────────────────
 // Ported from insight/streamline.js so the three skins behave alike: a firmware
 // flash is not something to get subtly different on one of them.
