@@ -738,6 +738,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .mcal-next{color:var(--accent)}
 .mcal-last{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;font-weight:700;color:var(--ink);margin:0 0 10px}
 .mcal-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.fm-unit{font-size:12px;font-weight:700;color:var(--ink-mute);margin:0 6px 0 -4px}
 .fm-reset{margin-left:10px;min-height:36px;padding:0 12px;font-size:12px}
 .ag-more summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--ink-mute);min-height:32px;display:flex;align-items:center}
 .ag-sugs{display:flex;flex-direction:column;gap:10px;margin-top:12px}
@@ -3739,7 +3740,7 @@ var I18N={
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
     waterCalNow:'Current reading',
     needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
-    flowCal:'Scale stop timing', flowCalDesc:'Seconds before the target that the gateway stops, to cover the scale\u2019s lag and the drops still falling. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}', fcReset:'Default', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Machine estimate (ml)', mcalGot:'Weighed on the scale (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Pour hot water with the cup on a connected scale, as usual: the machine\u2019s estimate and the weight are taken during the pour and offered above. Without a connected scale, weigh the cup yourself and enter both numbers.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', mcalLast:'Last hot water: estimated {e}ml, weighed {g}g ({d})', mcalUse:'Use these', hwOff:'Hot water: the machine estimated {e}ml, the scale weighed {g}g. The machine flow calibration looks off.',
+    flowCal:'Stop timing', flowCalDesc:'How many seconds before the target the shot or hot water is stopped. The scale reports a little late and drops keep falling after the pump stops, so stopping a moment early lands on the target. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}s', fcReset:'Default', fcSec:'s', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Machine estimate (ml)', mcalGot:'Weighed on the scale (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Pour hot water with the cup on a connected scale, as usual: the machine\u2019s estimate and the weight are taken during the pour and offered above. Without a connected scale, weigh the cup yourself and enter both numbers.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', mcalLast:'Last hot water: estimated {e}ml, weighed {g}g ({d})', mcalUse:'Use these', hwOff:'Hot water: the machine estimated {e}ml, the scale weighed {g}g. The machine flow calibration looks off.',
     refillKit:'Refill kit', refillKitDesc:'A plumbed machine refills itself, so its tank shows full and the low-water warning stays off. The machine reports whether the kit is fitted; set it here only to overrule a wrong reading.', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
     installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Install firmware {v}? The machine will restart; this takes several minutes.', updating:'Updating…',
@@ -4205,7 +4206,7 @@ var I18N={
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCalNow:'현재 수위',
     needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
-    flowCal:'저울 정지 보정', flowCalDesc:'저울로 멈출 때 저울의 늦음과 남은 방울만큼 목표보다 몇 초 먼저 멈출지 정합니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}', fcReset:'기본값', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'머신이 추정한 양 (ml)', mcalGot:'저울로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울이 연결된 상태로 평소처럼 온수를 내리면, 머신이 추정한 양과 저울 무게를 그동안 재어 위에 보여 줍니다. 저울이 연결돼 있지 않으면 컵을 직접 재어 두 값을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', mcalLast:'마지막 온수: 머신 추정 {e}ml, 저울 {g}g ({d})', mcalUse:'이 값 쓰기', hwOff:'온수: 머신은 {e}ml로 추정했고 저울은 {g}g을 쟀습니다. 머신 유량 보정이 필요해 보입니다.',
+    flowCal:'정지 시간 보정', flowCalDesc:'목표에 닿기 몇 초 전에 멈출지 정합니다. 저울은 무게를 조금 늦게 알리고 펌프가 멈춘 뒤에도 방울이 떨어지므로, 이 시간만큼 미리 멈춰야 목표에 맞습니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}초', fcReset:'기본값', fcSec:'초', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'머신이 추정한 양 (ml)', mcalGot:'저울로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울이 연결된 상태로 평소처럼 온수를 내리면, 머신이 추정한 양과 저울 무게를 그동안 재어 위에 보여 줍니다. 저울이 연결돼 있지 않으면 컵을 직접 재어 두 값을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', mcalLast:'마지막 온수: 머신 추정 {e}ml, 저울 {g}g ({d})', mcalUse:'이 값 쓰기', hwOff:'온수: 머신은 {e}ml로 추정했고 저울은 {g}g을 쟀습니다. 머신 유량 보정이 필요해 보입니다.',
     refillKit:'리필 키트', refillKitDesc:'배관 급수 머신은 스스로 물을 채우므로 탱크를 만수로 표시하고 저수위 경고를 띄우지 않습니다. 리필킷 장착 여부는 머신이 보고하며, 그 값이 틀렸을 때만 여기서 지정하세요.', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
     installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 {v}를 설치할까요? 머신이 재시작되며 몇 분 걸립니다.', updating:'업데이트 중…',
@@ -5952,7 +5953,10 @@ function api(method,path,body,timeoutMs){ var o={method:method,headers:{}};
         var err=new Error('HTTP '+r.status+(why?(' · '+why):''));
         err.status=r.status; err.detail=why; throw err; },
       function(){ var err=new Error('HTTP '+r.status); err.status=r.status; throw err; });
-    if(r.status===204) return null; return r.json(); })
+    // 202 Accepted comes back with no body for several writes; nothing to read
+    // is a success, not a broken reply.
+    if(r.status===204) return null;
+    return r.text().then(function(txt){ return txt?JSON.parse(txt):null; }); })
     .then(function(v){ if(timer) clearTimeout(timer); return v; },function(e){ if(timer) clearTimeout(timer); throw e; }); }
 // A save that dies before reaching the gateway must say so, and say where it tried.
 function apiErrorText(e){ if(e&&e.name==='AbortError') return t('mbTimeout')+' ('+GATEWAY.http+')';
@@ -8715,7 +8719,7 @@ function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSett
   return '<div class="set-row"><div class="set-info"><div class="set-name">'+label+'</div>'
     +(d!=null?'<div class="set-desc">'+escapeHtml(t('fcDefault').replace('{v}',d.toFixed(digits)))+'</div>':'')+'</div>'
     +'<div class="grind-stepper"><button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+(-step)+','+digits+')">−</button>'
-    +'<span class="grind-val" id="fm-'+key+'">'+v.toFixed(digits)+'</span>'
+    +'<span class="grind-val" id="fm-'+key+'">'+v.toFixed(digits)+'</span><span class="fm-unit">'+escapeHtml(t('fcSec'))+'</span>'
     +'<button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+step+','+digits+')">+</button></div>'
     +(d!=null?'<button class="m-btn fm-reset" onclick="flowMultReset(\''+key+'\','+digits+')">'+escapeHtml(t('fcReset'))+'</button>':'')+'</div>'; }
 function flowMultReset(key,digits){ var d=FLOW_MULT_DEF[key]; if(d==null) return;

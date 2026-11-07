@@ -120,11 +120,26 @@ test('the scale stop timing is named for what it does, with a way back to the de
   T.ok(t('flowCal').indexOf(t('flowCal') === 'flowCal' ? 'x' : '') >= 0 && !/유량 보정/.test(t('flowCal')), 'not called flow calibration: ' + t('flowCal'));
   var row = flowMultRow('hotWaterFlowMultiplier', t('fcHotWater'), 0.05, 2);
   T.ok(row.indexOf('0.30') >= 0 || row.indexOf('0.3') >= 0, 'shows its default');
+  T.ok(row.indexOf('fm-unit') >= 0 && row.indexOf(escapeHtml(t('fcSec'))) >= 0, 'in seconds');
   return fcWith(fcApi(1), function (gw) {
     flowMultReset('hotWaterFlowMultiplier');
     return fcWait().then(function () { return new Promise(function (r) { setTimeout(r, 600); }); }).then(function () {
       var post = fcPosts(gw.sent, '/api/v1/settings').pop() || {};
       T.eq(post.hotWaterFlowMultiplier, 0.3, 'reset to 0.3');
     });
+  });
+});
+
+// The gateway answers several writes, the calibration among them, with 202 and
+// no body. That is a success, not a broken reply.
+test('an accepted write with no body is a success', function (T) {
+  var real = window.fetch;
+  window.fetch = function () { return Promise.resolve(new Response(null, { status: 202 })); };
+  return api('POST', '/api/v1/machine/calibration', { flowMultiplier: 0.85 }).then(function (v) {
+    window.fetch = real;
+    T.eq(v, null, 'resolved with nothing to read');
+  }, function (e) {
+    window.fetch = real;
+    T.ok(false, 'rejected: ' + (e && e.message));
   });
 });
