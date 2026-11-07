@@ -256,6 +256,10 @@ test('a bag photo becomes the card cover', function (T) {
       var cover = cardFor('cb-b').querySelector('.bg-cover');
       T.ok(cover.classList.contains('has-pic'), 'the photo is on the cover');
       T.ok(/data:image/.test(cover.style.backgroundImage), 'as its background');
+      var cs = getComputedStyle(cover);
+      T.eq(cs.backgroundSize, 'cover', 'filling the cover, not at its own size');
+      T.ok(/50%/.test(cs.backgroundPosition), 'centred: ' + cs.backgroundPosition);
+      T.eq(Math.round(cover.getBoundingClientRect().height), 88, 'over the band above the words, not the whole card');
     });
   });
 });

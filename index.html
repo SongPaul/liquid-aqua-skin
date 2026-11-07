@@ -776,6 +776,11 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .bg-card{touch-action:pan-y;cursor:pointer;transition:transform .12s}
 .bg-card.bean .ep-cbody{margin-top:88px}
 .bg-card.grinder .ep-cbody{margin-top:72px}
+/* The shared card rule clears the background with a shorthand, which takes the
+   photo's size and position with it; the cover is put back as a band above
+   the words, with the photo filling it from the middle. */
+.ep-item.bg-card .thmb.bg-cover{bottom:auto;height:88px;background-size:cover;background-position:center;background-repeat:no-repeat}
+.ep-item.bg-card.grinder .thmb.bg-cover{height:72px}
 .bg-card .ep-cbody{background:rgba(255,255,255,.80)}
 body.night .bg-card .ep-cbody{background:rgba(22,19,36,.84)}
 .bg-card.pressing{transform:scale(.97)}
@@ -800,8 +805,8 @@ body.night .bg-cover{filter:saturate(.75) brightness(.78)}
 .bg-left{font-size:11px;font-weight:700;color:var(--ink-mute);margin-top:2px}
 .bg-left:empty{display:none}
 .bg-chip{display:inline-block;padding:1px 7px;border-radius:100px;font-size:10px;font-weight:700;color:var(--ink-mute);
-  border:1px solid var(--glass-line);background:rgba(255,255,255,.5)}
-body.night .bg-chip{background:rgba(255,255,255,.08)}
+  border:1px solid rgba(99,102,241,.16);background:rgba(99,102,241,.07)}
+body.night .bg-chip{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
 .bg-editbtn{flex-shrink:0;width:44px;height:44px;border-radius:11px;border:1px solid var(--ctl-edge);padding:0;cursor:pointer;
   background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);color:var(--accent);
   display:flex;align-items:center;justify-content:center}
