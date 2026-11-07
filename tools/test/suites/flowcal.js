@@ -41,7 +41,7 @@ test('a set amount and a measured one give the new calibration', function (T) {
       document.getElementById('mcalSet').value = '200';
       document.getElementById('mcalGot').value = '170';
       mcalCompute();
-      T.ok(/0\.85/.test(box.textContent), 'the new value is shown before saving');
+      T.eq(document.getElementById('mcalNew').value, '0.850', 'the new value is shown before saving');
       return mcalSave();
     }).then(function () {
       var post = fcPosts(gw.sent, '/api/v1/machine/calibration')[0] || {};
@@ -109,7 +109,7 @@ test('the calibration tab offers the last pour as its numbers', function (T) {
     return loadMachineCal().then(function () {
       T.ok(/200/.test(box.textContent) && /170/.test(box.textContent), 'the last pour is shown: ' + box.textContent.slice(0, 160));
       box.querySelector('.mcal-use').click();
-      T.ok(/0\.85/.test(box.textContent), 'and using it gives the new value');
+      T.eq(document.getElementById('mcalNew').value, '0.850', 'and using it gives the new value');
       box.remove();
       if (was == null) localStorage.removeItem('aurora_hwmeasure'); else localStorage.setItem('aurora_hwmeasure', was);
     });
@@ -141,5 +141,30 @@ test('an accepted write with no body is a success', function (T) {
   }, function (e) {
     window.fetch = real;
     T.ok(false, 'rejected: ' + (e && e.message));
+  });
+});
+
+test('a calibration value can be typed in and saved directly', function (T) {
+  return fcWith(fcApi(1.0), function (gw) {
+    var box = document.createElement('div'); box.id = 'mcalBox'; document.body.appendChild(box);
+    _mcal.set = ''; _mcal.got = '';
+    return loadMachineCal().then(function () {
+      var inp = document.getElementById('mcalNew');
+      T.ok(!!inp, 'a field for the value');
+      T.eq(inp && inp.value, '1.000', 'starting from the current one');
+      mcalStep(-0.01);
+      T.eq(document.getElementById('mcalNew').value, '0.990', 'stepped down');
+      document.getElementById('mcalNew').value = '0.86';
+      return mcalSave();
+    }).then(function () {
+      var post = fcPosts(gw.sent, '/api/v1/machine/calibration').pop() || {};
+      T.eq(post.flowMultiplier, 0.86, 'the typed value saved');
+      document.getElementById('mcalNew').value = '3';
+      var n = fcPosts(gw.sent, '/api/v1/machine/calibration').length;
+      return mcalSave().then(function () {
+        T.eq(fcPosts(gw.sent, '/api/v1/machine/calibration').length, n, 'one outside 0.13-2.0 is not sent');
+        box.remove();
+      });
+    });
   });
 });

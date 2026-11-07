@@ -737,6 +737,9 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .mcal-now{font-size:13px;color:var(--ink);margin:4px 0 10px}
 .mcal-next{color:var(--accent)}
 .mcal-last{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;font-weight:700;color:var(--ink);margin:0 0 10px}
+.mcal-new{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 6px}
+.mcal-new label{font-size:12px;font-weight:800;color:var(--ink-mute)}
+.mcal-new input{width:90px;text-align:center;font-size:18px;font-weight:800;color:var(--accent);border:1px solid var(--glass-line);border-radius:10px;background:var(--field);padding:6px 4px;font-family:var(--font)}
 .mcal-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .fm-unit{font-size:12px;font-weight:700;color:var(--ink-mute);margin:0 6px 0 -4px}
 .fm-reset{margin-left:10px;min-height:36px;padding:0 12px;font-size:12px}
@@ -3735,7 +3738,7 @@ var I18N={
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
     waterCalNow:'Current reading',
     needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
-    flowCal:'Stop timing', flowCalDesc:'How many seconds before the target the shot or hot water is stopped. The scale reports a little late and drops keep falling after the pump stops, so stopping a moment early lands on the target. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}s', fcReset:'Default', fcSec:'s', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Machine estimate (ml)', mcalGot:'Weighed on the scale (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Pour hot water with the cup on a connected scale, as usual: the machine\u2019s estimate and the weight are taken during the pour and offered above. Without a connected scale, weigh the cup yourself and enter both numbers.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', mcalLast:'Last hot water: estimated {e}ml, weighed {g}g ({d})', mcalUse:'Use these', hwOff:'Hot water: the machine estimated {e}ml, the scale weighed {g}g. The machine flow calibration looks off.',
+    flowCal:'Stop timing', flowCalDesc:'How many seconds before the target the shot or hot water is stopped. The scale reports a little late and drops keep falling after the pump stops, so stopping a moment early lands on the target. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}s', fcReset:'Default', fcSec:'s', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Machine estimate (ml)', mcalGot:'Weighed on the scale (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Pour hot water with the cup on a connected scale, as usual: the machine\u2019s estimate and the weight are taken during the pour and offered above. Without a connected scale, weigh the cup yourself and enter both numbers.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', mcalNew:'New value', mcalCalcTitle:'Work it out from a pour', mcalRange:'The machine takes 0.13 to 2.0', mcalLast:'Last hot water: estimated {e}ml, weighed {g}g ({d})', mcalUse:'Use these', hwOff:'Hot water: the machine estimated {e}ml, the scale weighed {g}g. The machine flow calibration looks off.',
     refillKit:'Refill kit', refillKitDesc:'A plumbed machine refills itself, so its tank shows full and the low-water warning stays off. The machine reports whether the kit is fitted; set it here only to overrule a wrong reading.', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
     installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Install firmware {v}? The machine will restart; this takes several minutes.', updating:'Updating…',
@@ -4201,7 +4204,7 @@ var I18N={
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCalNow:'현재 수위',
     needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
-    flowCal:'정지 시간 보정', flowCalDesc:'목표에 닿기 몇 초 전에 멈출지 정합니다. 저울은 무게를 조금 늦게 알리고 펌프가 멈춘 뒤에도 방울이 떨어지므로, 이 시간만큼 미리 멈춰야 목표에 맞습니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}초', fcReset:'기본값', fcSec:'초', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'머신이 추정한 양 (ml)', mcalGot:'저울로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울이 연결된 상태로 평소처럼 온수를 내리면, 머신이 추정한 양과 저울 무게를 그동안 재어 위에 보여 줍니다. 저울이 연결돼 있지 않으면 컵을 직접 재어 두 값을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', mcalLast:'마지막 온수: 머신 추정 {e}ml, 저울 {g}g ({d})', mcalUse:'이 값 쓰기', hwOff:'온수: 머신은 {e}ml로 추정했고 저울은 {g}g을 쟀습니다. 머신 유량 보정이 필요해 보입니다.',
+    flowCal:'정지 시간 보정', flowCalDesc:'목표에 닿기 몇 초 전에 멈출지 정합니다. 저울은 무게를 조금 늦게 알리고 펌프가 멈춘 뒤에도 방울이 떨어지므로, 이 시간만큼 미리 멈춰야 목표에 맞습니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}초', fcReset:'기본값', fcSec:'초', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'머신이 추정한 양 (ml)', mcalGot:'저울로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울이 연결된 상태로 평소처럼 온수를 내리면, 머신이 추정한 양과 저울 무게를 그동안 재어 위에 보여 줍니다. 저울이 연결돼 있지 않으면 컵을 직접 재어 두 값을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', mcalNew:'새 값', mcalCalcTitle:'온수로 계산하기', mcalRange:'0.13~2.0 사이로 넣으세요', mcalLast:'마지막 온수: 머신 추정 {e}ml, 저울 {g}g ({d})', mcalUse:'이 값 쓰기', hwOff:'온수: 머신은 {e}ml로 추정했고 저울은 {g}g을 쟀습니다. 머신 유량 보정이 필요해 보입니다.',
     refillKit:'리필 키트', refillKitDesc:'배관 급수 머신은 스스로 물을 채우므로 탱크를 만수로 표시하고 저수위 경고를 띄우지 않습니다. 리필킷 장착 여부는 머신이 보고하며, 그 값이 틀렸을 때만 여기서 지정하세요.', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
     installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 {v}를 설치할까요? 머신이 재시작되며 몇 분 걸립니다.', updating:'업데이트 중…',
@@ -8744,18 +8747,31 @@ function loadMachineCal(){
     renderMachineCal(); }).catch(function(){ _mcal.cur=null; renderMachineCal(); }); }
 function renderMachineCal(){
   var box=document.getElementById('mcalBox'); if(!box) return;
-  var cur=_mcal.cur, next=_mcal.next;
+  var cur=_mcal.cur, val=(_mcal.next!=null)?_mcal.next:cur;
   box.innerHTML='<div class="set-desc" style="margin-bottom:8px">'+escapeHtml(t('mcalDesc'))+'</div>'
-    +'<div class="mcal-now">'+escapeHtml(t('mcalNow'))+': <b>'+(cur==null?'\u2014':cur.toFixed(3))+'</b>'
-      +(next!=null?' \u2192 <b class="mcal-next">'+next.toFixed(3)+'</b>':'')+'</div>'
+    +'<div class="mcal-now">'+escapeHtml(t('mcalNow'))+': <b>'+(cur==null?'\u2014':cur.toFixed(3))+'</b></div>'
+    +'<div class="mcal-new"><label>'+escapeHtml(t('mcalNew'))+'</label>'
+      +'<div class="grind-stepper"><button class="ms-btn" onclick="mcalStep(-0.01)"'+(cur==null?' disabled':'')+'>\u2212</button>'
+      +'<input id="mcalNew" type="number" inputmode="decimal" min="'+MCAL_MIN+'" max="'+MCAL_MAX+'" step="0.01"'
+        +' value="'+(val==null?'':val.toFixed(3))+'"'+(cur==null?' disabled':'')+'>'
+      +'<button class="ms-btn" onclick="mcalStep(0.01)"'+(cur==null?' disabled':'')+'>+</button></div>'
+      +'<button class="m-btn primary" onclick="mcalSave()"'+(cur==null?' disabled':'')+'>'+escapeHtml(t('mcalSave'))+'</button></div>'
+    +'<div class="ep-section-title" style="margin-top:14px">'+escapeHtml(t('mcalCalcTitle'))+'</div>'
     +mcalLastHtml()
     +'<div class="field-row"><div class="field"><label>'+escapeHtml(t('mcalSet'))+'</label>'
-      +'<input id="mcalSet" type="number" inputmode="decimal" min="1" step="1" placeholder="200" value="'+escapeAttr(String(_mcal.set||''))+'"></div>'
+      +'<input id="mcalSet" type="number" inputmode="decimal" min="1" step="1" placeholder="100" value="'+escapeAttr(String(_mcal.set||''))+'"></div>'
       +'<div class="field"><label>'+escapeHtml(t('mcalGot'))+'</label>'
-      +'<input id="mcalGot" type="number" inputmode="decimal" min="1" step="0.1" placeholder="170" value="'+escapeAttr(String(_mcal.got||''))+'"></div></div>'
-    +'<div class="mcal-acts"><button class="m-btn" onclick="mcalCompute()"'+(cur==null?' disabled':'')+'>'+escapeHtml(t('mcalCalc'))+'</button>'
-      +'<button class="m-btn primary" onclick="mcalSave()"'+(next==null?' disabled':'')+'>'+escapeHtml(t('mcalSave'))+'</button></div>'
+      +'<input id="mcalGot" type="number" inputmode="decimal" min="1" step="0.1" placeholder="86" value="'+escapeAttr(String(_mcal.got||''))+'"></div></div>'
+    +'<div class="mcal-acts"><button class="m-btn" onclick="mcalCompute()"'+(cur==null?' disabled':'')+'>'+escapeHtml(t('mcalCalc'))+'</button></div>'
     +'<div class="set-desc" style="margin-top:8px">'+escapeHtml(t('mcalHow'))+'</div>'; }
+function mcalInputVal(){
+  var el=document.getElementById('mcalNew'); if(!el) return null;
+  var v=parseFloat(String(el.value).replace(',','.'));
+  return isFinite(v)?v:null; }
+function mcalStep(d){
+  var v=mcalInputVal(); if(v==null) v=_mcal.cur; if(v==null) return;
+  v=Math.max(MCAL_MIN,Math.min(MCAL_MAX,Math.round((v+d)*1000)/1000));
+  _mcal.next=v; var el=document.getElementById('mcalNew'); if(el) el.value=v.toFixed(3); }
 function mcalLastHtml(){
   var r=lsGet('aurora_hwmeasure'); if(!r||!(r.est>0)) return '';
   return '<div class="mcal-last">'+escapeHtml(t('mcalLast').replace('{e}',String(Math.round(r.est))).replace('{g}',String(Math.round(r.got)))
@@ -8768,12 +8784,15 @@ function mcalUseLast(){
 function mcalCompute(){
   var a=document.getElementById('mcalSet'), b=document.getElementById('mcalGot');
   _mcal.set=a?a.value.trim():''; _mcal.got=b?b.value.trim():'';
-  _mcal.next=mcalFrom(_mcal.cur,_mcal.set,_mcal.got);
-  if(_mcal.next==null) toast(t('mcalNeed'),'err');
-  renderMachineCal(); }
+  var v=mcalFrom(_mcal.cur,_mcal.set,_mcal.got);
+  if(v==null){ toast(t('mcalNeed'),'err'); return; }
+  _mcal.next=v; renderMachineCal(); }
 function mcalSave(){
-  var cur=_mcal.cur, next=_mcal.next;
-  if(next==null||cur==null) return Promise.resolve();
+  var cur=_mcal.cur, next=mcalInputVal();
+  if(cur==null||next==null) return Promise.resolve();
+  if(next<MCAL_MIN||next>MCAL_MAX){ toast(t('mcalRange'),'err'); return Promise.resolve(); }
+  next=Math.round(next*1000)/1000;
+  if(next===cur) return Promise.resolve();
   if(!confirm(t('mcalConfirm').replace('{a}',cur.toFixed(3)).replace('{b}',next.toFixed(3)))) return Promise.resolve();
   return api('POST','/api/v1/machine/calibration',{flowMultiplier:next}).then(function(){
     _mcal.cur=next; _mcal.next=null; _mcal.set=''; _mcal.got='';
