@@ -766,6 +766,70 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
   font-weight:800;line-height:15px;vertical-align:middle;white-space:nowrap}
 .bg-link{color:var(--accent);border:1px solid rgba(99,102,241,.35)}
 .bg-link.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#beanPage.bg-list .ep-body,#beanPage.bg-edit .ep-body{grid-template-columns:1fr}
+#beanPage.bg-list .ep-editor{display:none}
+#beanPage.bg-edit #bgList{display:none}
+#beanPage.bg-list #bgList{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));
+  grid-auto-rows:min-content;align-content:start;align-items:start;gap:10px}
+#beanPage.bg-list #bgList>.bg-head,#beanPage.bg-list #bgList>.ep-placeholder{grid-column:1/-1}
+.bg-hint{margin:0 0 4px}
+.bg-card{touch-action:pan-y;cursor:pointer;transition:transform .12s}
+.bg-card.bean .ep-cbody{margin-top:88px}
+.bg-card.grinder .ep-cbody{margin-top:72px}
+.bg-card .ep-cbody{background:rgba(255,255,255,.80)}
+body.night .bg-card .ep-cbody{background:rgba(22,19,36,.84)}
+.bg-card.pressing{transform:scale(.97)}
+.bg-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bg-cover{display:flex;align-items:flex-start;justify-content:center;background-size:cover;background-position:center}
+.bg-card .thmb.bg-cover.light{background-color:#d9b98f;background-image:linear-gradient(135deg,#ead3b2,#c99a6a)}
+.bg-card .thmb.bg-cover.medium{background-color:#a8724a;background-image:linear-gradient(135deg,#c99a6a,#8a5a34)}
+.bg-card .thmb.bg-cover.dark{background-color:#5a3520;background-image:linear-gradient(135deg,#7a4b2a,#3b2416)}
+.bg-card .thmb.bg-cover.any{background-color:#cfc4ea;background-image:linear-gradient(135deg,#e2dbf4,#b8a9d9)}
+.bg-card .thmb.bg-cover.grinder{background-color:#dfe4fd;background-image:linear-gradient(135deg,#eef1ff,#c7d2fe)}
+.bg-card .thmb.bg-cover.has-pic{background-color:#000}
+body.night .bg-cover{filter:saturate(.75) brightness(.78)}
+.bg-cover-init{margin-top:16px;font-size:40px;font-weight:900;color:rgba(255,255,255,.6);letter-spacing:-.02em}
+.bg-cover.has-pic .bg-cover-init{display:none}
+.bg-dial{margin-top:10px;font-size:38px;font-weight:900;color:var(--accent);letter-spacing:-.02em}
+.bg-dial-at{font-size:20px;opacity:.55;margin-right:2px}
+.bg-rest{position:absolute;z-index:2;top:8px;left:8px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:800;
+  background:rgba(255,255,255,.92);color:var(--ink-mute)}
+.bg-rest.ready{color:#15803d;background:rgba(220,252,231,.95)}
+.bg-rest.fading{color:#b45309;background:rgba(254,243,199,.95)}
+.bg-rest.past{color:#6b7280;background:rgba(243,244,246,.92)}
+.bg-left{font-size:11px;font-weight:700;color:var(--ink-mute);margin-top:2px}
+.bg-left:empty{display:none}
+.bg-chip{display:inline-block;padding:1px 7px;border-radius:100px;font-size:10px;font-weight:700;color:var(--ink-mute);
+  border:1px solid var(--glass-line);background:rgba(255,255,255,.5)}
+body.night .bg-chip{background:rgba(255,255,255,.08)}
+.bg-editbtn{flex-shrink:0;width:44px;height:44px;border-radius:11px;border:1px solid var(--ctl-edge);padding:0;cursor:pointer;
+  background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);color:var(--accent);
+  display:flex;align-items:center;justify-content:center}
+.ep-batch.gone{text-decoration:line-through;opacity:.6}
+.ep-batch.frz.on{color:#0369a1;border-color:#0369a1}
+.bg-rest.frozen{color:#0369a1;background:rgba(224,242,254,.95)}
+.bg-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 8px}
+.bg-tools .ep-kinds{flex:1 1 auto}
+.bg-sort{min-height:40px;border-radius:10px;border:1px solid var(--glass-line);background:var(--field);color:var(--ink);
+  font-family:var(--font);font-size:12px;font-weight:700;padding:0 10px}
+.bg-tools .ep-act.on{color:var(--accent);border-color:var(--accent)}
+.bg-tools .ep-selbar{flex:1 0 100%}
+.bg-favbtn{flex-shrink:0;width:44px;height:44px;border-radius:11px;border:1px solid var(--ctl-edge);padding:0;cursor:pointer;
+  background-color:var(--ctl-face);background-image:var(--ctl-sheen);box-shadow:var(--ctl-lift);color:var(--ink-mute);
+  display:flex;align-items:center;justify-content:center}
+.bg-favbtn.on{color:var(--amber);border-color:var(--amber)}
+#bgList .bg-card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+#bgList .bg-card.sel::after{content:'\2713';position:absolute;z-index:5;top:6px;right:8px;width:22px;height:22px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+#bgList .bg-card.out{opacity:.72}
+.ep-batch.used.on{color:var(--green);border-color:var(--green)}
+.toast.has-act{display:flex;align-items:center;gap:14px;padding:9px 10px 9px 22px}
+.toast.show.has-act{pointer-events:auto}
+.toast-act{min-height:36px;padding:0 14px;border-radius:100px;border:1px solid var(--accent);background:transparent;
+  color:var(--accent);font-weight:800;font-family:var(--font);cursor:pointer}
+.thmb.bg-init{display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--ink-mute)}
+.thmb.bg-init.bean{background:rgba(249,115,22,.12)}
+.thmb.bg-init.grinder{background:rgba(99,102,241,.12)}
 .bg-using{color:var(--green);border:1px solid currentColor}
 .bg-linkbox{margin:2px 0 4px;padding:9px 12px;border:1px solid var(--edge);border-radius:12px}
 .bg-linkrow{display:flex;align-items:center;gap:8px;min-width:0}
@@ -1214,6 +1278,7 @@ body.night .m-btn.primary{background-color:var(--ctl-tint);background-image:var(
 .ep-group-head{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);padding:18px 4px 9px;position:sticky;top:0;background:var(--sheet);z-index:3}
 .ep-group-head:first-child{padding-top:12px}
 #bgList .ep-item,#slList .ep-item{content-visibility:auto;contain-intrinsic-size:0 64px}
+#bgList .bg-card{contain-intrinsic-size:0 180px}
 .ep-item{background:var(--field);border:1px solid var(--edge);border-radius:12px;padding:7px 10px;cursor:pointer;transition:all .18s;display:flex;gap:10px;align-items:center}
 .ep-item:hover{transform:translateX(3px);box-shadow:var(--shadow)}
 /* A name cut off at the width of a column is a name you cannot read, and
@@ -1231,6 +1296,20 @@ body.night .ep-cbody{background:rgba(22,19,36,.46);box-shadow:inset 0 1px 0 rgba
 body.scaled .ep-cbody,body.no-fx .ep-cbody{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.80)}
 body.night.scaled .ep-cbody,body.night.no-fx .ep-cbody{background:rgba(22,19,36,.86)}
 .ep-card .mt{font-size:10px;font-weight:700;color:var(--ink-mute);margin:0 0 1px;text-transform:uppercase;letter-spacing:.04em}
+/* The curve is what a profile is told apart by, and under the frosted pane it
+   was a blur. It gets a clear band across the top of the card; the words sit
+   below it on a pane that no longer has anything to see through. */
+.ep-item.ep-card:not(.bg-card) .thmb{bottom:auto;height:88px;background:rgba(255,255,255,.62)}
+body.night .ep-item.ep-card:not(.bg-card) .thmb{background:rgba(10,8,20,.45)}
+.ep-item.ep-card:not(.bg-card) .ep-dot{top:6px;left:7px;right:auto;bottom:auto;width:9px;height:9px}
+.cc-lab{position:absolute;z-index:2;font-size:10px;font-weight:800;line-height:1;color:var(--ink-mute);pointer-events:none}
+.cc-lab:empty{display:none}
+.cc-peak{top:5px;right:7px;color:var(--ink)}
+.cc-temp{bottom:3px;left:7px}
+.cc-time{bottom:3px;right:7px}
+.ep-item.ep-card:not(.bg-card) .ep-cbody{margin-top:88px;backdrop-filter:none;-webkit-backdrop-filter:none;
+  background:rgba(255,255,255,.72);border-top:1px solid var(--glass-line)}
+body.night .ep-item.ep-card:not(.bg-card) .ep-cbody{background:rgba(22,19,36,.72)}
 /* what came with the app reads as ground rather than as a word on every row.
    The plain rows are one's own. */
 .ep-item.defp{background:rgba(99,102,241,.13);border-color:rgba(99,102,241,.26)}
@@ -2992,7 +3071,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div>
 </div>
 
-<div class="overlay" id="dupOverlay">
+<div class="overlay" id="dupOverlay" onclick="if(event.target===this)dismissOverlay(this)">
   <div class="modal dup-modal">
     <div class="modal-head"><div class="modal-title" data-i18n="dupTitle">Bean already exists</div></div>
     <div class="modal-body">
@@ -3182,11 +3261,6 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div></div>
 </div>
 
-<!-- ── Bean / Grinder modal ────────────────────────────────────── -->
-<div class="overlay" id="beanOverlay" onclick="closeModal(event,'beanOverlay')">
-  <div class="modal"><div class="modal-body" style="padding:22px 24px"><div style="color:var(--ink-mute)">Opening manager…</div></div></div>
-</div>
-
 <!-- ── Beans & Grinder full page ───────────────────────────────── -->
 <div class="editpage" id="beanPage">
   <div class="ep-head">
@@ -3195,7 +3269,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
   </div>
   <div class="ep-body">
     <div class="ep-list glass" id="bgList"></div>
-    <div class="ep-editor glass"><div class="ep-editor-inner" id="bgEditor"><div class="ep-placeholder">← Select or add an item</div></div></div>
+    <div class="ep-editor glass"><div class="ep-editor-inner" id="bgEditor"><div class="ep-placeholder" data-i18n="selectItem">Select an item</div></div></div>
   </div>
 </div>
 
@@ -3464,6 +3538,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div id="mbBatchRow"></div>
         <div class="field-row"><div class="field"><label data-i18n="roastDate">Roast date</label><input id="mbRoastDate" type="date"></div>
           <div class="field"><label data-i18n="roastLevel">Roast level</label><input id="mbRoast"></div></div>
+        <div class="field"><label data-i18n="bagWeight">Bag weight (g)</label><input id="mbBagWeight" type="number" min="0" step="1" inputmode="numeric" placeholder="250" oninput="showBagLeft('mb')"><div class="set-desc" id="mbBagLeft"></div></div>
         <div class="field"><label class="bean-check"><input type="checkbox" id="mbIsBlend" onchange="bgBlendToggle(this.checked)"> <span data-i18n="isBlend">Blend</span></label></div>
         <div id="mbBlendBox"></div>
       </div>
@@ -3559,7 +3634,7 @@ var I18N={
     grSrcWatchHint:'This grinder only reports — the number is kept here; hold for the grinder list',
     grReads:'The grinder reads {v}',
     grAutoReg:'Added the “{n}” grinder from its plugin',
-    grLinked:'Linked', grInUse:'In use', grLinkTitle:'Plugin grinder',
+    grLinked:'Linked', grInUse:'In use', undo:'Undo', usOffer:'Last shot\u2019s settings', bagFreeze:'Freeze', bagThaw:'Thaw', bagFrozen:'Marked frozen', bagThawed:'Marked thawed', rest_frozen:'Frozen', grindAt:'grind {s}', favLabel:'Favourite', bgfAll:'All', bgfReady:'Ready', bgfFrozen:'Frozen', bgfOut:'Used up \u00b7 put away', bgSortLbl:'Order', bgsSmart:'Suggested', bgsRoast:'Roast date', bgsName:'Name', bgSelect:'Select', bgSelDone:'Done', bgSelN:'{n} selected', bgArchive:'Put away', bgUnarchive:'Bring back', bgDelete:'Delete', bgArchived:'{n} put away', bgRestored:'{n} brought back', confirmDeleteBeans:'Delete {n} beans?', bgMultiHint:'Tap beans to pick them, then choose what to do', beanPicked:'Using {n}', grinderPicked:'Using {n}', bgCardHint:'Tap to use \u00b7 hold or the pencil to edit', rest_resting:'Resting', rest_ready:'Ready', rest_fading:'Fading', rest_past:'Past peak', bagLeftShort:'about {l}g left', bagsN:'{n} bags', bagUsedUp:'Used up', bagRestore:'Back in use', bagMarkedOut:'Marked used up', bagBackIn:'Back in use', saveBeanFirst:'Save the bean first', saveGrinderFirst:'Save the grinder first', confirmDeleteGrinder:'Delete this grinder?', noBeans:'No beans yet', noGrinders:'No grinders yet', grLinkTitle:'Plugin grinder',
     grLinkWhat:'Name and dial follow the plugin; the recipe card sets it while in use. Burrs and notes are yours.',
     grLinkAway:'Not connected now', grLinkGone:'The {p} plugin that kept this grinder is not installed now, so the record can be edited by hand.',
     grSrcManualHint:'Recorded here only — hold for the grinder list',
@@ -3867,7 +3942,7 @@ var I18N={
     delProfSoftBtn:'To the bin', delProfHardBtn:'Delete for good',
     delProfConfirm:'Delete \u201c{n}\u201d for good? This cannot be undone.',
     delProfDone:'Moved to the bin', delProfPurged:'Deleted', delProfRestored:'Put back',
-    kindHidden:'Hidden', hideProfile:'Hide this profile', showProfile:'Show this profile',
+    kindHidden:'Hidden', hideProfile:'Hide this profile', epBulkHide:'Hide', epBulkShow:'Show', showProfile:'Show this profile',
     hidden:'Hidden', shown:'Shown again', toggleFav:'Toggle favorite', favAdded:'★ {n} added to favorites', favRemoved:'{n} removed from favorites', favNeedsSave:'Save the profile first',
     tempSensor:'Measured at', sensorBasket:'Basket', sensorWater:'Water',
     rampLabel:'Ramp', rampFast:'Step', rampSmooth:'Ease',
@@ -3877,7 +3952,7 @@ var I18N={
     tankTemp:'Tank \u00b0C',
     bevEspresso:'Espresso', bevPourover:'Pour-over', bevCleaning:'Cleaning',
     bevCalibrate:'Calibration', bevManual:'Manual',
-    roastLevel:'Roast', fromProfile:'from the profile', clear:'Clear',
+    roastLevel:'Roast', bagWeight:'Bag weight (g)', bagLeft:'{n} shots recorded \u00b7 about {u}g used \u00b7 about {l}g left', bagNearlyOut:'Nearly out', fromProfile:'from the profile', clear:'Clear',
     tagAdd:'Add a tag…', tagRemove:'Remove this tag',
     mainTagHint:'Filled tags are the ones the main screen offers. Hold one to change that.',
     mainTagTip:'Hold to show or hide on the main screen', mainTagAll:'Show all on the main screen',
@@ -3932,7 +4007,7 @@ var I18N={
     wfSaved:'Done', wfRecent:'Recent', wfLoaded:'Loaded', wfAll:'All', wfHistEmpty:'None of these yet', wfStartWhere:'Everything above is already set on the machine. Start it from Extract in the top bar, or from the group head.',
     rsTitle:'Shot reading', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends the curve is read here, with no model and no network. A reading opens as a page, or waits behind the mark on the shot card.',
     rsModeModal:'Open it', rsModeIcon:'Mark only', rsModeOff:'Off',
-    cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTight:'In the time this profile allows it can pour about {a}g, which is the {b}g asked for and not a drop more. Any shortfall in flow and it misses.', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutWeight:'This profile ends itself at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutClock:'Nothing in this profile stops on weight — it ends on the clock, about {n}s in. {b}g may be more than it pours in that time.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
+    cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTight:'In the time this profile allows it can pour about {a}g, which is the {b}g asked for and not a drop more. Any shortfall in flow and it misses.', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutClock:'Nothing in this profile stops on weight — it ends on the clock, about {n}s in. {b}g may be more than it pours in that time.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
     rsYield:'The cup held {y}g, against {w}g', rsYieldOnly:'The cup held {y}g', rsStopOther:'The machine ended the shot ({r}), so the cup is not the puck\u2019s doing', rsVShort:'It came up short of the yield',
     rsResist:'Puck resistance averaged {r}, normalised to 9 bar', rsNoScale:'No scale on this shot, so nothing was weighed', rsEy:'Extraction yield measured {e}%', rsEyLow:'Extraction yield measured {e}%, under the usual window', rsEyHigh:'Extraction yield measured {e}%, over the usual window', rsYieldShort:'It stopped at {p}% of the target yield', rsYieldOver:'It poured {g}g past the target',
     rsVOk:'The curve looks ordinary', rsVChannel:'This one channelled', rsVMixed:'The curve pulls both ways', rsMixed:'It fell short of its pressure early and its flow later, so the grind is not the thing to move on this one.', rsVCoarse:'The puck let the water through too easily', rsVFine:'The puck held the water back',
@@ -4020,7 +4095,7 @@ var I18N={
     grSrcWatchHint:'이 그라인더는 읽기만 됩니다 — 숫자는 여기에 기록됩니다, 길게 누르면 그라인더 목록',
     grReads:'그라인더 표시값 {v}',
     grAutoReg:'“{n}” 플러그인 그라인더를 목록에 추가했습니다',
-    grLinked:'연동', grInUse:'사용 중', grLinkTitle:'플러그인 그라인더',
+    grLinked:'연동', grInUse:'사용 중', undo:'되돌리기', usOffer:'지난 샷 설정', bagFreeze:'냉동', bagThaw:'해동', bagFrozen:'냉동으로 표시했습니다', bagThawed:'해동으로 표시했습니다', rest_frozen:'냉동', grindAt:'분쇄 {s}', favLabel:'즐겨찾기', bgfAll:'전체', bgfReady:'적기', bgfFrozen:'냉동', bgfOut:'다 씀 \u00b7 보관', bgSortLbl:'정렬', bgsSmart:'추천순', bgsRoast:'로스팅일', bgsName:'이름', bgSelect:'선택', bgSelDone:'완료', bgSelN:'{n}개 선택', bgArchive:'보관', bgUnarchive:'꺼내기', bgDelete:'삭제', bgArchived:'{n}개를 보관했습니다', bgRestored:'{n}개를 꺼냈습니다', confirmDeleteBeans:'원두 {n}개를 삭제할까요?', bgMultiHint:'원두를 탭해 고른 뒤 할 일을 누르세요', beanPicked:'사용: {n}', grinderPicked:'사용: {n}', bgCardHint:'탭하면 사용 \u00b7 길게 누르거나 연필을 누르면 편집', rest_resting:'숙성 중', rest_ready:'적기', rest_fading:'지나는 중', rest_past:'지남', bagLeftShort:'남은 약 {l}g', bagsN:'봉투 {n}', bagUsedUp:'다 씀', bagRestore:'다시 사용', bagMarkedOut:'다 쓴 봉투로 표시했습니다', bagBackIn:'다시 쓰는 봉투로 돌렸습니다', saveBeanFirst:'원두를 먼저 저장하세요', saveGrinderFirst:'그라인더를 먼저 저장하세요', confirmDeleteGrinder:'이 그라인더를 삭제할까요?', noBeans:'아직 원두가 없습니다', noGrinders:'아직 그라인더가 없습니다', grLinkTitle:'플러그인 그라인더',
     grLinkWhat:'이름과 눈금은 플러그인을 따르고, 사용 중에는 레시피 카드에서 설정합니다. 버와 메모는 직접 입력하세요.',
     grLinkAway:'지금 연결되지 않음', grLinkGone:'이 그라인더를 관리하던 {p} 플러그인이 지금 설치돼 있지 않아 직접 편집할 수 있습니다.',
     grSrcManualHint:'여기에만 기록됩니다 — 길게 누르면 그라인더 목록',
@@ -4077,10 +4152,10 @@ var I18N={
     tcL_acid:['없다','약하다','적당','강하다','거슬리다'],
     tcL_bitter:['없다','약하다','적당','강하다','거슬리다'],
     tcL_sweet:['없다','희미','있다','뚜렷','아주 달다'],
-    tcL_body:['물 같다','가볍다','적당','무겁다','텅텅하다'],
+    tcL_body:['물 같다','가볍다','적당','무겁다','텁텁하다'],
     tcL_dry:['없다','있다'],
     tcL_finish:['바로 사라짐','짧다','잠깐 남음','기분 좋게 남음','오래 좋게 남음'],
-    tcL_again:['아니오','글쌌','보통','좋다','당장 한 잔 더'],
+    tcL_again:['아니오','글쎄','보통','좋다','당장 한 잔 더'],
     vizTitle:'Visualizer에서 가져오기',
     vizBrowse:'커뮤니티 둘러보기', vizBrowseMore:'더 불러오기',
     vizOpenCommunity:'커뮤니티 페이지 열기', vizSearchPh:'색인된 샷에서 검색\u2026',
@@ -4333,7 +4408,7 @@ var I18N={
     delProfSoftBtn:'휴지통으로', delProfHardBtn:'완전 삭제',
     delProfConfirm:'“{n}” 을 완전히 삭제할까요? 되돌릴 수 없습니다.',
     delProfDone:'휴지통으로 옮겼습니다', delProfPurged:'삭제했습니다', delProfRestored:'되돌렸습니다',
-    kindHidden:'숨김', hideProfile:'이 프로파일 숨기기', showProfile:'다시 보이기',
+    kindHidden:'숨김', hideProfile:'이 프로파일 숨기기', epBulkHide:'숨기기', epBulkShow:'다시 보이기', showProfile:'다시 보이기',
     hidden:'숨김 처리됨', shown:'다시 표시됨', toggleFav:'즐겨찾기', favAdded:'★ {n} 즐겨찾기 추가', favRemoved:'{n} 즐겨찾기 해제', favNeedsSave:'프로파일을 먼저 저장하세요',
     tagAdd:'태그 추가…', tagRemove:'이 태그 지우기',
     mainTagHint:'색이 채워진 태그가 메인 화면에 나옵니다. 길게 누르면 바뀝니다.',
@@ -4353,7 +4428,7 @@ var I18N={
     tankTemp:'탱크 °C',
     bevEspresso:'에스프레소', bevPourover:'푸어오버', bevCleaning:'청소',
     bevCalibrate:'캘리브레이션', bevManual:'수동',
-    roastLevel:'배전도', fromProfile:'프로파일에 명시됨', clear:'해제',
+    roastLevel:'배전도', bagWeight:'봉투 중량 (g)', bagLeft:'기록된 샷 {n}회 \u00b7 약 {u}g 사용 \u00b7 남은 약 {l}g', bagNearlyOut:'거의 소진', fromProfile:'프로파일에 명시됨', clear:'해제',
     tagForMilk:'우유음료', tagForLong:'롱드링크',
     aiClassify:'✨ AI 자동 분류', aiClassifyingShort:'분류 중…', aiClear:'AI 태그 삭제',
     aiClassifying:'분류 중 {a}/{b}…', aiClassified:'{m}개 중 {n}개에 태그를 붙였습니다',
@@ -4399,7 +4474,7 @@ var I18N={
     wfSaved:'완료', wfRecent:'최근 워크플로우', wfLoaded:'불러왔습니다', wfAll:'전체', wfHistEmpty:'해당하는 기록이 없습니다', wfStartWhere:'위 내용은 이미 머신에 저장됐습니다. 상단의 추출 버튼이나 그룹헤드로 시작하세요.',
     rsTitle:'추출 분석', rsSetting:'추출 후 분석', rsSettingDesc:'추출이 끝나면 곡선을 여기서 직접 읽습니다. 모델도 네트워크도 쓰지 않습니다. 바로 띄우거나, 샷 카드의 느낌표 뒤에서 기다리게 할 수 있습니다.',
     rsModeModal:'바로 띄우기', rsModeIcon:'느낌표만', rsModeOff:'사용 안 함',
-    cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTight:'이 프로파일이 정해진 시간 안에 낼 수 있는 양은 약 {a}g으로, 목표 {b}g와 딱 같고 여유가 없습니다. 유량이 조금만 못 나와도 닿지 못합니다.', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutWeight:'이 프로파일은 {a}g에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutClock:'이 프로파일에는 무게로 멈추는 장치가 없어 시간으로 끝납니다. 약 {n}초에 멈추므로 그 안에 {b}g가 안 나올 수 있습니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
+    cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTight:'이 프로파일이 정해진 시간 안에 낼 수 있는 양은 약 {a}g으로, 목표 {b}g와 딱 같고 여유가 없습니다. 유량이 조금만 못 나와도 닿지 못합니다.', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutClock:'이 프로파일에는 무게로 멈추는 장치가 없어 시간으로 끝납니다. 약 {n}초에 멈추므로 그 안에 {b}g가 안 나올 수 있습니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
     rsYield:'추출량 {y}g · 목표 {w}g', rsYieldOnly:'추출량 {y}g', rsStopOther:'머신이 샷을 끝냈습니다({r}). 컵은 퍽이 결정한 것이 아닙니다', rsVShort:'목표보다 적게 나왔습니다',
     rsResist:'퍽 저항 평균 {r} (9 bar 환산)', rsNoScale:'이 샷은 저울이 없어 무게를 읽지 못했습니다', rsEy:'추출 수율 {e}%', rsEyLow:'추출 수율 {e}% · 통상 범위보다 낮습니다', rsEyHigh:'추출 수율 {e}% · 통상 범위보다 높습니다', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
     rsVOk:'곡선에 특별히 걸리는 것이 없습니다', rsVMixed:'곡선이 양쪽으로 당깁니다', rsMixed:'초반에는 압력이, 후반에는 유량이 모자랐습니다. 이번 샷은 분쇄도로 건드릴 일이 아닙니다.', rsVChannel:'채널링이 생겼습니다',
@@ -4896,6 +4971,31 @@ function applyActionMode(){
   }
 }
 function clearBtn(b){ b.onclick=null; b.onmousedown=null; b.onmouseup=null; b.onmouseleave=null; b.ontouchstart=null; b.ontouchend=null; }
+// For a card in a scrolling list. A finger that moves is scrolling, so it
+// neither taps nor holds, and the page keeps its scroll; the click that follows
+// a hold is swallowed. The right button and the keyboard reach the hold too.
+function bindHold(el,tapFn,holdFn){
+  var timer=null, held=false, moved=false, x=0, y=0;
+  function stop(){ if(timer){ clearTimeout(timer); timer=null; } el.classList.remove('pressing'); }
+  el.addEventListener('pointerdown',function(e){
+    if(e.button>0) return;
+    held=false; moved=false; x=e.clientX; y=e.clientY; stop();
+    el.classList.add('pressing');
+    timer=setTimeout(function(){ timer=null; held=true; el.classList.remove('pressing'); holdFn(); },550); });
+  el.addEventListener('pointermove',function(e){
+    if(timer&&(Math.abs(e.clientX-x)>10||Math.abs(e.clientY-y)>10)){ moved=true; stop(); } });
+  el.addEventListener('pointerup',stop);
+  el.addEventListener('pointerleave',stop);
+  el.addEventListener('pointercancel',function(){ moved=true; stop(); });
+  el.addEventListener('click',function(e){
+    if(held||moved){ held=false; moved=false; e.preventDefault(); e.stopPropagation(); return; }
+    tapFn(e); });
+  el.addEventListener('contextmenu',function(e){
+    e.preventDefault(); stop(); if(!held){ held=true; holdFn(); } });
+  el.addEventListener('keydown',function(e){
+    if(e.target!==el) return;
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); tapFn(e); }
+    else if(e.key==='e'||e.key==='E'){ e.preventDefault(); holdFn(); } }); }
 function bindActionLongPress(btn, tapFn, holdFn){
   var timer=null, held=false;
   function start(){ held=false; timer=setTimeout(function(){ held=true; holdFn(); }, 550); }
@@ -4918,6 +5018,7 @@ function onMachineState(ms,prev){
   // changes and not only when a new water level arrives.
   if(MAINT[ms.state]) maintTrack(ms.state,ms.substate||'');
   if(ms.state!==prev&&(MAINT[ms.state]||MAINT[prev])&&spOpen()&&spCat==='machine') renderSpContent();
+  if(prev&&ms.state!==prev&&(GHC_ACTIONS[ms.state]||GHC_ACTIONS[prev])) dismissAllOverlays();
   if(ms.state!==prev){ updateWaterUI();
     if(ms.state==='needsWater') toast(t('needsWaterToast'),'err'); }
   var inEspresso=(ms.state==='espresso');
@@ -4994,7 +5095,7 @@ function onMachineState(ms,prev){
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); if(chart.targetMix.length>chart.max)chart.targetMix.shift(); drawChart(); }
 }
 function afterShot(){ api('GET','/api/v1/shots/latest').then(function(s){
-  if(s){ state.lastShotId=s.id; stampGrinderLine(s); if(prefs.autoDye) openDyeModal(); runShotRead(s.id); }
+  if(s){ state.lastShotId=s.id; stampGrinderLine(s); rememberGrind(s); if(prefs.autoDye) openDyeModal(); runShotRead(s.id); }
   loadLastShot(); }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
@@ -6700,7 +6801,20 @@ function setStopHotWaterAtWeight(on){
   api('POST','/api/v1/settings',{stopHotWaterAtWeight:on})
     .then(function(){ toast(t('saved'),'ok'); })
     .catch(function(){ toast(t('saveFailed'),'err'); syncWaterStop(); }); }
-function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show'); }
+function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show');
+  if(id==='dyeOverlay'&&_rsWaiting) showShotRead(); }
+// Whoever is working the machine from the group head is done with the screen,
+// so starting or stopping from there puts away any dialog left open, the way a
+// tap outside it would.
+var GHC_ACTIONS={espresso:1,steam:1,hotWater:1,flush:1};
+function dismissOverlay(el){
+  if(el.id==='dupOverlay'&&_dupResolve){ dupChoose(null); return; }
+  if(el.id==='plgOverlay'){ closePluginPanel(); return; }
+  if(el.id==='picOverlay'){ closePicBig(); return; }
+  el.classList.remove('show'); }
+function dismissAllOverlays(){
+  _rsWaiting=false;
+  Array.prototype.forEach.call(document.querySelectorAll('.overlay.show,.pic-ov.show'),dismissOverlay); }
 
 // Presets (max 3 per kind), stored in localStorage.
 var presets={ steam:[], flush:[], water:[] };
@@ -7073,10 +7187,11 @@ function profileCut(){
   var pr=curProfileObj&&curProfileObj.profile; if(!pr) return null;
   var want=settings.doseOut; if(!(want>0)) return null;
   var slack=0.2;
-  var tw=parseFloat(pr.target_weight)||0;
-  if(tw>0&&tw<want-slack) return {kind:'weight',at:tw};
+  // The gateway stops on the card's target weight, never on the profile's own
+  // target_weight, so that one ends nothing. Its volume stop is the fallback for
+  // a shot with no scale to stop it.
   var tv=parseFloat(pr.target_volume)||0;
-  if(tv>0&&tv<want-slack) return {kind:'volume',at:tv};
+  if(tv>0&&tv<want-slack&&!state.scaleConnected) return {kind:'volume',at:tv};
   // Only the last step ends the shot. An earlier step exiting on weight just
   // hands over to the next one.
   var st=pr.steps||[], lastStep=st.length?st[st.length-1]:null;
@@ -7097,9 +7212,9 @@ function syncProfileCut(){
   b.hidden=!c;
   b.classList.toggle('soft',!!(c&&c.soft));
   if(c) b.setAttribute('aria-label',t(c.soft?'cutMayTitle':'cutTitle')); }
-var CUT_TEXT={weight:'cutWeight',volume:'cutVolume',step:'cutStep',time:'cutTime',tight:'cutTight',past:'cutPast',clock:'cutClock'};
+var CUT_TEXT={volume:'cutVolume',step:'cutStep',time:'cutTime',tight:'cutTight',past:'cutPast',clock:'cutClock'};
 function cutText(c){
-  return t(CUT_TEXT[c.kind]||'cutWeight')
+  return t(CUT_TEXT[c.kind]||'cutStep')
     .replace('{a}',c.kind==='past'?String(c.at):(+c.at).toFixed(1))
     .replace('{n}',String(c.kind==='clock'?Math.round(c.at):c.at))
     .replace('{b}',settings.doseOut.toFixed(1)); }
@@ -7110,7 +7225,7 @@ function openProfileCut(){
     '<div class="cut-what">'+escapeHtml(cutText(c))+'</div>'
     +'<div class="cut-else">'+escapeHtml(t('cutElse'))+'</div>'
     +'<div class="ag-acts">'
-      +((c.kind==='weight'||c.kind==='step')
+      +(c.kind==='step'
         ? ('<button class="m-btn primary" onclick="cutMatch('+(+c.at)+')">'
            +escapeHtml(t('cutFix').replace('{a}',(+c.at).toFixed(1)))+'</button>')
         : '')
@@ -7438,6 +7553,8 @@ function hydrateFromStore(){
     else { var lp=aiPinGet(); if(lp) storePut('aipin',lp); }
     if(all.shotai&&typeof all.shotai==='object') lsSet('aurora_shotai',all.shotai);
     else { var local=lsGet('aurora_shotai'); if(local&&Object.keys(local).length) storePut('shotai',local); }
+    if(all.beanfav&&typeof all.beanfav==='object') lsSet('aurora_beanfav',all.beanfav);
+    if(all.grindmem&&typeof all.grindmem==='object') lsSet('aurora_grindmem',all.grindmem);
     if(Array.isArray(all.aifb)) lsSet('aurora_aifb',all.aifb);
     else { var lfb=aiFbAll(); if(lfb.length) storePut('aifb',lfb); }
     if(all.gbrands&&typeof all.gbrands==='object'){ grinderBrands=all.gbrands; lsSet('aurora_gbrands',grinderBrands); }
@@ -7951,7 +8068,7 @@ function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_E
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
 function applyFx(){ document.body.classList.toggle('no-fx',!prefs.fx); _gsCache={}; if(!_asleep) updateMachineUI(); }
 function setFx(on){ prefs.fx=!!on; savePrefs(); applyFx(); }
-function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); }
+function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); redrawCardCurves(); }
 function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
 function saveClaudeKey(v){ prefs.claudeKey=(v||'').trim(); savePrefs(); }
 function saveOpenaiKey(v){ prefs.openaiKey=(v||'').trim(); savePrefs(); }
@@ -9072,6 +9189,79 @@ function simulateProfile(profile){ var steps=(profile&&profile.steps)||[]; var p
     for(var i=1;i<=seg;i++){ var f=i/seg; var p=isP?(prevP+(tP-prevP)*(smooth?f:1)):tP; var fl=!isP?(prevF+(tF-prevF)*(smooth?f:1)):tF; var showP=isP?p:Math.min(9,fl*1.6); var showF=!isP?fl:Math.max(0,8-p*0.4); var tp=prevT+((tempT!=null?tempT:prevT)-prevT)*f; pts.push({t:t+dur*f,p:showP,f:showF,temp:tp,step:si}); }
     t+=dur; prevP=isP?tP:Math.min(9,tF*1.6); prevF=!isP?tF:Math.max(0,8-tP*0.4); prevT=(tempT!=null?tempT:prevT); });
   return {pts:pts,total:t}; }
+// The curve on a profile card. Each step is drawn as the one thing it sets --
+// a pressure or a flow -- never the other one guessed at. A step's seconds are
+// the most it may run, and one with an exit usually leaves early, so lengths
+// are cut to what a shot plausibly spends there and an espresso to a minute.
+// Pressure and flow keep their own fixed scales, the same on every card, so a
+// six-bar profile looks lower than a nine. Temperature is written, not drawn.
+var CC_EXIT_S=8, CC_STEP_S=15, CC_FLOW_MAX=6;
+function ccNum(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
+function cardSteps(pr){
+  var st=(pr&&pr.steps)||[], out=[], t=0, sum=0;
+  var cap=(String((pr&&pr.beverage_type)||'espresso')==='espresso')?60:180;
+  st.forEach(function(x){
+    var pump=String((x&&x.pump)||'').toLowerCase();
+    var isP=pump==='pressure'||(!pump&&ccNum(x&&x.pressure)>0);
+    var secs=Math.max(0,ccNum(x&&x.seconds));
+    var d=Math.min(secs,rsStepExits(x)?CC_EXIT_S:CC_STEP_S);
+    sum+=d; d=Math.max(0,Math.min(d,cap-t));
+    var lim=ccNum(x&&x.limiter&&x.limiter.value);
+    out.push({t0:t,d:d,isP:isP,v:ccNum(isP?x.pressure:x.flow),
+      smooth:String((x&&x.transition)||'')==='smooth',temp:ccNum(x&&x.temperature),lim:isP?0:lim});
+    t+=d; });
+  return {steps:out,total:t,cap:cap,trimmed:sum>cap}; }
+function cardSummary(pr){
+  var plan=cardSteps(pr), ps=plan.steps;
+  var pk=0, fk=0, temps=[];
+  ps.forEach(function(x){ if(x.isP) pk=Math.max(pk,x.v); else fk=Math.max(fk,x.v);
+    if(x.temp>0&&temps[temps.length-1]!==x.temp) temps.push(x.temp); });
+  function n1(v){ return String(Math.round(v*10)/10); }
+  var lo=Math.min.apply(null,temps.length?temps:[0]), hi=Math.max.apply(null,temps.length?temps:[0]);
+  var temp=!temps.length?'':(hi-lo<3?n1(temps[0]):temps.slice(0,3).map(n1).join('\u2192'))+'\u00b0';
+  return { peak:pk>0?n1(pk)+' bar':(fk>0?n1(fk)+' ml/s':''), temp:temp,
+    time:plan.total>0?('~'+Math.round(plan.total)+'s'+(plan.trimmed?'+':'')):'' }; }
+function ccLabel(th,cls,text){
+  var el=th.querySelector('.'+cls);
+  if(!el){ el=document.createElement('span'); el.className='cc-lab '+cls; th.appendChild(el); }
+  el.textContent=text||''; }
+function drawCardCurve(canvas,profile){
+  var th=canvas.parentNode, dpr=window.devicePixelRatio||1, r=canvas.getBoundingClientRect();
+  if(r.width===0) r={width:canvas.width||232,height:canvas.height||88};
+  canvas.width=r.width*dpr; canvas.height=r.height*dpr;
+  var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  var W=r.width, H=r.height; ctx.clearRect(0,0,W,H);
+  var sm=cardSummary(profile);
+  if(th){ ccLabel(th,'cc-peak',sm.peak); ccLabel(th,'cc-temp',sm.temp); ccLabel(th,'cc-time',sm.time); }
+  var plan=cardSteps(profile); if(!plan.steps.length||plan.total<=0) return;
+  var night=document.body.classList.contains('night');
+  var pC=night?'#a5b4fc':'#4f46e5', fC=night?'#67e8f9':'#0891b2';
+  var pFill=night?'rgba(165,180,252,.20)':'rgba(79,70,229,.14)', grid=night?'rgba(255,255,255,.08)':'rgba(30,27,58,.07)';
+  var maxP=10; plan.steps.forEach(function(x){ if(x.isP&&x.v>10) maxP=12; });
+  var top=17, bot=H-14, ph=Math.max(10,bot-top);
+  function X(t){ return t/plan.total*W; }
+  function Y(v,isP){ return bot-Math.min(v/(isP?maxP:CC_FLOW_MAX),1)*ph; }
+  ctx.lineWidth=1; ctx.strokeStyle=grid;
+  [3,6,9].forEach(function(b){ if(b>maxP) return; var y=Math.round(Y(b,true))+.5;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); });
+  var prev={p:null,f:null}, last=null;
+  plan.steps.forEach(function(x){
+    var k=x.isP?'p':'f', from=(x.smooth&&prev[k]!=null)?prev[k]:x.v;
+    if(x.d>0){
+      var x0=X(x.t0), x1=X(x.t0+x.d), y0=Y(from,x.isP), y1=Y(x.v,x.isP);
+      if(x.isP){ ctx.beginPath(); ctx.moveTo(x0,bot); ctx.lineTo(x0,y0); ctx.lineTo(x1,y1); ctx.lineTo(x1,bot); ctx.closePath();
+        ctx.fillStyle=pFill; ctx.fill(); }
+      ctx.beginPath();
+      if(last&&last.k===k&&Math.abs(last.x-x0)<.5) ctx.moveTo(last.x,last.y); else ctx.moveTo(x0,y0);
+      ctx.lineTo(x0,y0); ctx.lineTo(x1,y1);
+      ctx.strokeStyle=x.isP?pC:fC; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.setLineDash([]); ctx.stroke();
+      if(x.lim>0){ var yl=Y(x.lim,true); ctx.beginPath(); ctx.moveTo(x0,yl); ctx.lineTo(x1,yl);
+        ctx.strokeStyle=pC; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]); }
+      last={k:k,x:x1,y:y1}; }
+    prev[k]=x.v; }); }
+function redrawCardCurves(){
+  Array.prototype.forEach.call(document.querySelectorAll('#epList .ep-card:not(.bg-card) canvas'),function(cv){
+    if(cv._drawn&&cv._profile) drawCardCurve(cv,cv._profile); }); }
 function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
   canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
   var sim=simulateProfile(profile); if(sim.pts.length<2||sim.total<=0) return;
@@ -9916,7 +10106,7 @@ function closeEditPage(){
 var epItemEls={};       // id -> row element (to toggle .active without full rebuild)
 var epCurveObserver=null; // lazily draw curves only when a row scrolls into view
 function ensureCurveObserver(){ if(epCurveObserver||!('IntersectionObserver' in window)) return;
-  epCurveObserver=new IntersectionObserver(function(entries){ entries.forEach(function(en){ if(en.isIntersecting){ var cv=en.target; if(!cv._drawn){ cv._drawn=true; drawSimCurve(cv,cv._profile); } epCurveObserver.unobserve(cv); } }); }, {root:document.getElementById('epList'),rootMargin:'120px'}); }
+  epCurveObserver=new IntersectionObserver(function(entries){ entries.forEach(function(en){ if(en.isIntersecting){ var cv=en.target; if(!cv._drawn){ cv._drawn=true; drawCardCurve(cv,cv._profile); } epCurveObserver.unobserve(cv); } }); }, {root:document.getElementById('epList'),rootMargin:'120px'}); }
 // ── Profile browsing ────────────────────────────────────────────────
 // 73 bundled profiles arrive as one flat list. Rather than ask for them to be
 // filed by hand, the shape of each profile is read back into a few tags, the
@@ -10100,6 +10290,14 @@ function purgeFromTrash(id){
   var p=(allProfiles||[]).filter(function(x){ return x.id===id; })[0]; if(!p) return;
   if(!confirm(t('delProfConfirm').replace('{n}',profTitle(p)))) return;
   purgeProfileNow(p); }
+function epBulkHide(hidden){
+  var ids=epSelIds(); if(!ids.length) return;
+  Promise.all(ids.map(function(id){
+    return api('PUT','/api/v1/profiles/'+encodeURIComponent(id)+'/visibility',{visibility:hidden?'hidden':'visible'})
+      .then(function(){ return true; },function(){ return false; }); }))
+    .then(function(r){ toast(t(hidden?'hidden':'shown'),r.every(Boolean)?'ok':'err');
+      _epSel={}; return loadProfiles(); })
+    .then(function(){ renderEpList(); renderEpTools(); }); }
 function setProfileHidden(id,hidden){
   api('PUT','/api/v1/profiles/'+encodeURIComponent(id)+'/visibility',{visibility:hidden?'hidden':'visible'})
     .then(function(){ toast(hidden?t('hidden'):t('shown'),'ok'); return loadProfiles(); })
@@ -10403,6 +10601,8 @@ function renderEpTools(){
       +'<button class="m-btn" onclick="epSelAll(true)">'+escapeHtml(t('epSelAll'))+'</button>'
       +'<button class="m-btn" onclick="epSelAll(false)"'+(n?'':' disabled')+'>'+escapeHtml(t('epSelNone'))+'</button>';
     if(trash) h+='<button class="m-btn" onclick="epBulkRestore()"'+(n?'':' disabled')+'>'+escapeHtml(t('restoreProfile'))+'</button>';
+    else h+='<button class="m-btn" onclick="epBulkHide('+(epKind!=='hidden')+')"'+(n?'':' disabled')+'>'
+      +escapeHtml(t(epKind==='hidden'?'epBulkShow':'epBulkHide'))+'</button>';
     h+='<button class="m-btn danger" onclick="epBulkDelete()"'+(n?'':' disabled')+'>'+escapeHtml(t('deleteProfile'))+'</button>';
     sb.innerHTML=h;
     bar.appendChild(sb); }
@@ -10432,7 +10632,16 @@ function renderEpTools(){
       bindActionLongPress(b,function(){ epSetTag(b.dataset.k); },
                             function(){ toggleMainTag(b.dataset.k); }); });
     bar.appendChild(tw); } }
-function renderEpItems(){ var list=document.getElementById('epList'); if(!list) return;
+// What is already on screen is drawn now rather than whenever the observer
+// gets round to it.
+function epDrawVisible(){
+  var list=document.getElementById('epList'); if(!list) return;
+  Array.prototype.forEach.call(list.querySelectorAll('.ep-card:not(.bg-card) canvas'),function(cv){
+    if(cv._drawn) return; var r=cv.getBoundingClientRect();
+    if(r.width>0&&r.bottom>0&&r.top<window.innerHeight){ cv._drawn=true; drawCardCurve(cv,cv._profile);
+      if(epCurveObserver) epCurveObserver.unobserve(cv); } }); }
+function renderEpItems(){ renderEpItemsNow(); epDrawVisible(); }
+function renderEpItemsNow(){ var list=document.getElementById('epList'); if(!list) return;
   list.innerHTML=''; epItemEls={}; ensureCurveObserver();
   var shown=allProfiles.filter(epMatches);
   _epShown=shown.map(function(p){ return p.id; });
@@ -10482,12 +10691,12 @@ function renderEpItems(){ var list=document.getElementById('epList'); if(!list) 
       pg.textContent='×'; pg.title=t('purgeProfile');
       pg.onclick=function(e){ e.stopPropagation(); purgeFromTrash(p.id); };
       foot.appendChild(del); foot.appendChild(pg); }
-    else { foot.appendChild(edit); foot.appendChild(fav); foot.appendChild(eye); foot.appendChild(del); }
+    else { foot.appendChild(edit); foot.appendChild(fav); }
     body.appendChild(foot);
     it.appendChild(th); it.appendChild(body);
-    it.onclick=function(){ epTap(p); };
+    bindHold(it,function(){ epTap(p); },function(){ if(!_epWide) epOpenEditor(p); });
     list.appendChild(it); (epItemEls[p.id]=epItemEls[p.id]||[]).push(it);
-    if(epCurveObserver) epCurveObserver.observe(cv); else drawSimCurve(cv,p.profile); }
+    if(epCurveObserver) epCurveObserver.observe(cv); else { cv._drawn=true; drawCardCurve(cv,p.profile); } }
   // A search looks for a profile, so what matched its name comes first and the
   // rest says where it did match. The notes are searched too, which is useful
   // for a phrase and noise for a letter -- "q" finds every profile whose notes
@@ -11609,13 +11818,18 @@ function usRowsFor(shot,skip){
     add('temp',t('brewTempLabel'),cur,tp,function(v){ return usNum(v)!=null?usNum(v).toFixed(1):String(v); }); }
   return rows; }
 // Nothing to offer is not a dialog: the caller just carries on and closes.
-function offerLastShotSettings(opts){
-  var skip=opts.skip||[], after=opts.after||function(){};
-  api('GET','/api/v1/shots?limit=50').then(function(r){
+function findLastShotOffer(opts){
+  return api('GET','/api/v1/shots?limit=50').then(function(r){
     var items=(r&&(r.items||r.shots))||[];
     var found=items.length?findShotFor(items,opts.test||function(){ return false; }):null;
-    var rows=found?usRowsFor(found.shot,skip):[];
-    if(!rows.length){ after(); return; }
+    var rows=found?usRowsFor(found.shot,opts.skip||[]):[];
+    return rows.length?{found:found,rows:rows}:null; }).catch(function(){ return null; }); }
+function offerLastShotSettings(opts){
+  var after=opts.after||function(){};
+  findLastShotOffer(opts).then(function(o){ if(!o){ after(); return; } showLastShotOffer(o,opts); }); }
+function showLastShotOffer(o,opts){
+  var found=o.found, rows=o.rows, after=opts.after||function(){};
+  {
     _usShot=found.shot; _usRows=rows; _usAfter=after;
     document.getElementById('usTitle').textContent=t('usTitle');
     document.getElementById('usSub').textContent=(found.matched?t('usFromThis'):t('usFromLast'))
@@ -11626,7 +11840,7 @@ function offerLastShotSettings(opts){
         +'<span class="us-val">'+(row.was?'<span class="us-was">'+escapeHtml(row.was)+'</span><span class="us-arrow">→</span>':'')
         +escapeHtml(row.now)+'</span></label>'; }).join('');
     document.getElementById('useSetOverlay').classList.add('show');
-  }).catch(function(){ after(); }); }
+  } }
 function closeUseSettings(){
   document.getElementById('useSetOverlay').classList.remove('show');
   var f=_usAfter; _usShot=null; _usRows=[]; _usAfter=null; if(f) f(); }
@@ -11690,6 +11904,19 @@ function escapeArg(s){ return escapeAttr(String(s).replace(/\\/g,'\\\\').replace
 
 // ── Beans & Grinder ─────────────────────────────────────────────────
 var bgSel=null; // {type:'bean'|'grinder', obj}
+// The page is a wall of cards to choose from, or one of them open to edit.
+// Coming from the main screen, choosing is the errand, so a choice goes back.
+var bgView='list', _bgFromMain=false;
+// What the bean cards show and in what order, and the beans picked out when
+// several are being put away at once. Put-away beans are kept apart from the
+// list everything else uses, so only this page ever sees them.
+var bgFilter='all', bgSort='smart', bgMulti=false, _bgPicked={}, beansAll=[];
+function bgSetView(v){
+  bgView=(v==='edit')?'edit':'list';
+  var pg=document.getElementById('beanPage'); if(!pg) return;
+  pg.classList.toggle('bg-list',bgView==='list');
+  pg.classList.toggle('bg-edit',bgView==='edit'); }
+function bgShowGuide(){ var ed=document.getElementById('bgEditor'); ed.innerHTML=bgGuideHtml(); bgSetView('list'); }
 // The bean page carries three separate jobs -- the coffee itself, the profiles for
 // it, and what it has been pulled at -- so they get a pane each instead of one
 // long scroll. A new bean only ever needs the first.
@@ -11713,26 +11940,19 @@ function setBgTab(k){ bgPane=k;
     if(el) el.style.display=(x===k)?'':'none'; });
   renderBgTabs(); }
 // Tapping the grinder in the recipe opens Beans & Grinders on that grinder.
-function openGrinderPage(){
+function openGrinderPage(){ bgOpenCards('grinder'); }
+function bgOpenCards(tab){
   document.getElementById('beanPage').classList.add('show'); afterPageChange();
-  bgTab='grinder';
-  if(bgSel&&bgSel.type!=='grinder') bgSel=null;
+  bgTab=tab; bgSel=null; _bgFromMain=true; bgSetView('list');
   loadBeansGrinders().then(function(){
-    var g=currentGrinder()||grinders[0];
-    if(g){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; }
-    renderBgList(); renderBgEditor(); }); }
+    renderBgList(); renderBgEditor();
+    var c=document.querySelector('#bgList .bg-card.loaded');
+    if(c&&c.scrollIntoView) c.scrollIntoView({block:'nearest'}); }); }
 // Beans and Grinders share one page, so each way in has to say which of the two
 // it means. Without that the page simply kept whatever the last visit left, and
 // pressing Beans could land you on a grinder.
-function openBeanModal(){
-  document.getElementById('beanPage').classList.add('show'); afterPageChange();
-  bgTab='bean';
-  if(bgSel&&bgSel.type!=='bean') bgSel=null;
-  loadBeansGrinders().then(function(){
-    var b=currentBean();
-    if(b&&!bgSel) bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))};
-    renderBgList(); renderBgEditor(); }); }
-function closeBeanPage(){ document.getElementById('beanPage').classList.remove('show'); afterPageChange(); }
+function openBeanModal(){ bgOpenCards('bean'); }
+function closeBeanPage(){ _bgFromMain=false; document.getElementById('beanPage').classList.remove('show'); afterPageChange(); }
 // The four full-screen pages sit on top of the whole interface, which kept
 // laying out and painting behind them -- the same waste the sleep screen used
 // to have. Modals are not covered by this: they dim the app rather than hide it.
@@ -12066,11 +12286,148 @@ function parseAltitude(v){ var n=String(v||'').split(/[-~,]/).map(function(x){ r
   return n.length?n.slice(0,2):null; }
 function fmtAltitude(a){ return (a&&a.length)?a.join('-'):''; }
 // Write the roast fields back to the bean's batch, creating one on first use.
-function saveBeanBatch(beanId,roastDate,roastLevel,batchId){
+// A bag is weighed in grams, whatever its label prints.
+function bagGrams(v){
+  if(v==null||v==='') return null;
+  if(typeof v==='number') return (v>0&&v<=10000)?Math.round(v):null;
+  var m=String(v).replace(',','.').match(/(\d+(?:\.\d+)?)\s*(kg|g|oz|lbs|lb)?\b/i);
+  if(!m) return null;
+  var n=parseFloat(m[1]), u=(m[2]||'g').toLowerCase();
+  var g=Math.round(u==='kg'?n*1000:u==='oz'?n*28.3495:(u==='lb'||u==='lbs')?n*453.592:n);
+  return (g>0&&g<=10000)?g:null; }
+// The gateway keeps a remaining weight but nothing takes the doses off it, so
+// what is left is worked out here from the shots recorded against the bag.
+// Coffee ground away from the machine is not in it.
+function bagUsed(shots){
+  var n=0, g=0;
+  (shots||[]).forEach(function(sh){
+    var a=(sh&&sh.annotations)||{}, c=(sh&&sh.workflow&&sh.workflow.context)||{};
+    var d=parseFloat(a.actualDoseWeight); if(!(d>0)) d=parseFloat(c.targetDoseWeight);
+    if(d>0){ n++; g+=d; } });
+  return {n:n,g:g}; }
+function bagLeftText(weight,used){
+  weight=bagGrams(weight); if(!weight||!used) return '';
+  var left=weight-used.g, dose=used.n?used.g/used.n:18;
+  var line=t('bagLeft').replace('{n}',used.n).replace('{u}',Math.round(used.g))
+    .replace('{l}',Math.max(0,Math.floor(left)));
+  return left<dose?(t('bagNearlyOut')+' \u00b7 '+line):line; }
+// Days off roast, read against how long that roast wants to rest. The windows
+// are the usual espresso ones; a roast the label does not name gets the middle.
+var REST_WIN={light:[10,21],medium:[7,18],dark:[4,14],any:[7,21]};
+function roastClass(v){
+  v=String(v||'').toLowerCase();
+  if(/dark|\ub2e4\ud06c|\uac15\ubc30\uc804|french|italian/.test(v)) return 'dark';
+  if(/light|\ub77c\uc774\ud2b8|\uc57d\ubc30\uc804|nordic|cinnamon|blonde|filter/.test(v)) return 'light';
+  if(/medium|\ubbf8\ub514\uc5c4|\uc911\ubc30\uc804|city/.test(v)) return 'medium';
+  return 'any'; }
+// Coffee in the freezer stops ageing, so the days it spent there come off.
+function frozenDays(b){
+  var f=b&&b.freezeDate&&new Date(b.freezeDate); if(!f||isNaN(f)) return 0;
+  if(!b.frozen&&!b.unfreezeDate) return 0;
+  var end=b.frozen?new Date():new Date(b.unfreezeDate);
+  return isNaN(end)?0:Math.max(0,Math.floor((end-f)/86400000)); }
+function restState(b){
+  var age=daysSinceRoast(b); if(age==null) return null;
+  age=Math.max(0,age-frozenDays(b));
+  if(b.frozen) return {age:age,key:'frozen'};
+  var w=REST_WIN[roastClass(b&&b.roastLevel)];
+  var key=age<w[0]?'resting':age<=w[1]?'ready':age<=w[1]+14?'fading':'past';
+  return {age:age,key:key}; }
+var _bagUse={};
+function bagUsage(id){
+  var c=_bagUse[id]; if(c&&Date.now()-c.at<60000) return Promise.resolve(c.u);
+  return api('GET','/api/v1/shots?beanBatchId='+encodeURIComponent(id)+'&limit=500').then(function(r){
+    var u=bagUsed((r&&(r.items||r.shots))||[]); _bagUse[id]={at:Date.now(),u:u}; return u; })
+    .catch(function(){ return null; }); }
+function bagOut(b,u){
+  var w=bagGrams(b&&b.weight); if(!w||!u) return false;
+  return (w-u.g)<(u.n?u.g/u.n:18); }
+// The bag a tap on a bean takes: the one already in use, else the oldest one
+// that has rested and is not used up, else the newest one left, else the newest.
+function pickBag(bean){
+  var all=batchesOf(bean&&bean.id); if(!all.length) return Promise.resolve(null);
+  var cur=all.filter(function(x){ return x.id===context.beanBatchId&&!x.archived; })[0];
+  if(cur) return Promise.resolve(cur);
+  var live=all.filter(function(x){ return !x.archived&&!x.frozen; });
+  return Promise.all(live.map(function(x){ return bagGrams(x.weight)?bagUsage(x.id):Promise.resolve(null); }))
+    .then(function(us){
+      var left=live.filter(function(x,i){ return !bagOut(x,us[i]); });
+      var rested=left.filter(function(x){ var r=restState(x); return r&&r.key!=='resting'; })
+        .sort(function(a,b){ return batchTime(a)-batchTime(b); });
+      return rested[0]||left[0]||all.filter(function(x){ return !x.frozen; })[0]||all[0]; }); }
+function toggleUsedUp(pfx){
+  var mb=(pfx==='mb'), o=mb?mbBean:(bgSel&&bgSel.obj), id=bagBatchOpen(pfx);
+  var bt=id&&batchById(id); if(!o||!bt) return;
+  var on=!bt.archived;
+  api('PUT','/api/v1/bean-batches/'+encodeURIComponent(id),{archived:on}).then(function(){
+    bt.archived=on;
+    beanBatches[o.id]=batchesOf(o.id).filter(function(b){ return !b.archived; })[0]||batchesOf(o.id)[0];
+    toast(t(on?'bagMarkedOut':'bagBackIn'),'ok');
+    if(mb) mbRenderBatches(); else { renderBgEditor(); renderBgList(); }
+    updateBeanInfo(); }).catch(function(e){ toast(t('saveFailed')+' '+apiErrorText(e),'err'); }); }
+function toggleFrozen(pfx){
+  var mb=(pfx==='mb'), o=mb?mbBean:(bgSel&&bgSel.obj), id=bagBatchOpen(pfx);
+  var bt=id&&batchById(id); if(!o||!bt) return;
+  var now=new Date().toISOString();
+  var body=bt.frozen?{frozen:false,unfreezeDate:now}:{frozen:true,freezeDate:now,unfreezeDate:null};
+  Object.assign(bt,body);
+  api('PUT','/api/v1/bean-batches/'+encodeURIComponent(id),body).then(function(){
+    toast(t(body.frozen?'bagFrozen':'bagThawed'),'ok');
+    if(mb) mbRenderBatches(); else { renderBgEditor(); renderBgList(); }
+    updateBeanInfo(); }).catch(function(e){ toast(t('saveFailed')+' '+apiErrorText(e),'err'); }); }
+function bgToggleFrozen(){ toggleFrozen('bg'); }
+// The grind a coffee wants depends on the grinder it goes through, so it is
+// remembered for the pair, from the shots actually pulled. A linked grinder
+// reports its own dial, and that wins.
+function beanFavs(){ return lsGet('aurora_beanfav')||{}; }
+function bgToggleFav(id){
+  var f=beanFavs(); if(f[id]) delete f[id]; else f[id]=1;
+  lsSet('aurora_beanfav',f); storeSave('beanfav',f); renderBgList(); }
+function grindMemAll(){ return lsGet('aurora_grindmem')||{}; }
+function grindFor(beanId,grinderId){
+  var m=(beanId&&grinderId)?grindMemAll()[beanId+'|'+grinderId]:null;
+  return (m&&m.s!=null&&m.s!=='')?String(m.s):null; }
+function rememberGrind(sh){
+  var c=(sh&&sh.workflow&&sh.workflow.context)||{};
+  var bean=beanOfBatch(c.beanBatchId)||(beans||[]).filter(function(b){
+    return c.coffeeName&&b.name===c.coffeeName&&(!c.coffeeRoaster||b.roaster===c.coffeeRoaster); })[0];
+  if(!bean||!c.grinderId||c.grinderSetting==null||c.grinderSetting==='') return;
+  var all=grindMemAll(); all[bean.id+'|'+c.grinderId]={s:String(c.grinderSetting),at:Date.now()};
+  lsSet('aurora_grindmem',all); storeSave('grindmem',all); }
+function grinderLive(id){
+  var g=(grinders||[]).filter(function(x){ return x.id===id; })[0]; if(!g) return false;
+  var k=grinderKeyOf(g), dv=grinderDevice();
+  return !!(k&&dv&&dv.state==='connected'&&pluginKeyOfDevice(dv.id)===k); }
+function mbToggleFrozen(){ toggleFrozen('mb'); }
+function bgToggleUsedUp(){ toggleUsedUp('bg'); }
+function mbToggleUsedUp(){ toggleUsedUp('mb'); }
+function bagBatchOpen(pfx){
+  return pfx==='mb'?(mbNewBatch?null:mbBatchId):(bgNewBatch?null:bgBatchId); }
+function showBagLeft(pfx){
+  var el=document.getElementById(pfx+'BagLeft'), w=document.getElementById(pfx+'BagWeight');
+  if(!el||!w) return;
+  var id=bagBatchOpen(pfx);
+  if(!id||!bagGrams(w.value)){ el.textContent=''; return; }
+  if(el.dataset.batch===id&&el.dataset.n!=null){
+    el.textContent=bagLeftText(w.value,{n:+el.dataset.n,g:+el.dataset.g}); return; }
+  el.dataset.batch=id; delete el.dataset.n;
+  api('GET','/api/v1/shots?beanBatchId='+encodeURIComponent(id)+'&limit=500').then(function(r){
+    if(el.dataset.batch!==id) return;
+    var u=bagUsed((r&&(r.items||r.shots))||[]);
+    el.dataset.n=u.n; el.dataset.g=u.g;
+    el.textContent=bagLeftText(w.value,u); }).catch(function(){}); }
+function bagWeightHtml(pfx,batch){
+  return '<div class="field"><label>'+escapeHtml(t('bagWeight'))+'</label>'
+    +'<input id="'+pfx+'BagWeight" type="number" min="0" step="1" inputmode="numeric" placeholder="250"'
+    +' value="'+escapeAttr(batch&&batch.weight>0?String(Math.round(batch.weight)):'')+'"'
+    +' oninput="showBagLeft(\''+pfx+'\')">'
+    +'<div class="set-desc" id="'+pfx+'BagLeft"></div></div>'; }
+function saveBeanBatch(beanId,roastDate,roastLevel,batchId,weight){
   var body={ roastDate:toIsoDate(roastDate)||null, roastLevel:roastLevel||null };
+  if(weight!==undefined) body.weight=bagGrams(weight);
   // Nothing to record is a reason not to invent a batch, not a reason to
   // ignore a date being cleared off one that already exists.
-  if(!batchId&&!body.roastDate&&!body.roastLevel) return Promise.resolve(beanBatches[beanId]||null);
+  if(!batchId&&!body.roastDate&&!body.roastLevel&&!body.weight) return Promise.resolve(beanBatches[beanId]||null);
   var req=batchId?api('PUT','/api/v1/bean-batches/'+encodeURIComponent(batchId),body)
                  :api('POST','/api/v1/beans/'+encodeURIComponent(beanId)+'/batches',body);
   return req; }
@@ -12082,7 +12439,10 @@ function deleteBatch(id,pfx){
   api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(id))
     .then(function(){ delete _beanPics[id];
       return api('DELETE',picUrl(id)).catch(function(){}); })
-    .then(function(){ if(mb) mbBatchId=null; else bgBatchId=null; return loadBeanBatches(); })
+    .then(function(){ if(mb) mbBatchId=null; else bgBatchId=null;
+      if(context.beanBatchId===id){ context.beanBatchId=null;
+        api('PUT','/api/v1/workflow',{context:{beanBatchId:null}}).catch(function(){}); }
+      return loadBeanBatches(); })
     .then(function(){ toast(t('deleted'),'ok');
       if(mb) mbRenderBatches(); else { renderBgEditor(); renderBgList(); }
       updateBeanInfo(); })
@@ -12101,28 +12461,34 @@ function batchPicker(o,pfx){
   var isNew=mb?mbNewBatch:bgNewBatch;
   var sel=(mb?mbBatchId:bgBatchId)||(isNew?null:(list[0]&&list[0].id));
   var chips=list.map(function(b){
-    return '<button class="ep-batch'+(sel===b.id&&!isNew?' on':'')+'" onclick="'+pfx+'SelectBatch(\''+b.id+'\')">'
+    return '<button class="ep-batch'+(sel===b.id&&!isNew?' on':'')+(b.archived?' gone':'')+'" onclick="'+pfx+'SelectBatch(\''+b.id+'\')">'
       +escapeHtml(batchLabel(b))+'</button>'; }).join('');
   var add='<button class="ep-batch add'+(isNew?' on':'')+'" onclick="'+pfx+'AddBatch()">+ '+escapeHtml(t('newBatch'))+'</button>';
   var del=(sel&&!isNew)?'<button class="ep-batch del" onclick="deleteBatch(\''+sel+'\',\''+pfx+'\')">×</button>':'';
+  var selB=(sel&&!isNew)?list.filter(function(b){ return b.id===sel; })[0]:null;
+  var out=selB?('<button class="ep-batch frz'+(selB.frozen?' on':'')+'" onclick="'+pfx+'ToggleFrozen()">'
+      +escapeHtml(t(selB.frozen?'bagThaw':'bagFreeze'))+'</button>'
+    +'<button class="ep-batch used'+(selB.archived?' on':'')+'" onclick="'+pfx+'ToggleUsedUp()">'
+      +escapeHtml(t(selB.archived?'bagRestore':'bagUsedUp'))+'</button>'):'';
   return '<div class="ep-batchrow"><span class="ep-roastlab">'+escapeHtml(t('batch'))
-    +(list.length?' · '+list.length:'')+'</span>'+chips+add+del+'</div>'; }
-function beanSubtitle(b){ var age=daysSinceRoast(beanBatches[b.id]);
+    +(list.length?' · '+list.length:'')+'</span>'+chips+add+out+del+'</div>'; }
+function bgInitial(v){ var c=String(v||'').trim().charAt(0); return c?c.toUpperCase():'\u00b7'; }
+function beanSubtitle(b){ var age=daysSinceRoast(bagFor(b));
   return escapeHtml(b.roaster||'')+(age!=null?' \u00b7 '+t('daysOffRoast').replace('{n}',age):''); }
-function loadBeanBatches(){ return api('GET','/api/v1/bean-batches').then(function(list){
+function loadBeanBatches(){ return api('GET','/api/v1/bean-batches?includeArchived=true').then(function(list){
   beanBatches={}; beanBatchList={};
   (list||[]).forEach(function(b){ (beanBatchList[b.beanId]=beanBatchList[b.beanId]||[]).push(b); });
   Object.keys(beanBatchList).forEach(function(id){
     beanBatchList[id].sort(function(a,b){ return batchTime(b)-batchTime(a); });
-    beanBatches[id]=beanBatchList[id][0]; });
+    beanBatches[id]=beanBatchList[id].filter(function(b){ return !b.archived; })[0]||beanBatchList[id][0]; });
   }).catch(function(){ beanBatches={}; beanBatchList={}; }); }
 function batchesOf(beanId){ return (beanId&&beanBatchList[beanId])||[]; }
 function batchLabel(b){ var d=isoDay(b.roastDate);
   return (d||t('batchNoDate'))+(b.roastLevel?' · '+b.roastLevel:''); }
 
 function loadBeansGrinders(){
-  return Promise.all([ api('GET','/api/v1/beans').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}), loadBeanBatches() ])
-    .then(function(res){ beans=res[0]||[]; grinders=res[1]||[]; renderBgList(); if(bgSel&&bgSel.type==='bean'&&bgSel.obj.id) renderBgEditor();
+  return Promise.all([ api('GET','/api/v1/beans?includeArchived=true').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}), loadBeanBatches() ])
+    .then(function(res){ beansAll=res[0]||[]; beans=beansAll.filter(function(b){ return !b.archived; }); grinders=res[1]||[]; renderBgList(); if(bgSel&&bgSel.type==='bean'&&bgSel.obj.id) renderBgEditor();
       ensurePluginGrinders(); });
 }
 var bgTab='bean'; // which section is shown: 'bean' | 'grinder'
@@ -12145,50 +12511,209 @@ function bgMatches(o,kind){
     : [o.model,o.burrs,o.burrType,o.notes].join(' ');
   return hay.toLowerCase().indexOf(needle)>=0; }
 function renderBgList(){ var list=document.getElementById('bgList'); list.innerHTML='';
-  // tab switcher: Beans / Grinders shown separately
+  var head=document.createElement('div'); head.className='bg-head';
   var tabs=document.createElement('div'); tabs.className='bg-tabs';
-  tabs.innerHTML='<button class="bg-tab'+(bgTab==='bean'?' active':'')+'" onclick="bgSetTab(\'bean\')">🫘 Beans</button>'
-    +'<button class="bg-tab'+(bgTab==='grinder'?' active':'')+'" onclick="bgSetTab(\'grinder\')">⚙️ Grinders</button>';
-  list.appendChild(tabs);
+  tabs.innerHTML='<button class="bg-tab'+(bgTab==='bean'?' active':'')+'" onclick="bgSetTab(\'bean\')">'+escapeHtml(t('beans'))+'</button>'
+    +'<button class="bg-tab'+(bgTab==='grinder'?' active':'')+'" onclick="bgSetTab(\'grinder\')">'+escapeHtml(t('grinders'))+'</button>';
+  head.appendChild(tabs);
   var sb=document.createElement('input'); sb.className='ep-search'; sb.id='bgSearch';
   sb.placeholder=t(bgTab==='bean'?'searchBeans':'searchGrinders'); sb.value=bgQuery;
   sb.style.margin='0 0 8px';
   sb.oninput=function(){ bgSetQuery(this.value); };
-  list.appendChild(sb);
-  if(bgTab==='bean'){
-    var addB=document.createElement('button'); addB.className='ep-step-add'; addB.style.cssText='margin:4px 0 8px'; addB.textContent='+ Add Bean'; addB.onclick=function(){ bgSelectNew('bean'); }; list.appendChild(addB);
-    var shownB=beans.filter(function(b){ return bgMatches(b,'bean'); });
-    if(!shownB.length){ var e=document.createElement('div'); e.className='ep-placeholder'; e.style.marginTop='40px';
-      e.textContent=bgNeedle()?t('noMatches'):'No beans yet'; list.appendChild(e); }
-    shownB.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
-      it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(249,115,22,.12)">🫘</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(b.name||'')+'</div><div class="mt">'+beanSubtitle(b)+'</div></div>';
-      it.onclick=function(){ bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
-  } else {
-    var addG=document.createElement('button'); addG.className='ep-step-add'; addG.style.cssText='margin:4px 0 8px'; addG.textContent='+ Add Grinder'; addG.onclick=function(){ bgSelectNew('grinder'); }; list.appendChild(addG);
-    var shownG=grinders.filter(function(g){ return bgMatches(g,'grinder'); });
-    if(!shownG.length){ var e2=document.createElement('div'); e2.className='ep-placeholder'; e2.style.marginTop='40px';
-      e2.textContent=bgNeedle()?t('noMatches'):'No grinders yet'; list.appendChild(e2); }
-    shownG.forEach(function(g){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='grinder'&&bgSel.obj.id===g.id?' active':'');
-      var sub=(g.burrs||g.burrType||'grinder')+(g.grinderSetting?(' · @'+g.grinderSetting):'');
-      var badge=grinderLinkTag(g);
-      var using=(context.grinderId&&context.grinderId===g.id)?('<span class="bg-using">'+escapeHtml(t('grInUse'))+'</span>'):'';
-      it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+badge+using+'</div><div class="mt">'+escapeHtml(sub)+'</div></div>';
-      it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
-  }
-  return;
-}
-function renderBgListOLD(){ var list=document.getElementById('bgList'); list.innerHTML='';
-  var hb=document.createElement('div'); hb.style.cssText='font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 4px;display:flex;justify-content:space-between;align-items:center';
-  hb.innerHTML='<span>🫘 Beans</span>'; var addB=document.createElement('button'); addB.className='ep-step-add'; addB.textContent='+ Bean'; addB.onclick=function(){ bgSelectNew('bean'); }; hb.appendChild(addB); list.appendChild(hb);
-  beans.forEach(function(b){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='bean'&&bgSel.obj.id===b.id?' active':'');
-    it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(249,115,22,.12)">🫘</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(b.name||'')+'</div><div class="mt">'+escapeHtml(b.roaster||'')+'</div></div>';
-    it.onclick=function(){ bgSel={type:'bean',obj:JSON.parse(JSON.stringify(b))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
-  var hg=document.createElement('div'); hg.style.cssText='font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px;display:flex;justify-content:space-between;align-items:center';
-  hg.innerHTML='<span>⚙️ Grinders</span>'; var addG=document.createElement('button'); addG.className='ep-step-add'; addG.textContent='+ Grinder'; addG.onclick=function(){ bgSelectNew('grinder'); }; hg.appendChild(addG); list.appendChild(hg);
-  grinders.forEach(function(g){ var it=document.createElement('div'); it.className='ep-item'+(bgSel&&bgSel.type==='grinder'&&bgSel.obj.id===g.id?' active':'');
-    it.innerHTML='<div class="thmb" style="display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(99,102,241,.12)">⚙️</div><div style="flex:1;min-width:0"><div class="nm">'+escapeHtml(g.model||'')+'</div><div class="mt">'+escapeHtml(g.burrs||g.burrType||'grinder')+'</div></div>';
-    it.onclick=function(){ bgSel={type:'grinder',obj:JSON.parse(JSON.stringify(g))}; renderBgList(); renderBgEditor(); }; list.appendChild(it); });
-}
+  head.appendChild(sb);
+  var add=document.createElement('button'); add.className='ep-step-add'; add.style.cssText='margin:0 0 4px';
+  add.textContent=t(bgTab==='bean'?'addBean':'addGrinder');
+  add.onclick=function(){ bgSelectNew(bgTab); };
+  head.appendChild(add);
+  if(bgTab==='bean') head.appendChild(bgToolsEl());
+  var hint=document.createElement('div'); hint.className='set-desc bg-hint'; hint.textContent=t(bgMulti?'bgMultiHint':'bgCardHint');
+  head.appendChild(hint);
+  list.appendChild(head);
+  var shown=bgTab==='bean'
+    ? bgSortBeans(bgBeanSource().filter(function(x){ return bgMatches(x,'bean')&&bgPassesFilter(x); }))
+    : grinders.filter(function(x){ return bgMatches(x,'grinder'); }).slice().sort(function(a,b){
+        var ua=(context.grinderId===a.id)?0:1, ub=(context.grinderId===b.id)?0:1;
+        return (ua-ub)||String(a.model||'').localeCompare(String(b.model||'')); });
+  if(!shown.length){ var e=document.createElement('div'); e.className='ep-placeholder'; e.style.marginTop='40px';
+    e.textContent=bgNeedle()?t('noMatches'):t(bgTab==='bean'?'noBeans':'noGrinders'); list.appendChild(e); return; }
+  shown.forEach(function(x){ list.appendChild(bgTab==='bean'?bgBeanCard(x):bgGrinderCard(x)); });
+  bgObserveCovers(); }
+function bgBeanSource(){
+  var ids={}; (beans||[]).forEach(function(b){ ids[b.id]=1; });
+  return (beans||[]).concat((beansAll||[]).filter(function(b){ return b.archived&&!ids[b.id]; })); }
+function beanIsOut(b){
+  if(b.archived) return true;
+  var l=batchesOf(b.id); return l.length>0&&l.every(function(x){ return x.archived; }); }
+function bgPassesFilter(b){
+  if(bgFilter==='out') return beanIsOut(b);
+  if(beanIsOut(b)) return false;
+  if(bgFilter==='ready'){ var r=restState(bagFor(b)); return !!r&&r.key==='ready'; }
+  if(bgFilter==='frozen') return batchesOf(b.id).some(function(x){ return x.frozen&&!x.archived; });
+  return true; }
+var REST_RANK={ready:0,fading:1,resting:2,frozen:3,past:5};
+function bgSortBeans(list){
+  var cur=(currentBean()||{}).id, fav=beanFavs();
+  function roastT(b){ var bt=bagFor(b); return bt?batchTime(bt):0; }
+  function rank(b){ var r=restState(bagFor(b)); return r?REST_RANK[r.key]:4; }
+  function name(b){ return String(b.name||''); }
+  return list.slice().sort(function(a,b){
+    if(bgSort==='name') return name(a).localeCompare(name(b));
+    if(bgSort==='roast') return (roastT(b)-roastT(a))||name(a).localeCompare(name(b));
+    return ((a.id===cur?0:1)-(b.id===cur?0:1))||((fav[a.id]?0:1)-(fav[b.id]?0:1))
+      ||(rank(a)-rank(b))||name(a).localeCompare(name(b)); }); }
+function bgSetFilter(f){ bgFilter=f; renderBgList(); }
+function bgSetSort(v){ bgSort=v; renderBgList(); }
+function bgToggleMulti(){ bgMulti=!bgMulti; _bgPicked={}; renderBgList(); }
+function bgTogglePick(id){ if(_bgPicked[id]) delete _bgPicked[id]; else _bgPicked[id]=1; renderBgList(); }
+function bgToolsEl(){
+  var box=document.createElement('div'); box.className='bg-tools';
+  var fs=[['all','bgfAll'],['ready','bgfReady'],['frozen','bgfFrozen'],['out','bgfOut']];
+  var h='<div class="ep-kinds">'+fs.map(function(f){
+      return '<button class="ep-kind'+(bgFilter===f[0]?' on':'')+'" onclick="bgSetFilter(\''+f[0]+'\')">'+escapeHtml(t(f[1]))+'</button>'; }).join('')+'</div>'
+    +'<select class="bg-sort" onchange="bgSetSort(this.value)" aria-label="'+escapeAttr(t('bgSortLbl'))+'">'
+    +[['smart','bgsSmart'],['roast','bgsRoast'],['name','bgsName']].map(function(o){
+      return '<option value="'+o[0]+'"'+(bgSort===o[0]?' selected':'')+'>'+escapeHtml(t(o[1]))+'</option>'; }).join('')+'</select>'
+    +'<button class="ep-act'+(bgMulti?' on':'')+'" onclick="bgToggleMulti()">'+escapeHtml(t(bgMulti?'bgSelDone':'bgSelect'))+'</button>';
+  if(bgMulti){
+    var n=Object.keys(_bgPicked).length;
+    h+='<div class="ep-selbar"><span class="n">'+escapeHtml(t('bgSelN').replace('{n}',n))+'</span>'
+      +'<button class="m-btn" onclick="bgBulkArchive()"'+(n?'':' disabled')+'>'+escapeHtml(t('bgArchive'))+'</button>'
+      +'<button class="m-btn" onclick="bgBulkRestore()"'+(n?'':' disabled')+'>'+escapeHtml(t('bgUnarchive'))+'</button>'
+      +'<button class="m-btn" style="color:var(--red)" onclick="bgBulkDelete()"'+(n?'':' disabled')+'>'+escapeHtml(t('bgDelete'))+'</button></div>'; }
+  box.innerHTML=h;
+  return box; }
+function bgSetArchived(ids,on){
+  return Promise.all(ids.map(function(id){
+    return api('PUT','/api/v1/beans/'+encodeURIComponent(id),{archived:on}).then(function(){
+      var b=(beansAll||[]).filter(function(x){ return x.id===id; })[0]
+        ||(beans||[]).filter(function(x){ return x.id===id; })[0];
+      if(b){ b.archived=on; if((beansAll||[]).indexOf(b)<0) beansAll.push(b); }
+      return true; }).catch(function(){ return false; }); }))
+    .then(function(r){
+      beans=(beansAll||[]).filter(function(b){ return !b.archived; });
+      var ok=r.filter(Boolean).length;
+      toast(t(on?'bgArchived':'bgRestored').replace('{n}',ok),ok===ids.length?'ok':'err');
+      _bgPicked={}; bgMulti=false; renderBgList(); }); }
+function bgBulkArchive(){ return bgSetArchived(Object.keys(_bgPicked),true); }
+function bgBulkRestore(){ return bgSetArchived(Object.keys(_bgPicked),false); }
+function bgBulkDelete(){
+  var ids=Object.keys(_bgPicked); if(!ids.length) return;
+  if(!confirm(t('confirmDeleteBeans').replace('{n}',ids.length))) return;
+  var cur=(currentBean()||{}).id;
+  Promise.all(ids.map(function(id){ return removeBean(id).then(function(){ return true; },function(){ return false; }); }))
+    .then(function(r){
+      if(ids.indexOf(cur)>=0) clearBeanInUse();
+      toast(t('deleted'),r.every(Boolean)?'ok':'err');
+      _bgPicked={}; bgMulti=false; loadBeansGrinders(); }); }
+function bgCardShell(kind,id,using){
+  var el=document.createElement('div');
+  el.className='ep-item ep-card bg-card '+kind+(using?' loaded':'');
+  el.dataset.id=id; el.tabIndex=0; el.setAttribute('role','button');
+  return el; }
+function bgEditBtn(el,kind,id){
+  var btn=el.querySelector('.bg-editbtn'); if(!btn) return;
+  btn.onclick=function(e){ e.stopPropagation(); bgEditItem(kind,id); }; }
+function bgChip(v){ return v?'<span class="bg-chip">'+escapeHtml(v)+'</span>':''; }
+function bgBeanCard(b){
+  var bag=bagFor(b), rs=restState(bag), using=((currentBean()||{}).id===b.id);
+  var el=bgCardShell('bean',b.id,using), fav=!!beanFavs()[b.id];
+  if(bgMulti&&_bgPicked[b.id]) el.classList.add('sel');
+  if(beanIsOut(b)) el.classList.add('out');
+  var where=blendOf(b)?blendSummary(b):beanShort(b.country);
+  var live=batchesOf(b.id).filter(function(x){ return !x.archived; }).length;
+  var chips=bgChip(beanShort(b.processing))+bgChip(bag&&bag.roastLevel)
+    +(b.decaf?bgChip(t('decaf')):'')+(live>1?bgChip(t('bagsN').replace('{n}',live)):'');
+  el.innerHTML='<div class="thmb bg-cover '+roastClass(bag&&bag.roastLevel)+'" data-bean="'+escapeAttr(b.id)+'" data-bag="'+escapeAttr(bag?bag.id:'')+'">'
+      +'<span class="bg-cover-init">'+escapeHtml(bgInitial(b.roaster||b.name))+'</span></div>'
+    +(rs?'<span class="bg-rest '+rs.key+'">D+'+rs.age+' \u00b7 '+escapeHtml(t('rest_'+rs.key))+'</span>':'')
+    +'<div class="ep-cbody"><div class="mt">'+escapeHtml([b.roaster,where].filter(Boolean).join(' \u00b7 '))+'</div>'
+      +'<div class="nm">'+escapeHtml(b.name||'')+'</div>'
+      +'<span class="ep-loaded">'+escapeHtml(t('grInUse'))+'</span>'
+      +'<div class="bg-left"></div>'
+      +'<div class="cfoot"><div class="ep-chips">'+chips+'</div>'
+      +'<button type="button" class="bg-favbtn'+(fav?' on':'')+'" aria-pressed="'+fav+'" aria-label="'+escapeAttr(t('favLabel'))+'">'+'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="'+(fav?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'+'</button>'
+      +'<button type="button" class="bg-editbtn" aria-label="'+escapeAttr(t('edit'))+'">'+'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'+'</button></div></div>';
+  bindHold(el,function(){ if(bgMulti) bgTogglePick(b.id); else bgPickBean(b.id); },
+    function(){ if(!bgMulti) bgEditItem('bean',b.id); });
+  el.querySelector('.bg-favbtn').onclick=function(e){ e.stopPropagation(); bgToggleFav(b.id); };
+  bgEditBtn(el,'bean',b.id);
+  var w=bagGrams(bag&&bag.weight);
+  if(w) bagUsage(bag.id).then(function(u){
+    var box=el.querySelector('.bg-left'); if(!box||!u) return;
+    var left=w-u.g;
+    box.textContent=(left<(u.n?u.g/u.n:18)?t('bagNearlyOut')+' \u00b7 ':'')
+      +t('bagLeftShort').replace('{l}',Math.max(0,Math.floor(left))); });
+  return el; }
+function bgGrinderCard(g){
+  var using=!!(context.grinderId&&context.grinderId===g.id);
+  var el=bgCardShell('grinder',g.id,using);
+  var set=(g.grinderSetting!=null&&g.grinderSetting!=='')?String(g.grinderSetting):'\u2014';
+  el.innerHTML='<div class="thmb bg-cover grinder"><div class="bg-dial"><span class="bg-dial-at">@</span>'+escapeHtml(set)+'</div></div>'
+    +'<div class="ep-cbody"><div class="mt">'+escapeHtml(g.burrs||g.burrType||t('grinders'))+'</div>'
+      +'<div class="nm">'+escapeHtml(g.model||'')+'</div>'
+      +'<span class="ep-loaded">'+escapeHtml(t('grInUse'))+'</span>'
+      +'<div class="cfoot"><div class="ep-chips">'+grinderLinkTag(g)+'</div>'
+      +'<button type="button" class="bg-editbtn" aria-label="'+escapeAttr(t('edit'))+'">'+'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'+'</button></div></div>';
+  bindHold(el,function(){ bgPickGrinder(g.id); },function(){ bgEditItem('grinder',g.id); });
+  bgEditBtn(el,'grinder',g.id);
+  return el; }
+// A bag photo is a data URL of up to a couple of hundred kilobytes, so a cover
+// asks for its picture only once it is on screen.
+var _bgCoverObs=null;
+function bgObserveCovers(){
+  var covers=document.querySelectorAll('#bgList .bg-cover[data-bean]');
+  if(!('IntersectionObserver' in window)){ Array.prototype.forEach.call(covers,bgFillCover); return; }
+  if(!_bgCoverObs) _bgCoverObs=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ _bgCoverObs.unobserve(e.target); bgFillCover(e.target); } }); });
+  Array.prototype.forEach.call(covers,function(c){
+    var r=c.getBoundingClientRect();
+    if(r.width>0&&r.bottom>0&&r.top<window.innerHeight) bgFillCover(c); else _bgCoverObs.observe(c); }); }
+function bgFillCover(c){
+  var bag=c.dataset.bag, bean=c.dataset.bean;
+  (bag?loadBeanPics(bag):Promise.resolve([])).then(function(l){ return (l&&l.length)?l:loadBeanPics(bean); })
+    .then(function(l){ if(l&&l.length&&l[0].d){ c.style.backgroundImage='url('+l[0].d+')'; c.classList.add('has-pic'); } })
+    .catch(function(){}); }
+function bgEditItem(kind,id){
+  var src=(kind==='bean'?beans:grinders).filter(function(x){ return x.id===id; })[0]; if(!src) return;
+  bgTab=kind; bgSel={type:kind,obj:JSON.parse(JSON.stringify(src))};
+  renderBgEditor(); }
+// Choosing from a card. The page stays, the mark moves, and the toast can take
+// it back; a visit from the main screen was for this one choice and ends with it.
+var BEAN_KEYS=['coffeeName','coffeeRoaster','beanBatchId'], GRINDER_KEYS=['grinderId','grinderModel','grinderSetting'];
+function bgCtxSnap(keys){ var o={}; keys.forEach(function(k){ o[k]=(context[k]===undefined?null:context[k]); }); return o; }
+function bgApplyCtx(ctx){ Object.assign(context,ctx); return api('PUT','/api/v1/workflow',{context:ctx}); }
+function bgRefreshUse(){ updateBeanInfo(); updateGrindRow(); renderBgList(); }
+function bgAfterPick(prev,label,offer){
+  bgRefreshUse();
+  if(_bgFromMain) closeBeanPage();
+  var undo={label:t('undo'),fn:function(){ bgApplyCtx(prev).catch(function(){}); bgRefreshUse(); }};
+  toastActs(label,[undo]);
+  findLastShotOffer(offer).then(function(o){
+    if(!o) return;
+    toastActs(label,[{label:t('usOffer'),fn:function(){ showLastShotOffer(o,{name:offer.name}); }},undo]); }); }
+function bgPickBean(id){
+  var b=(beans||[]).filter(function(x){ return x.id===id; })[0]; if(!b) return Promise.resolve();
+  var prev=bgCtxSnap(BEAN_KEYS.concat(['grinderSetting']));
+  return pickBag(b).then(function(bag){
+    var ctx={coffeeName:b.name,coffeeRoaster:b.roaster||null,beanBatchId:(bag&&bag.id)||null};
+    var mem=grinderLive(context.grinderId)?null:grindFor(b.id,context.grinderId);
+    if(mem!=null&&mem!==String(context.grinderSetting==null?'':context.grinderSetting)) ctx.grinderSetting=mem;
+    return bgApplyCtx(ctx).then(function(){
+      bgAfterPick(prev,t('beanPicked').replace('{n}',(b.name||'')+(bag?' \u00b7 '+batchLabel(bag):''))
+        +(ctx.grinderSetting!=null?' \u00b7 '+t('grindAt').replace('{s}',ctx.grinderSetting):''),
+        {name:b.name||'',skip:['bean'],test:function(sh){ var c=(sh.workflow&&sh.workflow.context)||{}; return !!b.name&&c.coffeeName===b.name; }}); }); })
+    .catch(function(){ toast(t('tFailed'),'err'); }); }
+function bgPickGrinder(id){
+  var g=(grinders||[]).filter(function(x){ return x.id===id; })[0]; if(!g) return Promise.resolve();
+  var prev=bgCtxSnap(GRINDER_KEYS);
+  var ctx={grinderId:g.id,grinderModel:g.model||null};
+  if(g.grinderSetting!=null&&g.grinderSetting!=='') ctx.grinderSetting=String(g.grinderSetting);
+  var bean=currentBean(), mem=(bean&&!grinderLive(g.id))?grindFor(bean.id,g.id):null;
+  if(mem!=null) ctx.grinderSetting=mem;
+  return bgApplyCtx(ctx).then(function(){
+    bgAfterPick(prev,t('grinderPicked').replace('{n}',g.model||''),
+      {name:g.model||'',skip:['grinder'],test:function(sh){ var c=(sh.workflow&&sh.workflow.context)||{}; return !!g.model&&c.grinderModel===g.model; }}); })
+    .catch(function(){ toast(t('tFailed'),'err'); }); }
 function bgSelectNew(type){ bgTab=type; aiImages=[]; bgBatchId=null; bgNewBatch=false; bgSel={type:type,obj:type==='bean'?{roaster:'',name:'',country:'',region:'',producer:'',processing:'',species:'',decaf:false,decafProcess:'',variety:[],altitude:null}:{model:'',burrs:'',burrType:'conical',burrSize:null,settingType:'numeric',settingSmallStep:0.1,settingBigStep:1.0,settingValues:[],grinderSetting:'',grindSpeed:null}}; renderBgList(); renderBgEditor(); }
 var _recFor=null;
 // The right half stood empty with an arrow pointing at the list. What goes in
@@ -12197,13 +12722,13 @@ var _recFor=null;
 // than waiting to be filled in blind.
 function bgGuideHtml(){
   function sec(icon,title,rows){
-    return '<div class="bg-guide-sec"><div class="bg-guide-h"><span>'+icon+'</span>'+escapeHtml(title)+'</div>'
+    return '<div class="bg-guide-sec"><div class="bg-guide-h">'+(icon?'<span>'+icon+'</span>':'')+escapeHtml(title)+'</div>'
       +rows.map(function(r){ return '<div class="bg-guide-row"><b>'+escapeHtml(r[0])+'</b><span>'+escapeHtml(r[1])+'</span></div>'; }).join('')
       +'</div>'; }
   return '<div class="bg-guide">'
     +'<div class="bg-guide-lead">'+escapeHtml(t('bgGuideLead'))+'</div>'
-    +sec('\u2615',t('bgGuideBean'),[[t('bgGBeanA'),t('bgGBeanAd')],[t('bgGBeanB'),t('bgGBeanBd')],[t('bgGBeanC'),t('bgGBeanCd')]])
-    +sec('\u2699\ufe0f',t('bgGuideGrinder'),[[t('bgGGrA'),t('bgGGrAd')],[t('bgGGrB'),t('bgGGrBd')],[t('bgGGrC'),t('bgGGrCd')]])
+    +sec('',t('bgGuideBean'),[[t('bgGBeanA'),t('bgGBeanAd')],[t('bgGBeanB'),t('bgGBeanBd')],[t('bgGBeanC'),t('bgGBeanCd')]])
+    +sec('',t('bgGuideGrinder'),[[t('bgGGrA'),t('bgGGrAd')],[t('bgGGrB'),t('bgGGrBd')],[t('bgGGrC'),t('bgGGrCd')]])
     +'<div class="bg-guide-foot">'+escapeHtml(t('bgGuideFoot'))+'</div></div>'; }
 // Leaving the form without saving. Nothing has been written on the way in --
 // the fields are read when Save is pressed -- so this only has to put the
@@ -12219,7 +12744,8 @@ function bgCloseEditor(){
   usageResults=null; usageBusy=false; _usageFor=null; usageStats=null; usageShots=null;
   histProfile=null;
   renderBgEditor(); renderBgList(); }
-function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML=bgGuideHtml(); return; }
+function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML=bgGuideHtml(); bgSetView('list'); return; }
+  bgSetView('edit');
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){
     // Which bean is open settles what is remembered about it, and it has to be
@@ -12273,6 +12799,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +dl('bgRmList',roastMachineList())
       +batchPicker(o)
       +'<div class="field-row"><div class="field"><label>'+t('roastDate')+'</label><input id="bgRoastDate" type="date" value="'+escapeAttr(isoDay(batch.roastDate))+'"></div><div class="field"><label>'+t('roastLevel')+'</label><input id="bgRoast" value="'+escapeAttr(batch.roastLevel||'')+'" placeholder="light / medium / dark"></div></div>'
+      +bagWeightHtml('bg',batch)
       +'<div class="field"><label class="bean-check"><input type="checkbox" id="bgIsBlend"'+(blendOf(o)?' checked':'')+' onchange="bgBlendToggle(this.checked)"> '+t('isBlend')+'</label></div>'
       +'<div id="bgBlendBox">'+bgBlendRows()+'</div>'
       +'<div id="bgSoloOrigin"'+(blendOf(o)?' style="display:none"':'')+'>'
@@ -12286,7 +12813,7 @@ function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgS
       +'</div>'
       +'<div class="ep-save-bar">'+'<button class="m-btn" style="margin-right:auto" onclick="bgCloseEditor()">'+t('close')+'</button>'+(isNew?'':'<button class="m-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteBean()">'+t('delete')+'</button>')+'<button class="m-btn" onclick="useBean()">'+t('useForShot')+'</button><button class="m-btn primary" onclick="saveBean()">'+t('save')+'</button></div>';
     renderRecBox(); renderBeanStats(); renderBgTabs(); loadBeanUsage('bg');
-    showBeanPics('bg');
+    showBeanPics('bg'); showBagLeft('bg');
   } else {
     var isPreset=(o.settingType==='preset'), gname=splitGrinderName(o), owned=pluginOwned(o), ro=owned?' readonly':'';
     if(!o._burr) o._burr=burrPartsOf(o);
@@ -12684,11 +13211,11 @@ function histProfileRow(i){ var r=profileRows&&profileRows[i]; if(!r) return;
 function clearHistProfile(){ histProfile=null; renderBeanStats(); }
 function useProfileObj(p){
   selectProfile(p);
-  var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
+  var o=bgSel&&bgSel.obj, b=bgShownBatch(o);
   if(o&&o.name) api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).catch(function(){}); }
 function useRecommended(i){ var r=recResults&&recResults[i]; if(!r) return;
   selectProfile(r.p);
-  var o=bgSel&&bgSel.obj, b=o&&o.id&&beanBatches[o.id];
+  var o=bgSel&&bgSel.obj, b=bgShownBatch(o);
   if(o&&o.name) api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).catch(function(){}); }
 // -- Blends -------------------------------------------------------
 // A blend is several coffees in a stated proportion, and the gateway's bean
@@ -12830,14 +13357,14 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
     ? blend.some(function(c){ return !!c.decafProcess; })
     : !!body.decafProcess;
   if(!body.roaster||!body.name){ toast(t('mbNeedRoasterName'),'err'); return; }
-  var roastDate=v('bgRoastDate'), roastLevel=v('bgRoast');
+  var roastDate=v('bgRoastDate'), roastLevel=v('bgRoast'), bagW=v('bgBagWeight');
   var finish=function(){ toast(t('beanSaved'),'ok'); bgBatchId=null; bgNewBatch=false; bgSel=null;
     loadBeansGrinders(); updateBeanInfo();
-    document.getElementById('bgEditor').innerHTML=bgGuideHtml(); };
+    bgShowGuide(); };
   var fail=function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); };
   if(o.id){
     api('PUT','/api/v1/beans/'+o.id,body)
-      .then(function(){ return saveBeanBatch(o.id,roastDate,roastLevel,bgNewBatch?null:bgBatchId); })
+      .then(function(){ return saveBeanBatch(o.id,roastDate,roastLevel,bgNewBatch?null:bgBatchId,bagW); })
       .then(function(bt){ return keepScanPics((bt&&bt.id)||bgBatchId||o.id); })
       .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail);
     return; }
@@ -12846,14 +13373,14 @@ function saveBean(){ var o=bgSel.obj; var v=function(id){ var el=document.getEle
     if(choice===null) return;
     if(choice==='batch'&&dup){
       api('PUT','/api/v1/beans/'+dup.id,body)
-        .then(function(bt){ return saveBeanBatch(dup.id,roastDate,roastLevel,null); })
+        .then(function(bt){ return saveBeanBatch(dup.id,roastDate,roastLevel,null,bagW); })
         .then(function(bt){ return keepScanPics((bt&&bt.id)||dup.id); })
         .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail);
       return; }
     var madeId=null;
     api('POST','/api/v1/beans',body)
       .then(function(saved){ madeId=(saved&&saved.id)||null;
-        return saveBeanBatch(madeId,roastDate,roastLevel,null); })
+        return saveBeanBatch(madeId,roastDate,roastLevel,null,bagW); })
       .then(function(bt){ return keepScanPics((bt&&bt.id)||madeId); })
       .then(function(){ return loadBeanBatches(); }).then(finish).catch(fail); }); }
 // The same coffee bought again should become a batch, not a second bean - but
@@ -12874,7 +13401,21 @@ function askDuplicateBean(dup){
     _dupResolve=function(v){ ov.classList.remove('show'); _dupResolve=null; resolve(v); }; }); }
 var _dupResolve=null;
 function dupChoose(v){ if(_dupResolve) _dupResolve(v); }
+function clearBeanInUse(){
+  context.coffeeName=null; context.coffeeRoaster=null; context.beanBatchId=null;
+  api('PUT','/api/v1/workflow',{context:{coffeeName:null,coffeeRoaster:null,beanBatchId:null}}).catch(function(){});
+  updateBeanInfo(); }
+function removeBean(id){
+  var keys=[id].concat(batchesOf(id).map(function(b){ return b.id; }));
+  return api('GET','/api/v1/beans/'+id+'/batches?includeArchived=true').catch(function(){ return []; })
+    .then(function(list){ return Promise.all((Array.isArray(list)?list:[]).map(function(b){ return api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(b.id)).catch(function(){}); })); })
+    .then(function(){ return api('DELETE','/api/v1/beans/'+id); })
+    .then(function(){
+      keys.forEach(function(k){ delete _beanPics[k]; });
+      delete beanBatches[id];
+      return Promise.all(keys.map(function(k){ return api('DELETE',picUrl(k)).catch(function(){}); })); }); }
 function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm(t('confirmDeleteBean'))) return;
+  var inUse=((currentBean()||{}).id===o.id);
   api('GET','/api/v1/beans/'+o.id+'/batches').catch(function(){ return []; })
     .then(function(list){ return Promise.all((list||[]).map(function(b){ return api('DELETE','/api/v1/bean-batches/'+encodeURIComponent(b.id)).catch(function(){}); })); })
     .then(function(){ return api('DELETE','/api/v1/beans/'+o.id); })
@@ -12884,9 +13425,11 @@ function deleteBean(){ var o=bgSel.obj; if(!o.id) return; if(!confirm(t('confirm
       keys.forEach(function(k){ delete _beanPics[k]; });
       return Promise.all(keys.map(function(k){
         return api('DELETE',picUrl(k)).catch(function(){}); })); })
-    .then(function(){ delete beanBatches[o.id]; toast(t('deleted'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); })
+    .then(function(){ delete beanBatches[o.id]; if(inUse) clearBeanInUse(); toast(t('deleted'),'ok'); bgSel=null; loadBeansGrinders(); bgShowGuide(); })
     .catch(function(e){ toast(t('deleteFailed')+' '+apiErrorText(e),'err'); }); }
-function useBean(){ var o=bgSel.obj; var b=o.id&&beanBatches[o.id];
+function useBean(){ var o=bgSel.obj;
+  if(!o.id){ toast(t('saveBeanFirst'),'err'); return; }
+  var b=bgShownBatch(o);
   api('PUT','/api/v1/workflow',{context:{coffeeName:o.name,coffeeRoaster:o.roaster,beanBatchId:(b&&b.id)||null}}).then(function(){ toast(t('tBeanSet'),'ok'); loadWorkflow();
     offerLastShotSettings({ name:o.name||'',
       skip:['bean'],
@@ -13353,7 +13896,7 @@ function scanLookupNote(data){
 // Shared: send images to Gemini, resolve with the parsed bean object.
 // Retries transient overload (503/429) with backoff, then falls back to the lite model.
 function geminiAnalyze(key,images){
-  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"roastMachine\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE WHAT THE READER CAN READ; PUT THE REST INTO THEIR LANGUAGE. The reader reads '+aiOutLang()+'. When the label is written in '+aiOutLang()+' or in English, copy the value exactly as printed: do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method. When the label is in any other language - Chinese, Japanese, Thai, Russian - give the value in '+aiOutLang()+' instead, and give it the way the coffee trade writes it there, NOT as a literal translation of the characters. In Korean a washed coffee is \uc6cc\uc2dc\ub4dc, never a phrase meaning rinsed or washed clean; natural, honey, anaerobic, wet-hulled, carbonic maceration and the rest keep their trade names in the same way, as do roast levels and decaffeination methods. Countries, regions, farms, roasters and varieties keep the Latin spelling the trade already uses where there is one, and otherwise take the ordinary transliteration into '+aiOutLang()+'. The three non-text fields below are unaffected. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE: the one in '+aiOutLang()+' if the label prints it, otherwise the English one, otherwise the most prominent - and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. NEVER fill a field from what you know about the coffee rather than from what is printed: a country or a region does not tell you the altitude, the process or the variety, and a famous name does not either. If the bag does not print it, leave it empty. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. roastMachine is the roasting machine the bag names - Probat UG22, Giesen W15, Loring S35, Stronghold S9, 태환 프로아스터 - copied as printed, model number included when there is one. The roasting company name is not a machine and never goes here, and neither does a machine you merely expect that roastery to own: leave it empty unless the bag prints it. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, net weight, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
+  var parts=[{text:'You are reading one or more photos of a coffee bag label. Respond ONLY with JSON using exactly these keys, using an empty string, [] or false when the label does not say: {\"roaster\":\"\",\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"roastDate\":\"\",\"roastLevel\":\"\",\"roastMachine\":\"\",\"netWeight\":\"\",\"blend\":[],\"notes\":\"\"}. TRANSCRIBE WHAT THE READER CAN READ; PUT THE REST INTO THEIR LANGUAGE. The reader reads '+aiOutLang()+'. When the label is written in '+aiOutLang()+' or in English, copy the value exactly as printed: do not translate, romanise, expand or tidy up wording, and do not normalise a roast level or a processing method. When the label is in any other language - Chinese, Japanese, Thai, Russian - give the value in '+aiOutLang()+' instead, and give it the way the coffee trade writes it there, NOT as a literal translation of the characters. In Korean a washed coffee is \uc6cc\uc2dc\ub4dc, never a phrase meaning rinsed or washed clean; natural, honey, anaerobic, wet-hulled, carbonic maceration and the rest keep their trade names in the same way, as do roast levels and decaffeination methods. Countries, regions, farms, roasters and varieties keep the Latin spelling the trade already uses where there is one, and otherwise take the ordinary transliteration into '+aiOutLang()+'. The three non-text fields below are unaffected. Never put two languages in the same value and never append a translation or a romanisation - if a value is printed in more than one language, pick exactly ONE: the one in '+aiOutLang()+' if the label prints it, otherwise the English one, otherwise the most prominent - and put nothing else in that field. Do not repeat the roaster name inside name. Do not repeat the same information in two fields. NEVER fill a field from what you know about the coffee rather than from what is printed: a country or a region does not tell you the altitude, the process or the variety, and a famous name does not either. If the bag does not print it, leave it empty. roastDate is the ONLY value you reformat: give it as YYYY-MM-DD. Look for a roasted-on date under any wording - Roasted, Roast date, Roasted on, ROAST, \ub85c\uc2a4\ud305\uc77c, \ub85c\uc2a4\ud305\ub0a0\uc9dc, \ubcf6\uc740\ub0a0, \ubc30\uc804\uc77c, \u713e\u714e\u65e5 - including a hand-written or stamped date. Convert 2026.08.20, 26/08/20 and 2026\ub144 8\uc6d4 20\uc77c alike to 2026-08-20; read a two-digit year as 20YY. Never use a best-before, use-by, expiry or packaging date (\uc720\ud1b5\uae30\ud55c, \uc18c\ube44\uae30\ud55c, Best before, EXP) and never guess a date that is not printed. roastLevel: use it when the bag states it separately, and also when it is stated only as part of the coffee name - a Dark Roast Blend is Dark. Leave it empty when the bag never says. netWeight is the weight of coffee in the bag as printed with its unit - 200g, 250 g, 1kg, 12 oz - looked for under any wording: Net Wt, Net weight, \uc911\ub7c9, \ub0b4\uc6a9\ub7c9, \uc21c\uc911\ub7c9, \u51c0\u542b\u91cf, \u5185\u5bb9\u91cf; leave it empty when the bag does not print it. roastMachine is the roasting machine the bag names - Probat UG22, Giesen W15, Loring S35, Stronghold S9, 태환 프로아스터 - copied as printed, model number included when there is one. The roasting company name is not a machine and never goes here, and neither does a machine you merely expect that roastery to own: leave it empty unless the bag prints it. altitude is [min,max] in metres as numbers, or [value] for a single figure. decafProcess is the decaffeination method as printed - Swiss Water, CO2, Mountain Water; when the bag says the coffee is decaffeinated but never names a method, put the word it uses, and leave it empty for a coffee that is not decaffeinated. There is no separate decaf flag: the method is what says so. name is the coffee or blend name, not the roaster. variety is a list of cultivar names as printed. BLENDS: a blend rarely names one origin. If the bag says the coffee is a blend and lists what is in it, put one entry per component in blend, in the order printed, each as {\"name\":\"\",\"country\":\"\",\"region\":\"\",\"producer\":\"\",\"processing\":\"\",\"variety\":[],\"altitude\":[],\"decafProcess\":\"\",\"pct\":null}, under the same transcription rules, with pct a number when a share is printed and null when it is not, and name the farm, lot or coffee name as printed - leave name empty when the bag gives only a country. When blend has entries leave the top-level country, region, producer, processing, variety, altitude and decafProcess empty: they describe one coffee and this bag holds several. Leave blend empty for a single origin. Never invent an origin or a share, and never copy the origin, farm or process of one component into the top-level fields as if it applied to the whole bag. notes must carry EVERYTHING ELSE printed on the bag that has no field of its own, transcribed as printed and kept on separate lines. Where the same line is printed twice in two languages - a tasting-note list, a description - keep only one of them, in the same language you used for the fields. Include - tasting notes, cupping score, price, lot or batch number, importer, distributor, certifications, brewing or grind recommendations, best-before date, roaster address, contact, any marketing or story text. Do not repeat in notes what already went into another field.'}];
   images.forEach(function(im){ parts.push({inline_data:{mime_type:im.mime,data:im.data}}); });
   return aiJson(key,parts,0.1).then(function(d){
     return scanLookup(key,d).then(function(found){
@@ -13420,6 +13963,7 @@ function analyzeBeanImages(){ if(!aiImages.length) return;
       put('bgRoaster',data.roaster); put('bgName',data.name);
       put('bgRoast',data.roastLevel); put('bgRoastDate',toIsoDate(data.roastDate));
       put('bgRoastMachine',data.roastMachine); roastMachinePicked('bg');
+      put('bgBagWeight',bagGrams(data.netWeight)); showBagLeft('bg');
       var scanned=aiBlendParts(data);
       if(scanned){
         // The label says several coffees, so the form says several coffees: the
@@ -13590,6 +14134,7 @@ function mbAnalyze(){ if(!aiImages.length) return; var key=mbGetKey(); if(!key){
     set('mbDecafProcess',data.decafProcess); set('mbVariety',(data.variety||[]).join(', '));
     set('mbAltitude',fmtAltitude(data.altitude)); set('mbNotes',data.notes);
     set('mbRoastMachine',data.roastMachine); roastMachinePicked('mb');
+    set('mbBagWeight',bagGrams(data.netWeight)); showBagLeft('mb');
     // A label the model did not read as a blend is not a statement that this
     // coffee is not one. Parts already entered stay; only found parts replace.
     var scanned=aiBlendParts(data);
@@ -13648,7 +14193,7 @@ function mbSave(){ var st=document.getElementById('mbStatus'), btn=document.getE
     .then(function(saved){ mbSavedId=(saved&&saved.id)||null;
       return mbSavedId
         ? saveBeanBatch(mbSavedId,v('mbRoastDate'),v('mbRoast'),
-            (keepBatch&&!mbNewBatch)?mbBatchId:null)
+            (keepBatch&&!mbNewBatch)?mbBatchId:null,v('mbBagWeight'))
         : null; })
     .then(function(bt){ return keepScanPics((bt&&bt.id)||mbBatchId||mbSavedId); })
     .then(function(){ st.textContent=t('mbSaved');
@@ -16020,8 +16565,14 @@ function saveGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
       if(o.grindSpeed!=null) grinderSpeeds[id]=o.grindSpeed; else delete grinderSpeeds[id]; saveGrinderSpeeds();
       if(o.feedRpm!=null) grinderFeeds[id]=o.feedRpm; else delete grinderFeeds[id]; saveGrinderFeeds();
       if(parts.brand||parts.model||parts.coating||parts.notes) grinderBurrs[id]=parts; else delete grinderBurrs[id]; saveGrinderBurrs(); }
-    toast(t('tGrinderSaved'),'ok'); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML=bgGuideHtml(); }).catch(function(){ toast(t('saveFailed'),'err'); }); }
-function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm('Delete this grinder?')) return; api('DELETE','/api/v1/grinders/'+o.id).then(function(){ toast(t('deleted'),'ok'); delete grinderBrands[o.id]; saveGrinderBrands(); bgSel=null; loadBeansGrinders(); document.getElementById('bgEditor').innerHTML='<div class="ep-placeholder">← Select an item</div>'; }).catch(function(){ toast(t('deleteFailed'),'err'); }); }
+    toast(t('tGrinderSaved'),'ok'); bgSel=null; loadBeansGrinders(); bgShowGuide(); }).catch(function(){ toast(t('saveFailed'),'err'); }); }
+function deleteGrinder(){ var o=bgSel.obj; if(!o.id) return; if(!confirm(t('confirmDeleteGrinder'))) return;
+  api('DELETE','/api/v1/grinders/'+o.id).then(function(){
+    toast(t('deleted'),'ok'); delete grinderBrands[o.id]; saveGrinderBrands();
+    if(context.grinderId===o.id){ context.grinderId=null;
+      api('PUT','/api/v1/workflow',{context:{grinderId:null}}).catch(function(){}); updateGrindRow(); }
+    bgSel=null; loadBeansGrinders(); bgShowGuide(); })
+    .catch(function(){ toast(t('deleteFailed'),'err'); }); }
 // The same mark wherever a grinder is listed: a plugin's grinder, lit while
 // the plugin is driving a connected device.
 function grinderLinkTag(g){
@@ -16040,7 +16591,8 @@ function bgLinkHtml(o){
     +'<span class="bg-linkname">'+escapeHtml(pname)+'</span>'
     +'<span class="bg-linkstate">'+escapeHtml(lit?(dv.name||t('connStUp')):t('grLinkAway'))+'</span></div>'
     +'<div class="bg-linkdesc">'+escapeHtml(t(pluginOwned(o)?'grLinkWhat':'grLinkGone').replace('{p}',pname))+'</div></div>'; }
-function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
+function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj;
+  if(!o.id){ toast(t('saveGrinderFirst'),'err'); return; } var ctx={grinderId:o.id||null,grinderModel:o.model}; if(o.grinderSetting) ctx.grinderSetting=String(o.grinderSetting);
   api('PUT','/api/v1/workflow',{context:ctx}).then(function(){ toast(t('tGrinderSet'),'ok'); loadWorkflow();
     offerLastShotSettings({ name:o.model||'',
       skip:['grinder'],
@@ -16049,6 +16601,7 @@ function useGrinder(){ bgReadGrinderForm(); var o=bgSel.obj; var ctx={grinderId:
 // The workflow context only carries the coffee's name and roaster, so the detail
 // comes from the bean record it points at, and its batch for the roast.
 function currentBean(){ var n=context.coffeeName, r=context.coffeeRoaster; if(!n) return null;
+  var byBag=beanOfBatch(context.beanBatchId); if(byBag) return byBag;
   return beans.find(function(b){ return b.name===n && (!r || b.roaster===r); })
       || beans.find(function(b){ return b.name===n; }) || null; }
 function beanList(v){
@@ -16079,7 +16632,7 @@ function openBeanList(title,items){
     return '<div class="bl-item"><span class="i">'+(i+1)+'</span>'+escapeHtml(x)+'</div>'; }).join('');
   document.getElementById('beanListOverlay').classList.add('show'); }
 function updateBeanInfo(){ var name=context.coffeeName, roaster=context.coffeeRoaster;
-  var bean=currentBean(), batch=(bean&&beanBatches[bean.id])||null;
+  var bean=currentBean(), batch=bagFor(bean);
   var nameEl=document.getElementById('beanName'), subEl=document.getElementById('beanSub');
   if(name){ nameEl.textContent=(roaster?roaster+' · ':'')+name;
     var line=[];
@@ -17293,6 +17846,25 @@ function roastMachineNoteLine(m,ty){
   return t('roastMachine')+': '+m+(ty?(' ('+ty+')'):''); }
 // The bean this shot was pulled with, not the bean on the counter now.
 function beanKeyName(v){ return String(v==null?'':v).trim().replace(/\s+/g,' ').toLowerCase(); }
+// The bean a bag belongs to. A bag names one bean; a name can be shared.
+function beanOfBatch(id){
+  if(!id) return null;
+  var all=beanBatchList||{};
+  for(var k in all){
+    if(all[k].some(function(b){ return b.id===id; }))
+      return (beans||[]).filter(function(b){ return b.id===k; })[0]||null; }
+  return null; }
+// The bag a bean is put to use with when nobody has said which: the one
+// already in use if it is this bean's, otherwise its newest.
+function bagFor(b){
+  if(!b) return null;
+  var cur=context.beanBatchId;
+  if(cur&&batchesOf(b.id).some(function(x){ return x.id===cur; })) return batchById(cur);
+  return beanBatches[b.id]||null; }
+// The bag the bean editor is showing, which is the one the person chose.
+function bgShownBatch(o){
+  if(!o||!o.id||bgNewBatch) return null;
+  return batchesOf(o.id).filter(function(x){ return x.id===bgBatchId; })[0]||bagFor(o); }
 function batchById(id){
   if(!id) return null;
   var all=beanBatchList||{};
@@ -18132,55 +18704,62 @@ function tuneFromShots(){
     var known=(allProfiles||[]).filter(function(x){
       return String((x.profile&&x.profile.title)||'').trim()===title; })[0];
     tuneOpenFor(known||{id:null,profile:pr,metadata:{}},rows); }); }
-function aiResultHtml(r){
+function aiResultHtml(r,where){
   return '<div class="ai-verdict">'+escapeHtml(String(r.verdict||''))+'</div>'
     +((r.observations||[]).length?'<ul class="ai-list">'+r.observations.map(function(o){
         return '<li>'+escapeHtml(String(o))+'</li>'; }).join('')+'</ul>':'')
     +((r.suggestions||[]).length?'<div class="ai-sugs">'+r.suggestions.map(function(x,i){
         return '<div class="ai-sug"><div class="ai-sug-c">'+escapeHtml(String((x&&x.change)||''))+'</div>'
           +'<div class="ai-sug-w">'+escapeHtml(String((x&&x.why)||''))+'</div>'
-          +aiSugFbHtml(i,x)+'</div>'; }).join('')+'</div>':''); }
+          +aiSugFbHtml(i,x,where)+'</div>'; }).join('')+'</div>':''); }
 // The note only appears once a side has been taken: there is nothing to say
 // about a suggestion that has not been tried.
-function aiSugFbHtml(i,x){
-  var v=(x&&x.fb)||null;
+function aiSugFbHtml(i,x,where){
+  var v=(x&&x.fb)||null, on=where?(',\''+where+'\''):'';
   function b(kind,label,cls){
     return '<button class="ai-fb-btn'+cls+(v===kind?' on':'')+'" type="button"'
-      +' aria-pressed="'+(v===kind)+'" onclick="aiFbVote('+i+',\''+kind+'\')">'+escapeHtml(label)+'</button>'; }
+      +' aria-pressed="'+(v===kind)+'" onclick="aiFbVote('+i+',\''+kind+'\''+on+')">'+escapeHtml(label)+'</button>'; }
   return '<div class="ai-fb">'
     +b('up','\u2713 '+t('aiFbGood'),'')
     +b('down','\u2715 '+t('aiFbBad'),' no')
     +(v?'<input class="ai-fb-note" value="'+escapeAttr((x&&x.note)||'')+'"'
-        +' placeholder="'+escapeAttr(t('aiFbNotePh'))+'" oninput="aiFbNote('+i+',this.value)">':'')
+        +' placeholder="'+escapeAttr(t('aiFbNotePh'))+'" oninput="aiFbNote('+i+',this.value'+on+')">':'')
     +'</div>'; }
-function aiFbKey(i){ var rows=aiRows(); return (rows.length?aiCacheKey(rows):'?')+'#'+i; }
+// The phone log keeps a reading of its own, beside the tablet's.
+function aiFbTarget(where){
+  return where==='ph'?{r:_phAi,rows:_phOpen?[{id:_phOpen}]:[]}:{r:slAi,rows:aiRows()}; }
+function aiFbKey(i,rows){ rows=rows||aiRows(); return (rows.length?aiCacheKey(rows):'?')+'#'+i; }
 // A reaction is kept twice: on the reading, so the marks are still there when
 // it is opened again, and in the list the next prompt carries.
-function aiFbRecord(i,x){
-  var list=aiFbAll().filter(function(e){ return e.k!==aiFbKey(i); });
-  if(x&&x.fb){ var c=(slAi&&slAi._ctx)||{};
-    list.push({ k:aiFbKey(i), c:String(x.change||''), w:String(x.why||''), v:x.fb,
+function aiFbRecord(i,x,tg){
+  tg=tg||aiFbTarget();
+  var key=aiFbKey(i,tg.rows);
+  var list=aiFbAll().filter(function(e){ return e.k!==key; });
+  if(x&&x.fb){ var c=(tg.r&&tg.r._ctx)||{};
+    list.push({ k:key, c:String(x.change||''), w:String(x.why||''), v:x.fb,
       n:String(x.note||''), at:new Date().toISOString(),
       g:c.g||'', b:c.b||'', p:c.p||'' }); }
   while(list.length>AI_FB_MAX) list.shift();
   aiFbSave(list); }
-function aiFbVote(i,v){
-  var x=slAi&&slAi.suggestions&&slAi.suggestions[i]; if(!x) return;
+function aiFbVote(i,v,where){
+  var tg=aiFbTarget(where);
+  var x=tg.r&&tg.r.suggestions&&tg.r.suggestions[i]; if(!x) return;
   x.fb=(x.fb===v)?null:v;
   if(!x.fb) delete x.note;
-  aiFbRecord(i,x);
-  var rows=aiRows(); if(rows.length) saveShotAi(rows,slAi);
-  refreshAiPanel();
+  aiFbRecord(i,x,tg);
+  if(tg.rows.length) saveShotAi(tg.rows,tg.r);
+  if(where==='ph') renderPhoneLog(); else refreshAiPanel();
   if(spOpen()&&spCat==='ai') renderAiFbBox(); }
 // Typing must not redraw the field being typed in, so a keystroke only ever
 // updates what is kept.
 var _aiFbT=null;
-function aiFbNote(i,v){
-  var x=slAi&&slAi.suggestions&&slAi.suggestions[i]; if(!x||!x.fb) return;
+function aiFbNote(i,v,where){
+  var tg=aiFbTarget(where);
+  var x=tg.r&&tg.r.suggestions&&tg.r.suggestions[i]; if(!x||!x.fb) return;
   x.note=v;
   clearTimeout(_aiFbT); _aiFbT=setTimeout(function(){
-    aiFbRecord(i,x);
-    var rows=aiRows(); if(rows.length) saveShotAi(rows,slAi);
+    aiFbRecord(i,x,tg);
+    if(tg.rows.length) saveShotAi(tg.rows,tg.r);
     if(spOpen()&&spCat==='ai') renderAiFbBox(); },500); }
 function aiFbForget(k){
   aiFbSave(aiFbAll().filter(function(e){ return e.k!==k; }));
@@ -18250,10 +18829,10 @@ function aiPinFrom(r){
   var c=(r&&r._ctx)||{};
   return { at:new Date().toISOString(), verdict:String(r.verdict||''),
     bean:String(c.b||''), profile:String(c.p||''), for:aiMatchKey(c.b,c.p),
-    observations:(r.observations||[]).map(String).slice(0,4),
+    observations:(r.observations||[]).map(String).slice(0,8),
     suggestions:(r.suggestions||[]).slice(0,3).map(function(x){
       return { change:String((x&&x.change)||''), why:String((x&&x.why)||''),
-        apply:aiApplyOf(x), done:false }; }) }; }
+        apply:aiApplyOf(x), done:!!(x&&x.done) }; }) }; }
 function pinAiGuide(r){
   var pin=aiPinFrom(r); if(!pin||!pin.suggestions.length){ toast(t('aiNoResult'),'err'); return; }
   aiPinSet(pin);
@@ -18316,7 +18895,7 @@ function renderAiGuide(){
 function pinShotRead(){
   var r=shotReadGet(); if(!r) return;
   pinAiGuide({ verdict:r.verdict, observations:r.observations,
-    suggestions:r.suggestions.map(function(x){ return {change:x.change,why:x.why,apply:x.apply}; }),
+    suggestions:r.suggestions.map(function(x){ return {change:x.change,why:x.why,apply:x.apply,done:!!x.done}; }),
     _ctx:{b:r.bean||'',p:r.profile||''} });
   closeModal(null,'aiGuideOverlay'); }
 function clearAiGuide(){ agSave(null); closeModal(null,'aiGuideOverlay'); toast(t('aiGuideCleared'),'ok'); }
@@ -18347,6 +18926,15 @@ function applyAiAll(){
   if(!n) return;
   agSave(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
 // ── reading the shot that just finished ───────────────────────────────
+// One modal at a time. The tasting log opens as the shot ends, ahead of the
+// reading, so the reading waits for it to close and then opens: tasted first,
+// read second, which is also the order a barista would take them in.
+var _rsWaiting=false;
+function showShotRead(){
+  _rsWaiting=false;
+  if(shotReadMode()!=='modal'||!shotReadGet()) return;
+  if(document.querySelector('.overlay.show')){ _rsWaiting=true; return; }
+  openAiGuide('read'); }
 function runShotRead(id){
   if(!id||shotReadMode()==='off') return Promise.resolve(null);
   return withFullShots([{id:id}]).then(function(full){
@@ -18359,9 +18947,7 @@ function runShotRead(id){
       suggestions:r.suggestions.map(function(x){
         return { change:x.change, why:x.why, apply:aiApplyOf(x), done:false }; }) });
     loadLastShot();
-    // One modal at a time: if the log is already up, the mark on the card is
-    // how the reading waits.
-    if(shotReadMode()==='modal'&&!document.querySelector('.overlay.show')) openAiGuide('read');
+    showShotRead();
   }).catch(function(){}); }
 // ── Reading a shot without asking anyone ────────────────────────────
 // Everything below is read off the curve the machine recorded. A rule that
@@ -18427,6 +19013,27 @@ function rsGrindStep(sh,dir){
   var v=Math.max(0,parseFloat((n+dir*step).toFixed(2)));
   if(v===n) return null;
   return String(v); }
+// A step's seconds are the most it may run, and a step with an exit condition
+// usually leaves well before that, so only a profile that runs on the clock
+// alone says how long the shot is meant to take.
+function rsStepExits(st){
+  return !!(st&&((st.exit&&st.exit.type)||parseFloat(st.weight)>0||parseFloat(st.volume)>0)); }
+function rsPlanSeconds(pr){
+  var st=(pr&&pr.steps)||[], plan=0;
+  if(st.some(rsStepExits)) return 0;
+  st.forEach(function(x){ var v=parseFloat(x&&x.seconds); if(v>0) plan+=v; });
+  return plan; }
+// Turbo and allonge shots are ground open on purpose: a low-pressure, fast
+// pour is what they ask for, so a loose puck and a quick shot are not faults.
+function rsOpenProfile(pr){
+  if(!pr) return false;
+  if(/turbo|allong/i.test(String(pr.title||''))) return true;
+  var top=0;
+  (pr.steps||[]).forEach(function(x){
+    var p=String((x&&x.pump)||'').toLowerCase()==='flow'
+      ?parseFloat(x&&x.limiter&&x.limiter.value):parseFloat(x&&x.pressure);
+    if(p>top) top=p; });
+  return top>0&&top<=7; }
 function rsSug(change,why,apply){ return {change:change,why:why,apply:apply||null}; }
 function readShot(sh){
   var pts=rsPoints(sh);
@@ -18436,9 +19043,9 @@ function readShot(sh){
   var obs=[], sug=[], find=[], flags={};
   var secs=body.length?Math.max(0,body[body.length-1].t-body[0].t):0;
   var total=Math.max(0,pts[pts.length-1].t-pts[0].t);
-  var plan=0;
-  (((sh.workflow&&sh.workflow.profile)||{}).steps||[]).forEach(function(st){
-    if(st&&st.seconds>0) plan+=st.seconds; });
+  var prof0=(sh.workflow&&sh.workflow.profile)||null;
+  var plan=rsPlanSeconds(prof0), exits=((prof0&&prof0.steps)||[]).some(rsStepExits);
+  var open=rsOpenProfile(prof0);
 
   // ── a jump in flow that the pressure paid for ──
   var jump=null, jumpN=0, j=0, armed=false;
@@ -18534,7 +19141,7 @@ function readShot(sh){
   // One alone is a coincidence waiting to happen.
   var cv1=(pdM!=null&&pdM>=RS_P_SHORT&&pfM!=null&&pfM>=RS_P_FAST);
   var fv1=(fdM0!=null&&fdM0>=RS_F_SHORT&&fpM0!=null&&fpM0>=RS_P_PINNED);
-  var cv2=(rM!=null&&rM<RS_R_LOW), fv2=(rM!=null&&rM>RS_R_HIGH);
+  var cv2=(!open&&rM!=null&&rM<RS_R_LOW), fv2=(rM!=null&&rM>RS_R_HIGH);
   var ey=parseFloat(an0.drinkEy);
   if(!(ey>0)&&an0.drinkTds>0&&yld0>0&&dose0>0) ey=(an0.drinkTds*yld0)/dose0;
   var eyLow=(ey>0&&ey<RS_EY_LOW), eyHigh=(ey>0&&ey>RS_EY_HIGH);
@@ -18542,14 +19149,20 @@ function readShot(sh){
     obs.push(t(eyLow?'rsEyLow':eyHigh?'rsEyHigh':'rsEy').replace('{e}',ey.toFixed(1)));
     find.push('measured extraction yield '+ey.toFixed(1)+'%'); }
   var quick=(plan>0)?(total<plan*0.5):(total>0&&total<RS_FAST);
-  var slow=(plan>0)?(total>plan*1.5):(total>RS_SLOW);
-  var cv3=(quick&&share!=null&&share>=RS_YIELD_FULL);
+  var slow=(plan>0)?(total>plan*1.5):(!exits&&total>RS_SLOW);
+  var cv3=(!open&&quick&&share!=null&&share>=RS_YIELD_FULL);
   var fv3=slow||(share!=null&&share<RS_YIELD_SHORT&&(plan>0?(total>=plan):(total>30)));
   var cN=(cv1?1:0)+(cv2?1:0)+(cv3?1:0)+(eyLow?1:0);
   var fN=(fv1?1:0)+(fv2?1:0)+(fv3?1:0)+(eyHigh?1:0);
   var coarseOn=(cN>=2&&fN===0), fineOn=(fN>=2&&cN===0);
   if(!coarseOn&&!fineOn&&cN>0&&fN>0) flags.mixed=true;
   if(cN||fN) find.push('readings for a looser puck: '+cN+', for a tighter one: '+fN);
+  if(open) find.push('the profile asks for a low-pressure, fast pour, so a loose puck and a quick shot are what it wants');
+  // A channel makes any puck read loose. The puck is put right first and the
+  // grind judged again on a shot that did not channel.
+  if(flags.channel&&(coarseOn||fineOn)){
+    find.push('the grind readings are set aside because the puck channeled');
+    coarseOn=false; fineOn=false; }
 
   // The measurement is reported whenever it was taken; only the advice waits
   // for the vote.
@@ -19098,7 +19711,7 @@ function wfBeanHtml(){
     return wfCard(on,'wfSetBean('+i+')',b.name||'\u2014',sub); }).join('')+'</div>'; }
 function wfSetBean(i){
   var b=(beans||[])[i]; if(!b) return;
-  var bt=beanBatches[b.id];
+  var bt=bagFor(b);
   context.coffeeName=b.name; context.coffeeRoaster=b.roaster||'';
   context.beanBatchId=(bt&&bt.id)||null;
   api('PUT','/api/v1/workflow',{context:{coffeeName:b.name,coffeeRoaster:b.roaster||null,
@@ -19327,6 +19940,15 @@ function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
 }).catch(function(e){ console.error('[Aurora] loadDevices failed:', e); toast(t('tGatewayUnreachable')+': '+e.message,'err'); }); }
 
 // ── Toast ────────────────────────────────────────────────────────────
+function toastActs(msg,acts){
+  var el=document.getElementById('toast');
+  el.innerHTML='<span>'+escapeHtml(msg)+'</span>'+acts.map(function(a){
+    return '<button type="button" class="toast-act">'+escapeHtml(a.label)+'</button>'; }).join('');
+  el.className='toast show ok has-act';
+  Array.prototype.forEach.call(el.querySelectorAll('.toast-act'),function(b,i){
+    b.onclick=function(){ el.classList.remove('show'); acts[i].fn(); }; });
+  clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); },6000); }
+function toastUndo(msg,undoFn){ toastActs(msg,[{label:t('undo'),fn:undoFn}]); }
 var toastT=null; function toast(msg,type){ var el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'+(type?' '+type:''); clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); },2500); }
 var _hbAt=0;
 function signalPresence(){
@@ -19600,7 +20222,10 @@ function mbRenderBatches(){
   box.innerHTML=batchPicker(mbBean,'mb');
   var d=document.getElementById('mbRoastDate'), r=document.getElementById('mbRoast');
   if(d) d.value=isoDay(batch.roastDate)||'';
-  if(r) r.value=batch.roastLevel||''; }
+  if(r) r.value=batch.roastLevel||'';
+  var w=document.getElementById('mbBagWeight');
+  if(w) w.value=batch.weight>0?String(Math.round(batch.weight)):'';
+  showBagLeft('mb'); }
 function mbRenderPick(){
   mbFillRmList();
   var sel=document.getElementById('mbPick'); if(!sel) return;
@@ -19630,7 +20255,7 @@ function mbPickBean(id){
   loadBeanBatches().then(function(){ mbRenderBatches(); showBeanPics('mb'); }); }
 function mbClearFields(){
   ['mbRoaster','mbName','mbCountry','mbRegion','mbProcess','mbProducer','mbDecafProcess',
-   'mbVariety','mbAltitude','mbNotes','mbRoastDate','mbRoast','mbRoastMachine',
+   'mbVariety','mbAltitude','mbNotes','mbRoastDate','mbRoast','mbRoastMachine','mbBagWeight',
    'mbRoastType'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value=''; });
   bgBlend=null; var cb=document.getElementById('mbIsBlend'); if(cb) cb.checked=false;
@@ -20252,7 +20877,7 @@ function renderPhoneLog(){
           +'<textarea rows="2" placeholder="'+escapeAttr(t('phNotePh'))+'"'
           +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(tasteNoteOf(sh))+'</textarea></div>'))
         +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>'):'')
-        +(_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi)+'</div>'):'')
+        +(_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi,'ph')+'</div>'):'')
         // A reading that is on screen is a reason to ask for another one, not a
         // reason to take the button away.
         +'<div class="pl-acts">'

@@ -387,7 +387,7 @@ test('the list marks the linked grinder and the one in use', function (T) {
   var linked = rows.filter(function (r) { return r.textContent.indexOf('Test Grinder') >= 0; })[0];
   var hand = rows.filter(function (r) { return r.textContent.indexOf('Hand grinder') >= 0; })[0];
   T.ok(!!linked && !!linked.querySelector('.bg-link.on'), 'the linked record says so, lit while connected');
-  T.ok(!!linked && !!linked.querySelector('.bg-using'), 'and that it is in use');
+  T.ok(!!linked && linked.classList.contains('loaded') && !!linked.querySelector('.ep-loaded'), 'and that it is in use');
   T.ok(!!hand && hand.querySelector('.bg-link') === null, 'the hand grinder is not linked');
 });
 
