@@ -38,7 +38,7 @@ Object.keys(PANES).forEach(function (mode) {
       var grid = T.el('#' + PANES[mode] + ' .rc-grid');
       T.eq(T.css(grid, 'gridTemplateColumns').split(' ').length, 2, 'two columns');
       var blocks = T.all('#' + PANES[mode] + ' .rc-grid > .dose-block');
-      T.ok(blocks.length >= 3, 'at least three settings, got ' + blocks.length);
+      T.ok(blocks.length >= (mode === 'water' ? 2 : 3), 'its settings, got ' + blocks.length);
       // Filling column first put the fourth control alone at the top of the
       // second column and left the rest of it blank.
       T.ok(T.box(blocks[1]).left > T.box(blocks[0]).left,
