@@ -733,6 +733,8 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 @keyframes rcpulse{0%,100%{box-shadow:0 2px 8px rgba(245,158,11,.38)}
   50%{box-shadow:0 2px 14px rgba(245,158,11,.75)}}
 .ag-modal{max-width:520px}
+.ag-more{margin-top:8px}
+.ag-more summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--ink-mute);min-height:32px;display:flex;align-items:center}
 .ag-sugs{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .ag-sug{background:var(--glass-hi);border:1px solid var(--glass-line);border-radius:14px;padding:12px 14px}
 .ag-sug.done{opacity:.62}
@@ -3869,7 +3871,7 @@ var I18N={
     brewingNow:'Brewing — this profile is locked',
     exitDash:'Decaid dashboard', exitDashDesc:'The app’s own settings and skin picker. This leaves the skin; it does not close Decaid.', exitDashBtn:'Go to dashboard', exitDashFailed:'Could not leave the skin',
     newGrinder:'New Grinder', editGrinder:'Edit Grinder', bgGuideLead:'Pick something on the left to edit it, or add a new one. Nothing here is required \u2014 a name alone is a usable record, and the rest earns its place by being worth looking up later.', bgGuideBean:'A bean', bgGBeanA:'Name & roaster', bgGBeanAd:'All that is needed to log a shot against it.', bgGBeanB:'Roast date', bgGBeanBd:'Drives the days-since-roast the recipe card shows.', bgGBeanC:'Origin & process', bgGBeanCd:'What the profile recommendation reads. Worth filling for beans you will dial in.', bgGuideGrinder:'A grinder', bgGGrA:'Brand & model', bgGGrAd:'Enough to tell two grinders apart in the log.', bgGGrB:'Setting type', bgGGrBd:'A numeric dial with its step size, or named positions like Fine and Medium.', bgGGrC:'Burrs', bgGGrCd:'Recorded with the shot, so a burr change is visible later.', bgGuideFoot:'Closing a form leaves it without saving.',
-    noSettings:'No settings', connectToLoad:'Connect to load', noProfilesFound:'No profiles', stepsLabel:'Steps', cancel:'Cancel', saveProfile:'Save Profile', secondsLabel:'Seconds', grindSetting:'Grind Setting', settingType:'Setting type', numericDial:'Numeric dial', namedPresets:'Named presets', presetPositions:'Preset positions (comma separated)', currentSetting:'Current setting', currentSettingDial:'Current setting (dial)', fineStep:'Fine step', coarseStep:'Coarse step', notesLabel:'Notes', noShotsYet:'No shots recorded yet', connectForShots:'Connect to load shots', noShots2:'No shots', notFound:'Not found', tastingLog:'Tasting log', actualDose:'Actual dose (g)', actualYield:'Actual yield (g)', tdsPct:'TDS %', eyPct:'Extraction yield %', enjoyment:'Enjoyment',     stop_targetWeight:'Stopped at the target weight.', stop_targetVolume:'Stopped at the profile\u2019s target volume.', stop_profileAdvance:'The profile ran out before the target weight was reached. A step\u2019s own exit ended the shot \u2014 raise it, or give the last step longer, to pour more.', stop_profileSkip:'A step was skipped and the profile ended early.', stop_noScale:'No scale, so the shot could not stop on weight.', stop_stoppingBackstop:'The machine did not stop when asked; the backstop ended it.', stop_error:'The shot ended on an error.', stop_disconnected:'The machine disconnected during the shot.',
+    noSettings:'No settings', connectToLoad:'Connect to load', noProfilesFound:'No profiles', stepsLabel:'Steps', cancel:'Cancel', saveProfile:'Save Profile', secondsLabel:'Seconds', grindSetting:'Grind Setting', settingType:'Setting type', numericDial:'Numeric dial', namedPresets:'Named presets', presetPositions:'Preset positions (comma separated)', currentSetting:'Current setting', currentSettingDial:'Current setting (dial)', fineStep:'Fine step', coarseStep:'Coarse step', notesLabel:'Notes', noShotsYet:'No shots recorded yet', connectForShots:'Connect to load shots', noShots2:'No shots', notFound:'Not found', tastingLog:'Tasting log', actualDose:'Actual dose (g)', actualYield:'Actual yield (g)', tdsPct:'TDS %', eyPct:'Extraction yield %', enjoyment:'Enjoyment',     stop_targetWeight:'Stopped at the target weight.', stop_targetVolume:'Stopped at the profile\u2019s target volume.', stop_profileAdvance:'The profile ended before the target weight', stop_apiStop:'Stopped by the app or an outside request', stop_appStop:'Stopped from the app', stop_machineEnded:'Stopped at the machine', stop_profileSkip:'A step was skipped and the profile ended early.', stop_noScale:'No scale, so the shot could not stop on weight.', stop_stoppingBackstop:'The machine did not stop when asked; the backstop ended it.', stop_error:'The shot ended on an error.', stop_disconnected:'The machine disconnected during the shot.',
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
@@ -3997,7 +3999,7 @@ var I18N={
     aiMemory:'What the reader remembers', aiMemoryDesc:'Your reactions to earlier suggestions are sent with the next reading, so it stops repeating what did not work. Nothing here trains the model; it is a note passed along, and removing one removes it from the next reading.',
     aiMemoryEmpty:'Nothing remembered yet. Mark a suggestion in a shot reading.',
     aiMemoryClear:'Forget all', aiMemoryCleared:'Forgotten',
-    aiPin:'Use next time', aiPinned:'Waiting on the next shot', aiPinnedElsewhere:'Saved \u2014 the mark shows when {n} is loaded again', aiGuideTitle:'AI guidance', aiApply:'apply', aiApplied:'Applied', aiApplyAll:'Apply all', aiGuideClear:'Clear', aiGuideCleared:'Cleared', aiNoApply:'Nothing here to set on the card', aiApplyNoProfile:'Load a profile first',
+    aiPin:'Use next time', aiPinned:'Waiting on the next shot', aiPinnedElsewhere:'Saved \u2014 the mark shows when {n} is loaded again', aiGuideTitle:'AI guidance', aiApply:'apply', aiApplied:'Applied', aiGuideClear:'Clear', aiGuideCleared:'Cleared', aiNoApply:'Nothing here to set on the card', aiApplyNoProfile:'Load a profile first',
     wfTitle:'Workflow', wfPick:'What are you making?', wfPickShort:'Pick a drink',
     wf_espresso:'Espresso', wf_espresso_d:'Bean, profile, grind, recipe.',
     wf_americano:'Americano', wf_americano_d:'An espresso, then hot water.',
@@ -4010,21 +4012,21 @@ var I18N={
     wfWaterNote:'Poured at {t}\u00b0 and {f} ml/s, as the hot-water options are set.',
     wfStage_espresso:'Espresso', wfStage_water:'Hot water', wfStage_steam:'Steam',
     wfSaved:'Done', wfRecent:'Recent', wfLoaded:'Loaded', wfAll:'All', wfHistEmpty:'None of these yet', wfStartWhere:'Everything above is already set on the machine. Start it from Extract in the top bar, or from the group head.',
-    rsTitle:'Shot reading', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends the curve is read here, with no model and no network. A reading opens as a page, or waits behind the mark on the shot card.',
+    rsTitle:'Shot feedback', rsVRanOut:'The profile ended before the target weight', rsMore:'Details', rsRanOut:'The profile\u2019s time ran out at {y}g ({p}% of {w}g)', rsRanOutFix:'Give the last step about {n}s more', rsRanOutWhy:'It was pouring about {f}g/s at the end, so {n}s more reaches the target.', rsRanOutTight:'Pressure sat at its limit, so less water came through than the profile asked. Change the grind first; lengthen the last step only if it still falls short.', rsRanOutYield:'Or, if it tasted good, set the yield to {y}g', rsRanOutYieldWhy:'That is what this profile pours in its time.', cutElseTime:'The other way is to make the profile\u2019s last step longer in the profile editor.', cutElseStep:'The other way is to raise the last step\u2019s weight in the profile editor, which leaves the recipe as it is.', cutElseVolume:'With a scale connected the shot stops on weight instead of volume.', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. Show it at once, or just mark the shot card with !.',
     rsModeModal:'Open it', rsModeIcon:'Mark only', rsModeOff:'Off',
     cutTitle:'The profile stops first', cutMayTitle:'It may not reach the yield', cutTight:'In the time this profile allows it can pour about {a}g, which is the {b}g asked for and not a drop more. Any shortfall in flow and it misses.', cutTime:'In the time this profile allows it can pour about {a}g at most. The card asks for {b}g.', cutPast:'The last {n} shot(s) on this profile ended before reaching the target. {b}g may be out of its reach too.', cutVolume:'This profile ends itself at {a}ml. The card asks for {b}g, and the shot stops before it gets there.', cutStep:'The last step of this profile ends at {a}g. The card asks for {b}g, so the shot stops before it gets there.', cutClock:'Nothing in this profile stops on weight — it ends on the clock, about {n}s in. {b}g may be more than it pours in that time.', cutFix:'Make it {a}g', cutElse:'The other way is to raise the profile\u2019s own target in the profile editor, which leaves the recipe as it is.', tRecipeMatched:'Yield matched to the profile',
-    rsYield:'The cup held {y}g, against {w}g', rsYieldOnly:'The cup held {y}g', rsStopOther:'The machine ended the shot ({r}), so the cup is not the puck\u2019s doing', rsVShort:'It came up short of the yield',
-    rsResist:'Puck resistance averaged {r}, normalised to 9 bar', rsNoScale:'No scale on this shot, so nothing was weighed', rsEy:'Extraction yield measured {e}%', rsEyLow:'Extraction yield measured {e}%, under the usual window', rsEyHigh:'Extraction yield measured {e}%, over the usual window', rsYieldShort:'It stopped at {p}% of the target yield', rsYieldOver:'It poured {g}g past the target',
-    rsVOk:'The curve looks ordinary', rsVChannel:'This one channelled', rsVMixed:'The curve pulls both ways', rsMixed:'It fell short of its pressure early and its flow later, so the grind is not the thing to move on this one.', rsVCoarse:'The puck let the water through too easily', rsVFine:'The puck held the water back',
-    rsTime:'The shot took {s}s', rsTimePlan:'The shot took {s}s, against {m}s planned', rsFirstDrop:'First drop at {s}s', rsRatio:'Poured 1:{r}, against {g}',
-    rsChannel:'At {t}s the flow jumped {f} ml/s while the pressure fell {p} bar',
-    rsChannelFix:'Work on distribution and tamp', rsChannelWhy:'Water found a way through the puck instead of soaking it.',
-    rsCoarse:'Pressure ran {p} bar under target at a mean flow of {f} ml/s',
-    rsCoarseFix:'Grind one step finer', rsCoarseWhy:'The machine asked for more pressure than the puck could hold back.',
-    rsFine:'Flow ran {f} ml/s under target with the pressure at {p} bar',
-    rsFineFix:'Grind one step coarser', rsFineWhy:'The pressure was at its limit and the water still would not come.',
-    rsGrindAssume:'Taken as lower-is-finer on this dial.',
-    rsTempHigh:'The group ran {d} degrees above the profile', rsTempLow:'The group ran {d} degrees below the profile',
+    rsYield:'Yield {y}g (target {w}g)', rsYieldOnly:'Yield {y}g', rsStopOther:'The shot was stopped ({r}), so this weight says nothing about the grind', rsVShort:'It came up short of the target',
+    rsResist:'Puck resistance {r} (normal 3-6.5; higher is tighter)', rsNoScale:'No scale reading, so yield and ratio were not judged', rsEy:'Extraction yield {e}%', rsEyLow:'Extraction yield {e}% · low (under-extracted)', rsEyHigh:'Extraction yield {e}% · high (over-extracted)', rsYieldShort:'Stopped at {p}% of the target yield', rsYieldOver:'{g}g over the target',
+    rsVOk:'The shot ran normally. Let the taste decide', rsVChannel:'The puck channelled', rsVMixed:'Mixed signs: leave the grind alone', rsMixed:'Parts ran fast and parts choked, so there is no clear way to move the grind. Next shot, look only at distribution and tamping.', rsVCoarse:'It ran too fast: the grind is coarse', rsVFine:'It choked: the grind is fine',
+    rsTime:'Shot time {s}s', rsTimePlan:'Shot time {s}s (the profile allows up to {m}s)', rsFirstDrop:'First drops at {s}s', rsRatio:'Ratio 1:{r} (target {g})',
+    rsChannel:'At {t}s flow jumped {f} ml/s as pressure fell {p} bar',
+    rsChannelFix:'Keep the grind; break up clumps (WDT) and tamp level', rsChannelWhy:'Water broke through a weak spot instead of soaking the whole puck.',
+    rsCoarse:'Pressure averaged {p} bar below what the profile asked, at {f} ml/s',
+    rsCoarseFix:'Grind one step finer', rsCoarseWhy:'Water ran through too fast for pressure to reach what the profile asked.',
+    rsFine:'With pressure held at {p} bar, flow averaged {f} ml/s under what the profile asked',
+    rsFineFix:'Grind one step coarser', rsFineWhy:'Pressure hit its limit and the water still could not get through.',
+    rsGrindAssume:'(Assumes a lower number is finer on this dial)',
+    rsTempHigh:'The group ran {d}°C above the setting. Check the machine', rsTempLow:'The group ran {d}°C below the setting. Check it was fully warmed up',
     aiAnalysis:'AI reading', aiRun:'Analyse', aiAgain:'Again', aiReading:'Reading the shot…', aiNoResult:'No analysis came back', aiFailed:'Analysis failed:',
     aiNothingToDo:'Nothing to do', aiCleared:'AI tags cleared', fromAi:'AI guess',
     recButton:'✨ Suggest a profile for this bean', recHead:'Suggested profiles', recWorking:'Reading the bean and the catalogue…',
@@ -4335,7 +4337,7 @@ var I18N={
     brewingNow:'추출 중 — 프로파일 잠김',
     exitDash:'Decaid 대시보드', exitDashDesc:'앱 자체 설정과 스킨 선택 화면입니다. 스킨을 벗어날 뿐, Decaid를 종료하지는 않습니다.', exitDashBtn:'대시보드로', exitDashFailed:'스킨을 벗어나지 못했습니다',
     newGrinder:'새 그라인더', editGrinder:'그라인더 편집', bgGuideLead:'왼쪽에서 골라 편집하거나 새로 추가하세요. 필수 항목은 없습니다 — 이름만 있어도 기록으로 쓸 수 있고, 나머지는 나중에 찾아볼 가치가 있을 때 채우면 됩니다.', bgGuideBean:'원두', bgGBeanA:'이름·로스터', bgGBeanAd:'샷을 기록하는 데 필요한 전부입니다.', bgGBeanB:'로스팅 날짜', bgGBeanBd:'레시피 카드의 로스팅 경과일을 계산합니다.', bgGBeanC:'원산지·가공', bgGBeanCd:'프로파일 추천이 읽는 값입니다. 다이얼인할 원두라면 채울 만합니다.', bgGuideGrinder:'그라인더', bgGGrA:'브랜드·모델', bgGGrAd:'기록에서 둘을 구별할 만큼이면 충분합니다.', bgGGrB:'눈금 방식', bgGGrBd:'숫자 다이얼과 한 칸 크기, 또는 세밀·중간 같은 이름 단계.', bgGGrC:'버리', bgGGrCd:'샷과 함께 기록되어 버 교체가 나중에 보입니다.', bgGuideFoot:'닫기를 누르면 저장하지 않고 나갑니다.',
-    noSettings:'설정 없음', connectToLoad:'연결해야 불러옵니다', noProfilesFound:'프로파일 없음', stepsLabel:'추출 단계', cancel:'취소', saveProfile:'프로파일 저장', secondsLabel:'초', grindSetting:'분쇄도 설정', settingType:'눈금 방식', numericDial:'숫자 다이얼', namedPresets:'이름 단계', presetPositions:'단계 이름 (쉼표로 구분)', currentSetting:'현재 눈금', currentSettingDial:'현재 눈금 (다이얼)', fineStep:'세밀 간격', coarseStep:'거친 간격', notesLabel:'메모', noShotsYet:'아직 기록된 샷이 없습니다', connectForShots:'연결해야 샷을 불러옵니다', noShots2:'샷 없음', notFound:'찾을 수 없음', tastingLog:'테이스팅 기록', actualDose:'실제 도징 (g)', actualYield:'실제 추출량 (g)', tdsPct:'TDS %', eyPct:'추출 수율 %', enjoyment:'만족도',     stop_targetWeight:'목표 무게에 도달해 정지했습니다.', stop_targetVolume:'프로파일의 목표 볼륨에 도달해 정지했습니다.', stop_profileAdvance:'목표 무게에 닿기 전에 프로파일이 먼저 끝났습니다. 스텝의 종료 조건이 샷을 끝낸 것으로, 더 부으려면 그 값을 올리거나 마지막 스텝 시간을 늘리세요.', stop_profileSkip:'스텝이 건너뛰어져 프로파일이 일찍 끝났습니다.', stop_noScale:'저울이 없어 무게로 정지할 수 없었습니다.', stop_stoppingBackstop:'머신이 정지 요청에 응답하지 않아 안전장치가 끝냈습니다.', stop_error:'오류로 샷이 종료됐습니다.', stop_disconnected:'추출 중 머신 연결이 끊겼습니다.',
+    noSettings:'설정 없음', connectToLoad:'연결해야 불러옵니다', noProfilesFound:'프로파일 없음', stepsLabel:'추출 단계', cancel:'취소', saveProfile:'프로파일 저장', secondsLabel:'초', grindSetting:'분쇄도 설정', settingType:'눈금 방식', numericDial:'숫자 다이얼', namedPresets:'이름 단계', presetPositions:'단계 이름 (쉼표로 구분)', currentSetting:'현재 눈금', currentSettingDial:'현재 눈금 (다이얼)', fineStep:'세밀 간격', coarseStep:'거친 간격', notesLabel:'메모', noShotsYet:'아직 기록된 샷이 없습니다', connectForShots:'연결해야 샷을 불러옵니다', noShots2:'샷 없음', notFound:'찾을 수 없음', tastingLog:'테이스팅 기록', actualDose:'실제 도징 (g)', actualYield:'실제 추출량 (g)', tdsPct:'TDS %', eyPct:'추출 수율 %', enjoyment:'만족도',     stop_targetWeight:'목표 무게에 도달해 정지했습니다.', stop_targetVolume:'프로파일의 목표 볼륨에 도달해 정지했습니다.', stop_profileAdvance:'프로파일 단계가 끝나 목표 무게 전에 멈췄습니다', stop_apiStop:'앱이나 외부 요청으로 멈췄습니다', stop_appStop:'앱에서 멈췄습니다', stop_machineEnded:'머신에서 멈췄습니다', stop_profileSkip:'스텝이 건너뛰어져 프로파일이 일찍 끝났습니다.', stop_noScale:'저울이 없어 무게로 정지할 수 없었습니다.', stop_stoppingBackstop:'머신이 정지 요청에 응답하지 않아 안전장치가 끝냈습니다.', stop_error:'오류로 샷이 종료됐습니다.', stop_disconnected:'추출 중 머신 연결이 끊겼습니다.',
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
@@ -4464,7 +4466,7 @@ var I18N={
     aiMemory:'분석이 기억하는 것', aiMemoryDesc:'이전 조언에 남긴 반응을 다음 분석에 함께 보냅니다. 통하지 않았던 조언을 되풀이하지 않게 하기 위해서입니다. 모델을 학습시키는 것은 아니며 그때마다 전달하는 메모이므로, 여기서 지우면 다음 분석에서 빠집니다.',
     aiMemoryEmpty:'아직 기억한 것이 없습니다. 샷 분석의 조언에 표시해 보세요.',
     aiMemoryClear:'모두 지우기', aiMemoryCleared:'지웠습니다',
-    aiPin:'다음 추출에 반영', aiPinned:'다음 추출에 반영됩니다', aiPinnedElsewhere:'저장됐습니다 — {n} 을(를) 다시 불러오면 표시됩니다', aiGuideTitle:'AI 가이드', aiApply:'적용', aiApplied:'적용됨', aiApplyAll:'전부 적용', aiGuideClear:'지우기', aiGuideCleared:'지웠습니다', aiNoApply:'카드에 설정할 값이 없습니다', aiApplyNoProfile:'프로파일을 먼저 불러오세요',
+    aiPin:'다음 추출에 반영', aiPinned:'다음 추출에 반영됩니다', aiPinnedElsewhere:'저장됐습니다 — {n} 을(를) 다시 불러오면 표시됩니다', aiGuideTitle:'AI 가이드', aiApply:'적용', aiApplied:'적용됨', aiGuideClear:'지우기', aiGuideCleared:'지웠습니다', aiNoApply:'카드에 설정할 값이 없습니다', aiApplyNoProfile:'프로파일을 먼저 불러오세요',
     wfTitle:'워크플로우', wfPick:'무엇을 만드실가요?', wfPickShort:'음료 고르기',
     wf_espresso:'에스프레소', wf_espresso_d:'원두, 프로파일, 분쇄도, 레시피.',
     wf_americano:'아메리카노', wf_americano_d:'에스프레소 뒤에 뜨거운 물.',
@@ -4477,22 +4479,22 @@ var I18N={
     wfWaterNote:'온수 설정대로 {t}°, {f} ml/s로 내립니다.',
     wfStage_espresso:'에스프레소', wfStage_water:'온수', wfStage_steam:'스팀',
     wfSaved:'완료', wfRecent:'최근 워크플로우', wfLoaded:'불러왔습니다', wfAll:'전체', wfHistEmpty:'해당하는 기록이 없습니다', wfStartWhere:'위 내용은 이미 머신에 저장됐습니다. 상단의 추출 버튼이나 그룹헤드로 시작하세요.',
-    rsTitle:'추출 분석', rsSetting:'추출 후 분석', rsSettingDesc:'추출이 끝나면 곡선을 여기서 직접 읽습니다. 모델도 네트워크도 쓰지 않습니다. 바로 띄우거나, 샷 카드의 느낌표 뒤에서 기다리게 할 수 있습니다.',
+    rsTitle:'추출 피드백', rsVRanOut:'목표 무게 전에 프로파일이 끝났습니다', rsMore:'자세히', rsRanOut:'프로파일 시간이 끝나 {y}g에서 멈췄습니다 (목표 {w}g, {p}%)', rsRanOutFix:'마지막 단계를 약 {n}초 늘리세요', rsRanOutWhy:'끝날 때 초당 약 {f}g씩 나오고 있었으니 {n}초를 더 주면 목표에 닿습니다.', rsRanOutTight:'압력이 상한에 걸려 물이 프로파일 요구만큼 나오지 못했습니다. 먼저 분쇄를 바꿔 보고, 그래도 모자라면 마지막 단계를 늘리세요.', rsRanOutYield:'또는 맛이 좋았다면 추출량을 {y}g으로', rsRanOutYieldWhy:'이 프로파일이 정해진 시간에 내리는 양입니다.', cutElseTime:'다른 방법은 프로파일 편집에서 마지막 단계의 시간을 늘리는 것입니다.', cutElseStep:'다른 방법은 프로파일 편집에서 마지막 단계의 무게 조건을 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', cutElseVolume:'저울을 연결하면 부피 대신 무게로 멈춥니다.', rsSetting:'추출 후 분석', rsSettingDesc:'샷이 끝나면 압력·유량·무게 기록을 이 기기에서 바로 분석합니다(AI·인터넷을 쓰지 않음). 바로 띄우거나 샷 카드에 ! 표시만 해 둘 수 있습니다.',
     rsModeModal:'바로 띄우기', rsModeIcon:'느낌표만', rsModeOff:'사용 안 함',
     cutTitle:'프로파일이 먼저 멈춥니다', cutMayTitle:'추출 타겟에 못 미칠 수 있습니다', cutTight:'이 프로파일이 정해진 시간 안에 낼 수 있는 양은 약 {a}g으로, 목표 {b}g와 딱 같고 여유가 없습니다. 유량이 조금만 못 나와도 닿지 못합니다.', cutTime:'이 프로파일은 정해진 시간 안에 많아야 약 {a}g까지 낼 수 있습니다. 카드는 {b}g를 요청하고 있습니다.', cutPast:'이 프로파일로 뽑은 최근 {n}번이 목표에 닿기 전에 끝났습니다. 카드의 {b}g에도 못 미칠 수 있습니다.', cutVolume:'이 프로파일은 {a}ml에서 스스로 멈춥니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutStep:'이 프로파일의 마지막 단계가 {a}g에서 끝나도록 되어 있습니다. 카드는 {b}g를 요청하고 있어 거기까지 가지 못합니다.', cutClock:'이 프로파일에는 무게로 멈추는 장치가 없어 시간으로 끝납니다. 약 {n}초에 멈추므로 그 안에 {b}g가 안 나올 수 있습니다.', cutFix:'추출량을 {a}g로', cutElse:'다른 방법은 프로파일 편집에서 프로파일 자신의 목표를 올리는 것입니다. 그러면 레시피는 그대로 둡니다.', tRecipeMatched:'추출량을 프로파일에 맞췄습니다',
-    rsYield:'추출량 {y}g · 목표 {w}g', rsYieldOnly:'추출량 {y}g', rsStopOther:'머신이 샷을 끝냈습니다({r}). 컵은 퍽이 결정한 것이 아닙니다', rsVShort:'목표보다 적게 나왔습니다',
-    rsResist:'퍽 저항 평균 {r} (9 bar 환산)', rsNoScale:'이 샷은 저울이 없어 무게를 읽지 못했습니다', rsEy:'추출 수율 {e}%', rsEyLow:'추출 수율 {e}% · 통상 범위보다 낮습니다', rsEyHigh:'추출 수율 {e}% · 통상 범위보다 높습니다', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
-    rsVOk:'곡선에 특별히 걸리는 것이 없습니다', rsVMixed:'곡선이 양쪽으로 당깁니다', rsMixed:'초반에는 압력이, 후반에는 유량이 모자랐습니다. 이번 샷은 분쇄도로 건드릴 일이 아닙니다.', rsVChannel:'채널링이 생겼습니다',
-    rsVCoarse:'퍽이 물을 너무 쉽게 보냈습니다', rsVFine:'퍽이 물을 막았습니다',
-    rsTime:'추출 {s}초', rsTimePlan:'추출 {s}초 · 프로파일 계획 {m}초', rsFirstDrop:'첫 방울 {s}초', rsRatio:'실제 1:{r}, 목표 {g}',
-    rsChannel:'{t}초에 유량이 {f} ml/s 뛰는 동안 압력은 {p} bar 떨어졌습니다',
-    rsChannelFix:'분배와 탬핑을 다시 보세요', rsChannelWhy:'물이 퍽을 골고루 적시지 않고 길을 뚫었습니다.',
-    rsCoarse:'압력이 목표보다 평균 {p} bar 낮았고 유량은 평균 {f} ml/s였습니다',
-    rsCoarseFix:'분쇄도를 한 단계 가늘게', rsCoarseWhy:'머신이 요구한 압력을 퍽이 버티지 못했습니다.',
-    rsFine:'유량이 목표보다 평균 {f} ml/s 적었고 압력은 {p} bar에 붙어 있었습니다',
-    rsFineFix:'분쇄도를 한 단계 굵게', rsFineWhy:'압력은 한계였는데도 물이 나오지 않았습니다.',
-    rsGrindAssume:'이 다이얼은 숫자가 낮을수록 가늘다고 보았습니다.',
-    rsTempHigh:'그룹 온도가 프로파일보다 {d}도 높았습니다', rsTempLow:'그룹 온도가 프로파일보다 {d}도 낮았습니다',
+    rsYield:'추출량 {y}g (목표 {w}g)', rsYieldOnly:'추출량 {y}g', rsStopOther:'샷이 도중에 멈춰({r}) 이번 무게로는 분쇄를 판단할 수 없습니다', rsVShort:'목표보다 적게 나왔습니다',
+    rsResist:'퍽 저항 {r} (보통 3~6.5, 높을수록 촘촘함)', rsNoScale:'저울 기록이 없어 추출량과 비율은 판단하지 않았습니다', rsEy:'추출 수율 {e}%', rsEyLow:'추출 수율 {e}% · 낮음 (덜 우러남)', rsEyHigh:'추출 수율 {e}% · 높음 (많이 우러남)', rsYieldShort:'목표 추출량의 {p}%에서 멈췄습니다', rsYieldOver:'목표보다 {g}g 더 나왔습니다',
+    rsVOk:'추출은 정상입니다. 맛으로 판단하세요', rsVMixed:'신호가 엇갈립니다. 분쇄는 그대로 두세요', rsMixed:'빨리 빠진 구간과 막힌 구간이 함께 있어 분쇄 방향을 정할 수 없습니다. 다음 샷은 분배와 탬핑에만 신경 쓰세요.', rsVChannel:'채널링이 생겼습니다',
+    rsVCoarse:'너무 빨리 빠졌습니다. 분쇄가 굵습니다', rsVFine:'너무 막혔습니다. 분쇄가 곱습니다',
+    rsTime:'추출 시간 {s}초', rsTimePlan:'추출 시간 {s}초 (프로파일 최대 {m}초)', rsFirstDrop:'첫 방울 {s}초', rsRatio:'비율 1:{r} (목표 {g})',
+    rsChannel:'{t}초에 유량이 {f} ml/s 갑자기 늘고 압력이 {p} bar 떨어졌습니다',
+    rsChannelFix:'분쇄는 그대로 두고, 가루를 고르게 풀어(WDT) 수평으로 탬핑하세요', rsChannelWhy:'물이 퍽 전체를 적시지 못하고 약한 곳으로 길을 냈습니다.',
+    rsCoarse:'프로파일 요구보다 압력이 평균 {p} bar 낮았고, 유량은 평균 {f} ml/s였습니다',
+    rsCoarseFix:'분쇄를 한 단계 가늘게 하세요', rsCoarseWhy:'물이 너무 빨리 지나가 프로파일이 요구한 압력까지 오르지 못했습니다.',
+    rsFine:'압력이 {p} bar에 걸린 채 유량이 프로파일 요구보다 평균 {f} ml/s 적었습니다',
+    rsFineFix:'분쇄를 한 단계 굵게 하세요', rsFineWhy:'압력이 상한에 닿았는데도 물이 충분히 나오지 못했습니다.',
+    rsGrindAssume:'(숫자가 낮을수록 가는 다이얼로 가정했습니다)',
+    rsTempHigh:'그룹 온도가 설정보다 {d}°C 높았습니다. 머신 상태를 확인하세요', rsTempLow:'그룹 온도가 설정보다 {d}°C 낮았습니다. 예열이 충분했는지 확인하세요',
     aiAnalysis:'AI 추출 분석', aiRun:'분석', aiAgain:'다시 분석', aiReading:'추출을 읽는 중…', aiNoResult:'분석 결과가 없습니다', aiFailed:'분석 실패:',
     aiNothingToDo:'처리할 프로파일이 없습니다', aiCleared:'AI 태그를 지웠습니다', fromAi:'AI 추정',
     recButton:'✨ 이 원두에 맞는 프로파일 추천', recHead:'추천 프로파일', recWorking:'원두와 프로파일을 읽는 중…',
@@ -7188,6 +7190,7 @@ function profileRanOut(){
     var ty=parseFloat(c.targetYield)||0;
     return !(ty>0&&ty<want-1);               // a smaller target then says little now
   }).length; }
+var CUP_SHARE=0.85;
 function profileCut(){
   var pr=curProfileObj&&curProfileObj.profile; if(!pr) return null;
   var want=settings.doseOut; if(!(want>0)) return null;
@@ -7202,13 +7205,16 @@ function profileCut(){
   var st=pr.steps||[], lastStep=st.length?st[st.length-1]:null;
   var sw=lastStep?(parseFloat(lastStep.weight)||0):0;
   if(sw>0&&sw<want-slack) return {kind:'step',at:sw};
-  var cap=profileFlowCap();
-  if(cap!=null&&cap>0&&cap<want-slack) return {kind:'time',at:cap,soft:true};
+  // The flow cap is water; some of it stays in the puck, so the cup gets less.
+  var cap=profileFlowCap(); if(cap!=null) cap=cap*CUP_SHARE;
+  if(cap!=null&&cap>0&&cap<want-slack) return {kind:'time',at:cap,soft:cap>=want*0.9};
   if(cap!=null&&cap>0&&cap<want*1.05) return {kind:'tight',at:cap,soft:true};
   if(cap==null&&!headroomApplies()){
     var cs=profileClockShort();
     if(cs!=null) return {kind:'clock',at:cs,soft:true}; }
   var ran=profileRanOut();
+  var mem=(lsGet(RANOUT_KEY)||{})[String(pr.title||'')];
+  if(!ran&&mem&&mem.want>=want-1) ran=1;
   if(ran>0) return {kind:'past',at:ran,soft:true};
   return null; }
 function syncProfileCut(){
@@ -7228,11 +7234,11 @@ function openProfileCut(){
   document.getElementById('cutTitle').textContent=t(c.soft?'cutMayTitle':'cutTitle');
   document.getElementById('cutBody').innerHTML=
     '<div class="cut-what">'+escapeHtml(cutText(c))+'</div>'
-    +'<div class="cut-else">'+escapeHtml(t('cutElse'))+'</div>'
+    +'<div class="cut-else">'+escapeHtml(t(c.kind==='step'?'cutElseStep':c.kind==='volume'?'cutElseVolume':'cutElseTime'))+'</div>'
     +'<div class="ag-acts">'
-      +(c.kind==='step'
-        ? ('<button class="m-btn primary" onclick="cutMatch('+(+c.at)+')">'
-           +escapeHtml(t('cutFix').replace('{a}',(+c.at).toFixed(1)))+'</button>')
+      +((c.kind==='step'||c.kind==='time')
+        ? ('<button class="m-btn primary" onclick="cutMatch('+Math.floor(+c.at)+')">'
+           +escapeHtml(t('cutFix').replace('{a}',String(Math.floor(+c.at))))+'</button>')
         : '')
       +'<button class="m-btn" onclick="closeModal(null,\'cutOverlay\')">'
       +escapeHtml(t('close'))+'</button>'
@@ -7559,6 +7565,7 @@ function hydrateFromStore(){
     if(all.shotai&&typeof all.shotai==='object') lsSet('aurora_shotai',all.shotai);
     else { var local=lsGet('aurora_shotai'); if(local&&Object.keys(local).length) storePut('shotai',local); }
     if(all.beanfav&&typeof all.beanfav==='object') lsSet('aurora_beanfav',all.beanfav);
+    if(all.ranout&&typeof all.ranout==='object') lsSet('aurora_ranout',all.ranout);
     if(all.grindmem&&typeof all.grindmem==='object') lsSet('aurora_grindmem',all.grindmem);
     if(Array.isArray(all.aifb)) lsSet('aurora_aifb',all.aifb);
     else { var lfb=aiFbAll(); if(lfb.length) storePut('aifb',lfb); }
@@ -18834,7 +18841,7 @@ function aiPinFrom(r){
   var c=(r&&r._ctx)||{};
   return { at:new Date().toISOString(), verdict:String(r.verdict||''),
     bean:String(c.b||''), profile:String(c.p||''), for:aiMatchKey(c.b,c.p),
-    observations:(r.observations||[]).map(String).slice(0,8),
+    observations:(r.observations||[]).map(String).slice(0,10), more:+r.more||0,
     suggestions:(r.suggestions||[]).slice(0,3).map(function(x){
       return { change:String((x&&x.change)||''), why:String((x&&x.why)||''),
         apply:aiApplyOf(x), done:!!(x&&x.done) }; }) }; }
@@ -18873,10 +18880,10 @@ function renderAiGuide(){
   if(ttl) ttl.textContent=t(_agKind==='read'?'rsTitle':'aiGuideTitle');
   if(!box) return;
   if(!pin){ box.innerHTML=''; return; }
-  var any=pin.suggestions.some(function(x){ return x.apply&&!x.done; });
+  var nMore=Math.max(0,Math.min(+pin.more||0,pin.observations.length));
+  var shown=pin.observations.slice(0,pin.observations.length-nMore), folded=pin.observations.slice(pin.observations.length-nMore);
+  function list(a){ return '<ul class="ai-list">'+a.map(function(o){ return '<li>'+escapeHtml(o)+'</li>'; }).join('')+'</ul>'; }
   box.innerHTML=(pin.verdict?'<div class="ai-verdict">'+escapeHtml(pin.verdict)+'</div>':'')
-    +(pin.observations.length?'<ul class="ai-list">'+pin.observations.map(function(o){
-        return '<li>'+escapeHtml(o)+'</li>'; }).join('')+'</ul>':'')
     +'<div class="ag-sugs">'+pin.suggestions.map(function(x,i){
       var foot;
       if(!x.apply) foot='<span class="ag-none">'+escapeHtml(t('aiNoApply'))+'</span>';
@@ -18889,17 +18896,18 @@ function renderAiGuide(){
         +'<div class="ag-c">'+escapeHtml(x.change)+'</div>'
         +'<div class="ag-w">'+escapeHtml(x.why)+'</div>'
         +'<div class="ag-foot">'+foot+'</div></div>'; }).join('')+'</div>'
+    +(shown.length?list(shown):'')
+    +(folded.length?'<details class="ag-more"><summary>'+escapeHtml(t('rsMore'))+' \u00b7 '+folded.length+'</summary>'+list(folded)+'</details>':'')
     +'<div class="ag-acts">'
       // A reading of the shot just pulled can be carried forward as a pin, so
       // it is still there once the card has moved on to the next one.
       +(_agKind==='read'?('<button class="m-btn" onclick="pinShotRead()">\u2757 '
         +escapeHtml(t('aiPin'))+'</button>'):'')
-      +(any?'<button class="m-btn" onclick="applyAiAll()">'+escapeHtml(t('aiApplyAll'))+'</button>':'')
       +'<button class="m-btn" onclick="clearAiGuide()">'+escapeHtml(t('aiGuideClear'))+'</button>'
     +'</div>'; }
 function pinShotRead(){
   var r=shotReadGet(); if(!r) return;
-  pinAiGuide({ verdict:r.verdict, observations:r.observations,
+  pinAiGuide({ verdict:r.verdict, observations:r.observations, more:r.more,
     suggestions:r.suggestions.map(function(x){ return {change:x.change,why:x.why,apply:x.apply,done:!!x.done}; }),
     _ctx:{b:r.bean||'',p:r.profile||''} });
   closeModal(null,'aiGuideOverlay'); }
@@ -18923,13 +18931,6 @@ function applyAiSug(i){
   var x=pin.suggestions[i]; if(!x||!x.apply||x.done) return;
   if(!aiApplyOne(x.apply)) return;
   x.done=true; agSave(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
-function applyAiAll(){
-  var pin=agObj(); if(!pin) return;
-  var n=0;
-  pin.suggestions.forEach(function(x){
-    if(x.apply&&!x.done&&aiApplyOne(x.apply)){ x.done=true; n++; } });
-  if(!n) return;
-  agSave(pin); renderAiGuide(); toast(t('aiApplied'),'ok'); }
 // ── reading the shot that just finished ───────────────────────────────
 // One modal at a time. The tasting log opens as the shot ends, ahead of the
 // reading, so the reading waits for it to close and then opens: tasted first,
@@ -18945,9 +18946,10 @@ function runShotRead(id){
   return withFullShots([{id:id}]).then(function(full){
     var sh=full&&full[0]; if(!sh) return;
     var r=readShot(sh); if(!r) return;
+    if(r.ranOut) rememberRanOut(r.ranOut); else if(r.reached) forgetRanOut(r.reached);
     var c=r._ctx||{};
     shotReadSet({ shotId:id, at:new Date().toISOString(),
-      verdict:r.verdict, observations:r.observations, findings:r.findings,
+      verdict:r.verdict, observations:r.observations, more:r.more||0, findings:r.findings,
       bean:String(c.b||''), profile:String(c.p||''),
       suggestions:r.suggestions.map(function(x){
         return { change:x.change, why:x.why, apply:aiApplyOf(x), done:false }; }) });
@@ -19000,6 +19002,7 @@ function rsPoints(sh){
       tp:rsNum(o.targetPressure), tf:rsNum(o.targetFlow),
       g:rsNum(o.groupTemperature),
       w:(pt.scale&&pt.scale.weight!=null)?rsNum(pt.scale.weight):null,
+      fr:(o.profileFrame!=null&&isFinite(o.profileFrame))?+o.profileFrame:null,
       sub:((o.state||{}).substate)||'' }); });
   return out; }
 // Which way one notch goes, and whether it can be named at all.
@@ -19039,13 +19042,40 @@ function rsOpenProfile(pr){
       ?parseFloat(x&&x.limiter&&x.limiter.value):parseFloat(x&&x.pressure);
     if(p>top) top=p; });
   return top>0&&top<=7; }
+// The gateway gives one reason, machineEnded, for a stop from the group head
+// and for a profile that simply finished. The frame says which: a shot that
+// spent the whole of its last timed step there ran out; one that left it early
+// was stopped.
+function rsRanToEnd(sh,pts){
+  var st=((sh.workflow&&sh.workflow.profile)||{}).steps||[];
+  var last=-1; st.forEach(function(x,i){ if(ccNum(x&&x.seconds)>0) last=i; });
+  var F=null; pts.forEach(function(x){ if(x.fr!=null&&(F==null||x.fr>F)) F=x.fr; });
+  if(F==null||last<0) return false;
+  if(F>last) return true;
+  if(F<last||rsStepExits(st[F])) return false;
+  var inF=pts.filter(function(x){ return x.fr===F; });
+  var spent=inF.length?inF[inF.length-1].t-inF[0].t:0;
+  return spent>=ccNum(st[F].seconds)-1.5; }
+// What the cup was gaining per second at the end, for how much longer it needed.
+function rsEndRate(pts){
+  var ws=pts.filter(function(x){ return x.w!=null; }); if(ws.length<2) return 0;
+  var end=ws[ws.length-1], from=ws.filter(function(x){ return x.t>=end.t-5; })[0]||ws[0];
+  return (end.t>from.t)?(end.w-from.w)/(end.t-from.t):0; }
+var RANOUT_KEY='aurora_ranout';
+function rememberRanOut(r){
+  if(!r||!r.title) return;
+  var all=lsGet(RANOUT_KEY)||{}; all[r.title]={yld:r.yld,want:r.want,at:Date.now()};
+  lsSet(RANOUT_KEY,all); storeSave('ranout',all); }
+function forgetRanOut(title){
+  var all=lsGet(RANOUT_KEY)||{}; if(!title||!all[title]) return;
+  delete all[title]; lsSet(RANOUT_KEY,all); storeSave('ranout',all); }
 function rsSug(change,why,apply){ return {change:change,why:why,apply:apply||null}; }
 function readShot(sh){
   var pts=rsPoints(sh);
   if(pts.length<6) return null;
   var pour=pts.filter(function(x){ return x.sub==='pouring'; });
   var body=(pour.length>=5)?pour:pts;
-  var obs=[], sug=[], find=[], flags={};
+  var obs=[], more=[], sug=[], find=[], flags={};
   var secs=body.length?Math.max(0,body[body.length-1].t-body[0].t):0;
   var total=Math.max(0,pts[pts.length-1].t-pts[0].t);
   var prof0=(sh.workflow&&sh.workflow.profile)||null;
@@ -19069,7 +19099,7 @@ function readShot(sh){
       if(!jump) jump={t:b.t,df:b.f-a.f,dp:b.p-a.p}; } }
   if(jump){
     flags.channel=true;
-    obs.push(t('rsChannel').replace('{t}',jump.t.toFixed(1))
+    more.push(t('rsChannel').replace('{t}',jump.t.toFixed(1))
       .replace('{f}',jump.df.toFixed(1)).replace('{p}',Math.abs(jump.dp).toFixed(1)));
     find.push('flow jumped '+jump.df.toFixed(1)+' ml/s while pressure fell '
       +Math.abs(jump.dp).toFixed(1)+' bar at '+jump.t.toFixed(1)+'s ('+jumpN+' such moments)');
@@ -19097,7 +19127,7 @@ function readShot(sh){
     res.push(3*Math.sqrt(x.p)/x.f); });
   var rM=(res.length>=10)?rsMean(res):null;
   if(rM!=null){
-    obs.push(t('rsResist').replace('{r}',rM.toFixed(1)));
+    more.push(t('rsResist').replace('{r}',rM.toFixed(1)));
     find.push('puck resistance averaged '+rM.toFixed(1)+' bar per ml/s'); }
 
   // ── what came out of it ──
@@ -19113,10 +19143,12 @@ function readShot(sh){
   var want0=(ctx0.targetYield>0)?ctx0.targetYield:null;
   var share=(yld0>0&&want0)?(yld0/want0):null;
   var why=sh&&sh.stopReason;
-  var yieldMeans=!(why&&RS_YIELD_MOOT[why]);
+  var ranOut=(why==='machineEnded')&&rsRanToEnd(sh,pts);
+  var yieldMeans=ranOut||!(why&&RS_YIELD_MOOT[why]);
   var sawScale=(sh.measurements||[]).some(function(m){
     return m&&m.scale&&m.scale.weight!=null; });
   if(!sawScale&&an0.actualYield==null) obs.push(t('rsNoScale'));
+  var yieldAt=obs.length;
   if(yld0>0){
     obs.push(want0
       ? t('rsYield').replace('{y}',(+yld0).toFixed(1)).replace('{w}',(+want0).toFixed(1))
@@ -19131,6 +19163,14 @@ function readShot(sh){
     find.push('it stopped at '+Math.round(share*100)+'% of the target yield, but the '
       +'machine gave "'+why+'" as the reason, so the cup is not evidence about the puck');
     share=null; }
+  else if(share!=null&&share<RS_YIELD_SHORT&&ranOut){
+    flags.ranOut=true;
+    // the ran-out line says the yield and the target, so it takes their place
+    if(yld0>0) obs.splice(yieldAt,1);
+    obs.push(t('rsRanOut').replace('{y}',(+yld0).toFixed(1)).replace('{w}',(+want0).toFixed(1))
+      .replace('{p}',Math.round(share*100)));
+    find.push('the profile ran to the end of its last timed step and stopped at '+Math.round(share*100)
+      +'% of the target yield'); }
   else if(share!=null&&share<RS_YIELD_SHORT){
     flags.short=true;
     obs.push(t('rsYieldShort').replace('{p}',Math.round(share*100)));
@@ -19151,7 +19191,7 @@ function readShot(sh){
   if(!(ey>0)&&an0.drinkTds>0&&yld0>0&&dose0>0) ey=(an0.drinkTds*yld0)/dose0;
   var eyLow=(ey>0&&ey<RS_EY_LOW), eyHigh=(ey>0&&ey>RS_EY_HIGH);
   if(ey>0){
-    obs.push(t(eyLow?'rsEyLow':eyHigh?'rsEyHigh':'rsEy').replace('{e}',ey.toFixed(1)));
+    ((eyLow||eyHigh)?obs:more).push(t(eyLow?'rsEyLow':eyHigh?'rsEyHigh':'rsEy').replace('{e}',ey.toFixed(1)));
     find.push('measured extraction yield '+ey.toFixed(1)+'%'); }
   var quick=(plan>0)?(total<plan*0.5):(total>0&&total<RS_FAST);
   var slow=(plan>0)?(total>plan*1.5):(!exits&&total>RS_SLOW);
@@ -19165,6 +19205,28 @@ function readShot(sh){
   if(open) find.push('the profile asks for a low-pressure, fast pour, so a loose puck and a quick shot are what it wants');
   // A channel makes any puck read loose. The puck is put right first and the
   // grind judged again on a shot that did not channel.
+  if(flags.ranOut){
+    // The puck holding the flow back is why less water went through, and a
+    // coarser grind is what lets it through; the step's time and the recipe's
+    // yield are the other two ways to meet.
+    var tightN=body.filter(function(x){ return x.t-tPour>=RS_SETTLE&&x.tf!=null&&x.tf>0.2&&x.f!=null
+      &&x.f<x.tf*0.8&&x.p!=null&&x.p>=7.5; }).length;
+    // One change at a time: a puck that held the flow back at the pressure
+    // limit is fixed at the grinder, and only a shot that kept up and still
+    // fell short says the step is too short.
+    var tight=fineOn||(body.length>0&&tightN*0.2>=3);
+    var rate=rsEndRate(pts); if(!(rate>0.2)) rate=1;
+    var extra=Math.min(15,Math.max(1,Math.ceil((want0-yld0)/rate)));
+    if(tight){ var coarse=rsGrindStep(sh,1);
+      sug.push(rsSug(t('rsFineFix'),t('rsRanOutTight')+(coarse?(' '+t('rsGrindAssume')):''),
+        coarse?{field:'grind',to:coarse}:null)); }
+    else sug.push(rsSug(t('rsRanOutFix').replace('{n}',extra),
+      t('rsRanOutWhy').replace('{f}',rate.toFixed(1)).replace('{n}',extra),null));
+    var canYield=Math.floor(yld0);
+    if(canYield>=10) sug.push(rsSug(t('rsRanOutYield').replace('{y}',canYield),t('rsRanOutYieldWhy'),{field:'yield',to:canYield}));
+    find.push(tight?'flow lagged at the pressure limit, so the first change is a coarser grind'
+      :'the flow kept up, so the last step needs about '+extra+'s more');
+    coarseOn=false; fineOn=false; }
   if(flags.channel&&(coarseOn||fineOn)){
     find.push('the grind readings are set aside because the puck channeled');
     coarseOn=false; fineOn=false; }
@@ -19172,11 +19234,11 @@ function readShot(sh){
   // The measurement is reported whenever it was taken; only the advice waits
   // for the vote.
   if(cv1){
-    obs.push(t('rsCoarse').replace('{p}',pdM.toFixed(1)).replace('{f}',pfM.toFixed(1)));
+    more.push(t('rsCoarse').replace('{p}',pdM.toFixed(1)).replace('{f}',pfM.toFixed(1)));
     find.push('pressure ran '+pdM.toFixed(1)+' bar under target at a mean flow of '
       +pfM.toFixed(1)+' ml/s'); }
   if(fv1){
-    obs.push(t('rsFine').replace('{f}',fdM0.toFixed(1)).replace('{p}',fpM0.toFixed(1)));
+    more.push(t('rsFine').replace('{f}',fdM0.toFixed(1)).replace('{p}',fpM0.toFixed(1)));
     find.push('flow ran '+fdM0.toFixed(1)+' ml/s under target while pressure held at '
       +fpM0.toFixed(1)+' bar'); }
   if(coarseOn){
@@ -19194,7 +19256,7 @@ function readShot(sh){
   var drip=null;
   for(var k=0;k<body.length;k++){ if(body[k].w!=null&&body[k].w>=RS_DRIP){ drip=body[k].t; break; } }
   if(drip!=null){
-    obs.push(t('rsFirstDrop').replace('{s}',drip.toFixed(1)));
+    more.push(t('rsFirstDrop').replace('{s}',drip.toFixed(1)));
     find.push('first drop at '+drip.toFixed(1)+'s'); }
 
   // ── what came out against what was asked for ──
@@ -19224,10 +19286,11 @@ function readShot(sh){
       +(secs>0?(', of which '+secs.toFixed(1)+'s was pouring'):'')); }
 
   if(flags.mixed){
-    obs.push(t('rsMixed'));
+    more.push(t('rsMixed'));
     find.push('the curve missed its pressure target early and its flow target later, '
       +'so neither reading is clear enough to act on'); }
   var verdict=flags.channel?t('rsVChannel')
+    :flags.ranOut?t('rsVRanOut')
     :flags.coarse?t('rsVCoarse')
     :flags.fine?t('rsVFine')
     :flags.mixed?t('rsVMixed')
@@ -19235,8 +19298,13 @@ function readShot(sh){
     :t('rsVOk');
   // Everything measured is worth showing; the cap is only there so a strange
   // shot cannot fill the page.
-  return { verdict:verdict, observations:obs.slice(0,8), suggestions:sug.slice(0,3),
-    findings:find, _ctx:aiCtxOf(shotDigestForAi(sh)) }; }
+  var title=String((((sh.workflow&&sh.workflow.profile)||{}).title)||'');
+  // What the person needs first stays in view; the readings behind it fold.
+  var main=obs.slice(0,6), all=main.concat(more).slice(0,10);
+  return { verdict:verdict, observations:all, more:all.length-main.length, suggestions:sug.slice(0,3),
+    findings:find, _ctx:aiCtxOf(shotDigestForAi(sh)),
+    ranOut:flags.ranOut?{title:title,yld:yld0,want:want0}:null,
+    reached:(share!=null&&share>=0.95)?title:null }; }
 function aiCacheKey(rows){ return rows.map(function(r){ return r.id; }).sort().join(','); }
 function loadShotAi(rows){ if(!rows||!rows.length) return null;
   var all=lsGet('aurora_shotai')||{};
