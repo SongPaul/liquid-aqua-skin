@@ -19131,6 +19131,9 @@ var RS_R_LOW=3.0, RS_R_HIGH=6.5;
 // without either being a fault, so only the plainly-out cases vote.
 var RS_EY_LOW=17, RS_EY_HIGH=23;
 var RS_FAST=18, RS_SLOW=45, RS_YIELD_SHORT=0.85, RS_YIELD_FULL=0.9, RS_YIELD_OVER=1.15;
+// A profile that ran out never stopped on the scale, so being short by more
+// than drip and scale noise is enough to say so.
+var RS_RANOUT_GAP=1.0;
 // Endings that were not the puck's doing. What landed in the cup after one of
 // these says nothing about how the coffee was ground.
 var RS_YIELD_MOOT={profileAdvance:1,profileSkip:1,apiStop:1,appStop:1,machineEnded:1,
@@ -19311,7 +19314,7 @@ function readShot(sh){
     find.push('it stopped at '+Math.round(share*100)+'% of the target yield, but the '
       +'machine gave "'+why+'" as the reason, so the cup is not evidence about the puck');
     share=null; }
-  else if(share!=null&&share<RS_YIELD_SHORT&&ranOut){
+  else if(share!=null&&ranOut&&(want0-yld0)>=RS_RANOUT_GAP){
     flags.ranOut=true;
     // the ran-out line says the yield and the target, so it takes their place
     if(yld0>0) obs.splice(yieldAt,1);

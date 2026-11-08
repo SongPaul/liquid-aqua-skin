@@ -102,3 +102,28 @@ test('the reading speaks plainly and keeps its numbers folded', function (T) {
   document.getElementById('aiGuideOverlay').classList.remove('show');
   lsSet('aurora_shotread', was); syncShotRead();
 });
+
+// A profile that ends on its clock never stopped on the scale, so a cup short
+// by a gram or two is still the profile running out, not a shot that hit its
+// mark. Visualizer 33a3de5e: 34.2g of 36 read as an ordinary shot.
+test('a profile that ran out a couple of grams short is still read as running out', function (T) {
+  var sh = roShot(35.2, 'machineEnded', true);
+  sh.annotations.actualYield = 34.2;
+  var r = readShot(sh);
+  T.eq(r.verdict, t('rsVRanOut'), 'ran out at 95%: ' + r.verdict);
+  T.ok(!!r.ranOut, 'remembered');
+});
+
+test('a profile that ran out within a gram of the target is not flagged', function (T) {
+  var sh = roShot(35.2, 'machineEnded', true);
+  sh.annotations.actualYield = 35.4;
+  var r = readShot(sh);
+  T.ok(r.verdict !== t('rsVRanOut'), 'close enough: ' + r.verdict);
+  T.ok(!r.ranOut, 'nothing remembered');
+});
+
+test('a shot stopped on weight a gram or two short is not read as running out', function (T) {
+  var sh = roShot(30, 'targetWeight', true); sh.annotations.actualYield = 34.2;
+  var r = readShot(sh);
+  T.ok(r.verdict !== t('rsVRanOut'), 'not ran out: ' + r.verdict);
+});
