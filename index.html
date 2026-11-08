@@ -3733,6 +3733,7 @@ var I18N={
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
     waterCalNow:'Current reading',
     needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
+    sawAuto:'Adjust the shot stop after each shot', sawLearned:'Shot stop moved {a}s \u2192 {b}s ({y}g for {w}g)',
     flowCal:'Stop timing', flowCalDesc:'How many seconds before the target the shot or hot water is stopped. The scale reports a little late and drops keep falling after the pump stops, so stopping a moment early lands on the target. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}s', fcReset:'Default', fcSec:'s', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Machine estimate (ml)', mcalGot:'Weighed on the scale (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Pour hot water with the cup on a connected scale, as usual: the machine\u2019s estimate and the weight are taken during the pour and offered above. Without a connected scale, weigh the cup yourself and enter both numbers.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', mcalNew:'New value', mcalCalcTitle:'Work it out from a pour', mcalRange:'The machine takes 0.13 to 2.0', mcalLast:'Last hot water: estimated {e}ml, weighed {g}g ({d})', mcalUse:'Use these', hwOff:'Hot water: the machine estimated {e}ml, the scale weighed {g}g. The machine flow calibration looks off.',
     refillKit:'Refill kit', refillKitDesc:'A plumbed machine refills itself, so its tank shows full and the low-water warning stays off. The machine reports whether the kit is fitted; set it here only to overrule a wrong reading.', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
@@ -4199,6 +4200,7 @@ var I18N={
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCalNow:'현재 수위',
     needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
+    sawAuto:'샷마다 추출 정지 시간 자동 맞춤', sawLearned:'추출 정지 시간을 {a}초 \u2192 {b}초로 맞췄습니다 (목표 {w}g에 {y}g)',
     flowCal:'정지 시간 보정', flowCalDesc:'목표에 닿기 몇 초 전에 멈출지 정합니다. 저울은 무게를 조금 늦게 알리고 펌프가 멈춘 뒤에도 방울이 떨어지므로, 이 시간만큼 미리 멈춰야 목표에 맞습니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}초', fcReset:'기본값', fcSec:'초', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'머신이 추정한 양 (ml)', mcalGot:'저울로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울이 연결된 상태로 평소처럼 온수를 내리면, 머신이 추정한 양과 저울 무게를 그동안 재어 위에 보여 줍니다. 저울이 연결돼 있지 않으면 컵을 직접 재어 두 값을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', mcalNew:'새 값', mcalCalcTitle:'온수로 계산하기', mcalRange:'0.13~2.0 사이로 넣으세요', mcalLast:'마지막 온수: 머신 추정 {e}ml, 저울 {g}g ({d})', mcalUse:'이 값 쓰기', hwOff:'온수: 머신은 {e}ml로 추정했고 저울은 {g}g을 쟀습니다. 머신 유량 보정이 필요해 보입니다.',
     refillKit:'리필 키트', refillKitDesc:'배관 급수 머신은 스스로 물을 채우므로 탱크를 만수로 표시하고 저수위 경고를 띄우지 않습니다. 리필킷 장착 여부는 머신이 보고하며, 그 값이 틀렸을 때만 여기서 지정하세요.', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
@@ -8383,6 +8385,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
         +opt('on',t('rkOn'),rkm)+opt('off',t('rkOff'),rkm)+'</select>');
     var flowPane='<div class="set-desc" style="margin-bottom:6px">'+t('flowCalDesc')+'</div>'
       +flowMultRow('weightFlowMultiplier',t('fcWeight'),0.1,1)
+      +sawAutoRowHtml()
       +flowMultRow('volumeFlowMultiplier',t('fcVolume'),0.05,2)
       +flowMultRow('hotWaterFlowMultiplier',t('fcHotWater'),0.05,2);
     var rkDet=(machineInfo.extra&&machineInfo.extra.refillKit!=null)?(machineInfo.extra.refillKit?t('rkYes'):t('rkNo')):'—';
@@ -19093,6 +19096,7 @@ function runShotRead(id){
   if(!id||shotReadMode()==='off') return Promise.resolve(null);
   return withFullShots([{id:id}]).then(function(full){
     var sh=full&&full[0]; if(!sh) return;
+    sawLearn(sh);
     var r=readShot(sh); if(!r) return;
     if(r.ranOut) rememberRanOut(r.ranOut); else if(r.reached) forgetRanOut(r.reached);
     var c=r._ctx||{};
@@ -19134,6 +19138,53 @@ var RS_FAST=18, RS_SLOW=45, RS_YIELD_SHORT=0.85, RS_YIELD_FULL=0.9, RS_YIELD_OVE
 // A profile that ran out never stopped on the scale, so being short by more
 // than drip and scale noise is enough to say so.
 var RS_RANOUT_GAP=1.0;
+// A shot stopped on the scale says how late the stop came: the grams past the
+// target over the rate they were landing at. Half of it is taken each shot.
+var SAW_NOISE=0.4, SAW_ODD=4, SAW_MIN=0.3, SAW_MAX=3.0, SAW_GAIN=0.5;
+function sawAutoOn(){ return lsGet('aurora_saw_auto')!==false; }
+function setSawAuto(on){ lsSet('aurora_saw_auto',!!on); }
+function sawAutoRowHtml(){
+  return '<div class="set-row"><div class="set-info"><div class="set-name">'+escapeHtml(t('sawAuto'))+'</div></div>'
+    +sw('sawAutoSw',sawAutoOn(),'setSawAuto(this.checked)')+'</div>'; }
+function sawRate(sh){
+  var pour=rsPoints(sh).filter(function(x){ return x.sub==='pouring'&&x.w!=null; });
+  if(pour.length<5) return 0;
+  var end=pour[pour.length-1], from=pour.filter(function(x){ return x.t>=end.t-2; })[0];
+  return (from&&end.t>from.t)?(end.w-from.w)/(end.t-from.t):0; }
+function sawFinal(sh){
+  var all=(sh&&sh.measurements)||[];
+  for(var i=all.length-1;i>=0;i--){ var w=all[i]&&all[i].scale&&all[i].scale.weight; if(w!=null) return +w; }
+  return null; }
+function sawLearnFrom(sh,cur){
+  if(!sh||sh.stopReason!=='targetWeight'||!(cur>=0)) return null;
+  var want=+(((sh.workflow||{}).context||{}).targetYield)||0, got=sawFinal(sh);
+  if(!(want>0)||got==null) return null;
+  var err=got-want;
+  if(Math.abs(err)<SAW_NOISE||Math.abs(err)>SAW_ODD) return null;
+  var rate=sawRate(sh);
+  if(!(rate>=0.5&&rate<=4)) return null;
+  var next=Math.max(SAW_MIN,Math.min(SAW_MAX,cur+SAW_GAIN*err/rate));
+  next=Math.round(next*10)/10;
+  return next===Math.round(cur*10)/10?null:next; }
+function sawLearn(sh){
+  if(!sh||!sawAutoOn()||lsGet('aurora_saw_last')===sh.id) return Promise.resolve(null);
+  return api('GET','/api/v1/settings').then(function(gs){
+    var cur=gs&&gs.weightFlowMultiplier; if(cur==null) return null;
+    var next=sawLearnFrom(sh,+cur);
+    lsSet('aurora_saw_last',sh.id);
+    if(next==null) return null;
+    return api('POST','/api/v1/settings',{weightFlowMultiplier:next}).then(function(){
+      gwSettings.weightFlowMultiplier=next;
+      var el=document.getElementById('fm-weightFlowMultiplier'); if(el) el.textContent=next.toFixed(1);
+      var msg=t('sawLearned').replace('{a}',(+cur).toFixed(1)).replace('{b}',next.toFixed(1))
+        .replace('{y}',sawFinal(sh).toFixed(1)).replace('{w}',(+sh.workflow.context.targetYield).toFixed(1));
+      toastActs(msg,[{label:t('undo'),fn:function(){
+        api('POST','/api/v1/settings',{weightFlowMultiplier:+cur}).then(function(){
+          gwSettings.weightFlowMultiplier=+cur;
+          var e2=document.getElementById('fm-weightFlowMultiplier'); if(e2) e2.textContent=(+cur).toFixed(1); })
+          .catch(function(){}); }}],10000);
+      return next; }); })
+    .catch(function(){ return null; }); }
 // Endings that were not the puck's doing. What landed in the cup after one of
 // these says nothing about how the coffee was ground.
 var RS_YIELD_MOOT={profileAdvance:1,profileSkip:1,apiStop:1,appStop:1,machineEnded:1,
