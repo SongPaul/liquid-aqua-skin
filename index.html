@@ -3644,7 +3644,7 @@ var I18N={
     grLinkWhat:'Name and dial follow the plugin; the recipe card sets it while in use. Burrs and notes are yours.',
     grLinkAway:'Not connected now', grLinkGone:'The {p} plugin that kept this grinder is not installed now, so the record can be edited by hand.',
     grSrcManualHint:'Recorded here only — hold for the grinder list',
-    doseHoldHint:'Tap to type it, hold to take it off the scale',
+    doseHoldHint:'Tap to type it, hold to take it off the scale', doseTypeHint:'Tap to type it',
     doseTareHint:'Zero the dosing scale',
     tare:'Tap to tare', tared:'Tared', pressure:'Pressure', flow:'Flow',
     profile:'Profile', edit:'Edit', recipe:'Recipe', doseG:'Dose', yieldG:'Yield', brewTemp:'Brew temp', noProfile:'No profile loaded',
@@ -4106,7 +4106,7 @@ var I18N={
     grLinkWhat:'이름과 눈금은 플러그인을 따르고, 사용 중에는 레시피 카드에서 설정합니다. 버와 메모는 직접 입력하세요.',
     grLinkAway:'지금 연결되지 않음', grLinkGone:'이 그라인더를 관리하던 {p} 플러그인이 지금 설치돼 있지 않아 직접 편집할 수 있습니다.',
     grSrcManualHint:'여기에만 기록됩니다 — 길게 누르면 그라인더 목록',
-    doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값',
+    doseHoldHint:'탭하면 직접 입력, 길게 누르면 저울값', doseTypeHint:'누르면 직접 입력',
     doseTareHint:'누르면 도징 저울 영점',
     tare:'눌러서 영점', tared:'영점 됨', pressure:'압력', flow:'유량',
     profile:'프로파일', edit:'편집', recipe:'레시피', doseG:'도징', yieldG:'추출량', brewTemp:'추출 온도', noProfile:'프로파일이 없습니다',
@@ -5984,14 +5984,19 @@ function syncDoseNow(){
   el.textContent=!on?'':live?(convWeight(state.dosingWeight).toFixed(1)+weightUnitLabel()):'\u2014'; }
 function syncDoseTake(){
   wfSyncScale(); syncDoseNow();
-  var live=doseSourceWeight()!==null, tarable=dosingHasReading();
+  var tarable=dosingHasReading(), live=doseSourceWeight()!==null;
   var d=document.getElementById('devDose');
   if(d) d.disabled=!tarable;
   var el=document.getElementById('doseIn');
-  if(el) el.title=live?t('doseTakeHint'):t('doseHoldHint'); }
+  if(el) el.title=t(tarable?'doseTakeHint':live?'doseHoldHint':'doseTypeHint'); }
 // A tap takes the reading, a hold types it. The scale is the usual source and
 // the keyboard is the exception, so the shorter gesture belongs to the scale.
-function doseHold(){ if(doseSourceWeight()!==null) doseFromScale(); else openKeypad('doseIn'); }
+// A dosing scale is read on a tap and typed over on a hold. Without one the
+// brewing scale stands in, but on the hold: it usually sits tared under the
+// cup, and a tap that took it set the dose to 0.0 g.
+function doseTap(){ if(dosingHasReading()) doseFromScale(); else openKeypad('doseIn'); }
+function doseLongPress(){
+  if(!dosingHasReading()&&doseSourceWeight()!==null) doseFromScale(); else openKeypad('doseIn'); }
 // Anything that can be pressed. A ripple on something that does nothing when
 // touched would be a lie about what just happened.
 var RIPPLE_SEL='button,.album,.tap,.kp-key,.m-btn,.ms-btn,'
@@ -6022,7 +6027,7 @@ document.addEventListener('pointerdown',function(e){
 function bindDoseGestures(){
   var el=document.getElementById('doseIn'); if(!el||el._bound) return;
   el._bound=true; el.onclick=null;
-  bindActionLongPress(el, doseHold, function(){ openKeypad('doseIn'); }); }
+  bindActionLongPress(el, doseTap, doseLongPress); }
 // -- Dosing scale ---------------------------------------------------
 // The gateway has exactly one scale it treats as special, the one a shot is
 // weighed on. Any other scale is held open on request with no meaning attached
@@ -8094,10 +8099,13 @@ function trDrop(){
   delete I18N_AI[c]; saveAiLangs();
   prefs.lang='auto'; savePrefs();
   applyI18n(); relocalizeDynamic(); renderSpContent(); }
-// Re-render dynamic UI that isn't marked with data-i18n.
+// Re-render dynamic UI that isn't marked with data-i18n. A store sync calls this
+// on every resume, so an editor is redrawn only when its language changed:
+// redrawing it wiped what was being typed.
+var _bgEdLang=null, _epEdLang=null;
 function relocalizeDynamic(){ try{ renderCarousel(); updateShotBtn(); updateConnUI(state.connected?'on':'off'); syncWorkflowBtn(); applyActionMode(); updateBeanInfo(); loadLastShot(); _chartLegendMode=null; drawChart();
-  if(document.getElementById('editPage').classList.contains('show')){ renderEpList(); if(editing) renderEpEditor(); }
-  if(document.getElementById('beanPage').classList.contains('show')){ renderBgList(); if(bgSel) renderBgEditor(); }
+  if(document.getElementById('editPage').classList.contains('show')){ renderEpList(); if(editing&&_epEdLang!==_lang) renderEpEditor(); }
+  if(document.getElementById('beanPage').classList.contains('show')){ renderBgList(); if(bgSel&&_bgEdLang!==_lang) renderBgEditor(); }
   if(document.getElementById('settingsPage')&&document.getElementById('settingsPage').classList.contains('show')){ renderSpNav(); renderSpContent(); }
 }catch(_){ } }
 function prefEq(a,b){ try{ return JSON.stringify(a)===JSON.stringify(b); }catch(_){ return a===b; } }
@@ -11526,7 +11534,7 @@ function tagEditor(p){
   return '<div class="ep-tagrow">'+chips
     +'<input class="ep-tagadd" maxlength="24" placeholder="'+escapeAttr(t('tagAdd'))+'"'
     +' onkeydown="epTagKey(event,\''+live.id+'\')"></div>'; }
-function renderEpEditor(){ var wrap=document.getElementById('epEditor');
+function renderEpEditor(){ _epEdLang=_lang; var wrap=document.getElementById('epEditor');
   if(!editing){ wrap.innerHTML=epGuideHtml(); return; }
   var pr=editing.profile||{};
   var meta=''
@@ -12907,7 +12915,7 @@ function bgCloseEditor(){
   usageResults=null; usageBusy=false; _usageFor=null; usageStats=null; usageShots=null;
   histProfile=null;
   renderBgEditor(); renderBgList(); }
-function renderBgEditor(){ var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML=bgGuideHtml(); bgSetView('list'); return; }
+function renderBgEditor(){ _bgEdLang=_lang; var wrap=document.getElementById('bgEditor'); if(!bgSel){ wrap.innerHTML=bgGuideHtml(); bgSetView('list'); return; }
   bgSetView('edit');
   var o=bgSel.obj; var isNew=!o.id;
   if(bgSel.type==='bean'){

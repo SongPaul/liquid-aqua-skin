@@ -197,3 +197,19 @@ test('several beans can be put away at once', function (T) {
     });
   });
 });
+
+// The store is hydrated on every resume -- every 90 s, and on focus -- and it
+// redrew the bean editor for a language that had not changed, so a roaster
+// and name half typed were wiped about half a minute in.
+test('typing in the bean editor survives a store sync with the language unchanged', function (T) {
+  var page = document.getElementById('beanPage'), was = page.classList.contains('show');
+  page.classList.add('show');
+  bgSelectNew('bean');
+  T.el('#bgRoaster').value = 'Biroso';
+  T.el('#bgName').value = 'Yeoun';
+  relocalizeDynamic();
+  T.eq(T.el('#bgRoaster').value, 'Biroso', 'the roaster is kept');
+  T.eq(T.el('#bgName').value, 'Yeoun', 'the name is kept');
+  bgSel = null; renderBgEditor();
+  if (!was) page.classList.remove('show');
+});

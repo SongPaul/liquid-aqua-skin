@@ -101,7 +101,7 @@ test('a tap takes the dosing scale\u2019s reading with no brewing scale about', 
   var took = null, typed = null, realTake = doseFromScale, realKp = openKeypad;
   doseFromScale = function () { took = doseSourceWeight(); };
   openKeypad = function (f) { typed = f; };
-  try { doseHold(); } finally { doseFromScale = realTake; openKeypad = realKp; }
+  try { doseTap(); } finally { doseFromScale = realTake; openKeypad = realKp; }
   T.eq(took, 18.4, 'took the dosing scale\u2019s 18.4');
   T.eq(typed, null, 'and did not open the keypad');
 });
@@ -135,4 +135,50 @@ test('a choice made here still wins over another held scale', function (T) {
   prefs.dosingScaleId = '';
   withScales([LUNAR, SPARE]);
   T.eq(dosingId(), '', 'and nothing held, nothing chosen, is no dosing scale');
+});
+
+// Without a dosing scale the brewing scale still weighs the dose, but on a
+// hold: it usually sits tared under the cup, and a tap took 0.0 g off it.
+function doseGesture(fn, setup) {
+  withScales([LUNAR]);
+  prefs.dosingScaleId = '';
+  state.dosingConnected = false; state.dosingWeight = null;
+  setup();
+  var took = null, typed = null, realTake = doseFromScale, realKp = openKeypad;
+  doseFromScale = function () { took = doseSourceWeight(); };
+  openKeypad = function (f) { typed = f; };
+  try { fn(); syncDoseTake(); } finally { doseFromScale = realTake; openKeypad = realKp; }
+  var title = T_title();
+  state.scaleConnected = false; state.scaleWeight = null; syncDoseTake();
+  return { took: took, typed: typed, title: title };
+}
+function T_title() { return document.getElementById('doseIn').title; }
+
+test('without a dosing scale a tap types the dose', function (T) {
+  var r = doseGesture(doseTap, function () { state.scaleConnected = true; state.scaleWeight = 18.1; });
+  T.eq(r.took, null, 'nothing taken off the brewing scale');
+  T.eq(r.typed, 'doseIn', 'the keypad instead');
+  T.eq(r.title, t('doseHoldHint'), 'the hint says tap types, hold takes the scale');
+});
+
+test('without a dosing scale a hold takes the brewing scale’s reading', function (T) {
+  var r = doseGesture(doseLongPress, function () { state.scaleConnected = true; state.scaleWeight = 18.1; });
+  T.eq(r.took, 18.1, 'the brewing scale’s 18.1');
+  T.eq(r.typed, null, 'no keypad');
+});
+
+test('with no scale at all both gestures type the dose', function (T) {
+  var a = doseGesture(doseTap, function () { state.scaleConnected = false; state.scaleWeight = null; });
+  var b = doseGesture(doseLongPress, function () { state.scaleConnected = false; state.scaleWeight = null; });
+  T.eq(a.typed, 'doseIn', 'a tap types'); T.eq(b.typed, 'doseIn', 'a hold types');
+  T.eq(a.title, t('doseTypeHint'), 'and the hint says so');
+});
+
+test('with a dosing scale a hold types the dose', function (T) {
+  dosingOnly(18.4);
+  var typed = null, took = false, realTake = doseFromScale, realKp = openKeypad;
+  doseFromScale = function () { took = true; };
+  openKeypad = function (f) { typed = f; };
+  try { doseLongPress(); } finally { doseFromScale = realTake; openKeypad = realKp; }
+  T.eq(typed, 'doseIn', 'the keypad'); T.eq(took, false, 'no reading taken');
 });
