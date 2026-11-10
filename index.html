@@ -2387,6 +2387,11 @@ body.night .ep-grid .gname{color:var(--ink)}
 .ep-imp-t .s{font-size:11px;font-weight:600;color:var(--ink-mute)}
 .cn-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;margin-top:10px}
 .cn-cell{min-width:0;border:1px solid var(--edge);border-radius:14px;padding:11px 12px 10px}
+.cn-cell.wide{grid-column:1/-1}
+.milk-now.hit{color:var(--green)}
+.live-milk{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em;white-space:nowrap}
+.live-milk:empty{display:none}
+.live-milk.hit{color:var(--green)}
 .cn-sec-h{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute)}
 .cn-sec-g{font-size:14px;line-height:1}
 .cn-now-h{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);opacity:.6;margin:8px 0 2px}
@@ -2918,6 +2923,16 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
               <div class="dose-adj"><button class="ms-btn" onclick="adjustMilk(-10)">−</button>
                 <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkLbl"></span><span class="lu">g</span></div><div class="dose-num tap" id="milkNum" onclick="openMilkKeypad()"><span id="milkVal">—</span></div></div>
                 <button class="ms-btn" onclick="adjustMilk(10)">+</button></div>
+            </div>
+            <div class="dose-block" id="milkTempBlock" style="display:none">
+              <span class="rg-dev" id="devThermo"></span>
+              <div class="dose-adj">
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkTempNow"></span><span class="lu">°</span></div><div class="dose-num milk-now" id="milkTempV">—</div></div></div>
+            </div>
+            <div class="dose-block" id="milkStopBlock" style="display:none">
+              <div class="dose-adj"><button class="ms-btn" onclick="milkStopAdj(-1)">−</button>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkStop"></span><span class="lu">°</span></div><div class="dose-num tap" onclick="milkStopKeypad()"><span id="milkStopV">—</span></div></div>
+                <button class="ms-btn" onclick="milkStopAdj(1)">+</button></div>
             </div>
           </div>
         </div>
@@ -3894,6 +3909,8 @@ var I18N={
     connFind:'Find', connStUp:'connected', connStWorking:'working',
     connStSeen:'found', connStAway:'remembered, out of range',
     connViaPlugin:'plugin', connOwned:'Held by the machine',
+    thermo:'Thermometer', milkTempNow:'Milk now', milkStop:'Milk target', milkStopOff:'off',
+    thermoNone:'no thermometer', tMilkReached:'Milk reached {v}° — steam stopped',
     connJoin:'Connect', connDrop:'Disconnect', connForget:'Forget',
     cnRecord:'list: {g}', cnUse:'Use', cnNotUsed:'not in use, {g} is', cnNoGrinder:'no grinder',
     connJoined:'Connected', connDropped:'Disconnected', connForgot:'Forgotten',
@@ -4361,6 +4378,8 @@ var I18N={
     connFind:'찾기', connStUp:'연결됨', connStWorking:'처리 중',
     connStSeen:'찾음', connStAway:'기억됨, 범위 밖',
     connViaPlugin:'플러그인', connOwned:'머신이 가진 기기',
+    thermo:'온도계', milkTempNow:'우유 온도', milkStop:'우유 목표', milkStopOff:'끔',
+    thermoNone:'온도계 없음', tMilkReached:'우유 {v}° 도달 — 스팀을 멈췄습니다',
     connJoin:'연결', connDrop:'해제', connForget:'잊기',
     cnRecord:'목록: {g}', cnUse:'사용', cnNotUsed:'사용 안 함 · 지금 {g} 사용 중', cnNoGrinder:'그라인더 없음',
     connJoined:'연결되었습니다', connDropped:'해제했습니다', connForgot:'잊었습니다',
@@ -4774,7 +4793,7 @@ var GATEWAY=(function(){ var h=window.location.hostname||'localhost'; var b='htt
 var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:0, groupTemp:0, steamTemp:0, profileFrame:0,
   connected:false, scaleWeight:null, scaleConnected:false, dosingWeight:null, dosingConnected:false, devices:[], shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null, shotPourEnd:null,
   flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
-var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
+var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, milkStop:0, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
 var chart={ pressure:[], flow:[], weight:[], wflow:[], frame:[], steamTemp:[], waterTemp:[],
   groupTemp:[], mixTemp:[], targetGroup:[], targetMix:[], targetFlow:[], targetPressure:[],
   t:[], wt:[], mode:'espresso', max:600 };
@@ -4928,11 +4947,12 @@ function initWebSockets(){
     var wasConnected=state.connected, wasScale=state.scaleConnected;
     state.connected=machineConnected||(phase==='ready');
     state.scaleConnected=scaleConnected;
+    syncThermoWs();
     if(scaleConnected&&!wasScale) maybeAutoScanDosing();
     if(scaleConnected!==wasScale) syncWaterRoom();
     updateConnUI(state.connected?'on':(scanning?'ing':'off'));
     var err=m.connectionStatus&&m.connectionStatus.error; if(err&&err.suggestion) toast(err.suggestion,'err');
-    if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); }
+    if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); loadThermoPlugins(); }
     applyChargingState(m.charging);
     syncDosing();
     updateShotBtn(); });
@@ -5630,7 +5650,7 @@ function syncConnDosing(){
     t('dosingScale')+((d&&d.name)?(' \u2014 '+d.name):'')); }
 
 // ── Timer & chart ───────────────────────────────────────────────────
-function startTimer(){ state.shotStart=Date.now(); state.shotPourEnd=null; _auxStopSent=false; if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
+function startTimer(){ state.shotStart=Date.now(); state.shotPourEnd=null; _auxStopSent=false; _milkStopSent=false; if(state.shotTick) clearInterval(state.shotTick); state.shotTick=setInterval(tick,100); document.getElementById('timerBig').className='timer-big run'; }
 function stopTimer(){ if(state.shotTick){ clearInterval(state.shotTick); state.shotTick=null; } document.getElementById('timerBig').className='timer-big'; }
 function mmss(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 // Hot water ends on its volume or the scale, never on a clock the skin keeps.
@@ -6532,6 +6552,101 @@ function pickScaleFromModal(side,id){
 // Devices. One sheet for the four glyphs above it: each role says what is
 // holding it and what else could, and anything found but idle is one tap
 // from taking a job.
+// A thermometer is any sensor a loaded plugin drives. The plugin being on is
+// what puts it in the sheet and on the steam card; the gateway stops the steam
+// at the milk target itself, and the skin asks too in case the gateway reads
+// a different sensor than the one shown here.
+var _thermoPlugins=[], _thermoWs=null, _thermoWsId='';
+var MILK_STOP_MIN=30, MILK_STOP_MAX=90, _milkStopSent=false;
+function thermoPluginsFrom(list){
+  return (Array.isArray(list)?list:[]).filter(function(p){
+    return p&&p.loaded!==false&&(p.drivers||[]).some(function(d){ return d&&d.type==='sensor'; }); })
+    .map(function(p){ return p.id; }); }
+function setThermoPlugins(ids){
+  _thermoPlugins=ids||[];
+  syncMilkTemp();
+  if(connOpen()) renderConnModal(); }
+function loadThermoPlugins(){
+  return api('GET','/api/v1/plugins').then(function(list){
+    if(Array.isArray(list)) setThermoPlugins(thermoPluginsFrom(list)); },function(){}); }
+function thermoOn(){ return _thermoPlugins.length>0; }
+function isThermo(d){
+  return !!d&&d.type==='sensor'&&_thermoPlugins.some(function(id){
+    return String(d.id||'').indexOf('plugin:'+id+':')===0; }); }
+function thermoDevices(){ return (state.devices||[]).filter(isThermo); }
+function thermoDevice(){
+  return thermoDevices().filter(function(d){ return d.state==='connected'; })[0]||null; }
+function milkTempText(){
+  return state.milkTemp==null?'':(state.milkTemp.toFixed(1)+'°'); }
+function milkStopTarget(){ return +settings.milkStop||0; }
+function milkReached(){
+  var g=milkStopTarget();
+  return g>0&&state.milkTemp!=null&&state.milkTemp>=g; }
+function closeThermoWs(){
+  var ws=_thermoWs; _thermoWs=null;
+  if(ws){ ws.onclose=null; ws.onerror=null; try{ ws.close(); }catch(_){} } }
+function openThermoWs(id){
+  closeThermoWs();
+  var ws=new WebSocket(GATEWAY.ws+'/ws/v1/sensors/'+encodeURIComponent(id)+'/snapshot');
+  _thermoWs=ws;
+  ws.onmessage=function(e){ milkFrame(e.data); };
+  ws.onclose=function(){ if(_thermoWs!==ws) return; _thermoWs=null;
+    setTimeout(function(){ if(_thermoWsId===id&&!_thermoWs) openThermoWs(id); },2000); };
+  ws.onerror=function(){ try{ ws.close(); }catch(_){} }; }
+function syncThermoWs(){
+  var d=thermoDevice(), id=d?d.id:'';
+  if(id!==_thermoWsId){
+    _thermoWsId=id; state.milkTemp=null;
+    if(id) openThermoWs(id); else closeThermoWs(); }
+  syncMilkTemp(); }
+function milkFrame(text){
+  var m; try{ m=JSON.parse(text); }catch(_){ return; }
+  if(m&&typeof m==='object') milkSample(m.values&&typeof m.values==='object'?m.values:m); }
+function milkSample(values){
+  var v=values?parseFloat(values.temperature):NaN;
+  state.milkTemp=isFinite(v)?v:null;
+  syncMilkTemp();
+  milkStopTick(); }
+function milkStopTick(){
+  if(_milkStopSent||auxRunning()!=='steam'||state.shotPourEnd||!milkReached()) return;
+  _milkStopSent=true;
+  toast(t('tMilkReached').replace('{v}',milkTempText().replace('°','')),'ok');
+  auxTimeUp(); }
+function milkStopText(){
+  var g=milkStopTarget();
+  return g>0?String(Math.round(g)):t('milkStopOff'); }
+function setMilkStop(v){
+  v=Math.round(parseFloat(v)||0);
+  if(v>0) v=Math.max(MILK_STOP_MIN,Math.min(MILK_STOP_MAX,v)); else v=0;
+  if(v===milkStopTarget()) { syncMilkTemp(); return; }
+  settings.milkStop=v; _milkStopSent=false;
+  syncMilkTemp();
+  api('PUT','/api/v1/workflow',{steamSettings:{stopAtTemperature:v}})
+    .catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
+function milkStopAdj(d){
+  var g=milkStopTarget();
+  if(!g) return setMilkStop(d>0?MILK_STOP_MIN+30:0);
+  var n=g+d;
+  setMilkStop(n<MILK_STOP_MIN?0:n); }
+function milkStopKeypad(){
+  openKeypadFor({ value:milkStopTarget(), dp:0, min:0, max:MILK_STOP_MAX,
+    title:t('milkStop'), unit:'°', onOk:function(v){ setMilkStop(v); } }); }
+function syncMilkTemp(){
+  var on=thermoOn(), d=thermoDevice(), hit=milkReached();
+  ['milkTempBlock','milkStopBlock'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display=on?'':'none'; });
+  var dev=document.getElementById('devThermo');
+  if(dev) dev.textContent=d?(d.name||''):t('thermoNone');
+  var now=document.getElementById('milkTempV');
+  if(now){ now.textContent=d&&state.milkTemp!=null?state.milkTemp.toFixed(1):'—';
+    now.classList.toggle('hit',hit); }
+  var st=document.getElementById('milkStopV'); if(st) st.textContent=milkStopText();
+  var cn=document.querySelector('#connList [data-cell="thermo"] .cn-line.up .cn-rec');
+  if(cn) cn.textContent=milkTempText()||'—';
+  var lm=document.getElementById('liveMilk');
+  if(lm){ lm.textContent=(on&&d&&state.milkTemp!=null)
+      ?('🥛 '+milkTempText()+(milkStopTarget()>0?' → '+milkStopText()+'°':'')):'';
+    lm.classList.toggle('hit',hit); } }
 var _connBusy='';
 function connTypeOf(d){
   return (d.type==='machine'||d.type==='scale'||d.type==='grinder')?d.type:'other'; }
@@ -6563,15 +6678,19 @@ var CONN_CELLS=[
   {key:'scaleBrew', glyph:'\u23f1\ufe0e'},
   {key:'dosingScale',glyph:'\u2696\ufe0e'},
   {key:'grinder',   glyph:'\u2699\ufe0e'}];
+var THERMO_CELL={key:'thermo',glyph:'\ud83c\udf21\ufe0e',wide:true};
+function connCells(){ return thermoOn()?CONN_CELLS.concat([THERMO_CELL]):CONN_CELLS; }
 function connCellNow(kind){
   if(kind==='machine') return connMachineUp();
   if(kind==='scaleBrew') return connBrewScale();
   if(kind==='dosingScale') return dosingDevice();
+  if(kind==='thermo') return thermoDevice();
   return connGrinderUp(); }
 function connCellPool(kind){
   var now=connCellNow(kind);
   var list=(kind==='machine')?connDevices('machine')
           :(kind==='grinder')?connDevices('grinder')
+          :(kind==='thermo')?thermoDevices()
           :scaleDevices();
   return list.filter(function(d){ return !now||d.id!==now.id; }); }
 // What a device is already doing elsewhere, so a scale is never offered as
@@ -6593,11 +6712,13 @@ function connJoinCall(kind,id){
   if(kind==='grinder') return 'connJoinGrinder('+q+')';
   if(kind==='scaleBrew') return "connPick('brew',"+q+")";
   if(kind==='dosingScale') return "connPick('dosing',"+q+")";
+  if(kind==='thermo') return 'connSet(\'thermo\','+q+',true)';
   return 'connSet(\''+escapeArg(kind==='machine'?'machine':'grinder')+'\','+q+',true)'; }
 function connDropCall(kind,id){
   var q="'"+escapeArg(id)+"'";
   if(kind==='scaleBrew') return "connPick('brew','')";
   if(kind==='dosingScale') return "connPick('dosing','')";
+  if(kind==='thermo') return 'connSet(\'thermo\','+q+',false)';
   return 'connSet(\''+escapeArg(kind==='machine'?'machine':'grinder')+'\','+q+',false)'; }
 function connLine(d,sub,actions,on,rec){
   return '<div class="cn-line'+(on?' up':'')+'">'
@@ -6614,6 +6735,7 @@ function connNowBlock(kind){
     note=connGrinderNote(d);
     if(rec&&rec.id!==context.grinderId)
       acts=connBtn(t('cnUse'),"connUseGrinder('"+escapeArg(rec.id)+"')",busy)+acts; }
+  if(kind==='thermo') note=milkTempText()||'—';
   return connLine(d,[connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),acts,true,note); }
 function connPoolBlock(kind){
   var busy=connLocked(), pool=connCellPool(kind);
@@ -6626,14 +6748,14 @@ function connPoolBlock(kind){
     return connLine(d,[connElsewhere(kind,d),connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),
       a,false,kind==='grinder'?connGrinderNote(d):''); }).join('')+'</div>'; }
 function connCell(c){
-  return '<div class="cn-cell"><div class="cn-sec-h"><span class="cn-sec-g">'+c.glyph+'</span>'
+  return '<div class="cn-cell'+(c.wide?' wide':'')+'" data-cell="'+c.key+'"><div class="cn-sec-h"><span class="cn-sec-g">'+c.glyph+'</span>'
     +escapeHtml(t(c.key))+'</div>'
     +'<div class="cn-now-h">'+escapeHtml(t('connNowHeld'))+'</div>'
     +connNowBlock(c.key)+connPoolBlock(c.key)+'</div>'; }
 function renderConnModal(){
   var box=document.getElementById('connList'); if(!box) return;
-  var other=connDevices('other');
-  box.innerHTML='<div class="cn-grid">'+CONN_CELLS.map(connCell).join('')+'</div>'
+  var other=connDevices('other').filter(function(d){ return !isThermo(d); });
+  box.innerHTML='<div class="cn-grid">'+connCells().map(connCell).join('')+'</div>'
     +(other.length?'<div class="cn-owned">'+escapeHtml(t('connOwned'))+': '
       +escapeHtml(other.map(function(d){ return d.name||d.id; }).join(' \u00b7 '))+'</div>':'');
   var b=document.getElementById('connScanBtn');
@@ -6643,13 +6765,14 @@ function openConnModal(){
   renderConnModal();
   document.getElementById('connOverlay').classList.add('show');
   probeDosingSupport().then(renderConnModal);
+  loadThermoPlugins();
   refreshConnDevices(); }
 function connOpen(){ var o=document.getElementById('connOverlay');
   return !!(o&&o.classList.contains('show')); }
 function refreshConnDevices(){
   return api('GET','/api/v1/devices').then(function(list){
     if(Array.isArray(list)) state.devices=list;
-  }).catch(function(){}).then(function(){
+  }).catch(function(){}).then(function(){ syncThermoWs();
     updateConnUI(); renderConnModal(); syncDosing(); renderDosingRow(); }); }
 // Discovery only. The gateway's connecting scan fills empty slots by itself,
 // which is the one thing nobody wants while standing in a sheet deciding by
@@ -7147,8 +7270,10 @@ function renderAuxLive(kind){
         +'<div class="live-lbl">'+escapeHtml(t(f.unit))+'</div></div>'; }).join('')
     +'</div>'
     +'<div class="live-bar"><div class="live-kind"><span>'+def.ico+'</span><span>'+escapeHtml(t(kind))+'</span></div>'
+    +(kind==='steam'?'<span class="live-milk" id="liveMilk"></span>':'')
     +'<span class="live-left" id="liveLeft"></span>'
-    +'<button class="m-btn" onclick="'+def.act+'()">'+escapeHtml(t('stop'))+'</button></div>'; }
+    +'<button class="m-btn" onclick="'+def.act+'()">'+escapeHtml(t('stop'))+'</button></div>';
+  if(kind==='steam') syncMilkTemp(); }
 var _monAuxKind=null;
 function renderMonAuxLive(kind){
   var def=AUX_KINDS[kind], box=document.getElementById('monAuxLive');
@@ -9261,7 +9386,7 @@ function renderSkinBox(){
 // ── Gateway plugins (list + enable/disable + open UI) ───────────────
 var pluginsCache=[];
 function loadPlugins(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
-  api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:[]; renderPluginList(); renderGrinderPluginGuide(); })
+  api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:[]; setThermoPlugins(thermoPluginsFrom(pluginsCache)); renderPluginList(); renderGrinderPluginGuide(); })
     .catch(function(){ box.innerHTML='<div class="ls-empty">'+t('noPlugins')+'</div>'; }); }
 function pluginHasUI(p){ var a=p.api; if(!a) return false; a=Array.isArray(a)?a:[a]; return a.some(function(e){ return e&&e.id==='ui'&&e.type==='http'; }); }
 function renderPluginList(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='';
@@ -9305,7 +9430,7 @@ function installGrinderPlugin(id){
     .then(function(){ toast(t('gpInstalled').replace('{p}',g.name),'ok'); },
       function(e){ toast(t('gpInstallFail').replace('{p}',g.name)+(e&&e.message?': '+e.message:''),'err'); })
     .then(function(){ delete _gpBusy[id];
-      return api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:pluginsCache; },function(){}); })
+      return api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:pluginsCache; setThermoPlugins(thermoPluginsFrom(pluginsCache)); },function(){}); })
     .then(function(){ renderPluginList(); renderGrinderPluginGuide(); return ensurePluginGrinders(); }); }
 function togglePlugin(id,on,cb){ api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/'+(on?'enable':'disable'))
     .then(function(){ toast((on?t('enabled'):t('disabled'))+': '+id,'ok'); var p=pluginsCache.find(function(x){return x.id===id;}); if(p) p.loaded=on; })
@@ -20183,7 +20308,7 @@ function loadWorkflow(){
   api('GET','/api/v1/workflow').then(function(w){ if(!w) return;
   if(w.context){ context=w.context;
     if(w.context.targetDoseWeight) settings.doseIn=w.context.targetDoseWeight; if(w.context.targetYield) settings.doseOut=w.context.targetYield; }
-  if(w.steamSettings){ if(w.steamSettings.targetTemperature) settings.steamTemp=w.steamSettings.targetTemperature; if(w.steamSettings.duration) settings.steamDur=w.steamSettings.duration; if(w.steamSettings.flow) settings.steamFlow=w.steamSettings.flow; }
+  if(w.steamSettings){ if(w.steamSettings.targetTemperature) settings.steamTemp=w.steamSettings.targetTemperature; if(w.steamSettings.duration) settings.steamDur=w.steamSettings.duration; if(w.steamSettings.flow) settings.steamFlow=w.steamSettings.flow; if(w.steamSettings.stopAtTemperature!=null) settings.milkStop=+w.steamSettings.stopAtTemperature||0; syncMilkTemp(); }
   if(w.rinseData){ if(w.rinseData.targetTemperature) settings.flushTemp=w.rinseData.targetTemperature; if(w.rinseData.duration) settings.flushDur=w.rinseData.duration; if(w.rinseData.flow) settings.flushFlow=w.rinseData.flow; }
   if(w.hotWaterData){ if(w.hotWaterData.targetTemperature) settings.waterTemp=w.hotWaterData.targetTemperature; if(w.hotWaterData.volume){ _waterVolSent=w.hotWaterData.volume; settings.waterVol=waterTargetFrom(w.hotWaterData.volume); } syncWaterRoom(); }
   if(w.profile){ var prevId=curProfileObj&&curProfileObj.id;
@@ -20218,7 +20343,7 @@ function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
   state.machineName=machineName; state.scaleName=scaleName;
   state.connected=machineConnected; state.scaleConnected=scaleConnected;
   updateConnUI(state.connected?'on':'off'); updateShotBtn();
-  if(state.connected){ loadMachineInfo(); loadWorkflow(); if(!_hbAt) signalPresence(); }
+  if(state.connected){ loadMachineInfo(); loadWorkflow(); loadThermoPlugins(); if(!_hbAt) signalPresence(); }
 }).catch(function(e){ console.error('[Aurora] loadDevices failed:', e); toast(t('tGatewayUnreachable')+': '+e.message,'err'); }); }
 
 // ── Toast ────────────────────────────────────────────────────────────

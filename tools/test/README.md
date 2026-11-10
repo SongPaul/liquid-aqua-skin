@@ -70,6 +70,7 @@ style.
 |---|---|
 | `card` | the recipe card: caption on the number between the buttons, the two groups behind a rule, rows lining up across groups, device names shown whole |
 | `devices` | the connection sheet: four roles two by two, what holds each, which call each button makes, nothing actionable mid-shot |
+| `thermo` | a plugin thermometer: its cell in the sheet, the milk reading and target on the steam card, the stop at the target |
 | `grinder` | capability gating against what the xBloom Studio and the Mahlkoenig E64 actually declare: a reading is never the editable setting |
 | `panes` | steam, flush and water: capped at the shot pane's height without being cut |
 | `profiles` | the library and the editor as two views of one page: covers full width, a profile opening into the fields, the way back |
