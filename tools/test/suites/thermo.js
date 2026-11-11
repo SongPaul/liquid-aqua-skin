@@ -129,7 +129,7 @@ test('the milk target is saved as the steam stop temperature', function (T) {
   });
 });
 
-test('the steam stops once the milk reaches the target, once', function (T) {
+test('reaching the target is shown once and left to the gateway to stop', function (T) {
   return showSteam().then(function () {
     thermoFleet('connected');
     settings.milkStop = 65;
@@ -140,8 +140,8 @@ test('the steam stops once the milk reaches the target, once', function (T) {
     var below = calls(function () { milkSample({ temperature: 64.9 }); });
     T.eq(below.length, 0, 'nothing below the target');
     var at = calls(function () { milkSample({ temperature: 65.1 }); });
-    T.eq(at.map(function (c) { return c.method + ' ' + c.path; }).join(),
-      'PUT /api/v1/machine/state/idle', 'stopped at the target');
+    T.eq(at.length, 0, 'no second stop request on top of the gateway');
+    T.ok(_milkStopSent, 'the arrival is noted');
     T.ok(T.el('#milkTempV').classList.contains('hit'), 'and marked as reached');
     var again = calls(function () { milkSample({ temperature: 66 }); });
     T.eq(again.length, 0, 'only once');

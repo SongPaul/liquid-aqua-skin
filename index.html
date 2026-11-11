@@ -6610,8 +6610,7 @@ function milkSample(values){
 function milkStopTick(){
   if(_milkStopSent||auxRunning()!=='steam'||state.shotPourEnd||!milkReached()) return;
   _milkStopSent=true;
-  toast(t('tMilkReached').replace('{v}',milkTempText().replace('°','')),'ok');
-  auxTimeUp(); }
+  toast(t('tMilkReached').replace('{v}',milkTempText().replace('°','')),'ok'); }
 function milkStopText(){
   var g=milkStopTarget();
   return g>0?String(Math.round(g)):t('milkStopOff'); }

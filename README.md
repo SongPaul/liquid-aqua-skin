@@ -169,7 +169,7 @@ The chip band stays visible the whole time, with the running one outlined, so yo
 With a thermometer plugin turned on (any plugin that drives a sensor, such as [LEBREW TEMP](https://github.com/SongPaul/lebrew-temp-plugin)), the connection sheet gains a **Thermometer** cell to connect and disconnect it, and the steam card gains two blocks:
 
 - **Milk now**: the thermometer's reading, green once it reaches the target.
-- **Milk target**: the temperature steaming stops at, from 30 to 90 °C, or *off*. It is saved as the workflow's `steamSettings.stopAtTemperature`, so the gateway stops the steam at it; the skin asks the machine to stop as well, once, in case the gateway reads a different sensor.
+- **Milk target**: the temperature steaming stops at, from 30 to 90 °C, or *off*. It is saved as the workflow's `steamSettings.stopAtTemperature`, and the gateway stops the steam at it. The skin only marks the reading and says so; a second stop request from the skin would count as the second tap of the two-tap steam purge setting and purge straight away.
 
 While steaming, the bar under the live controls shows the milk against its target.
 
