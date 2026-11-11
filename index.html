@@ -19266,13 +19266,13 @@ var RS_R_LOW=3.0, RS_R_HIGH=6.5;
 // The classic window, kept wide: a short ratio reads low and a long one high
 // without either being a fault, so only the plainly-out cases vote.
 var RS_EY_LOW=17, RS_EY_HIGH=23;
-var RS_FAST=18, RS_SLOW=45, RS_YIELD_SHORT=0.85, RS_YIELD_FULL=0.9, RS_YIELD_OVER=1.15;
+var RS_FAST=18, RS_SLOW=45, RS_YIELD_SHORT=0.85, RS_YIELD_FULL=0.9, RS_YIELD_OVER=1.15, RS_OVER_G=1;
 // A profile that ran out never stopped on the scale, so being short by more
 // than drip and scale noise is enough to say so.
 var RS_RANOUT_GAP=1.0;
 // A shot stopped on the scale says how late the stop came: the grams past the
 // target over the rate they were landing at. Half of it is taken each shot.
-var SAW_NOISE=0.4, SAW_ODD=4, SAW_MIN=0.3, SAW_MAX=3.0, SAW_GAIN=0.5;
+var SAW_NOISE=0.4, SAW_ODD=5, SAW_MIN=0.3, SAW_MAX=3.0, SAW_GAIN=0.5, SAW_RATE_MAX=8;
 function sawAutoOn(){ return lsGet('aurora_saw_auto')!==false; }
 function setSawAuto(on){ lsSet('aurora_saw_auto',!!on); }
 function sawAutoRowHtml(){
@@ -19284,6 +19284,8 @@ function sawRate(sh){
   var end=pour[pour.length-1], from=pour.filter(function(x){ return x.t>=end.t-2; })[0];
   return (from&&end.t>from.t)?(end.w-from.w)/(end.t-from.t):0; }
 function sawFinal(sh){
+  var a=+((sh&&sh.annotations)||{}).actualYield;
+  if(a>0) return a;
   var all=(sh&&sh.measurements)||[];
   for(var i=all.length-1;i>=0;i--){ var w=all[i]&&all[i].scale&&all[i].scale.weight; if(w!=null) return +w; }
   return null; }
@@ -19294,7 +19296,7 @@ function sawLearnFrom(sh,cur){
   var err=got-want;
   if(Math.abs(err)<SAW_NOISE||Math.abs(err)>SAW_ODD) return null;
   var rate=sawRate(sh);
-  if(!(rate>=0.5&&rate<=4)) return null;
+  if(!(rate>=0.5&&rate<=SAW_RATE_MAX)) return null;
   var next=Math.max(SAW_MIN,Math.min(SAW_MAX,cur+SAW_GAIN*err/rate));
   next=Math.round(next*10)/10;
   return next===Math.round(cur*10)/10?null:next; }
@@ -19509,7 +19511,7 @@ function readShot(sh){
     flags.short=true;
     obs.push(t('rsYieldShort').replace('{p}',Math.round(share*100)));
     find.push('stopped at '+Math.round(share*100)+'% of the target yield'); }
-  else if(share!=null&&share>RS_YIELD_OVER){
+  else if(share!=null&&(share>RS_YIELD_OVER||(yld0-want0)>=RS_OVER_G)){
     obs.push(t('rsYieldOver').replace('{g}',(yld0-want0).toFixed(1)));
     find.push('poured '+(yld0-want0).toFixed(1)+'g past the target yield'); }
 
