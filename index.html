@@ -715,6 +715,37 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
   font-size:12px;font-weight:900;line-height:1;font-family:var(--font);
   box-shadow:0 2px 8px rgba(245,158,11,.38);animation:rcpulse 2.4s ease-in-out infinite}
 .rc-alert[hidden]{display:none}
+.rc-doser{margin-right:6px;flex:none}
+.rc-doser[hidden]{display:none}
+.rc-doser:active{transform:scale(.95)}
+.dz-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--ctl-edge)}
+.dz-row:last-child{border-bottom:none}
+.dz-name{flex:1;min-width:0}
+.dz-n{font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dz-st{font-size:11px;font-weight:600;color:var(--ink-mute)}
+.dz-st.ok{color:var(--green)} .dz-st.failed,.dz-st.uncertain{color:var(--amber)}
+.dz-g{width:68px;min-height:36px;padding:4px 6px;border-radius:9px;border:1px solid var(--ctl-edge);background:var(--ctl-face);
+  font-family:var(--font);font-size:15px;font-weight:700;color:var(--ink);text-align:center;-webkit-appearance:none}
+.dz-tabs{display:flex;gap:5px;flex:none;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}
+.dz-tabs[hidden]{display:none}
+.dz-tabs::-webkit-scrollbar{display:none}
+.dz-tab{flex:none;min-height:28px;padding:0 11px;border-radius:14px;border:1px solid var(--ctl-edge);background:var(--ctl-face);
+  font-family:var(--font);font-size:12px;font-weight:700;color:var(--ink-mute);cursor:pointer;-webkit-appearance:none}
+.dz-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.dz-tab.ok:not(.on){color:var(--green)}
+.dz-tab.failed:not(.on),.dz-tab.uncertain:not(.on){color:var(--amber)}
+.bean-info.dz-mod .bean-row,.bean-info.dz-mod .bean-chips{display:none}
+.dz-panel[hidden]{display:none}
+.dz-panel .dz-row{border-bottom:none;padding:2px 0}
+.dz-panel .dz-n{display:none}
+.dz-panel .dz-st{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dz-m{font-size:11px;font-weight:600;color:var(--ink-mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dz-bean{max-width:100%;min-height:28px;margin:3px 0 2px;padding:2px 8px;border-radius:8px;border:1px solid var(--ctl-edge);
+  background:var(--ctl-face);font-family:var(--font);font-size:12px;font-weight:600;color:var(--ink)}
+.dz-num{display:inline-block;min-width:16px;height:16px;line-height:16px;margin-right:2px;border-radius:8px;
+  background:rgba(139,92,246,.18);font-size:10px;font-weight:800;text-align:center}
+.dz-tab.on .dz-num{background:rgba(255,255,255,.3)}
+.dz-max{font-size:11px;font-weight:600;color:var(--ink-mute);padding:4px 0}
 .ls-alert{position:static;margin-right:7px;flex:none}
 /* Laid over the yield block rather than added to it, so the card is the height
    it was. */
@@ -2973,13 +3004,16 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         </div>
       </div>
 
-    <div class="bean-info glass">
+    <div class="bean-info glass" id="beanInfo">
+      <div class="dz-tabs" id="dzTabs" hidden></div>
       <div class="bean-row">
         <div class="bean-ico">🫘</div>
         <div class="bean-txt"><div class="bean-name" id="beanName">No bean selected</div><div class="bean-sub" id="beanSub">Tap edit to add beans &amp; grinder</div></div>
+        <button class="bean-edit rc-doser" id="rcDoser" onclick="openDoser()" hidden></button>
         <button class="bean-edit" onclick="openBeanModal()">Edit</button>
       </div>
       <div class="bean-chips" id="beanChips"></div>
+      <div class="dz-panel" id="dzPanel" hidden></div>
     </div>
 
     <div class="lastshot-card glass">
@@ -3250,6 +3284,18 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     <div class="modal-actions">
       <button class="m-btn" id="connScanBtn" onclick="connScan()">Find</button>
       <button class="m-btn" onclick="closeModal(null,'connOverlay')"><span data-i18n="close"></span></button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Bean dosing modules -->
+<div class="overlay" id="doserOverlay" onclick="closeModal(event,'doserOverlay')">
+  <div class="modal"><div class="modal-head"><div class="modal-title" data-i18n="dzTitle"></div><button class="modal-close" onclick="closeModal(null,'doserOverlay')">×</button></div>
+  <div class="modal-body">
+    <div id="doserList"></div>
+    <div class="modal-actions">
+      <button class="m-btn" onclick="closeModal(null,'doserOverlay')"><span data-i18n="close"></span></button>
+      <button class="m-btn primary" id="doserAllBtn" onclick="doserDispenseAll()"></button>
     </div>
   </div></div>
 </div>
@@ -3909,7 +3955,7 @@ var I18N={
     connFind:'Find', connStUp:'connected', connStWorking:'working',
     connStSeen:'found', connStAway:'remembered, out of range',
     connViaPlugin:'plugin', connOwned:'Held by the machine',
-    thermo:'Thermometer', milkTempNow:'Milk now', milkStop:'Milk target', milkStopOff:'off',
+    thermo:'Thermometer', doser:'Bean doser', dzTitle:'Dispense beans', dzBeanTab:'Bean', dzSlot:'Doser {n}', dzNoBean:'No bean', dzGo:'Dispense', dzDispense:'Dispense', dzAll:'Dispense all · {g} g', dzNone:'No dosing module connected', dzBusy:'Dispensing…', dzOk:'{g} g dispensed', dzFailed:'Failed — {e}', dzUncertain:'May have dispensed — check the cup', dzUncertainAsk:'{n} may already have dispensed. Dispense again?', dzMax:'Up to {n} modules can be connected at once', tDzOk:'{n}: {g} g dispensed', tDzFailed:'{n}: dispensing failed', tDzUncertain:'{n} may have dispensed — check the cup before trying again', milkTempNow:'Milk now', milkStop:'Milk target', milkStopOff:'off',
     thermoNone:'no thermometer', tMilkReached:'Milk reached {v}° — steam stopped',
     connJoin:'Connect', connDrop:'Disconnect', connForget:'Forget',
     cnRecord:'list: {g}', cnUse:'Use', cnNotUsed:'not in use, {g} is', cnNoGrinder:'no grinder',
@@ -4378,7 +4424,7 @@ var I18N={
     connFind:'찾기', connStUp:'연결됨', connStWorking:'처리 중',
     connStSeen:'찾음', connStAway:'기억됨, 범위 밖',
     connViaPlugin:'플러그인', connOwned:'머신이 가진 기기',
-    thermo:'온도계', milkTempNow:'우유 온도', milkStop:'우유 목표', milkStopOff:'끔',
+    thermo:'온도계', doser:'원두 계량기', dzTitle:'원두 배출', dzBeanTab:'원두', dzSlot:'도징 {n}', dzNoBean:'원두 없음', dzGo:'원두 배출', dzDispense:'배출', dzAll:'모두 배출 · {g} g', dzNone:'연결된 계량 모듈이 없습니다', dzBusy:'배출 중…', dzOk:'{g} g 배출함', dzFailed:'실패 — {e}', dzUncertain:'배출됐을 수 있음 — 컵을 확인하세요', dzUncertainAsk:'{n}이(가) 이미 배출했을 수 있습니다. 다시 배출할까요?', dzMax:'모듈은 한 번에 {n}개까지 연결됩니다', tDzOk:'{n}: {g} g 배출', tDzFailed:'{n}: 배출 실패', tDzUncertain:'{n}: 배출됐을 수 있습니다 — 다시 하기 전에 컵을 확인하세요', milkTempNow:'우유 온도', milkStop:'우유 목표', milkStopOff:'끔',
     thermoNone:'온도계 없음', tMilkReached:'우유 {v}° 도달 — 스팀을 멈췄습니다',
     connJoin:'연결', connDrop:'해제', connForget:'잊기',
     cnRecord:'목록: {g}', cnUse:'사용', cnNotUsed:'사용 안 함 · 지금 {g} 사용 중', cnNoGrinder:'그라인더 없음',
@@ -6552,23 +6598,25 @@ function pickScaleFromModal(side,id){
 // Devices. One sheet for the four glyphs above it: each role says what is
 // holding it and what else could, and anything found but idle is one tap
 // from taking a job.
-// A thermometer is any sensor a loaded plugin drives. The plugin being on is
-// what puts it in the sheet and on the steam card; the gateway stops the steam
-// at the milk target itself, and the skin asks too in case the gateway reads
-// a different sensor than the one shown here.
+// A thermometer is any sensor a loaded plugin drives, other than the bean
+// doser's modules. The plugin being on is what puts it in the sheet and on the
+// steam card; the gateway stops the steam at the milk target itself.
 var _thermoPlugins=[], _thermoWs=null, _thermoWsId='';
 var MILK_STOP_MIN=30, MILK_STOP_MAX=90, _milkStopSent=false;
 function thermoPluginsFrom(list){
   return (Array.isArray(list)?list:[]).filter(function(p){
-    return p&&p.loaded!==false&&(p.drivers||[]).some(function(d){ return d&&d.type==='sensor'; }); })
+    return p&&p.id!==DOSER_PLUGIN&&p.loaded!==false&&(p.drivers||[]).some(function(d){ return d&&d.type==='sensor'; }); })
     .map(function(p){ return p.id; }); }
+function setPluginDevices(list){
+  setThermoPlugins(thermoPluginsFrom(list));
+  setDoserOn(doserOnFrom(list)); }
 function setThermoPlugins(ids){
   _thermoPlugins=ids||[];
   syncMilkTemp();
   if(connOpen()) renderConnModal(); }
 function loadThermoPlugins(){
   return api('GET','/api/v1/plugins').then(function(list){
-    if(Array.isArray(list)) setThermoPlugins(thermoPluginsFrom(list)); },function(){}); }
+    if(Array.isArray(list)) setPluginDevices(list); },function(){}); }
 function thermoOn(){ return _thermoPlugins.length>0; }
 function isThermo(d){
   return !!d&&d.type==='sensor'&&_thermoPlugins.some(function(id){
@@ -6657,6 +6705,162 @@ function connState(d){
   // Remembered and out of range is not the same as switched on and waiting,
   // and only one of the two is worth walking over to the counter for.
   return d.available===false?t('connStAway'):t('connStSeen'); }
+// RedxKey dosing modules. Each module is a sensor the plugin drives with a
+// dispense command; several can be connected at once, up to the gateway's
+// four bindings per plugin. A dispense that failed after its start byte may
+// have poured, so it is never repeated without asking.
+var DOSER_PLUGIN='redxkey.reaplugin', DOSER_MAX=4, DOSER_G_MAX=25.5;
+var _doserOn=false, _doserStatus={};
+function doserOnFrom(list){
+  return (Array.isArray(list)?list:[]).some(function(p){
+    return p&&p.id===DOSER_PLUGIN&&p.loaded!==false; }); }
+function setDoserOn(on){
+  _doserOn=!!on;
+  syncDoser();
+  if(connOpen()) renderConnModal(); }
+function isDoser(d){
+  return !!d&&d.type==='sensor'&&String(d.id||'').indexOf('plugin:'+DOSER_PLUGIN+':')===0; }
+function doserDevices(){ return _doserOn?(state.devices||[]).filter(isDoser):[]; }
+function doserUp(){ return doserDevices().filter(function(d){ return d.state==='connected'; }); }
+function doserFull(){ return doserUp().length>=DOSER_MAX; }
+function doserClamp(g){
+  g=Math.round((parseFloat(g)||0)*10)/10;
+  return Math.max(0,Math.min(DOSER_G_MAX,g)); }
+function doserGrams(d){
+  if(!d) return 0;
+  var kept=(prefs.doserGrams||{})[d.name||d.id];
+  if(kept!=null) return doserClamp(kept);
+  return doserUp().length===1?doserClamp(settings.doseIn):0; }
+function setDoserGrams(id,g){
+  var d=deviceById(id); if(!d) return;
+  if(!prefs.doserGrams) prefs.doserGrams={};
+  prefs.doserGrams[d.name||d.id]=doserClamp(g);
+  savePrefs();
+  renderDoserTotal(); syncDoserChip(); }
+function doserAdj(id,delta){
+  setDoserGrams(id,doserGrams(deviceById(id))+delta);
+  syncDoser(); }
+function doserTotal(){
+  return Math.round(doserUp().reduce(function(a,d){ return a+doserGrams(d); },0)*10)/10; }
+function doserStatusText(id){
+  var s=_doserStatus[id]; if(!s) return '';
+  if(s.kind==='busy') return t('dzBusy');
+  if(s.kind==='ok') return t('dzOk').replace('{g}',s.grams.toFixed(1));
+  if(s.kind==='uncertain') return t('dzUncertain');
+  return t('dzFailed').replace('{e}',s.error||''); }
+// Each module is a hopper with a bean in it. The bean is kept by module name,
+// and the module's place among the connected ones is its doser number.
+function dzKey(d){ return d.name||d.id; }
+function dzBean(d){
+  var id=d&&(prefs.doserBeans||{})[dzKey(d)];
+  return id?(beans.filter(function(b){ return b.id===id; })[0]||null):null; }
+function setDoserBean(id,beanId){
+  var d=deviceById(id); if(!d) return;
+  if(!prefs.doserBeans) prefs.doserBeans={};
+  if(beanId) prefs.doserBeans[dzKey(d)]=beanId; else delete prefs.doserBeans[dzKey(d)];
+  savePrefs();
+  syncDoser(); }
+function dzSlot(d){
+  var up=doserUp();
+  for(var i=0;i<up.length;i++) if(up[i].id===d.id) return i+1;
+  return 0; }
+function dzBeanShort(b){ return b?(b.roaster||b.name||''):''; }
+function dzBeanFull(b){ return b?[b.roaster,b.name].filter(Boolean).join(' \u00b7 '):''; }
+function dzTitle(d){
+  return [t('dzSlot').replace('{n}',dzSlot(d)),dzBeanFull(dzBean(d))].filter(Boolean).join(' \u00b7 '); }
+function dzBeanSelect(d){
+  var cur=dzBean(d), id=escapeArg(d.id);
+  var list=beans.filter(function(b){ return !b.archived||(cur&&b.id===cur.id); });
+  return '<select class="dz-bean" onchange="setDoserBean(\''+id+'\',this.value)">'
+    +'<option value="">'+escapeHtml(t('dzNoBean'))+'</option>'
+    +list.map(function(b){
+      return '<option value="'+escapeAttr(b.id)+'"'+(cur&&b.id===cur.id?' selected':'')+'>'
+        +escapeHtml(dzBeanFull(b))+'</option>'; }).join('')+'</select>'; }
+function doserRow(d){
+  var id=escapeArg(d.id), s=_doserStatus[d.id]||{}, busy=s.kind==='busy';
+  return '<div class="dz-row" data-id="'+escapeAttr(d.id)+'">'
+    +'<div class="dz-name"><div class="dz-n">'+escapeHtml(dzTitle(d))+'</div>'
+    +'<div class="dz-m">'+escapeHtml(d.name||d.id)+'</div>'
+    +dzBeanSelect(d)
+    +'<div class="dz-st '+(s.kind||'')+'">'+escapeHtml(doserStatusText(d.id))+'</div></div>'
+    +'<button class="ms-btn" onclick="doserAdj(\''+id+'\',-0.1)">−</button>'
+    +'<input class="dz-g" type="number" step="0.1" min="0" max="'+DOSER_G_MAX+'" value="'+doserGrams(d).toFixed(1)+'"'
+    +' onchange="setDoserGrams(\''+id+'\',this.value);syncDoser()">'
+    +'<button class="ms-btn" onclick="doserAdj(\''+id+'\',0.1)">+</button>'
+    +'<button class="m-btn cn-btn" onclick="doserDispense(\''+id+'\')"'+(busy?' disabled':'')+'>'
+    +escapeHtml(t('dzDispense'))+'</button></div>'; }
+function renderDoserTotal(){
+  var b=document.getElementById('doserAllBtn'); if(!b) return;
+  var up=doserUp(), total=doserTotal();
+  b.textContent=t('dzAll').replace('{g}',total.toFixed(1));
+  b.disabled=!up.length||!(total>0)||up.some(function(d){ return (_doserStatus[d.id]||{}).kind==='busy'; }); }
+function renderDoser(){
+  var box=document.getElementById('doserList'); if(!box) return;
+  var up=doserUp();
+  box.innerHTML=up.length?up.map(doserRow).join('')
+    :'<div class="cn-none">'+escapeHtml(t('dzNone'))+'</div>';
+  renderDoserTotal(); }
+function doserOpen(){ var o=document.getElementById('doserOverlay');
+  return !!(o&&o.classList.contains('show')); }
+function openDoser(){
+  renderDoser();
+  document.getElementById('doserOverlay').classList.add('show'); }
+function syncDoserChip(){
+  var b=document.getElementById('rcDoser'); if(!b) return;
+  var n=doserUp().length;
+  b.hidden=!n;
+  b.textContent=n?t('dzGo')+' · '+doserTotal().toFixed(1)+'g':''; }
+// Two modules or more make the bean card a set of tabs: the bean first, then
+// one per module, each with its own grams and dispense.
+var _dzTab='';
+function dzTabHtml(d){
+  var b=dzBeanShort(dzBean(d));
+  return b?'<b class="dz-num">'+dzSlot(d)+'</b> '+escapeHtml(b)
+    :escapeHtml(t('dzSlot').replace('{n}',dzSlot(d))); }
+function pickDzTab(id){ _dzTab=id||''; renderDzTabs(); }
+function renderDzTabs(){
+  var tabs=document.getElementById('dzTabs'), panel=document.getElementById('dzPanel'),
+      info=document.getElementById('beanInfo');
+  if(!tabs||!panel||!info) return;
+  var up=doserUp(), on=up.length>=2;
+  var open=on?up.filter(function(d){ return d.id===_dzTab; })[0]:null;
+  if(!open) _dzTab='';
+  tabs.hidden=!on;
+  tabs.innerHTML=on?'<button class="dz-tab'+(open?'':' on')+'" onclick="pickDzTab(\'\')">'
+      +escapeHtml(t('dzBeanTab'))+'</button>'
+    +up.map(function(d){
+      var k=(_doserStatus[d.id]||{}).kind||'';
+      return '<button class="dz-tab'+(d===open?' on':'')+(k?' '+k:'')+'" onclick="pickDzTab(\''
+        +escapeArg(d.id)+'\')">'+dzTabHtml(d)+'</button>'; }).join(''):'';
+  info.classList.toggle('dz-mod',!!open);
+  panel.hidden=!open;
+  panel.innerHTML=open?doserRow(open):''; }
+function syncDoser(){
+  syncDoserChip();
+  renderDzTabs();
+  if(doserOpen()) renderDoser(); }
+function doserDispense(id){
+  var d=deviceById(id), g=doserGrams(d), prev=_doserStatus[id]||{};
+  if(!d||!(g>0)||prev.kind==='busy') return Promise.resolve(null);
+  if(prev.kind==='uncertain'&&!confirm(t('dzUncertainAsk').replace('{n}',d.name||id)))
+    return Promise.resolve(null);
+  var name=d.name||id;
+  _doserStatus[id]={kind:'busy'}; syncDoser();
+  return api('POST','/api/v1/sensors/'+encodeURIComponent(id)+'/execute',
+      {commandId:'dispense',params:{grams:g}},15000)
+    .then(function(r){
+      var res=(r&&r.result)||{}, kind=(res.result==='ok'||res.result==='uncertain')?res.result:'failed';
+      _doserStatus[id]={kind:kind,grams:g,error:res.error||''};
+      if(kind==='ok') toast(t('tDzOk').replace('{n}',name).replace('{g}',g.toFixed(1)),'ok');
+      else if(kind==='uncertain') toast(t('tDzUncertain').replace('{n}',name),'err');
+      else toast(t('tDzFailed').replace('{n}',name)+(res.error?' — '+res.error:''),'err'); },
+      function(e){
+        _doserStatus[id]={kind:'failed',grams:g,error:apiErrorText(e)};
+        toast(t('tDzFailed').replace('{n}',name)+' — '+apiErrorText(e),'err'); })
+    .then(function(){ syncDoser(); return _doserStatus[id]; }); }
+function doserDispenseAll(){
+  return Promise.all(doserUp().filter(function(d){ return doserGrams(d)>0; })
+    .map(function(d){ return doserDispense(d.id); })); }
 function connVia(d){ return /^plugin:/.test(d.id||'')?t('connViaPlugin'):''; }
 function connBtn(label,call,off){
   return '<button class="m-btn cn-btn"'+(off?' disabled':'')
@@ -6677,8 +6881,11 @@ var CONN_CELLS=[
   {key:'scaleBrew', glyph:'\u23f1\ufe0e'},
   {key:'dosingScale',glyph:'\u2696\ufe0e'},
   {key:'grinder',   glyph:'\u2699\ufe0e'}];
-var THERMO_CELL={key:'thermo',glyph:'\ud83c\udf21\ufe0e',wide:true};
-function connCells(){ return thermoOn()?CONN_CELLS.concat([THERMO_CELL]):CONN_CELLS; }
+var THERMO_CELL={key:'thermo',glyph:'🌡︎',wide:true};
+var DOSER_CELL={key:'doser',glyph:'⛁︎',wide:true};
+function connCells(){
+  var cells=thermoOn()?CONN_CELLS.concat([THERMO_CELL]):CONN_CELLS;
+  return _doserOn?cells.concat([DOSER_CELL]):cells; }
 function connCellNow(kind){
   if(kind==='machine') return connMachineUp();
   if(kind==='scaleBrew') return connBrewScale();
@@ -6690,6 +6897,7 @@ function connCellPool(kind){
   var list=(kind==='machine')?connDevices('machine')
           :(kind==='grinder')?connDevices('grinder')
           :(kind==='thermo')?thermoDevices()
+          :(kind==='doser')?doserDevices().filter(function(d){ return d.state!=='connected'; })
           :scaleDevices();
   return list.filter(function(d){ return !now||d.id!==now.id; }); }
 // What a device is already doing elsewhere, so a scale is never offered as
@@ -6711,13 +6919,13 @@ function connJoinCall(kind,id){
   if(kind==='grinder') return 'connJoinGrinder('+q+')';
   if(kind==='scaleBrew') return "connPick('brew',"+q+")";
   if(kind==='dosingScale') return "connPick('dosing',"+q+")";
-  if(kind==='thermo') return 'connSet(\'thermo\','+q+',true)';
+  if(kind==='thermo'||kind==='doser') return 'connSet(\''+kind+'\','+q+',true)';
   return 'connSet(\''+escapeArg(kind==='machine'?'machine':'grinder')+'\','+q+',true)'; }
 function connDropCall(kind,id){
   var q="'"+escapeArg(id)+"'";
   if(kind==='scaleBrew') return "connPick('brew','')";
   if(kind==='dosingScale') return "connPick('dosing','')";
-  if(kind==='thermo') return 'connSet(\'thermo\','+q+',false)';
+  if(kind==='thermo'||kind==='doser') return 'connSet(\''+kind+'\','+q+',false)';
   return 'connSet(\''+escapeArg(kind==='machine'?'machine':'grinder')+'\','+q+',false)'; }
 function connLine(d,sub,actions,on,rec){
   return '<div class="cn-line'+(on?' up':'')+'">'
@@ -6725,7 +6933,17 @@ function connLine(d,sub,actions,on,rec){
     +'<div class="cn-sub">'+escapeHtml(sub)+'</div>'
     +(rec?'<div class="cn-rec">'+escapeHtml(rec)+'</div>':'')+'</div>'
     +'<div class="cn-acts">'+actions+'</div></div>'; }
+function doserNowBlock(){
+  var up=doserUp(), busy=connLocked();
+  var lines=up.map(function(d){
+    return connLine(d,[connState(d),connVia(d)].filter(Boolean).join(' · '),
+      connBtn(t('connDrop'),connDropCall('doser',d.id),busy),true,doserStatusText(d.id)); }).join('');
+  if(!up.length) lines='<div class="cn-none">'+escapeHtml(t('connNoneHeld'))+'</div>';
+  return lines
+    +(doserFull()?'<div class="dz-max">'+escapeHtml(t('dzMax').replace('{n}',DOSER_MAX))+'</div>':'')
+    +(up.length?'<div class="cn-acts">'+connBtn(t('dzTitle'),'openDoser()',false)+'</div>':''); }
 function connNowBlock(kind){
+  if(kind==='doser') return doserNowBlock();
   var d=connCellNow(kind), busy=connLocked();
   if(!d) return '<div class="cn-none">'+escapeHtml(t('connNoneHeld'))+'</div>';
   var acts=connBtn(t('connDrop'),connDropCall(kind,d.id),busy), note='';
@@ -6741,7 +6959,7 @@ function connPoolBlock(kind){
   if(!pool.length) return '<div class="cn-list"><div class="cn-none">'
     +escapeHtml(t('connNothing'))+'</div></div>';
   return '<div class="cn-list">'+pool.map(function(d){
-    var a=connBtn(t('connJoin'),connJoinCall(kind,d.id),busy||d.available===false);
+    var a=connBtn(t('connJoin'),connJoinCall(kind,d.id),busy||d.available===false||(kind==='doser'&&doserFull()));
     if(d.state!=='connected'&&d.available===false)
       a+=connBtn(t('connForget'),"connForget('"+escapeArg(d.id)+"')",busy);
     return connLine(d,[connElsewhere(kind,d),connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),
@@ -6753,7 +6971,7 @@ function connCell(c){
     +connNowBlock(c.key)+connPoolBlock(c.key)+'</div>'; }
 function renderConnModal(){
   var box=document.getElementById('connList'); if(!box) return;
-  var other=connDevices('other').filter(function(d){ return !isThermo(d); });
+  var other=connDevices('other').filter(function(d){ return !isThermo(d)&&!isDoser(d); });
   box.innerHTML='<div class="cn-grid">'+connCells().map(connCell).join('')+'</div>'
     +(other.length?'<div class="cn-owned">'+escapeHtml(t('connOwned'))+': '
       +escapeHtml(other.map(function(d){ return d.name||d.id; }).join(' \u00b7 '))+'</div>':'');
@@ -6771,7 +6989,7 @@ function connOpen(){ var o=document.getElementById('connOverlay');
 function refreshConnDevices(){
   return api('GET','/api/v1/devices').then(function(list){
     if(Array.isArray(list)) state.devices=list;
-  }).catch(function(){}).then(function(){ syncThermoWs();
+  }).catch(function(){}).then(function(){ syncThermoWs(); syncDoser();
     updateConnUI(); renderConnModal(); syncDosing(); renderDosingRow(); }); }
 // Discovery only. The gateway's connecting scan fills empty slots by itself,
 // which is the one thing nobody wants while standing in a sheet deciding by
@@ -9385,7 +9603,7 @@ function renderSkinBox(){
 // ── Gateway plugins (list + enable/disable + open UI) ───────────────
 var pluginsCache=[];
 function loadPlugins(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
-  api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:[]; setThermoPlugins(thermoPluginsFrom(pluginsCache)); renderPluginList(); renderGrinderPluginGuide(); })
+  api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:[]; setPluginDevices(pluginsCache); renderPluginList(); renderGrinderPluginGuide(); })
     .catch(function(){ box.innerHTML='<div class="ls-empty">'+t('noPlugins')+'</div>'; }); }
 function pluginHasUI(p){ var a=p.api; if(!a) return false; a=Array.isArray(a)?a:[a]; return a.some(function(e){ return e&&e.id==='ui'&&e.type==='http'; }); }
 function renderPluginList(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='';
@@ -9429,7 +9647,7 @@ function installGrinderPlugin(id){
     .then(function(){ toast(t('gpInstalled').replace('{p}',g.name),'ok'); },
       function(e){ toast(t('gpInstallFail').replace('{p}',g.name)+(e&&e.message?': '+e.message:''),'err'); })
     .then(function(){ delete _gpBusy[id];
-      return api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:pluginsCache; setThermoPlugins(thermoPluginsFrom(pluginsCache)); },function(){}); })
+      return api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:pluginsCache; setPluginDevices(pluginsCache); },function(){}); })
     .then(function(){ renderPluginList(); renderGrinderPluginGuide(); return ensurePluginGrinders(); }); }
 function togglePlugin(id,on,cb){ api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/'+(on?'enable':'disable'))
     .then(function(){ toast((on?t('enabled'):t('disabled'))+': '+id,'ok'); var p=pluginsCache.find(function(x){return x.id===id;}); if(p) p.loaded=on; })

@@ -17,7 +17,7 @@ var FLEET = [
 ];
 
 function fleet() {
-  _thermoPlugins = [];
+  _thermoPlugins = []; _doserOn = false;
   state.devices = FLEET.map(function (d) { return Object.assign({}, d); });
   gwSettings = Object.assign({}, gwSettings || {}, { preferredScaleId: 'Lunar' });
   prefs.dosingScaleId = 'Bench';
