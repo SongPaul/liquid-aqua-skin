@@ -7991,7 +7991,7 @@ function hydrateFromStore(){
       lsSet('aurora_rmachines',roastMachines); }
     else if(roastMachines) storePut('rmachines',roastMachines);
     if(changed){ applyNight(); applyI18n(); relocalizeDynamic(); syncRecipe(); syncAux();
-      updateBeanInfo(); applyCam(); applyFx(); if(carItems.length) buildCarousel(); }
+      updateBeanInfo(); applyCam(); applyFx(); syncDoser(); if(carItems.length) buildCarousel(); }
   }); }
 function applyPrefsObject(p){
   if(p.chartHide&&typeof p.chartHide==='object') prefs.chartHide=p.chartHide;
@@ -8048,6 +8048,8 @@ function applyPrefsObject(p){
   if(typeof p.camZoom==='number'&&p.camZoom>=1&&p.camZoom<=3) prefs.camZoom=p.camZoom;
   if(typeof p.camMirror==='boolean') prefs.camMirror=p.camMirror;
   if(typeof p.fx==='boolean') prefs.fx=p.fx;
+  if(p.doserBeans&&typeof p.doserBeans==='object'&&!Array.isArray(p.doserBeans)) prefs.doserBeans=p.doserBeans;
+  if(p.doserGrams&&typeof p.doserGrams==='object'&&!Array.isArray(p.doserGrams)) prefs.doserGrams=p.doserGrams;
 }
 
 // ── Grinder identity ────────────────────────────────────────────────
@@ -13026,7 +13028,7 @@ function batchLabel(b){ var d=isoDay(b.roastDate);
 function loadBeansGrinders(){
   return Promise.all([ api('GET','/api/v1/beans?includeArchived=true').catch(function(){return[];}), api('GET','/api/v1/grinders').catch(function(){return[];}), loadBeanBatches() ])
     .then(function(res){ beansAll=res[0]||[]; beans=beansAll.filter(function(b){ return !b.archived; }); grinders=res[1]||[]; renderBgList(); if(bgSel&&bgSel.type==='bean'&&bgSel.obj.id) renderBgEditor();
-      ensurePluginGrinders(); });
+      ensurePluginGrinders(); syncDoser(); });
 }
 var bgTab='bean'; // which section is shown: 'bean' | 'grinder'
 function bgSetTab(t){ bgTab=t; renderBgList(); }

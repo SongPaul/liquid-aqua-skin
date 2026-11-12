@@ -304,3 +304,19 @@ test('grams are typed on the skin keypad, not the system keyboard', function (T)
   T.eq(doserGrams(deviceById(dzId(1))), 25.5, 'held to what a module can pour');
   closeModal(null, 'doserOverlay');
 });
+
+test('a module keeps its bean and grams when the skin loads again', function (T) {
+  dzFleet(2);
+  var b = beans.filter(function (x) { return !x.archived; })[0];
+  T.ok(b, 'a bean to use');
+  setDoserBean(dzId(1), b.id);
+  setDoserGrams(dzId(1), 9.5);
+  var saved = JSON.parse(JSON.stringify(prefs));
+  delete prefs.doserBeans; delete prefs.doserGrams;
+  applyPrefsObject(saved);
+  T.eq((dzBean(deviceById(dzId(1))) || {}).id, b.id, 'the bean is back');
+  T.eq(doserGrams(deviceById(dzId(1))), 9.5, 'and the grams');
+  applyPrefsObject({ doserBeans: 'junk', doserGrams: [1] });
+  T.eq((dzBean(deviceById(dzId(1))) || {}).id, b.id, 'junk does not wipe them');
+  setDoserBean(dzId(1), '');
+});
