@@ -2419,6 +2419,19 @@ body.night .ep-grid .gname{color:var(--ink)}
 .cn-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;margin-top:10px}
 .cn-cell{min-width:0;border:1px solid var(--edge);border-radius:14px;padding:11px 12px 10px}
 .cn-cell.wide{grid-column:1/-1}
+.cn-modal.more{width:960px}
+.cn-grid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cn-grid.c3 .cn-cell.wide{grid-column:auto}
+.cn-grid.c3 .cn-cell.span2{grid-column:span 2}
+.cn-grid.c3 .cn-cell.span3,.cn-grid .cn-cell.wide[data-cell="doser"]{grid-column:1/-1}
+.cn-sec-x{margin-left:auto;display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0}
+.cn-sec-x .dz-max{padding:0}
+.cn-held{max-height:190px;overflow-y:auto}
+.cn-cell[data-cell="doser"] .cn-held{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
+@media (max-width:820px){.cn-grid.c3{grid-template-columns:1fr 1fr}
+  .cn-grid.c3 .cn-cell.span2,.cn-grid.c3 .cn-cell.span3{grid-column:auto}
+  .cn-grid.c3 .cn-cell.lone2{grid-column:1/-1}
+  .cn-cell[data-cell="doser"] .cn-held{grid-template-columns:1fr}}
 .milk-now.hit{color:var(--green)}
 .live-milk{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em;white-space:nowrap}
 .live-milk:empty{display:none}
@@ -6939,9 +6952,11 @@ function doserNowBlock(){
     return connLine(d,[connState(d),connVia(d)].filter(Boolean).join(' · '),
       connBtn(t('connDrop'),connDropCall('doser',d.id),busy),true,doserStatusText(d.id)); }).join('');
   if(!up.length) lines='<div class="cn-none">'+escapeHtml(t('connNoneHeld'))+'</div>';
-  return lines
-    +(doserFull()?'<div class="dz-max">'+escapeHtml(t('dzMax').replace('{n}',DOSER_MAX))+'</div>':'')
-    +(up.length?'<div class="cn-acts">'+connBtn(t('dzTitle'),'openDoser()',false)+'</div>':''); }
+  return '<div class="cn-held">'+lines+'</div>'; }
+function doserHeadExtra(){
+  var up=doserUp();
+  return (doserFull()?'<span class="dz-max">'+escapeHtml(t('dzMax').replace('{n}',DOSER_MAX))+'</span>':'')
+    +(up.length?connBtn(t('dzTitle'),'openDoser()',false):''); }
 function connNowBlock(kind){
   if(kind==='doser') return doserNowBlock();
   var d=connCellNow(kind), busy=connLocked();
@@ -6964,15 +6979,23 @@ function connPoolBlock(kind){
       a+=connBtn(t('connForget'),"connForget('"+escapeArg(d.id)+"')",busy);
     return connLine(d,[connElsewhere(kind,d),connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),
       a,false,kind==='grinder'?connGrinderNote(d):''); }).join('')+'</div>'; }
-function connCell(c){
-  return '<div class="cn-cell'+(c.wide?' wide':'')+'" data-cell="'+c.key+'"><div class="cn-sec-h"><span class="cn-sec-g">'+c.glyph+'</span>'
-    +escapeHtml(t(c.key))+'</div>'
+function connCell(c,span,lone){
+  return '<div class="cn-cell'+(c.wide?' wide':'')+(span>1?' span'+span:'')+(lone?' lone2':'')+'" data-cell="'+c.key+'"><div class="cn-sec-h"><span class="cn-sec-g">'+c.glyph+'</span>'
+    +escapeHtml(t(c.key))
+    +(c.key==='doser'?'<span class="cn-sec-x">'+doserHeadExtra()+'</span>':'')+'</div>'
     +'<div class="cn-now-h">'+escapeHtml(t('connNowHeld'))+'</div>'
     +connNowBlock(c.key)+connPoolBlock(c.key)+'</div>'; }
 function renderConnModal(){
   var box=document.getElementById('connList'); if(!box) return;
   var other=connDevices('other').filter(function(d){ return !isThermo(d)&&!isDoser(d); });
-  box.innerHTML='<div class="cn-grid">'+connCells().map(connCell).join('')+'</div>'
+  var cells=connCells(), more=cells.length>CONN_CELLS.length;
+  var modal=box.closest('.modal'); if(modal) modal.classList.toggle('more',more);
+  var rest=cells.filter(function(c){ return c.key!=='doser'; }).length;
+  var tail=more?(3-rest%3)%3+1:1;
+  var html=cells.map(function(c,i){
+    var last=c.key!=='doser'&&i===rest-1;
+    return connCell(c,last?tail:1,last&&rest%2===1); }).join('');
+  box.innerHTML='<div class="cn-grid'+(more?' c3':'')+'">'+html+'</div>'
     +(other.length?'<div class="cn-owned">'+escapeHtml(t('connOwned'))+': '
       +escapeHtml(other.map(function(d){ return d.name||d.id; }).join(' \u00b7 '))+'</div>':'');
   var b=document.getElementById('connScanBtn');

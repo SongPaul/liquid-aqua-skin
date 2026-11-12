@@ -263,3 +263,26 @@ test('the dispense sheet names each module by number and bean too', function (T)
     closeModal(null, 'doserOverlay');
   });
 });
+
+test('extra cells widen the sheet to three columns instead of stacking it', function (T) {
+  openConnModal();
+  setPluginDevices([]);
+  _doserOn = false; _thermoPlugins = [];
+  renderConnModal();
+  T.ok(!T.el('#connList .cn-grid').classList.contains('c3'), 'four cells keep two columns');
+  T.ok(!T.el('#connOverlay .modal').classList.contains('more'), 'and the narrow sheet');
+  dzFleet(4, 1);
+  setThermoPlugins(['lebrew-temp.reaplugin']);
+  T.ok(T.el('#connList .cn-grid').classList.contains('c3'), 'six cells take three columns');
+  T.ok(T.el('#connOverlay .modal').classList.contains('more'), 'on a wider sheet');
+  T.ok(!!T.el('#connList .cn-cell[data-cell="doser"] .cn-held'), 'the held modules scroll in their own list');
+  var grid = T.el('#connList .cn-grid').getBoundingClientRect();
+  var dz = T.el('#connList .cn-cell[data-cell="doser"]').getBoundingClientRect();
+  var th = T.el('#connList .cn-cell[data-cell="thermo"]').getBoundingClientRect();
+  var gr = T.el('#connList .cn-cell[data-cell="grinder"]').getBoundingClientRect();
+  T.ok(Math.abs(dz.width - grid.width) < 2, 'the doser takes the whole width: ' + dz.width + ' of ' + grid.width);
+  T.ok(Math.abs(th.right - grid.right) < 2 && th.width > gr.width * 1.5, 'the thermometer fills its row');
+  T.ok(T.el('#connList .cn-cell[data-cell="doser"] .cn-sec-h button[onclick^="openDoser("]'), 'dispense sits in the cell head');
+  setThermoPlugins([]);
+  closeModal(null, 'connOverlay');
+});
