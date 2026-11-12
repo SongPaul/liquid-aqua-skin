@@ -150,13 +150,18 @@ body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 .lock-ripple{position:absolute;inset:-40% -20%;z-index:-1;border-radius:50%;pointer-events:none;
   background:radial-gradient(60% 55% at 50% 50%,rgba(56,189,248,.10),rgba(99,102,241,.05) 45%,transparent 70%)}
 /* While asleep, stop the water-tank wave animation to save the panel/CPU. */
-body.asleep-settled .wave-path,body.asleep-settled .wave-path2,body.asleep-settled .batt-fluid svg{animation-play-state:paused!important}
+body.asleep-settled .water-fill svg,body.asleep-settled .batt-fluid svg{animation-play-state:paused!important}
 
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 20px}
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
-.water-fill svg{position:absolute;top:-16px;left:0;width:100%;height:18px;display:block}
-.water-fill svg.bubbles{position:absolute;top:auto;bottom:0;left:0;width:100%;height:100%;pointer-events:none}
+.water-fill svg{position:absolute;top:-16px;left:0;width:200%;height:18px;display:block;animation:tankwave 10s linear infinite}
+@keyframes tankwave{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+body.no-fx .water-fill svg{animation:none}
+.water-fill .bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.water-fill .bub{position:absolute;top:0;height:100%;opacity:0;will-change:transform,opacity;animation:bubrise linear infinite}
+.water-fill .bub::before{content:'';display:block;width:var(--d);height:var(--d);margin-left:calc(var(--d) / -2);border-radius:50%;background:rgba(255,255,255,.85)}
+@keyframes bubrise{0%{transform:translateY(110%);opacity:0}12%{opacity:.9}72%{opacity:.9}100%{transform:translateY(-12%);opacity:0}}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
@@ -725,7 +730,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .dz-st{font-size:11px;font-weight:600;color:var(--ink-mute)}
 .dz-st.ok{color:var(--green)} .dz-st.failed,.dz-st.uncertain{color:var(--amber)}
 .dz-g{width:68px;min-height:36px;padding:4px 6px;border-radius:9px;border:1px solid var(--ctl-edge);background:var(--ctl-face);
-  font-family:var(--font);font-size:15px;font-weight:700;color:var(--ink);text-align:center;-webkit-appearance:none}
+  font-family:var(--font);font-size:15px;font-weight:700;color:var(--ink);text-align:center;cursor:pointer;-webkit-appearance:none}
 .dz-tabs{display:flex;gap:5px;flex:none;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}
 .dz-tabs[hidden]{display:none}
 .dz-tabs::-webkit-scrollbar{display:none}
@@ -761,8 +766,7 @@ body.night.no-fx .glass{background:rgba(30,27,54,.92)}
 .cut-what{font-size:14px;font-weight:700;color:var(--ink);line-height:1.6}
 .cut-else{font-size:12px;font-weight:600;color:var(--ink-mute);line-height:1.6;margin-top:10px}
 .rc-alert:active{transform:scale(.92)}
-@keyframes rcpulse{0%,100%{box-shadow:0 2px 8px rgba(245,158,11,.38)}
-  50%{box-shadow:0 2px 14px rgba(245,158,11,.75)}}
+@keyframes rcpulse{0%,100%{opacity:1}50%{opacity:.6}}
 .ag-modal{max-width:520px}
 .ag-more{margin-top:8px}
 .mcal-now{font-size:13px;color:var(--ink);margin:4px 0 10px}
@@ -2768,9 +2772,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     <div class="tank-card glass" id="tankCard" title="Water tank level">
       <div class="water-bg">
         <div class="water-fill" id="waterFill" style="height:0%">
-          <svg viewBox="0 0 1280 18" preserveAspectRatio="none">
-            <path class="wave-path" d=""><animate attributeName="d" dur="5s" repeatCount="indefinite"
-              values="M0,9 Q160,16 320,9 T640,9 T960,9 T1280,9 V18 H0 Z;M0,9 Q160,2 320,9 T640,9 T960,9 T1280,9 V18 H0 Z;M0,9 Q160,16 320,9 T640,9 T960,9 T1280,9 V18 H0 Z"/></path>
+          <svg viewBox="0 0 2560 18" preserveAspectRatio="none">
+            <path class="wave-path" d="M0,9 Q160,16 320,9 T640,9 T960,9 T1280,9 T1600,9 T1920,9 T2240,9 T2560,9 V18 H0 Z"/>
           </svg>
         </div>
       </div>
@@ -5461,17 +5464,12 @@ function setTankBubbles(on,level){
   var had=fill.querySelector('.bubbles');
   if(had) had.parentNode.removeChild(had);
   if(!on) return;
-  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('class','bubbles');
-  svg.setAttribute('viewBox','0 0 1280 100');
-  svg.setAttribute('preserveAspectRatio','none');
-  svg.innerHTML=bubbleSeeds(level).map(function(b){
-    var cx=b[0], r=b[1], dur=b[2]+'s', beg=b[3]+'s';
-    return '<circle cx="'+cx+'" cy="110" r="'+r+'" fill="rgba(255,255,255,.85)">'
-      +'<animate attributeName="cy" values="110;-12" dur="'+dur+'" begin="'+beg+'" repeatCount="indefinite"/>'
-      +'<animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.12;.72;1" dur="'+dur+'" begin="'+beg+'" repeatCount="indefinite"/>'
-      +'</circle>'; }).join('');
-  fill.appendChild(svg); }
+  var box=document.createElement('div');
+  box.className='bubbles';
+  box.innerHTML=bubbleSeeds(level).map(function(b){
+    return '<i class="bub" style="left:'+(b[0]/12.8).toFixed(2)+'%;--d:'+(b[1]+1)+'px;'
+      +'animation-duration:'+b[2]+'s;animation-delay:'+b[3]+'s"></i>'; }).join('');
+  fill.appendChild(box); }
 function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   var low=!plumbed()&&(state.water.current<=state.water.refill||pct<15);
   // Mix (brew water) temperature is the meaningful reference during a shot; the
@@ -5484,7 +5482,7 @@ function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.wate
   fill.style.background='linear-gradient(180deg,rgba('+c[0]+','+c[1]+','+c[2]+',.30),rgba('+c[0]+','+c[1]+','+c[2]+',.48))';
   var wp=fill.querySelector('.wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
   var wp2=fill.querySelector('.wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
-  var want=(t >= (_bubblesOn?TANK_BUBBLE_OFF:TANK_BUBBLE_ON));
+  var want=!!prefs.fx&&(t >= (_bubblesOn?TANK_BUBBLE_OFF:TANK_BUBBLE_ON));
   setTankBubbles(want, want?bubbleLevel(t):-1);
 }
 function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.current);
@@ -6753,6 +6751,10 @@ function setDoserGrams(id,g){
 function doserAdj(id,delta){
   setDoserGrams(id,doserGrams(deviceById(id))+delta);
   syncDoser(); }
+function doserKeypad(id){
+  var d=deviceById(id); if(!d) return;
+  openKeypadFor({ value:doserGrams(d), dp:1, unit:'g', title:dzTitle(d),
+    min:0, max:DOSER_G_MAX, onOk:function(v){ setDoserGrams(id,v); syncDoser(); } }); }
 function doserTotal(){
   return Math.round(doserUp().reduce(function(a,d){ return a+doserGrams(d); },0)*10)/10; }
 function doserStatusText(id){
@@ -6797,8 +6799,7 @@ function doserRow(d){
     +dzBeanSelect(d)
     +'<div class="dz-st '+(s.kind||'')+'">'+escapeHtml(doserStatusText(d.id))+'</div></div>'
     +'<button class="ms-btn" onclick="doserAdj(\''+id+'\',-0.1)">−</button>'
-    +'<input class="dz-g" type="number" step="0.1" min="0" max="'+DOSER_G_MAX+'" value="'+doserGrams(d).toFixed(1)+'"'
-    +' onchange="setDoserGrams(\''+id+'\',this.value);syncDoser()">'
+    +'<button class="dz-g" onclick="doserKeypad(\''+id+'\')">'+doserGrams(d).toFixed(1)+'</button>'
     +'<button class="ms-btn" onclick="doserAdj(\''+id+'\',0.1)">+</button>'
     +'<button class="m-btn cn-btn" onclick="doserDispense(\''+id+'\')"'+(busy?' disabled':'')+'>'
     +escapeHtml(t('dzDispense'))+'</button></div>'; }

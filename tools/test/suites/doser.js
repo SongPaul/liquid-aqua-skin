@@ -84,7 +84,7 @@ test('a single module starts at the recipe dose', function (T) {
   openDoser();
   var rows = T.all('#doserList .dz-row');
   T.eq(rows.length, 1, 'one row');
-  T.eq(rows[0].querySelector('.dz-g').value, '18.2', 'the dose');
+  T.eq(rows[0].querySelector('.dz-g').textContent, '18.2', 'the dose');
   closeModal(null, 'doserOverlay');
 });
 
@@ -188,9 +188,9 @@ test('a module tab holds that module: its grams and its own dispense', function 
   T.ok(!p.hidden, 'the panel shows');
   T.ok(p.querySelector('.dz-n').textContent.indexOf(t('dzSlot').replace('{n}', '2')) === 0, 'numbered');
   T.ok(p.textContent.indexOf('RedXKey_02') >= 0, 'and named');
-  T.eq(p.querySelector('.dz-g').value, '8.0', 'its grams');
+  T.eq(p.querySelector('.dz-g').textContent, '8.0', 'its grams');
   doserAdj(dzId(2), 0.1);
-  T.eq(T.el('#dzPanel .dz-g').value, '8.1', 'plus moves it');
+  T.eq(T.el('#dzPanel .dz-g').textContent, '8.1', 'plus moves it');
   return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
     return doserDispense(dzId(2));
   }).then(function (got) {
@@ -285,4 +285,22 @@ test('extra cells widen the sheet to three columns instead of stacking it', func
   T.ok(T.el('#connList .cn-cell[data-cell="doser"] .cn-sec-h button[onclick^="openDoser("]'), 'dispense sits in the cell head');
   setThermoPlugins([]);
   closeModal(null, 'connOverlay');
+});
+
+test('grams are typed on the skin keypad, not the system keyboard', function (T) {
+  dzFleet(1);
+  setDoserGrams(dzId(1), 9);
+  openDoser();
+  T.ok(!T.el('#doserList input'), 'no text field to raise the keyboard');
+  T.el('#doserList .dz-g').click();
+  T.ok(T.el('#keypadOverlay').classList.contains('show'), 'the keypad opens');
+  T.eq(T.el('#kpValue').textContent, '9', 'with the grams');
+  kpPress('1'); kpPress('2'); kpPress('.'); kpPress('5');
+  kpConfirm();
+  T.eq(doserGrams(deviceById(dzId(1))), 12.5, 'set from the keypad');
+  T.eq(T.el('#doserList .dz-g').textContent, '12.5', 'and shown');
+  T.el('#doserList .dz-g').click();
+  kpPress('9'); kpPress('9'); kpConfirm();
+  T.eq(doserGrams(deviceById(dzId(1))), 25.5, 'held to what a module can pour');
+  closeModal(null, 'doserOverlay');
 });
