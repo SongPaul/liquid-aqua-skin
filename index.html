@@ -254,6 +254,9 @@ header>*{position:relative;z-index:1}
 .conn-toggle:active{transform:scale(.96)}
 .conn-toggle.ing{border-color:var(--amber)}
 .conn-grid{display:grid;grid-template-columns:auto auto;gap:2px 9px;align-items:center;justify-items:center}
+.conn-grid.c3{grid-template-columns:auto auto auto}
+.cglyph[hidden]{display:none}
+.cg-svg{width:15px;height:15px;display:block}
 .cglyph{font-size:15px;line-height:15px;color:var(--ink-mute);opacity:.5;transition:color .2s,opacity .2s}
 .cglyph.up{color:var(--green);opacity:1}
 .cglyph.ing{color:var(--amber);opacity:1;animation:blink .8s infinite}
@@ -2718,6 +2721,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
           <span class="cglyph" id="cgScale">⏱︎</span>
           <span class="cglyph" id="cgDosing">⚖︎</span>
           <span class="cglyph" id="cgGrinder">⚙︎</span>
+          <span class="cglyph" id="cgThermo" hidden><svg class="cg-svg" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 2.5a1.5 1.5 0 0 1 3 0v6.6a3 3 0 1 1-3 0z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="11.7" r="1.6" fill="currentColor"/><path d="M8 5.5v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+          <span class="cglyph" id="cgDoser" hidden>⛁︎</span>
         </span>
       </button></div>
 
@@ -3775,8 +3780,8 @@ var I18N={
     vizNoPlugin:'The Visualizer plugin is not installed or is disabled — a share code needs it. A shot link works without it.',
     vizProfileSaved:'Profile saved: {n}', vizShown:'Showing Visualizer shot — {n}', vizFailed:'Import failed',
     vizGraph:'Visualizer shot',
-    catSkin:'Skin', skinHistory:'Update history', skinCheck:'Check for skin updates',
-    skinChecking:'Checking…', skinChecked:'Update check finished.', skinUpToDate:'This skin is up to date.',
+    catSkin:'Skin', skinHistory:'Update history', 
+    pluginViaApp:'Plugins are installed, switched and set up in the Decaid app, under Plugins on its dashboard.', skinViaApp:'Skin updates are installed from the Decaid app: Web Interface on its dashboard, then the menu at the top right, then Check for updates.', skinOpenApp:'Open the Decaid app', autoUpdViaApp:'Automatic updates are turned on in the Decaid app’s settings.', skinUpToDate:'This skin is up to date.',
     skinNewer:'v{v} is available.', skinNewsFail:'Could not load the update history.',
     skinInstalledTag:'running', skinAll:'All releases',
     skinStale:'v{v} is installed but this page is still running v{r}. Reload to use it.', skinReload:'Reload',
@@ -4241,8 +4246,8 @@ var I18N={
     vizNoPlugin:'Visualizer 플러그인이 없거나 꺼져 있습니다 — 공유 코드는 플러그인이 필요합니다. 샷 링크는 없어도 됩니다.',
     vizProfileSaved:'프로파일 저장됨: {n}', vizShown:'Visualizer 샷 표시 중 — {n}', vizFailed:'가져오기 실패',
     vizGraph:'Visualizer 샷',
-    catSkin:'스킨', skinHistory:'업데이트 내역', skinCheck:'스킨 업데이트 확인',
-    skinChecking:'확인 중…', skinChecked:'업데이트 확인을 마쳤습니다.', skinUpToDate:'스킨이 최신입니다.',
+    catSkin:'스킨', skinHistory:'업데이트 내역', 
+    pluginViaApp:'플러그인 설치, 켜기·끄기, 설정은 Decaid 앱 대시보드의 Plugins에서 할 수 있습니다.', skinViaApp:'스킨 업데이트는 Decaid 앱에서 설치합니다. 대시보드의 Web Interface 화면 오른쪽 위 메뉴에서 Check for updates를 누르세요.', skinOpenApp:'Decaid 앱 열기', autoUpdViaApp:'자동 업데이트는 Decaid 앱의 설정에서 켤 수 있습니다.', skinUpToDate:'스킨이 최신입니다.',
     skinNewer:'v{v}를 사용할 수 있습니다.', skinNewsFail:'업데이트 내역을 불러오지 못했습니다.',
     skinInstalledTag:'사용 중', skinAll:'전체 릴리스',
     skinStale:'v{v}가 설치되었지만 이 화면은 아직 v{r}입니다. 새로고침하면 적용됩니다.', skinReload:'새로고침',
@@ -5650,10 +5655,22 @@ function updateConnUI(s){ var btn=document.getElementById('btnConnect');
     t('machine')+(state.machineName?(' \u2014 '+state.machineName):''));
   cglyph('cgScale',state.scaleConnected?'up':'',
     t('scale')+(state.scaleName?(' \u2014 '+state.scaleName):''));
-  syncConnDosing(); syncConnGrinder(); syncDevNames(); bindGrindSrc();
+  syncConnDosing(); syncConnGrinder(); syncConnExtras(); syncDevNames(); bindGrindSrc();
   // The sheet is a view of the same list the glyphs read, so a device that
   // appears mid-scan appears there too, without being asked for again.
   if(connOpen()) renderConnModal(); }
+// The thermometer and the bean doser join the button only while their plugin
+// is in use, and the button goes to three columns to hold them.
+function syncConnExtras(){
+  var th=document.getElementById('cgThermo'), dz=document.getElementById('cgDoser');
+  if(!th||!dz) return;
+  var thOn=thermoOn(), dzOn=_doserOn;
+  th.hidden=!thOn; dz.hidden=!dzOn;
+  if(thOn){ var d=thermoDevice();
+    cglyph('cgThermo',d?'up':'',t('thermo')+(d&&d.name?(' — '+d.name):'')); }
+  if(dzOn){ var n=doserUp().length;
+    cglyph('cgDoser',n?'up':'',t('doser')+' — '+n); }
+  var g=th.parentElement; if(g) g.classList.toggle('c3',thOn||dzOn); }
 function grinderDevice(){
   return (state.devices||[]).filter(function(d){ return d.type==='grinder'; })
     .sort(function(a,b){ return (b.state==='connected')-(a.state==='connected'); })[0]||null; }
@@ -6821,7 +6838,7 @@ function setPluginDevices(list){
   setDoserOn(doserOnFrom(list)); }
 function setThermoPlugins(ids){
   _thermoPlugins=ids||[];
-  syncMilkTemp();
+  syncMilkTemp(); syncConnExtras();
   if(connOpen()) renderConnModal(); }
 function loadThermoPlugins(){
   return api('GET','/api/v1/plugins').then(function(list){
@@ -7049,7 +7066,7 @@ function renderDzTabs(){
   info.classList.toggle('dz-mod',open);
   panel.hidden=!open;
   if(open) renderDoser(); }
-function syncDoser(){ renderDzTabs(); }
+function syncDoser(){ renderDzTabs(); syncConnExtras(); }
 // What was dispensed is what the next shot is made of, so the module's bean
 // becomes the recipe's bean and the shot is saved with it.
 function doserUseBean(d){
@@ -9246,10 +9263,16 @@ function infoCell(k,v){ return '<div class="sp-info-cell"><div class="k">'+escap
 // Display settings
 function setBrightness(v,live){ document.getElementById('brVal').textContent=v; if(live) return; // only push on change (release)
   api('PUT','/api/v1/display/brightness',{brightness:parseInt(v,10)}).catch(function(){ toast(t('tBrightFailed'),'err'); }); }
+// Turning automatic updates on installs skins and plugins unattended, so
+// Decaid asks for a management token for it; turning them off needs none.
 function setAutoUpdateCheck(on){ gwSettings.automaticUpdateCheck=on;
-  api('POST','/api/v1/settings',{automaticUpdateCheck:on})
+  return api('POST','/api/v1/settings',{automaticUpdateCheck:on})
     .then(function(){ spSaved(); })
-    .catch(function(e){ spFailed(e); }); }
+    .catch(function(e){
+      if(on&&e&&(e.status===401||e.status===403)){
+        gwSettings.automaticUpdateCheck=false; toast(t('autoUpdViaApp'),'err');
+        if(spOpen()) renderSpContent(); return; }
+      spFailed(e); }); }
 // Leaving a skin is the host's to do, and it gives exactly one way to ask:
 // window.decentApp.exitToDashboard, injected into the page it serves. There is
 // no way to close the app itself from here and this is not that -- it puts the
@@ -9726,7 +9749,7 @@ function renderAppUpdate(){ var box=document.getElementById('appBox'); if(!box) 
 // rather than assumed.
 var SKIN_ID='liquid-aqua', SKIN_REPO='SongPaul/liquid-aqua-skin';
 var SKIN_NEWS_TTL=6*3600*1000;
-var skinInfo=null, skinNews=null, skinRunningVer=null, _skinNewsState='', _skinChecking=false;
+var skinInfo=null, skinNews=null, skinRunningVer=null, _skinNewsState='';
 function skinRepo(){
   var src=(skinInfo&&skinInfo.reaMetadata&&skinInfo.reaMetadata.sourceUrl)||'';
   var m=src.match(/^github_(?:release|branch):([^@\s]+)/);
@@ -9770,13 +9793,12 @@ function loadSkinNews(force){
       lsSet('aurora_skinnews',{repo:repo,at:Date.now(),list:skinNews}); })
     .catch(function(){ _skinNewsState=(skinNews&&skinNews.length)?'':'err'; })
     .then(function(){ skinBoxRefresh(); }); }
-function skinCheckUpdate(){
-  if(_skinChecking) return;
-  _skinChecking=true; skinBoxRefresh();
-  api('POST','/api/v1/webui/skins/update',null,90000)
-    .then(function(){ toast(t('skinChecked'),'ok'); })
-    .catch(function(e){ toast(apiErrorText(e),'err'); })
-    .then(function(){ _skinChecking=false; loadSkinNews(true); loadSkinInfo(); }); }
+// Decaid installs skin updates only for a caller holding a management token,
+// which a skin can neither mint nor safely keep, so the update is the app's to
+// do and this page says where.
+function skinViaAppHtml(){
+  return '<div class="set-desc">'+escapeHtml(t('skinViaApp'))+'</div>'
+    +(canExitToDashboard()?'<button class="m-btn tinted" onclick="exitToDashboard()">'+escapeHtml(t('skinOpenApp'))+'</button>':''); }
 // A release is titled "v1.96.0 - something", and the version is already its own
 // chip beside it, so the title keeps only the half that is not the version.
 function relTitle(r,v){
@@ -9813,12 +9835,10 @@ function renderPhSkin(){
   h+='<div class="set-desc" style="margin-bottom:10px">'
     +escapeHtml(t('installed'))+' '+(inst?('v'+escapeHtml(inst)):'\u2014')
     +' \u00b7 '+escapeHtml(t('available'))+' '+(latest?('v'+escapeHtml(latest)):'\u2014')+'</div>';
-  h+='<button class="m-btn primary mb-analyze" onclick="skinCheckUpdate()"'+(_skinChecking?' disabled':'')+'>'
-    +escapeHtml(t('skinCheck'))+'</button>';
+  h+='<div style="display:flex;flex-direction:column;gap:8px">'+skinViaAppHtml()+'</div>';
   if(stale) h+='<button class="m-btn mb-analyze" style="margin-top:8px" onclick="location.reload()">'
     +escapeHtml(t('skinReload'))+'</button>';
-  var note=_skinChecking?t('skinChecking')
-    :stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
+  var note=stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
     :(inst&&latest&&verCmp(latest,inst)>0)?t('skinNewer').replace('{v}',latest)
     :(inst&&latest)?t('skinUpToDate'):'';
   if(note) h+='<div class="set-desc" style="margin-top:10px">'+escapeHtml(note)+'</div>';
@@ -9829,8 +9849,7 @@ function renderSkinBox(){
   var h='<div class="sp-info-grid">'+infoCell(t('installed'),inst?('v'+inst):'\u2014')
     +infoCell(t('available'),latest?('v'+latest):'\u2014')+'</div>';
   h+='<div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap">'
-    +'<button class="m-btn primary" onclick="skinCheckUpdate()"'+(_skinChecking?' disabled':'')+'>'
-      +escapeHtml(t('skinCheck'))+'</button>'
+    +skinViaAppHtml()
     +'<button class="m-btn tinted" onclick="window.open(\'https://github.com/'+escapeAttr(skinRepo())+'/releases\',\'_blank\')">'
       +escapeHtml(t('skinAll'))+' \u2197</button>';
   // What is on disk can be newer than what this page was loaded from, and only
@@ -9838,8 +9857,7 @@ function renderSkinBox(){
   var stale=!!(inst&&running&&verCmp(inst,running)>0);
   if(stale) h+='<button class="m-btn" onclick="location.reload()">'+escapeHtml(t('skinReload'))+'</button>';
   h+='</div>';
-  var note=_skinChecking?t('skinChecking')
-    :stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
+  var note=stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
     :(inst&&latest&&verCmp(latest,inst)>0)?t('skinNewer').replace('{v}',latest)
     :(inst&&latest)?t('skinUpToDate'):'';
   if(note) h+='<div class="set-desc" style="margin-top:8px">'+escapeHtml(note)+'</div>';
@@ -9886,6 +9904,9 @@ function grinderPluginGuideHtml(){
       +'<div class="plugin-author">'+escapeHtml(t(g.note))+'</div></div>'
       +'<div class="plugin-actions">'+status+'</div></div>'; }).join(''); }
 function renderGrinderPluginGuide(){ var box=document.getElementById('gpList'); if(box) box.innerHTML=grinderPluginGuideHtml(); }
+// Installing, switching and configuring plugins need a management token the
+// skin does not have; a refusal for that says where it can be done instead.
+function needsApp(e){ return !!e&&(e.status===401||e.status===403); }
 function installGrinderPlugin(id){
   var g=GRINDER_PLUGINS.filter(function(x){ return x.id===id; })[0];
   if(!g||_gpBusy[id]) return Promise.resolve();
@@ -9894,13 +9915,13 @@ function installGrinderPlugin(id){
     .then(function(r){ return (r&&r.loaded===false)
       ?api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/enable'):null; })
     .then(function(){ toast(t('gpInstalled').replace('{p}',g.name),'ok'); },
-      function(e){ toast(t('gpInstallFail').replace('{p}',g.name)+(e&&e.message?': '+e.message:''),'err'); })
+      function(e){ toast(needsApp(e)?t('pluginViaApp'):(t('gpInstallFail').replace('{p}',g.name)+(e&&e.message?': '+e.message:'')),'err'); })
     .then(function(){ delete _gpBusy[id];
       return api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:pluginsCache; setPluginDevices(pluginsCache); },function(){}); })
     .then(function(){ renderPluginList(); renderGrinderPluginGuide(); return ensurePluginGrinders(); }); }
-function togglePlugin(id,on,cb){ api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/'+(on?'enable':'disable'))
+function togglePlugin(id,on,cb){ return api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/'+(on?'enable':'disable'))
     .then(function(){ toast((on?t('enabled'):t('disabled'))+': '+id,'ok'); var p=pluginsCache.find(function(x){return x.id===id;}); if(p) p.loaded=on; })
-    .catch(function(e){ toast(t('tPluginToggleFailed'),'err'); if(cb) cb.checked=!on; }); }
+    .catch(function(e){ toast(needsApp(e)?t('pluginViaApp'):t('tPluginToggleFailed'),'err'); if(cb) cb.checked=!on; }); }
 // Schema-driven plugin settings form (covers Visualizer credentials, etc.)
 var pluginCfgId=null, pluginCfgSchema=null;
 function openPluginCfg(id){ var p=pluginsCache.find(function(x){return x.id===id;}); if(!p) return;
@@ -9932,9 +9953,9 @@ function savePluginCfg(){ if(!pluginCfgId) return; var patch={};
     else if(sec){ if(el.value!=='') patch[k]=el.value; /* blank = keep existing (omit) */ }
     else { patch[k]=el.value; } });
   var st=document.getElementById('pluginCfgStatus'); st.textContent='Saving…'; document.getElementById('pluginCfgSave').disabled=true;
-  api('POST','/api/v1/plugins/'+encodeURIComponent(pluginCfgId)+'/settings',patch)
+  return api('POST','/api/v1/plugins/'+encodeURIComponent(pluginCfgId)+'/settings',patch)
     .then(function(){ toast(t('tPluginSaved'),'ok'); closeModal(null,'pluginCfgOverlay'); loadPlugins(); })
-    .catch(function(e){ st.textContent='Failed: '+e.message; })
+    .catch(function(e){ st.textContent=needsApp(e)?t('pluginViaApp'):('Failed: '+e.message); })
     .then(function(){ document.getElementById('pluginCfgSave').disabled=false; }); }
 function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
 function toggleNight(v){ prefs.night=!!v; savePrefs(); applyNight(); }

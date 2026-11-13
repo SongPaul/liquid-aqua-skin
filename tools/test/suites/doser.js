@@ -411,3 +411,22 @@ test('dispense all asks first, naming what each module will pour', function (T) 
     T.ok(asked.indexOf('16.5') >= 0, 'and the total');
   });
 });
+
+test('the header button carries the thermometer and the doser when they are in use', function (T) {
+  setPluginDevices([]); _thermoPlugins = []; state.devices = [];
+  updateConnUI('on');
+  T.ok(T.el('#cgThermo').hidden && T.el('#cgDoser').hidden, 'neither without its plugin');
+  T.eq(T.css(T.el('#btnConnect .conn-grid'), 'gridTemplateColumns').split(' ').length, 2, 'two columns for four');
+  dzFleet(2);
+  setThermoPlugins(['lebrew-temp.reaplugin']);
+  state.devices = state.devices.concat([{ id: 'plugin:lebrew-temp.reaplugin:lebrew:aa', name: 'LEBREW TEMP',
+    type: 'sensor', state: 'connected', available: true }]);
+  updateConnUI('on');
+  T.ok(!T.el('#cgThermo').hidden && !T.el('#cgDoser').hidden, 'both shown');
+  T.ok(T.el('#cgThermo').classList.contains('up'), 'the thermometer is connected');
+  T.ok(T.el('#cgDoser').classList.contains('up'), 'modules are connected');
+  T.ok(T.el('#cgDoser').title.indexOf('2') >= 0, 'the title counts them: ' + T.el('#cgDoser').title);
+  T.eq(T.css(T.el('#btnConnect .conn-grid'), 'gridTemplateColumns').split(' ').length, 3, 'three columns for six');
+  setThermoPlugins([]); setPluginDevices([]); state.devices = [];
+  updateConnUI('on');
+});
