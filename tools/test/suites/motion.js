@@ -122,3 +122,16 @@ test('the recipe alert pulses without animating its shadow', function (T) {
   T.ok(found, 'the pulse is there');
   T.ok(found && found.indexOf('box-shadow') < 0, 'and leaves the shadow alone');
 });
+
+test('a dialog over the screen stills what moves behind it, and lets it go again', function (T) {
+  mHot(function () {
+    var ov = document.getElementById('dyeOverlay');
+    ov.classList.add('show'); ovSync();
+    T.ok(fxIdle(), 'the clock rests behind a dialog');
+    T.ok(document.body.classList.contains('ov-open'), 'and the glass behind it stops blurring');
+    T.eq(T.css(T.el('.tank-card'), 'backdropFilter'), 'none', 'the tank card has no blur under the dialog');
+    closeModal(null, 'dyeOverlay');
+    T.ok(!fxIdle(), 'closing it starts the clock again');
+    T.ok(!document.body.classList.contains('ov-open'), 'and the glass comes back');
+  });
+});

@@ -161,6 +161,7 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill{visibility:hidden}
 .tank-fx{position:absolute;inset:0;width:100%;height:100%;display:block}
+body.ov-open .app .glass,body.ov-open .app .ep-cbody{backdrop-filter:none;-webkit-backdrop-filter:none}
 .fps-meter{position:fixed;left:6px;bottom:6px;z-index:99999;font:700 11px Inter,monospace;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;pointer-events:none}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
@@ -5499,7 +5500,18 @@ function setTankBubbles(on,level){
 // the tank and the flowing gauge. Each task keeps its own rate, and the loop
 // stops whenever nobody can see it -- asleep, hidden, or behind a page.
 var FX={tasks:[],raf:null,cost:0};
-function fxIdle(){ return _asleep||document.hidden||(_pageOpen&&!_monOpen); }
+function fxIdle(){ return _asleep||document.hidden||(_pageOpen&&!_monOpen)||_ovOpen; }
+// A dialog dims the whole screen. What moves behind it is barely seen, yet a
+// tablet's GPU still recomposes it and every blurred pane under the dim each
+// frame, which is what dropped a post-shot dialog to twenty frames. So the
+// clock rests and the glass stops blurring while one is open.
+var _ovOpen=false;
+function ovSync(){
+  var on=!!document.querySelector('.overlay.show,.pic-ov.show');
+  if(on===_ovOpen) return;
+  _ovOpen=on; document.body.classList.toggle('ov-open',on);
+  if(!on) fxKick(); }
+setInterval(ovSync,300);
 function fxHas(k){ return FX.tasks.indexOf(k)>=0; }
 function fxRun(k){ if(!fxHas(k)) FX.tasks.push(k); fxKick(); }
 function fxStop(k){ var i=FX.tasks.indexOf(k); if(i>=0) FX.tasks.splice(i,1); }
@@ -7408,7 +7420,7 @@ function setStopHotWaterAtWeight(on){
   api('POST','/api/v1/settings',{stopHotWaterAtWeight:on})
     .then(function(){ toast(t('saved'),'ok'); })
     .catch(function(){ toast(t('saveFailed'),'err'); syncWaterStop(); }); }
-function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show');
+function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show'); ovSync();
   if(id==='dyeOverlay'&&_rsWaiting) showShotRead(); }
 // Whoever is working the machine from the group head is done with the screen,
 // so starting or stopping from there puts away any dialog left open, the way a
@@ -7417,8 +7429,8 @@ var GHC_ACTIONS={espresso:1,steam:1,hotWater:1,flush:1};
 function dismissOverlay(el){
   if(el.id==='dupOverlay'&&_dupResolve){ dupChoose(null); return; }
   if(el.id==='plgOverlay'){ closePluginPanel(); return; }
-  if(el.id==='picOverlay'){ closePicBig(); return; }
-  el.classList.remove('show'); }
+  if(el.id==='picOverlay'){ closePicBig(); ovSync(); return; }
+  el.classList.remove('show'); ovSync(); }
 function dismissAllOverlays(){
   _rsWaiting=false;
   Array.prototype.forEach.call(document.querySelectorAll('.overlay.show,.pic-ov.show'),dismissOverlay); }
