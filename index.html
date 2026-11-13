@@ -161,10 +161,6 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill{visibility:hidden}
 .tank-fx{position:absolute;inset:0;width:100%;height:100%;display:block}
-body.ov-open .app .glass,body.ov-open .app .ep-cbody{backdrop-filter:none;-webkit-backdrop-filter:none}
-body.ov-settled .app{visibility:hidden}
-body.ov-settled .app *{animation:none!important}
-.overlay.show,.pic-ov.show{visibility:visible}
 .fps-meter{position:fixed;left:6px;bottom:6px;z-index:99999;font:700 11px Inter,monospace;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;pointer-events:none}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
@@ -1000,8 +996,10 @@ body.night .bl-card{background:rgba(255,255,255,.04);border-color:rgba(255,255,2
 .bean-edit{min-height:44px;padding:0 12px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;background:none;border:none;-webkit-appearance:none}
 
 /* ── Profile Editor full page ────────────────────────────────────── */
-.editpage{position:fixed;inset:0;z-index:250;background:linear-gradient(135deg,#eef1ff,#f5edff);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .18s ease;will-change:opacity;contain:layout paint}
-.editpage.show{opacity:1;pointer-events:auto}
+.editpage{position:fixed;inset:0;z-index:250;background:linear-gradient(135deg,#eef1ff,#f5edff);display:flex;flex-direction:column;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .18s ease,visibility 0s linear .18s;contain:layout paint}
+/* A closed page is not drawn once it has faded out, so the eight of them do
+   not each keep a screen-sized layer for the GPU to carry every frame. */
+.editpage.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .18s ease;will-change:opacity}
 body.page-swap .editpage{transition:none}
 .ep-head{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--glass-line);background:rgba(255,255,255,.6)}
 .ep-head-left{display:flex;align-items:center;gap:12px;min-width:0}
@@ -2403,8 +2401,8 @@ body.night .ep-grid .gname{color:var(--ink)}
 /* Above .editpage (250): a modal is opened BY a page -- the settings page, the
    profile editor -- and belongs on top of the one that opened it. Below the
    toast (300) and the lock screen (400). */
-.overlay{position:fixed;inset:0;background:rgba(30,27,58,.72);display:flex;align-items:center;justify-content:center;z-index:260;opacity:0;pointer-events:none;transition:opacity .2s;padding:24px}
-.overlay.show{opacity:1;pointer-events:auto}
+.overlay{position:fixed;inset:0;background:rgba(30,27,58,.72);display:flex;visibility:hidden;contain:layout paint;align-items:center;justify-content:center;z-index:260;opacity:0;pointer-events:none;transition:opacity .2s,visibility 0s linear .2s;padding:24px}
+.overlay.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .2s}
 .modal{background:#fbfaff;border:1px solid var(--glass-line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:600px;max-width:94vw;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.98);transition:transform .25s}
 .modal.wide{width:1000px}
 .overlay.show .modal{transform:translateY(0) scale(1)}
@@ -5504,22 +5502,16 @@ function setTankBubbles(on,level){
 // stops whenever nobody can see it -- asleep, hidden, or behind a page.
 var FX={tasks:[],raf:null,cost:0};
 function fxIdle(){ return _asleep||document.hidden||(_pageOpen&&!_monOpen)||_ovOpen; }
-// A dialog dims the whole screen. What moves behind it is barely seen, yet a
-// tablet's GPU still recomposes it and every blurred pane under the dim each
-// frame, which is what dropped a post-shot dialog to twenty frames. So the
-// clock rests and the glass stops blurring while one is open.
-// Once the dialog has faded in, the screen behind it is hidden outright, the
-// way a full page hides it: the readings keep arriving, nothing is painted or
-// composited under the dim, and closing shows it again at once.
-var _ovOpen=false, _ovSettleT=null, OV_SETTLE=240;
+// What moves behind a dialog is barely seen under the dim, so the clock rests
+// while one is open. Nothing else changes: unblurring the glass or hiding the
+// screen at that moment restyles and repaints it all mid-fade, which measured
+// as more dropped frames, not fewer.
+var _ovOpen=false;
 function ovSync(){
   var on=!!document.querySelector('.overlay.show,.pic-ov.show');
   if(on===_ovOpen) return;
-  _ovOpen=on; document.body.classList.toggle('ov-open',on);
-  if(_ovSettleT){ clearTimeout(_ovSettleT); _ovSettleT=null; }
-  if(on) _ovSettleT=setTimeout(function(){ _ovSettleT=null;
-    if(_ovOpen) document.body.classList.add('ov-settled'); },OV_SETTLE);
-  else { document.body.classList.remove('ov-settled'); fxKick(); } }
+  _ovOpen=on;
+  if(!on) fxKick(); }
 (function(){
   if(typeof MutationObserver!=='function') return;
   var mo=new MutationObserver(ovSync);
@@ -10713,6 +10705,13 @@ function syncCarouselLock(){
 // The same idea as the tank: an SVG animation, so the one call that pauses every
 // svg under .app on sleep pauses this too, and document.getAnimations() -- which
 // the idle-screen rule is measured with -- never sees it.
+// A cover more than three places out is fully transparent anyway; not drawing
+// it keeps seventy-odd canvases from each being a layer the GPU carries every
+// frame. One that comes back is redrawn at the size it now has.
+function carDrawn(p,on){
+  if(!p._el||(p._drawnOn===on)) return;
+  p._drawnOn=on; p._el.style.display=on?'':'none';
+  if(on&&p._curveCv) setTimeout(function(){ drawSimCurve(p._curveCv,p.profile,true); },0); }
 function renderCarousel(){
   var lock=brewLocked();
   carItems.forEach(function(p,i){ var off=i-carIndex-carDragSteps; var abs=Math.abs(off);
@@ -10726,6 +10725,7 @@ function renderCarousel(){
       p._el.style.pointerEvents='none';
       p._el.classList.toggle('center',here); p._el.classList.toggle('side',!here);
       p._el.classList.toggle('loaded',here);
+      carDrawn(p,here);
       return; }
     // One curve through the whole range rather than a centre case and a rest:
     // mid-drag a cover is genuinely between two places and has to look it.
@@ -10734,6 +10734,7 @@ function renderCarousel(){
     p._el.style.transform='translateX('+(off*CAR_STEP)+'px) scale('+sc+')';
     var op=abs>2.4?0:(abs<=1?(0.55+0.45*(1-abs)):0.55);
     p._el.style.opacity=op; p._el.style.zIndex=Math.round(100-abs*10); p._el.style.pointerEvents=abs>2.4?'none':'auto';
+    carDrawn(p,abs<=3.2);
     p._el.classList.toggle('center', abs<0.5); p._el.classList.toggle('side', abs>=0.5);
     var isLoaded=!!(curProfileObj&&curProfileObj.id===p.id);
     p._el.classList.toggle('loaded', isLoaded); });

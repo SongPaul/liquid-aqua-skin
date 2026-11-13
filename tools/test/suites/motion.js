@@ -128,26 +128,42 @@ test('a dialog over the screen stills what moves behind it, and lets it go again
     var ov = document.getElementById('dyeOverlay');
     ov.classList.add('show'); ovSync();
     T.ok(fxIdle(), 'the clock rests behind a dialog');
-    T.ok(document.body.classList.contains('ov-open'), 'and the glass behind it stops blurring');
-    T.eq(T.css(T.el('.tank-card'), 'backdropFilter'), 'none', 'the tank card has no blur under the dialog');
+    T.eq(T.css(T.el('.app'), 'visibility'), 'visible', 'the screen behind is left as it is');
     closeModal(null, 'dyeOverlay');
     T.ok(!fxIdle(), 'closing it starts the clock again');
-    T.ok(!document.body.classList.contains('ov-open'), 'and the glass comes back');
   });
 });
 
-test('once a dialog has faded in, the screen behind it is not drawn at all', function (T) {
+test('a dialog is noticed the moment it opens', function (T) {
   if (_asleep) endSleepUI();
   var ov = document.getElementById('dyeOverlay');
   ov.classList.add('show');
   return Promise.resolve().then(function () {
-    T.ok(document.body.classList.contains('ov-open'), 'noticed the moment it opens');
-    T.eq(T.css(T.el('.app'), 'visibility'), 'visible', 'still seen through the dim while it fades in');
-    return new Promise(function (r) { setTimeout(r, OV_SETTLE + 80); });
-  }).then(function () {
-    T.eq(T.css(T.el('.app'), 'visibility'), 'hidden', 'then the screen behind is not drawn');
-    T.eq(T.css(ov, 'visibility'), 'visible', 'the dialog itself is');
+    T.ok(fxIdle(), 'the clock rests from the first frame');
     closeModal(null, 'dyeOverlay');
-    T.eq(T.css(T.el('.app'), 'visibility'), 'visible', 'closing brings the screen straight back');
   });
+});
+
+// Every composited layer is handed to the GPU each frame. Pages and dialogs
+// that are closed, and covers far off the strip, are not drawn, so they do
+// not add layers that nobody sees.
+test('a closed page is not drawn and holds no layer of its own', function (T) {
+  var p = T.el('#beanPage');
+  T.ok(!p.classList.contains('show'), 'closed');
+  T.eq(T.css(p, 'visibility'), 'hidden', 'not drawn');
+  T.eq(T.css(p, 'willChange'), 'auto', 'no layer asked for');
+});
+
+test('a closed dialog is not drawn', function (T) {
+  var o = T.el('#dyeOverlay');
+  T.ok(!o.classList.contains('show'), 'closed');
+  T.eq(T.css(o, 'visibility'), 'hidden', 'not drawn');
+});
+
+test('covers far off the strip are not drawn, near ones are', function (T) {
+  if (!carItems || carItems.length < 8) { T.ok(true, 'too few profiles to tell'); return; }
+  var far = carItems.filter(function (p, i) { return Math.abs(i - carIndex) > 3; })[0];
+  var near = carItems[carIndex];
+  T.eq(far._el.style.display, 'none', 'a far cover is not drawn');
+  T.ok(near._el.style.display !== 'none', 'the centre one is');
 });
