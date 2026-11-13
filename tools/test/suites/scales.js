@@ -182,3 +182,72 @@ test('with a dosing scale a hold types the dose', function (T) {
   try { doseLongPress(); } finally { doseFromScale = realTake; openKeypad = realKp; }
   T.eq(typed, 'doseIn', 'the keypad'); T.eq(took, false, 'no reading taken');
 });
+
+// A dosing scale that stays away is looked for less and less often: every
+// automatic scan shares the radio with the scales and modules already held.
+function scanStub(run) {
+  var real = api, scans = 0;
+  api = function (method, path) {
+    if (path.indexOf('/api/v1/devices/scan') === 0) { scans++; return Promise.resolve(state.devices); }
+    return real.apply(this, arguments);
+  };
+  return Promise.resolve().then(run).then(function () { api = real; return scans; },
+    function (e) { api = real; throw e; });
+}
+function awayDosing() {
+  _dosingSupport = true; state.shotRunning = false; _dosingScanning = false;
+  gwSettings = Object.assign({}, gwSettings || {}, { preferredScaleId: null });
+  withScales([LUNAR]);
+  prefs.dosingScaleId = 'Gone';
+  _dosingAutoScanAt = 0; _dosingDiscoverAt = 0; _dosingMiss = 0;
+}
+
+test('an absent dosing scale is looked for less often each time it is missed', function (T) {
+  awayDosing();
+  return scanStub(function () {
+    return maybeAutoScanDosing();
+  }).then(function (n) {
+    T.eq(n, 1, 'the first look goes out');
+    _dosingAutoScanAt = Date.now() - 100000;
+    return scanStub(function () { return maybeAutoScanDosing(); });
+  }).then(function (n) {
+    T.eq(n, 0, 'after one miss, ninety seconds is not long enough');
+    _dosingAutoScanAt = Date.now() - 190000;
+    return scanStub(function () { return maybeAutoScanDosing(); });
+  }).then(function (n) {
+    T.eq(n, 1, 'three minutes is');
+    _dosingMiss = 20;
+    _dosingAutoScanAt = Date.now() - 16 * 60000;
+    return scanStub(function () { return maybeAutoScanDosing(); });
+  }).then(function (n) {
+    T.eq(n, 1, 'the wait stops growing at a quarter of an hour');
+    prefs.dosingScaleId = ''; _dosingMiss = 0;
+  });
+});
+
+test('finding the dosing scale or a hand scan starts the wait over', function (T) {
+  awayDosing();
+  _dosingMiss = 4;
+  return scanStub(function () {
+    withScales([LUNAR, { id: 'Gone', name: 'Gone', type: 'scale', state: 'discovered', available: true }]);
+    _dosingAutoScanAt = 0;
+    return maybeAutoScanDosing();
+  }).then(function () {
+    T.eq(_dosingMiss, 0, 'seen again, the next absence starts from ninety seconds');
+    _dosingMiss = 4;
+    return scanStub(function () { return connScan(); });
+  }).then(function () {
+    T.eq(_dosingMiss, 0, 'a scan asked for by hand resets it too');
+    prefs.dosingScaleId = '';
+  });
+});
+
+test('no automatic scan while the page is not on screen', function (T) {
+  awayDosing();
+  Object.defineProperty(document, 'hidden', { get: function () { return true; }, configurable: true });
+  return scanStub(function () { return maybeAutoScanDosing(); }).then(function (n) {
+    delete document.hidden;
+    T.eq(n, 0, 'a hidden page leaves the radio alone');
+    prefs.dosingScaleId = '';
+  }, function (e) { delete document.hidden; throw e; });
+});

@@ -56,10 +56,20 @@
 
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
+  // The gateway's simulated machine falls asleep after a few idle minutes,
+  // and the skin answers that with its lock screen, which hides the whole
+  // interface. A case measuring the card would then read a hidden page, so
+  // the run ignores the machine's sleep and starts every case awake.
+  function holdAwake() {
+    window.enterSleepLocalOnly = function () {};
+    if (window._asleep && typeof window.endSleepUI === 'function') window.endSleepUI();
+  }
+
   function run() {
     var i = 0;
     function next() {
       if (i >= cases.length) return report();
+      holdAwake();
       var c = cases[i++];
       current = { name: c.name, failures: [] };
       var done;

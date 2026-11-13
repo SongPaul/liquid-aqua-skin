@@ -155,18 +155,13 @@ body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 .lock-ripple{position:absolute;inset:-40% -20%;z-index:-1;border-radius:50%;pointer-events:none;
   background:radial-gradient(60% 55% at 50% 50%,rgba(56,189,248,.10),rgba(99,102,241,.05) 45%,transparent 70%)}
 /* While asleep, stop the water-tank wave animation to save the panel/CPU. */
-body.asleep-settled .water-fill svg,body.asleep-settled .batt-fluid svg{animation-play-state:paused!important}
 
 /* ── Header: water tank + actions ────────────────────────────────── */
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 20px}
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
-.water-fill svg{position:absolute;top:-16px;left:0;width:200%;height:18px;display:block;animation:tankwave 10s linear infinite}
-@keyframes tankwave{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-body.no-fx .water-fill svg{animation:none}
-.water-fill .bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.water-fill .bub{position:absolute;top:0;height:100%;opacity:0;will-change:transform,opacity;animation:bubrise linear infinite}
-.water-fill .bub::before{content:'';display:block;width:var(--d);height:var(--d);margin-left:calc(var(--d) / -2);border-radius:50%;background:rgba(255,255,255,.85)}
-@keyframes bubrise{0%{transform:translateY(110%);opacity:0}12%{opacity:.9}72%{opacity:.9}100%{transform:translateY(-12%);opacity:0}}
+.water-fill{visibility:hidden}
+.tank-fx{position:absolute;inset:0;width:100%;height:100%;display:block}
+.fps-meter{position:fixed;left:6px;bottom:6px;z-index:99999;font:700 11px Inter,monospace;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;pointer-events:none}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
@@ -188,9 +183,7 @@ header>*{position:relative;z-index:1}
 .batt>*{position:relative;z-index:1}
 .batt-fluid{position:absolute;left:0;bottom:0;z-index:0;width:100%;height:0;background:linear-gradient(180deg,rgba(16,185,129,.26),rgba(16,185,129,.52));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .6s ease}
 .batt .batt-fluid{color:rgba(16,185,129,.40)}
-.batt-fluid svg{position:absolute;top:-5px;left:0;width:200%;height:6px;display:block;animation:battwave 3.6s linear infinite}
 .batt-wave{fill:currentColor}
-@keyframes battwave{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .batt .batt-pct{font-size:11px;font-weight:800;color:var(--ink);letter-spacing:0;font-variant-numeric:tabular-nums}
 .batt.low .batt-fluid{background:linear-gradient(180deg,rgba(239,68,68,.26),rgba(239,68,68,.52));color:rgba(239,68,68,.40)}
 .batt.low .batt-pct{color:var(--red)}
@@ -2424,7 +2417,7 @@ body.night .ep-grid .gname{color:var(--ink)}
 .preset-chip .pc-put{display:none}
 .preset-chip.edited .pc-put{display:inline}
 .ps-modal{max-width:420px}
-.cn-modal{max-width:660px}
+.cn-modal{width:860px;max-width:96vw}
 .ep-imp{display:flex;align-items:center;gap:14px;width:100%;margin-top:10px;
   padding:14px 16px;border-radius:14px;border:1px solid var(--ctl-edge);
   background-color:var(--ctl-face);background-image:var(--ctl-sheen);
@@ -2439,18 +2432,11 @@ body.night .ep-grid .gname{color:var(--ink)}
 .cn-cell{min-width:0;border:1px solid var(--edge);border-radius:14px;padding:11px 12px 10px}
 .cn-cell.wide{grid-column:1/-1}
 .cn-modal.more{width:960px}
-.cn-grid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.cn-grid.c3 .cn-cell.wide{grid-column:auto}
-.cn-grid.c3 .cn-cell.span2{grid-column:span 2}
-.cn-grid.c3 .cn-cell.span3,.cn-grid .cn-cell.wide[data-cell="doser"]{grid-column:1/-1}
 .cn-sec-x{margin-left:auto;display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0}
 .cn-sec-x .dz-max{padding:0}
 .cn-held{max-height:190px;overflow-y:auto}
 .cn-cell[data-cell="doser"] .cn-held{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
-@media (max-width:820px){.cn-grid.c3{grid-template-columns:1fr 1fr}
-  .cn-grid.c3 .cn-cell.span2,.cn-grid.c3 .cn-cell.span3{grid-column:auto}
-  .cn-grid.c3 .cn-cell.lone2{grid-column:1/-1}
-  .cn-cell[data-cell="doser"] .cn-held{grid-template-columns:1fr}}
+@media (max-width:820px){.cn-cell[data-cell="doser"] .cn-held{grid-template-columns:1fr}}
 .milk-now.hit{color:var(--green)}
 .live-milk{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em;white-space:nowrap}
 .live-milk:empty{display:none}
@@ -2460,7 +2446,7 @@ body.night .ep-grid .gname{color:var(--ink)}
 .cn-now-h{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);opacity:.6;margin:8px 0 2px}
 .cn-line{display:flex;align-items:center;gap:8px;padding:5px 0;min-width:0}
 .cn-line-t{flex:1;min-width:0}
-.cn-name{font-size:13px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cn-name{font-size:13px;font-weight:800;color:var(--ink);overflow:hidden;overflow-wrap:anywhere;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .cn-line.up .cn-name{color:var(--green)}
 .cn-sub{font-size:10px;font-weight:600;color:var(--ink-mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cn-acts{display:flex;gap:6px;flex:none}
@@ -2721,11 +2707,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
         <div class="brand-meta">
           <span class="hdr-clock" id="hdrClock"></span>
           <span class="batt" id="battPill" style="display:none">
-            <span class="batt-fluid" id="battFluid" style="height:0">
-              <svg viewBox="0 0 128 10" preserveAspectRatio="none">
-                <path class="batt-wave" d="M0,5 Q8,1 16,5 T32,5 T48,5 T64,5 T80,5 T96,5 T112,5 T128,5 V10 H0 Z"/>
-              </svg>
-            </span>
+            <span class="batt-fluid" id="battFluid" style="height:0"></span>
             <i class="batt-bolt"></i><span class="batt-pct" id="battPct"></span>
           </span>
         </div>
@@ -2786,11 +2768,8 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     <div class="live-row">
     <div class="tank-card glass" id="tankCard" title="Water tank level">
       <div class="water-bg">
-        <div class="water-fill" id="waterFill" style="height:0%">
-          <svg viewBox="0 0 2560 18" preserveAspectRatio="none">
-            <path class="wave-path" d="M0,9 Q160,16 320,9 T640,9 T960,9 T1280,9 T1600,9 T1920,9 T2240,9 T2560,9 V18 H0 Z"/>
-          </svg>
-        </div>
+        <div class="water-fill" id="waterFill" style="height:0%"></div>
+        <canvas class="tank-fx" id="tankFx"></canvas>
       </div>
       <div class="tank-content">
         <div class="htemp" title="Group head temperature"><span class="ht-ico">🔥</span><span class="ht-v"><span id="groupTemp">—</span>°</span><span class="ht-l" data-i18n="group">Group</span></div>
@@ -3850,7 +3829,8 @@ var I18N={
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
     camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are. Scan the code it puts there with a phone: it can send its own camera, or the address of an IP-camera app on it.',
     camUrlName:'Stream address', camUrlDesc:'For the IP-camera app way: the MJPEG address of a camera on this network, usually ending in /video. A phone sending its own camera does not use this.',
-    fx:'Screen effects', fxDesc:'The ripple under a touch, the light across the loaded profile, and the blur behind the glass. Turn it off if the screen stutters.',
+    fpsMeter:'Frame meter', fpsMeterDesc:'Shows frames per second and the time the animations take, in a corner of the screen. For checking how smoothly this tablet runs.',
+    fx:'Screen effects', fxDesc:'The moving water in the tank, the graph and the loaded profile\u2019s cover, the ripple under a touch, and the blur behind the glass. Turn it off if the screen stutters.',
     camRotate:'Turn the picture', camRotateDesc:'For a phone lying on its side or clipped upside down.',
     camFit:'Fill the pane', camFitDesc:'Crop to the edges instead of leaving bars.',
     camZoom:'Enlarge', camZoomDesc:'Crops in on the middle of the picture.',
@@ -4319,7 +4299,8 @@ var I18N={
     dose:'도징', yield:'추출량', ratio:'추출 비율', time:'시간', peak:'최고', volume:'용량',
     camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다. 거기 뜨는 QR을 폰으로 스캔하면 폰 카메라를 보내거나 IP 카메라 앱 주소를 넣을 수 있습니다.',
     camUrlName:'스트리밍 주소', camUrlDesc:'IP 카메라 앱 방식용 주소입니다. 같은 네트워크의 MJPEG 주소로, 보통 /video 로 끝납니다. 폰 카메라를 직접 보내는 경우에는 쓰지 않습니다.',
-    fx:'화면 효과', fxDesc:'터치할 때 퍼지는 물결, 로드된 프로파일 위를 지나가는 빛, 유리 뒤의 블러. 화면이 끊기면 끄세요.',
+    fpsMeter:'프레임 표시', fpsMeterDesc:'화면 구석에 초당 프레임 수와 애니메이션이 쓰는 시간을 보여 줍니다. 이 태블릿에서 화면이 얼마나 부드럽게 도는지 확인할 때 켜세요.',
+    fx:'화면 효과', fxDesc:'탱크, 그래프, 로드된 프로파일 커버에서 움직이는 물, 터치할 때 퍼지는 물결, 유리 뒤의 블러. 화면이 끊기면 끄세요.',
     camRotate:'화면 회전', camRotateDesc:'폰을 누이거나 거꾸로 물렸을 때.',
     camFit:'여백 없이 채우기', camFitDesc:'상하 좌우 여백 대신 가장자리를 잘라 채웁니다.',
     camZoom:'확대', camZoomDesc:'화면 가운데를 당겨 보여줍니다.',
@@ -4806,6 +4787,7 @@ function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window
   // backdrop every frame, so the glass gives up its blur exactly where it costs.
   document.body.classList.toggle('scaled',scaled); }
 document.addEventListener('visibilitychange',function(){
+  if(!document.hidden&&typeof fxKick==='function') fxKick();
   if(!document.hidden&&typeof maybeAutoScanDosing==='function') maybeAutoScanDosing(); });
 var RESUME_AFTER=15000, RESUME_THROTTLE=20000, _hiddenAt=0, _lastResume=0;
 function maybeResume(force){
@@ -5141,7 +5123,7 @@ function onMachineState(ms,prev){
   // would draw nothing at all, which is worse than drawing the brackets.
   var phased=(sub==='preparingForShot'||sub==='preinfusion'||sub==='pouring'||sub==='pouringDone');
   var pouringNow=(!phased)||(sub==='pouring'||sub==='preinfusion');
-  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; }
+  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; _chartOff=null; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
   // espresso state ends (after pouringDone returns to idle).
@@ -5180,15 +5162,15 @@ function onMachineState(ms,prev){
   syncAuxPanel();
   monitorOnState(ms.state,prev||'');
 
-  if(extracting){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetGroup.push(state.targetGroupTemp||0); chart.targetMix.push(state.targetMixTemp||0); chart.targetFlow.push(state.targetFlow||0); chart.targetPressure.push(state.targetPressure||0);
+  if(extracting){ chart.t.push(state.snapTime||Date.now()); chartArrived(); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.frame.push(state.profileFrame||0); chart.groupTemp.push(state.groupTemp); chart.mixTemp.push(state.mixTemp); chart.targetGroup.push(state.targetGroupTemp||0); chart.targetMix.push(state.targetMixTemp||0); chart.targetFlow.push(state.targetFlow||0); chart.targetPressure.push(state.targetPressure||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.frame.length>chart.max)chart.frame.shift(); if(chart.groupTemp.length>chart.max)chart.groupTemp.shift(); if(chart.mixTemp.length>chart.max)chart.mixTemp.shift(); ['targetGroup','targetMix','targetFlow','targetPressure'].forEach(function(k){ if(chart[k].length>chart.max) chart[k].shift(); }); drawChart(); }
   // The steam line is what the machine reports, not what it was set to. It used
   // to fall back to the configured flow whenever the reading sat near zero,
   // which draws a setting in the shape of a measurement -- the same fault as
   // showing a temperature the machine is not holding.
-  else if(steaming&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.steamTemp.push(state.steamTemp);
+  else if(steaming&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chartArrived(); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.steamTemp.push(state.steamTemp);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
-  else if((watering||flushing)&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
+  else if((watering||flushing)&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chartArrived(); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
     chart.targetMix.push(state.targetMixTemp||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); if(chart.targetMix.length>chart.max)chart.targetMix.shift(); drawChart(); }
 }
@@ -5334,8 +5316,7 @@ function gsBody(pfx,viz,lvl,col,kind,scale){
   if(!lvl) return '<path class="gs-liq" d="'+gsCrest(GS_AMP)+'"'+fill+'/>';
   // flow runs: the crest travels, and the faster the flow the faster it goes
   var tdur=(3.4-lvl*0.55).toFixed(2);
-  return '<g><path class="gs-liq" d="'+gsCrest(GS_AMP)+'"'+fill+'/>'
-    +'<animateTransform attributeName="transform" type="translate" values="0 0;100 0" dur="'+tdur+'s" repeatCount="indefinite"/></g>'; }
+  return '<g class="gs-flow" data-dur="'+tdur+'"><path class="gs-liq" d="'+gsCrest(GS_AMP)+'"'+fill+'/></g>'; }
 // A step of level rebuilds the surface, which restarts its animation. Sitting
 // exactly on a boundary while the reading wobbles would do that several times a
 // second, so a step only counts once the value is clear of the boundary.
@@ -5352,7 +5333,7 @@ function gsLevelOf(pfx,viz,v){
 // fall runs at one speed rather than lurching once per report. Measured on a
 // 9 bar fall reported at 4.4/s: the largest move between frames is 0.8% of the
 // tile against 1.7% for an exponential follow, and the speed varies half as much.
-var _gsCache={}, _gsLvl={}, _gsSeg={}, _gsRAF=null;
+var _gsCache={}, _gsLvl={}, _gsSeg={};
 function gsPlace(pfx,v){
   var sv=document.getElementById(pfx+'Scene'); if(!sv) return;
   var g=_gsSeg[pfx];
@@ -5364,14 +5345,15 @@ function gsPlace(pfx,v){
   var body=sv.firstChild; if(!body||!body.style) return;
   body.style.transform='translateY('+((1-v)*GS_BOX-GS_AMP).toFixed(2)+'px)'; }
 function gsTick(){
-  _gsRAF=null; if(_asleep) return;
+  if(_asleep) return false;
   var now=Date.now(), busy=false;
   for(var pfx in _gsSeg){ var g=_gsSeg[pfx];
     if(g.at===g.to) continue;
     var pr=g.dur>0?Math.min(1,(now-g.t0)/g.dur):1;
     g.at=pr>=1?g.to:(g.from+(g.to-g.from)*pr);
     gsPlace(pfx,g.at); if(pr<1) busy=true; }
-  if(busy) _gsRAF=requestAnimationFrame(gsTick); }
+  return busy; }
+var NEEDLE_TASK={name:'needle',hz:60,draw:function(){ return gsTick(); }};
 function setGaugeScene(pfx,viz,raw,frac,scale,kind){
   var sv=document.getElementById(pfx+'Scene'); if(!sv) return;
   var lvl=prefs.fx?gsLevelOf(pfx,viz,raw):0;
@@ -5386,7 +5368,8 @@ function setGaugeScene(pfx,viz,raw,frac,scale,kind){
     if(tile){ tile.classList.toggle('dial',dial);
       tile.classList.toggle('m-pressure',viz==='pressure');
       tile.classList.toggle('m-flow',viz==='flow'); }
-    sv.innerHTML='<g class="gs-body">'+gsBody(pfx,viz,lvl,col,kind,scale)+'</g>'; }
+    sv.innerHTML='<g class="gs-body">'+gsBody(pfx,viz,lvl,col,kind,scale)+'</g>';
+    if(lvl&&!dial) fxRun(GS_TASK); }
   var to=Math.max(0,Math.min(frac,1)), now=Date.now(), g=_gsSeg[pfx];
   if(!g||g.viz!==viz||!prefs.fx){ _gsSeg[pfx]=g={at:to,to:to,from:to,t0:now,dur:0,last:now,viz:viz}; gsPlace(pfx,to); return; }
   if(to!==g.to){
@@ -5395,7 +5378,7 @@ function setGaugeScene(pfx,viz,raw,frac,scale,kind){
     g.from=g.at; g.to=to; g.t0=now; g.dur=ivl; }
   g.last=now;
   if(rebuilt) gsPlace(pfx,g.at);
-  if(g.at!==g.to) { if(_gsRAF==null&&!_asleep) _gsRAF=requestAnimationFrame(gsTick); } }
+  if(g.at!==g.to) fxRun(NEEDLE_TASK); }
 // Under the band, in it, or over it -- or -1 when this reading has no band
 // (steam, hot water, or no profile loaded).
 function gaugeZoneIndex(kind,scale,frac){
@@ -5505,18 +5488,104 @@ function bubbleSeeds(level){
     out.push([TANK_BUBBLE_X[i],4+(i%3),(dur+(i%4)*0.35).toFixed(2),TANK_BUBBLE_DELAY[i]]); }
   return out; }
 function setTankBubbles(on,level){
-  var fill=document.getElementById('waterFill'); if(!fill) return;
-  if(on===_bubblesOn && level===_bubbleLevel && !!fill.querySelector('.bubbles')===on) return;
-  _bubblesOn=on; _bubbleLevel=on?level:-1;
-  var had=fill.querySelector('.bubbles');
-  if(had) had.parentNode.removeChild(had);
-  if(!on) return;
-  var box=document.createElement('div');
-  box.className='bubbles';
-  box.innerHTML=bubbleSeeds(level).map(function(b){
-    return '<i class="bub" style="left:'+(b[0]/12.8).toFixed(2)+'%;--d:'+(b[1]+1)+'px;'
-      +'animation-duration:'+b[2]+'s;animation-delay:'+b[3]+'s"></i>'; }).join('');
-  fill.appendChild(box); }
+  _bubblesOn=on; _bubbleLevel=on?level:-1; _tank.bubbles=_bubbleLevel; }
+// ── Motion clock ────────────────────────────────────────────────────
+// One requestAnimationFrame loop draws everything that moves: the live graph,
+// the tank and the flowing gauge. Each task keeps its own rate, and the loop
+// stops whenever nobody can see it -- asleep, hidden, or behind a page.
+var FX={tasks:[],raf:null,cost:0};
+function fxIdle(){ return _asleep||document.hidden||(_pageOpen&&!_monOpen); }
+function fxHas(k){ return FX.tasks.indexOf(k)>=0; }
+function fxRun(k){ if(!fxHas(k)) FX.tasks.push(k); fxKick(); }
+function fxStop(k){ var i=FX.tasks.indexOf(k); if(i>=0) FX.tasks.splice(i,1); }
+function fxKick(){ if(FX.raf==null&&FX.tasks.length&&!fxIdle()) FX.raf=requestAnimationFrame(fxFrame); }
+function fxFrame(now){
+  FX.raf=null; if(fxIdle()) return;
+  var t0=performance.now();
+  FX.tasks.slice().forEach(function(k){
+    if(now-(k.at||0)<1000/(k.hz||30)-4) return;
+    k.at=now; var keep=false, s0=performance.now();
+    try{ keep=k.draw(now)!==false; }catch(e){ keep=false; }
+    var ms=performance.now()-s0;
+    k.cost=(k.cost==null)?ms:k.cost*0.9+ms*0.1; k.frames=(k.frames||0)+1;
+    if(!keep) fxStop(k); });
+  FX.cost=FX.cost*0.9+(performance.now()-t0)*0.1;
+  fxKick(); }
+// The tank is two waves over a body of water, drawn on one canvas. The level
+// eases toward the reading, the surface swells while water is being drawn
+// off, and a hot tank bubbles.
+var _tank={lvl:-1,target:0,color:[56,189,248],bubbles:-1,amp:4,at:0};
+var TANK_TASK={name:'tank',hz:30,draw:function(now){ drawTank(now); return !!prefs.fx; }};
+function tankLevel(pct,snap){
+  _tank.target=Math.max(0,Math.min(pct,100))*0.9;
+  if(snap||_tank.lvl<0) _tank.lvl=_tank.target;
+  tankWake(); }
+function tankWake(){
+  if(prefs.fx&&!_asleep) fxRun(TANK_TASK);
+  else { fxStop(TANK_TASK); if(!_asleep) drawTank(performance.now()); } }
+function tankBubbleCount(){ return _tank.bubbles<0?0:4+_tank.bubbles; }
+function drawTank(now){
+  var cv=document.getElementById('tankFx'); if(!cv) return;
+  var r=cv.getBoundingClientRect(); if(!r.width||!r.height) return;
+  var dpr=Math.min(window.devicePixelRatio||1,2), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr);
+  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  var W=r.width, H=r.height, fx=!!prefs.fx;
+  var dt=(fx&&_tank.at)?Math.min(0.1,Math.max(0,(now-_tank.at)/1000)):1; _tank.at=now;
+  if(_tank.lvl<0) _tank.lvl=_tank.target;
+  _tank.lvl+=(_tank.target-_tank.lvl)*Math.min(1,dt*2.5);
+  var run=state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning;
+  _tank.amp+=((run?6.5:4)-_tank.amp)*Math.min(1,dt*1.5);
+  ctx.clearRect(0,0,W,H);
+  if(_tank.lvl<=0.2) return;
+  var c=_tank.color, t=fx?now/1000:0, top=H*(1-_tank.lvl/100), A=_tank.amp;
+  function rgba(a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
+  function surface(amp,len,speed,ph){
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(var x=0;x<=W+6;x+=6) ctx.lineTo(x,top+amp*Math.sin(x/len*Math.PI*2+t*speed+ph));
+    ctx.lineTo(W,H); ctx.closePath(); }
+  surface(A*0.8,W/1.6,-0.8,1.7); ctx.fillStyle=rgba(.22); ctx.fill();
+  surface(A,W/2.3,1.15,0);
+  var g=ctx.createLinearGradient(0,top-A,0,H); g.addColorStop(0,rgba(.36)); g.addColorStop(1,rgba(.55));
+  ctx.fillStyle=g; ctx.fill();
+  ctx.beginPath();
+  for(var x=0;x<=W+6;x+=6){ var y=top+A*Math.sin(x/(W/2.3)*Math.PI*2+t*1.15); if(x) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
+  ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=1.3; ctx.stroke();
+  var n=fx?tankBubbleCount():0;
+  for(var i=0;i<n;i++){
+    var dur=5.8-_tank.bubbles*0.5+(i%4)*0.35, ph=((t+TANK_BUBBLE_DELAY[i])/dur)%1;
+    var bx=TANK_BUBBLE_X[i]/1280*W+Math.sin(t*2.2+i)*3, by=H+4-ph*(H+4-top);
+    var a=0.85*Math.min(1,ph/0.12)*Math.min(1,(1-ph)/0.28);
+    ctx.beginPath(); ctx.arc(bx,by,(5+(i%3))/2,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,'+a.toFixed(3)+')'; ctx.fill(); } }
+// A flowing gauge crest travels at a rate set by its level. Its phase comes
+// from the clock rather than from when the surface was built, so a rebuild
+// does not jerk it back to the start.
+var GS_TASK={name:'gauge',hz:30,draw:function(now){ return gsFlowTick(now)>0&&!!prefs.fx; }};
+function gsFlowTick(now){
+  var list=document.querySelectorAll('.app .gs-flow');
+  for(var i=0;i<list.length;i++){ var g=list[i], d=parseFloat(g.getAttribute('data-dur'))||3;
+    g.setAttribute('transform','translate('+(((now/1000)/d%1)*100).toFixed(2)+' 0)'); }
+  return list.length; }
+// A corner readout of frames per second and of what the clock spends per
+// frame, for judging a tablet rather than guessing.
+var _fpsN=0, _fpsAt=0, _fpsRaf=null;
+function setFpsMeter(on){ prefs.fpsMeter=!!on; savePrefs(); applyFpsMeter(); }
+function applyFpsMeter(){
+  var el=document.getElementById('fpsMeter');
+  if(prefs.fpsMeter){
+    if(!el){ el=document.createElement('div'); el.id='fpsMeter'; el.className='fps-meter'; document.body.appendChild(el); }
+    el.hidden=false;
+    if(_fpsRaf==null){ _fpsAt=performance.now(); _fpsN=0; _fpsRaf=requestAnimationFrame(fpsTick); } }
+  else { if(el) el.hidden=true;
+    if(_fpsRaf!=null){ cancelAnimationFrame(_fpsRaf); _fpsRaf=null; } } }
+function fpsTick(now){
+  _fpsRaf=null; if(!prefs.fpsMeter) return;
+  _fpsN++;
+  if(now-_fpsAt>=1000){ var el=document.getElementById('fpsMeter');
+    if(el) el.textContent=Math.round(_fpsN*1000/(now-_fpsAt))+' fps \u00b7 '+FX.cost.toFixed(1)+' ms';
+    _fpsN=0; _fpsAt=now; }
+  _fpsRaf=requestAnimationFrame(fpsTick); }
 function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   var low=!plumbed()&&(state.water.current<=state.water.refill||pct<15);
   // Mix (brew water) temperature is the meaningful reference during a shot; the
@@ -5525,12 +5594,10 @@ function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.wate
   if(!_dispColor){ _dispColor=target.slice(); }
   else { var k=0.18; for(var i=0;i<3;i++){ _dispColor[i]+= (target[i]-_dispColor[i])*k; } }
   var c=[Math.round(_dispColor[0]),Math.round(_dispColor[1]),Math.round(_dispColor[2])];
-  var fill=document.getElementById('waterFill'); if(!fill) return;
-  fill.style.background='linear-gradient(180deg,rgba('+c[0]+','+c[1]+','+c[2]+',.30),rgba('+c[0]+','+c[1]+','+c[2]+',.48))';
-  var wp=fill.querySelector('.wave-path'); if(wp) wp.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.5)';
-  var wp2=fill.querySelector('.wave-path2'); if(wp2) wp2.style.fill='rgba('+c[0]+','+c[1]+','+c[2]+',.32)';
+  _tank.color=c;
   var want=!!prefs.fx&&(t >= (_bubblesOn?TANK_BUBBLE_OFF:TANK_BUBBLE_ON));
   setTankBubbles(want, want?bubbleLevel(t):-1);
+  tankWake();
 }
 function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   // Out of water is the machine's own needsWater state and nothing else. The
@@ -5542,9 +5609,9 @@ function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.cu
   if(lbl) lbl.textContent=dry?t('needsWater'):t('tank');
   // Refill kit ON = plumbed supply, tank is effectively always full.
   if(plumbed()&&!dry){
-    document.getElementById('waterPct').textContent=100; document.getElementById('waterFill').style.height=fillHeight(100);
+    document.getElementById('waterPct').textContent=100; document.getElementById('waterFill').style.height=fillHeight(100); tankLevel(100);
     document.getElementById('waterWarn').style.display='none'; updateWaterVisual(); return; }
-  document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=fillHeight(pct);
+  document.getElementById('waterPct').textContent=Math.round(pct); document.getElementById('waterFill').style.height=fillHeight(pct); tankLevel(pct);
   document.getElementById('waterWarn').style.display=(dry||state.water.current<=state.water.refill||pct<15)?'inline':'none';
   updateWaterVisual(); }
 // Map a 0-100% tank level to a visual fill height. Full (100%) fills to 90% so the
@@ -5784,7 +5851,84 @@ function tick(){ if(!state.shotStart) return;
 var _chartRAF=null;
 // The monitor is a full-screen page, but it is the one page that exists to show
 // the graph, so it does not suppress drawing the way the others do.
+// While something pours, the graph is drawn a sample behind the socket and
+// every line is read at that one moment, so the trace grows continuously
+// instead of jumping once per report. The machine's clock is mapped onto this
+// one by the quickest arrival seen, which a slow frame cannot drag around.
+var _chartOff=null;
+// Thirty frames a second, or twenty on a tablet where one frame of the graph
+// takes more than five milliseconds. The temperatures under it move slowly and
+// are drawn on every other frame.
+var CHART_TASK={name:'chart',hz:30,n:0,draw:function(){
+  if(chartDispTime()===Infinity){ _drawChartNow(); drawTempChart(); return false; }
+  _drawChartNow();
+  if(!(this.n++%2)) drawTempChart();
+  this.hz=(this.cost>5)?20:30;
+  return true; }};
+function chartLive(){ return !!prefs.fx&&!!(state.shotRunning||state.steamRunning||state.waterRunning)&&chart.t.length>1&&_chartOff!=null; }
+function chartLag(){ var t=chart.t, n=t.length; if(n<2) return 0;
+  var k=Math.min(5,n-1); return Math.max(80,Math.min(600,(t[n-1]-t[n-1-k])/k)); }
+function chartDispTime(){ return chartLive()?Date.now()-_chartOff-chartLag():Infinity; }
+function chartArrived(){
+  var off=Date.now()-chart.t[chart.t.length-1];
+  _chartOff=(_chartOff==null)?off:Math.min(_chartOff,off);
+  if(chartLive()) fxRun(CHART_TASK); }
+// A monotone cubic through every sample: the corners round off, and no curve
+// swings above or below the two samples it joins.
+function smoothPath(ctx,xs,ys){
+  var n=xs.length; if(!n) return;
+  ctx.moveTo(xs[0],ys[0]);
+  if(n<3){ for(var j=1;j<n;j++) ctx.lineTo(xs[j],ys[j]); return; }
+  var d=[], m=[], i;
+  for(i=0;i<n-1;i++){ var dx=xs[i+1]-xs[i]; d[i]=dx>0?(ys[i+1]-ys[i])/dx:0; }
+  m[0]=d[0]; m[n-1]=d[n-2];
+  for(i=1;i<n-1;i++) m[i]=(d[i-1]*d[i]<=0)?0:(d[i-1]+d[i])/2;
+  for(i=0;i<n-1;i++){
+    if(d[i]===0){ m[i]=0; m[i+1]=0; continue; }
+    var a=m[i]/d[i], b=m[i+1]/d[i], q=a*a+b*b;
+    if(q>9){ var k=3/Math.sqrt(q); m[i]=k*a*d[i]; m[i+1]=k*b*d[i]; } }
+  for(i=0;i<n-1;i++){ var h=(xs[i+1]-xs[i])/3;
+    ctx.bezierCurveTo(xs[i]+h,ys[i]+m[i]*h,xs[i+1]-h,ys[i+1]-m[i+1]*h,xs[i+1],ys[i+1]); } }
+function livePts(d,ts,disp,xi,xt,yv){
+  var useT=disp<Infinity&&ts&&ts.length===d.length&&d.length>1, xs=[], ys=[];
+  for(var i=0;i<d.length;i++){
+    if(useT&&ts[i]>disp){
+      if(i>0){ var f=(disp-ts[i-1])/Math.max(1,ts[i]-ts[i-1]);
+        xs.push(xt(disp)); ys.push(yv(d[i-1]+(d[i]-d[i-1])*f)); }
+      break; }
+    xs.push(xi(i)); ys.push(yv(d[i])); }
+  return {xs:xs,ys:ys}; }
+function liveVal(d,ts,disp){
+  if(!d||!d.length) return null;
+  var n=d.length;
+  if(!(disp<Infinity)||!ts||ts.length!==n) return d[n-1];
+  for(var i=0;i<n;i++) if(ts[i]>disp)
+    return i?d[i-1]+(d[i]-d[i-1])*((disp-ts[i-1])/Math.max(1,ts[i]-ts[i-1])):d[0];
+  return d[n-1]; }
+function hexRgba(hex,a){ if(Array.isArray(hex)) return 'rgba('+hex[0]+','+hex[1]+','+hex[2]+','+a+')';
+  var h=hex.replace('#','');
+  return 'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')'; }
+// Water under a line: a gradient that deepens toward the curve, and while the
+// shot runs a few ripples drifting through it.
+function waterArea(ctx,p,color,base,alpha,live){
+  var n=p.xs.length; if(n<2) return;
+  var top=base; for(var i=0;i<n;i++) if(p.ys[i]<top) top=p.ys[i];
+  ctx.save(); ctx.beginPath(); smoothPath(ctx,p.xs,p.ys);
+  ctx.lineTo(p.xs[n-1],base); ctx.lineTo(p.xs[0],base); ctx.closePath();
+  var g=ctx.createLinearGradient(0,top,0,base);
+  g.addColorStop(0,hexRgba(color,alpha)); g.addColorStop(1,hexRgba(color,alpha*0.12));
+  ctx.fillStyle=g; ctx.fill();
+  if(live){ ctx.clip(); var tt=Date.now()/1000, x0=p.xs[0], x1=p.xs[n-1];
+    ctx.strokeStyle=document.body.classList.contains('night')?'rgba(255,255,255,.10)':'rgba(255,255,255,.38)';
+    ctx.lineWidth=1.3;
+    for(var r=0;r<3;r++){ var yb=top+(base-top)*(0.28+0.24*r);
+      ctx.beginPath();
+      for(var x=x0;x<=x1+5;x+=5){ var y=yb+2.2*Math.sin((x-x0)/24+tt*(1.4+r*0.35)+r*2.1);
+        if(x===x0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+      ctx.stroke(); } }
+  ctx.restore(); }
 function drawChart(){ if(_asleep||(_pageOpen&&!_monOpen)||_chartRAF) return;
+  if(fxHas(CHART_TASK)&&chartLive()) return;
   _chartRAF=requestAnimationFrame(function(){ _chartRAF=null; _drawChartNow();
     drawTempChart(); }); }
 var _chartDims={w:0,h:0}; var _chartLegendMode=null; var _chartBg=null, _chartBgKey=null;
@@ -5858,8 +6002,9 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   // index. Counting samples as tenths of a second ran the trace slow whenever
   // the link delivered fewer than ten a second.
   var T0=chart.t.length?chart.t[0]:0;
-  var ELAPSED=(chart.t.length===N&&N>1)?(chart.t[N-1]-T0)/1000:0;
-  var timed=ELAPSED>0.05;
+  var DISP=chartDispTime(), LIVE=DISP<Infinity;
+  var ELAPSED=(chart.t.length===N&&N>1)?(Math.min(chart.t[N-1],DISP)-T0)/1000:0;
+  var timed=ELAPSED>0.05||(chart.t.length===N&&N>1&&chart.t[N-1]-T0>50);
   var SPAN=axisSpan(guide?Math.max(guide.total,timed?ELAPSED:N/10):(timed?ELAPSED:0),!chartReviewing);
   function pxAt(ms){ return X0+Math.max(0,Math.min(((ms-T0)/1000)/SPAN,1))*PW; }
   function px(i){ if(timed) return pxAt(chart.t[i]);
@@ -5949,24 +6094,32 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     ctx.save(); ctx.setLineDash(GOAL_DASH); ctx.beginPath();
     var pen=false;
     for(var i=0;i<d.length;i++){
+      if(LIVE&&chart.t[i]>DISP) break;
       if(!(d[i]>0)){ pen=false; continue; }
       var x=pxOf(d,i), y=py(d[i],mx);
       if(pen) ctx.lineTo(x,y); else { ctx.moveTo(x,y); pen=true; } }
     ctx.strokeStyle=c; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
-  function line(d,c,mx,fill){ if(d.length<2) return; ctx.beginPath(); for(var i=0;i<d.length;i++){ if(i===0)ctx.moveTo(pxOf(d,i),py(d[i],mx));else ctx.lineTo(pxOf(d,i),py(d[i],mx)); } ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); if(fill){ ctx.lineTo(X0+PW,Y0+PH); ctx.lineTo(X0,Y0+PH); ctx.closePath(); var g=ctx.createLinearGradient(0,Y0,0,Y0+PH); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
+  function tsOf(d){ return (d===chart.weight||d===chart.wflow)?chart.wt:chart.t; }
+  function vAt(d){ return liveVal(d,tsOf(d),DISP); }
+  function line(d,c,mx,fill){ if(d.length<2) return;
+    var p=livePts(d,tsOf(d),DISP,function(i){ return pxOf(d,i); },pxAt,function(v){ return py(v,mx); });
+    if(p.xs.length<2) return;
+    if(fill) waterArea(ctx,p,c,Y0+PH,fill,LIVE);
+    ctx.beginPath(); smoothPath(ctx,p.xs,p.ys);
+    ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); }
   if(isSteam){
-    if(hasTempAxis&&vis('steam')) line(chart.steamTemp,SERIES.steam,TMAX,'rgba(214,64,43,.15)'); // steam temp (right axis scale)
-    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);        // steam flow (small-range scale)
+    if(hasTempAxis&&vis('steam')) line(chart.steamTemp,SERIES.steam,TMAX,null); // steam temp (right axis scale)
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,.24);        // steam flow (small-range scale)
     if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,null); // steam pressure
   } else if(isWater){
-    if(hasTempAxis&&vis('water')) line(chart.waterTemp,SERIES.water,TMAX,'rgba(214,64,43,.15)');  // water temp (right axis scale)
-    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);        // water flow
+    if(hasTempAxis&&vis('water')) line(chart.waterTemp,SERIES.water,TMAX,null);  // water temp (right axis scale)
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,.24);        // water flow
   } else if(!hasTempAxis){
     drawGuide();
     if(vis('pressureGoal')) goal(chart.targetPressure,SERIES.pressureGoal,PMAX);
     if(vis('flowGoal')) goal(chart.targetFlow,SERIES.flowGoal,FMAX);
-    if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)');
-    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);
+    if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,.30);
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,.20);
     // the cumulative line is the default, so it is laid over the rate
     if(vis('wflow')) line(chart.wflow,SERIES.wflow,FMAX,null);
     if(vis('weight')) line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
@@ -5980,8 +6133,8 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     if(vis('mix')) line(chart.mixTemp,SERIES.mix,TMAX,null);
     if(vis('pressureGoal')) goal(chart.targetPressure,SERIES.pressureGoal,PMAX);
     if(vis('flowGoal')) goal(chart.targetFlow,SERIES.flowGoal,FMAX);
-    if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,'rgba(31,191,168,.15)');
-    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,null);
+    if(vis('pressure')) line(chart.pressure,SERIES.pressure,PMAX,.30);
+    if(vis('flow')) line(chart.flow,SERIES.flow,FMAX,.20);
     // the cumulative line is the default, so it is laid over the rate
     if(vis('wflow')) line(chart.wflow,SERIES.wflow,FMAX,null);
     if(vis('weight')) line(chart.weight,SERIES.weight,settings.doseOut*1.2,null);
@@ -5990,7 +6143,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
   // live readouts at the leading edge
   var running=state.shotRunning||state.steamRunning||state.waterRunning;
   if(N>=1 && running){
-    var lx=px(N-1);
+    var lx=LIVE?pxAt(Math.min(DISP,chart.t[N-1])):px(N-1);
     // Four readouts on one edge run into each other and into the lines they
     // belong to. Lay them all out first: keep the dot on the true value, push
     // the labels apart, tether each back to its dot, and put them on a chip so
@@ -5999,19 +6152,19 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
     function tags(items){
       drawReadouts(ctx, items.map(function(it){
         return (it.v==null||isNaN(it.v))?null:{v:it.v,c:it.c,u:it.u,y:py(it.v,it.mx)}; }), lx, Y0, Y0+PH); }
-    if(isSteam){ tags([{v:(hasTempAxis&&vis('steam'))?chart.steamTemp[N-1]:null,mx:TMAX,c:SERIES.steam,u:U_TEMP},
-                       {v:vis('flow')?chart.flow[N-1]:null,mx:FMAX,c:SERIES.flow,u:U_FLOW},
-                       {v:vis('pressure')?chart.pressure[N-1]:null,mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
-    else if(isWater){ tags([{v:(hasTempAxis&&vis('water'))?chart.waterTemp[N-1]:null,mx:TMAX,c:SERIES.water,u:U_TEMP},
-                            {v:vis('flow')?chart.flow[N-1]:null,mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
+    if(isSteam){ tags([{v:(hasTempAxis&&vis('steam'))?vAt(chart.steamTemp):null,mx:TMAX,c:SERIES.steam,u:U_TEMP},
+                       {v:vis('flow')?vAt(chart.flow):null,mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                       {v:vis('pressure')?vAt(chart.pressure):null,mx:PMAX,c:SERIES.pressure,u:U_BAR}]); }
+    else if(isWater){ tags([{v:(hasTempAxis&&vis('water'))?vAt(chart.waterTemp):null,mx:TMAX,c:SERIES.water,u:U_TEMP},
+                            {v:vis('flow')?vAt(chart.flow):null,mx:FMAX,c:SERIES.flow,u:U_FLOW}]); }
     else { var wN=chart.weight.length, fN=chart.wflow.length;
-           tags([{v:vis('pressure')?chart.pressure[N-1]:null,mx:PMAX,c:SERIES.pressure,u:U_BAR},
-                 {v:vis('flow')?chart.flow[N-1]:null,mx:FMAX,c:SERIES.flow,u:U_FLOW},
-                 {v:(vis('wflow')&&fN)?chart.wflow[fN-1]:null,mx:FMAX,c:SERIES.wflow,u:U_GS},
+           tags([{v:vis('pressure')?vAt(chart.pressure):null,mx:PMAX,c:SERIES.pressure,u:U_BAR},
+                 {v:vis('flow')?vAt(chart.flow):null,mx:FMAX,c:SERIES.flow,u:U_FLOW},
+                 {v:(vis('wflow')&&fN)?vAt(chart.wflow):null,mx:FMAX,c:SERIES.wflow,u:U_GS},
                  // the scale ticks on its own, so the weight reads from its own end
-                 {v:(vis('weight')&&wN)?chart.weight[wN-1]:null,mx:settings.doseOut*1.2,c:SERIES.weight,u:U_G},
-                 {v:(hasTempAxis&&vis('basket'))?chart.groupTemp[N-1]:null,mx:TMAX,c:SERIES.basket,u:U_TEMP},
-                 {v:(hasTempAxis&&vis('mix'))?chart.mixTemp[N-1]:null,mx:TMAX,c:SERIES.mix,u:U_TEMP}]); }
+                 {v:(vis('weight')&&wN)?vAt(chart.weight):null,mx:settings.doseOut*1.2,c:SERIES.weight,u:U_G},
+                 {v:(hasTempAxis&&vis('basket'))?vAt(chart.groupTemp):null,mx:TMAX,c:SERIES.basket,u:U_TEMP},
+                 {v:(hasTempAxis&&vis('mix'))?vAt(chart.mixTemp):null,mx:TMAX,c:SERIES.mix,u:U_TEMP}]); }
   }
 }
 
@@ -6383,9 +6536,7 @@ function tickHdrClock(){
 var _lockClockT=null; var _asleep=false; var _preSleepBrightness=null;
 // Nothing may be left running behind the sleep screen, and bubbles are only
 // worth having when someone is looking.
-function dropTankBubbles(){ _bubblesOn=false; _bubbleLevel=-1;
-  var fill=document.getElementById('waterFill'); if(!fill) return;
-  var b=fill.querySelector('.bubbles'); if(b) b.parentNode.removeChild(b); }
+function dropTankBubbles(){ _bubblesOn=false; _bubbleLevel=-1; _tank.bubbles=-1; }
 function pauseSvgAnimations(on){
   if(on) dropTankBubbles();
   var list=document.querySelectorAll('.app svg');
@@ -6428,7 +6579,7 @@ function endSleepUI(){ _asleep=false;
   // finished fading out, which is the crossfade the other direction wants.
   document.body.classList.remove('asleep'); document.body.classList.remove('asleep-settled');
   document.getElementById('lockScreen').classList.remove('show');
-  parkSockets(false); syncWakeLock(); pauseSvgAnimations(false);
+  parkSockets(false); syncWakeLock(); pauseSvgAnimations(false); fxKick(); tankWake(); albumWake();
   if(prefs.cam) camStart();
   if(_lockClockT){ clearTimeout(_lockClockT); _lockClockT=null; }
   ltStop();
@@ -7007,7 +7158,7 @@ function connDropCall(kind,id){
   return 'connSet(\''+escapeArg(kind==='machine'?'machine':'grinder')+'\','+q+',false)'; }
 function connLine(d,sub,actions,on,rec){
   return '<div class="cn-line'+(on?' up':'')+'">'
-    +'<div class="cn-line-t"><div class="cn-name">'+escapeHtml(d.name||d.id)+'</div>'
+    +'<div class="cn-line-t"><div class="cn-name" title="'+escapeHtml(d.name||d.id)+'">'+escapeHtml(d.name||d.id)+'</div>'
     +'<div class="cn-sub">'+escapeHtml(sub)+'</div>'
     +(rec?'<div class="cn-rec">'+escapeHtml(rec)+'</div>':'')+'</div>'
     +'<div class="cn-acts">'+actions+'</div></div>'; }
@@ -7044,8 +7195,8 @@ function connPoolBlock(kind){
       a+=connBtn(t('connForget'),"connForget('"+escapeArg(d.id)+"')",busy);
     return connLine(d,[connElsewhere(kind,d),connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),
       a,false,kind==='grinder'?connGrinderNote(d):''); }).join('')+'</div>'; }
-function connCell(c,span,lone){
-  return '<div class="cn-cell'+(c.wide?' wide':'')+(span>1?' span'+span:'')+(lone?' lone2':'')+'" data-cell="'+c.key+'"><div class="cn-sec-h"><span class="cn-sec-g">'+c.glyph+'</span>'
+function connCell(c){
+  return '<div class="cn-cell'+(c.wide?' wide':'')+'" data-cell="'+c.key+'"><div class="cn-sec-h"><span class="cn-sec-g">'+c.glyph+'</span>'
     +escapeHtml(t(c.key))
     +(c.key==='doser'?'<span class="cn-sec-x">'+doserHeadExtra()+'</span>':'')+'</div>'
     +'<div class="cn-now-h">'+escapeHtml(t('connNowHeld'))+'</div>'
@@ -7055,12 +7206,8 @@ function renderConnModal(){
   var other=connDevices('other').filter(function(d){ return !isThermo(d)&&!isDoser(d); });
   var cells=connCells(), more=cells.length>CONN_CELLS.length;
   var modal=box.closest('.modal'); if(modal) modal.classList.toggle('more',more);
-  var rest=cells.filter(function(c){ return c.key!=='doser'; }).length;
-  var tail=more?(3-rest%3)%3+1:1;
-  var html=cells.map(function(c,i){
-    var last=c.key!=='doser'&&i===rest-1;
-    return connCell(c,last?tail:1,last&&rest%2===1); }).join('');
-  box.innerHTML='<div class="cn-grid'+(more?' c3':'')+'">'+html+'</div>'
+  var html=cells.map(connCell).join('');
+  box.innerHTML='<div class="cn-grid">'+html+'</div>'
     +(other.length?'<div class="cn-owned">'+escapeHtml(t('connOwned'))+': '
       +escapeHtml(other.map(function(d){ return d.name||d.id; }).join(' \u00b7 '))+'</div>':'');
   var b=document.getElementById('connScanBtn');
@@ -7084,10 +7231,10 @@ function refreshConnDevices(){
 // hand which scale weighs the shot.
 function connScan(){
   if(connLocked()) return;
-  _dosingAutoScanAt=0; _dosingDiscoverAt=0;
+  _dosingAutoScanAt=0; _dosingDiscoverAt=0; _dosingMiss=0;
   _dosingScanning=true; renderConnModal(); syncConnDosing();
   var before=(state.devices||[]).length;
-  api('GET','/api/v1/devices/scan?connect=false',null,60000)
+  return api('GET','/api/v1/devices/scan?connect=false',null,60000)
     .then(function(list){ if(Array.isArray(list)) state.devices=list;
       var found=(state.devices||[]).length;
       toast(found>before?t('dosingScanFound').replace('{n}',found-before)
@@ -8554,7 +8701,9 @@ function savePrefs(){ _prefsTouchedAt=Date.now(); lsSet('aurora_prefs',prefs);
 function migratePrefs(){ _prefsBase={}; savePrefs(); }
 function isNightTime(){ var h=new Date().getHours(); return (NIGHT_START>NIGHT_END) ? (h>=NIGHT_START||h<NIGHT_END) : (h>=NIGHT_START&&h<NIGHT_END); }
 // When Auto is on, night follows the clock; otherwise it follows the manual toggle.
-function applyFx(){ document.body.classList.toggle('no-fx',!prefs.fx); _gsCache={}; if(!_asleep) updateMachineUI(); }
+function applyFx(){ document.body.classList.toggle('no-fx',!prefs.fx); _gsCache={}; if(!_asleep) updateMachineUI();
+  if(!prefs.fx){ fxStop(GS_TASK); fxStop(CHART_TASK); drawChart(); var acv=albumLiveCanvas(); fxStop(ALBUM_TASK); if(acv) drawSimCurve(acv,acv._prof,true); }
+  tankWake(); albumWake(); applyFpsMeter(); }
 function setFx(on){ prefs.fx=!!on; savePrefs(); applyFx(); }
 function applyNight(){ var on=prefs.nightAuto?isNightTime():prefs.night; document.body.classList.toggle('night',on); if(typeof drawChart==='function') drawChart(); redrawCardCurves(); }
 function saveGeminiKey(v){ prefs.geminiKey=(v||'').trim(); savePrefs(); }
@@ -8790,6 +8939,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
       h+=row('camMirror','camMirrorDesc',sw('setCamMirror',!!prefs.camMirror,'setCamMirror(this.checked)')); }
     var pCam=h; h=pScreen;
     h+=row('fx','fxDesc',sw('setFx',!!prefs.fx,'setFx(this.checked)'));
+    h+=row('fpsMeter','fpsMeterDesc',sw('setFpsMeter',!!prefs.fpsMeter,'setFpsMeter(this.checked)'));
     h+=row('lockPics','lockPicsDesc',sw('setLockPics',prefs.lockPics!==false,'setLockPics(this.checked)'));
     if(prefs.lockPics!==false){
       var lm=lockMotion();
@@ -9035,7 +9185,13 @@ function dosingWatchdog(){
   _dosingGreyAt=Date.now();
   reopenDosingWs(); }
 setInterval(dosingWatchdog,5000);
-var _dosingAutoScanAt=0, _dosingDiscoverAt=0;
+var _dosingAutoScanAt=0, _dosingDiscoverAt=0, _dosingMiss=0;
+// Every automatic scan shares the radio with the scales and modules already
+// held, so a dosing scale that stays away is looked for half as often each
+// time it is missed, up to a quarter of an hour.
+var DOSING_SCAN_CAP=900000;
+function dosingScanGap(base){
+  return Math.min(base*Math.pow(2,Math.min(_dosingMiss,10)),Math.max(base,DOSING_SCAN_CAP)); }
 function dosingPickable(){
   var brew=brewScaleId(), pref=(gwSettings&&gwSettings.preferredScaleId)||'';
   return scaleDevices().filter(function(d){
@@ -9048,25 +9204,28 @@ function autoPickDosing(){
   _dosingHoldAt=0; _dosingWaitAt=0;
   toast(t('dosingPicked').replace('{n}',c[0].name||c[0].id),'ok'); }
 function maybeAutoScanDosing(){
-  if(!dosingSupported()) return;
+  if(!dosingSupported()||document.hidden) return;
   if(state.shotRunning||_dosingScanning) return;
   if(brewScalePending()) return;
   var id=dosingId();
-  if(id&&deviceById(id)) return;
+  if(id&&deviceById(id)){ _dosingMiss=0; return; }
   // Nothing chosen yet is a hunt rather than a reunion: it needs the brewing
   // scale actually up, and it is worth far less often.
   if(!id&&!state.scaleConnected) return;
-  var gap=id?90000:600000;
+  var gap=dosingScanGap(id?90000:600000);
   if(Date.now()-(id?_dosingAutoScanAt:_dosingDiscoverAt)<gap) return;
   if(id) _dosingAutoScanAt=Date.now(); else _dosingDiscoverAt=Date.now();
   _dosingScanning=true; renderDosingRow(); syncConnDosing();
-  api('GET','/api/v1/devices/scan?connect=false',null,60000)
+  return api('GET','/api/v1/devices/scan?connect=false',null,60000)
     .then(function(list){ if(Array.isArray(list)) state.devices=list; },function(){})
     .then(function(){ _dosingScanning=false;
       if(!dosingId()) autoPickDosing();
+      var now=dosingId();
+      if(now&&deviceById(now)) _dosingMiss=0; else _dosingMiss++;
       renderDosingRow(); syncConnDosing(); syncDosing(); }); }
 function dosingScan(){
   if(_dosingScanning||state.shotRunning) return;
+  _dosingMiss=0;
   _dosingScanning=true; renderDosingRow(); syncConnDosing();
   var before=scaleDevices().length;
   api('GET','/api/v1/devices/scan?connect=false',null,60000)
@@ -9865,14 +10024,37 @@ function drawCardCurve(canvas,profile){
 function redrawCardCurves(){
   Array.prototype.forEach.call(document.querySelectorAll('#epList .ep-card:not(.bg-card) canvas'),function(cv){
     if(cv._drawn&&cv._profile) drawCardCurve(cv,cv._profile); }); }
-function drawSimCurve(canvas,profile,onColor){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
-  canvas.width=r.width*dpr; canvas.height=r.height*dpr; var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
-  var sim=simulateProfile(profile); if(sim.pts.length<2||sim.total<=0) return;
-  var pC=onColor?'rgba(255,255,255,.95)':'#6366f1', fC=onColor?'rgba(190,235,255,.9)':'#38bdf8', pFill=onColor?'rgba(255,255,255,.22)':'rgba(99,102,241,.15)';
-  var tC=onColor?'rgba(255,214,170,.85)':'#f97316'; // temperature line
-  function draw(field,color,mx,fill){ ctx.beginPath(); sim.pts.forEach(function(pt,i){ var x=(pt.t/sim.total)*W; var y=H-Math.min(pt[field]/mx,1)*(H-6)-3; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke(); if(fill){ ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); var g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,fill); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fill(); } }
-  draw('temp',tC,110,null); // temperature (0-110C scale), drawn first (background)
-  draw('p',pC,12,pFill); draw('f',fC,12,null); }
+function drawSimCurve(canvas,profile,onColor,live){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
+  var cw=Math.round(r.width*dpr), ch=Math.round(r.height*dpr);
+  if(canvas.width!==cw||canvas.height!==ch){ canvas.width=cw; canvas.height=ch; }
+  var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
+  if(canvas._simOf!==profile){ canvas._simOf=profile; canvas._sim=simulateProfile(profile); }
+  var sim=canvas._sim; canvas._prof=profile; canvas._on=!!onColor;
+  if(sim.pts.length<2||sim.total<=0) return;
+  var pC=onColor?'rgba(255,255,255,.95)':'#6366f1', fC=onColor?'rgba(190,235,255,.9)':'#38bdf8';
+  var pBase=onColor?[255,255,255]:'#6366f1', fBase=onColor?[190,235,255]:'#38bdf8';
+  var tC=onColor?'rgba(255,214,170,.85)':'#f97316';
+  function pts(field,mx){ var xs=[],ys=[];
+    sim.pts.forEach(function(pt){ xs.push((pt.t/sim.total)*W); ys.push(H-Math.min(pt[field]/mx,1)*(H-6)-3); });
+    return {xs:xs,ys:ys}; }
+  function stroke(q,color){ ctx.beginPath(); smoothPath(ctx,q.xs,q.ys);
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); }
+  stroke(pts('temp',110),tC);
+  var P=pts('p',12), F=pts('f',12);
+  waterArea(ctx,F,fBase,H,onColor?.16:.10,false);
+  waterArea(ctx,P,pBase,H,onColor?.34:.20,!!live);
+  stroke(P,pC); stroke(F,fC); }
+// The loaded profile's cover, when it is the one in the middle, carries the
+// same moving water as the live graph.
+var ALBUM_TASK={name:'album',hz:30,draw:function(now){
+  var cv=albumLiveCanvas();
+  if(!cv) return false;
+  if(!prefs.fx){ drawSimCurve(cv,cv._prof,true); return false; }
+  drawSimCurve(cv,cv._prof,true,true); return true; }};
+function albumLiveCanvas(){
+  var cv=document.querySelector('.album.center.loaded .al-curve canvas');
+  return (cv&&cv._prof)?cv:null; }
+function albumWake(){ if(prefs.fx&&albumLiveCanvas()) fxRun(ALBUM_TASK); }
 
 // ── The camera ──────────────────────────────────────────────────────
 // An <img> pointed at an MJPEG endpoint. The connection stays open for as long
@@ -10503,7 +10685,7 @@ function renderCarousel(){
     var isLoaded=!!(curProfileObj&&curProfileObj.id===p.id);
     p._el.classList.toggle('loaded', isLoaded); });
   // redraw center curve crisp at its scaled size after transform applies
-  if(!_carDragging){ var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); },400); }
+  if(!_carDragging){ var ctr=carItems[carIndex]; if(ctr&&ctr._curveCv){ setTimeout(function(){ drawSimCurve(ctr._curveCv,ctr.profile,true); albumWake(); },400); }
     if(prefs.cam) camPlace(); }
   var cur=carItems[carIndex]; if(cur){ var pr=cur.profile||{};
     var stc=splitTitle(pr.title||cur.id);
@@ -12579,7 +12761,7 @@ function afterPageChange(){
     _pageOpen=open;
     document.body.classList.toggle('page-open', open);
     pauseSvgAnimations(open);
-    if(!open){ _chartBgKey=null; drawChart(); updateMachineUI(); updateWaterUI(); updateScaleUI(); } }); }
+    if(!open){ _chartBgKey=null; drawChart(); updateMachineUI(); updateWaterUI(); updateScaleUI(); fxKick(); } }); }
 // Two full-screen pages cross-fading and scaling at once is the jank you can see;
 // a swap is instant, an ordinary open or close still animates.
 function swapPage(fn){
@@ -18729,9 +18911,11 @@ function drawTempChart(){
   // one has to as well or the two disagree about where a second is
   var guide=(!isSteam&&!isWater)?currentGuide():null;
   var T0=chart.t.length?chart.t[0]:0;
-  var ELAPSED=(chart.t.length===N&&N>1)?(chart.t[N-1]-T0)/1000:0;
-  var timed=ELAPSED>0.05;
+  var DISP=chartDispTime();
+  var ELAPSED=(chart.t.length===N&&N>1)?(Math.min(chart.t[N-1],DISP)-T0)/1000:0;
+  var timed=ELAPSED>0.05||(chart.t.length===N&&N>1&&chart.t[N-1]-T0>50);
   var SPAN=axisSpan(guide?Math.max(guide.total,timed?ELAPSED:N/10):(timed?ELAPSED:0),!chartReviewing);
+  function pxAt(ms){ return X0+Math.max(0,Math.min(((ms-T0)/1000)/SPAN,1))*PW; }
   function px(i){ if(timed) return X0+Math.max(0,Math.min(((chart.t[i]-T0)/1000)/SPAN,1))*PW;
     if(guide) return X0+Math.min((i/10)/SPAN,1)*PW;
     return X0+(N<2?0:(i/(N-1))*PW); }
@@ -18753,7 +18937,9 @@ function drawTempChart(){
   function tline(d,c,dash){ if(!d||d.length<2) return;
     if(dash){ var any=false; for(var g=0;g<d.length;g++){ if(d[g]>0){ any=true; break; } } if(!any) return; }
     ctx.save(); if(dash) ctx.setLineDash(dash);
-    ctx.beginPath(); for(var i=0;i<d.length;i++){ var x=px(i),y=py(d[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+    var p=livePts(d,chart.t,DISP,px,pxAt,py);
+    if(dash){ ctx.beginPath(); for(var i=0;i<p.xs.length;i++){ if(i===0)ctx.moveTo(p.xs[i],p.ys[i]); else ctx.lineTo(p.xs[i],p.ys[i]); } }
+    else { ctx.beginPath(); smoothPath(ctx,p.xs,p.ys); }
     ctx.strokeStyle=c; ctx.lineWidth=dash?1.5:2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); ctx.restore(); }
   if(guide&&guide.hasTemp&&vis('basket')){ ctx.save(); ctx.globalAlpha=.22; ctx.lineWidth=2; ctx.lineJoin='round';
     ctx.beginPath(); guide.pts.forEach(function(pt,i){ var x=X0+Math.min(pt.t/SPAN,1)*PW, y=py(pt.temp);
@@ -18769,14 +18955,14 @@ function drawTempChart(){
   // the same readouts the extraction chart carries, for the lines that live here
   var running=state.shotRunning||state.steamRunning||state.waterRunning;
   if(N>=1 && running){
-    var last=function(d){ return (d&&d.length)?d[d.length-1]:null; };
+    var last=function(d){ return liveVal(d,chart.t,DISP); };
     // a line that is not drawn has no reading to place against it
     var rows=(isSteam?[{k:'steam',v:last(chart.steamTemp),c:SERIES.steam}]
       :isWater?[{k:'water',v:last(chart.waterTemp),c:SERIES.water},{k:'mixGoal',v:last(chart.targetMix),c:SERIES.mixGoal}]
       :[{k:'basket',v:last(chart.groupTemp),c:SERIES.basket},{k:'mix',v:last(chart.mixTemp),c:SERIES.mix}])
       .filter(function(r){ return vis(r.k); });
     drawReadouts(ctx, rows.map(function(r){
-      return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,u:U_TEMP,y:py(r.v)}; }), px(N-1), Y0, Y0+PH); }
+      return (r.v==null||isNaN(r.v))?null:{v:r.v,c:r.c,u:U_TEMP,y:py(r.v)}; }), DISP<Infinity?pxAt(Math.min(DISP,chart.t[N-1])):px(N-1), Y0, Y0+PH); }
 }
 // The machine brackets a shot with preparingForShot before it and pouringDone
 // after; neither is extraction. The live timer has always counted only the

@@ -1,6 +1,6 @@
-// What moves on the main screen while nobody touches it has to move on the
-// compositor: an SVG <animate> or an animated shadow is redrawn on the main
-// thread every frame, under a blurred glass panel that is redrawn with it.
+// What moves on the main screen is drawn by one clock on canvases. Nothing is
+// left to an SVG animation, which is redrawn on the main thread every frame,
+// and the clock stops whenever nobody can see it move.
 function mHot(run) {
   if (_asleep) endSleepUI();
   var was = { mix: state.mixTemp, group: state.groupTemp, fx: prefs.fx };
@@ -13,31 +13,89 @@ function mHot(run) {
     updateWaterVisual();
   }
 }
-function mAnim(el) { return el ? getComputedStyle(el).animationName : 'none'; }
+function mPainted(cv) {
+  var c = cv.getContext('2d'), d = c.getImageData(0, 0, cv.width, cv.height).data, n = 0;
+  for (var i = 3; i < d.length; i += 4) if (d[i] > 0) n++;
+  return n;
+}
 
-test('the tank wave moves on CSS, not an SVG animation', function (T) {
+test('the tank is drawn on a canvas by the clock, with no SVG animation', function (T) {
   mHot(function () {
-    T.ok(!T.el('#waterFill animate'), 'no SVG animation in the tank');
-    T.ok(T.el('#waterFill .wave-path'), 'the wave is there');
-    T.ok(mAnim(T.el('#waterFill svg')) !== 'none', 'and it moves');
+    T.ok(T.el('#tankFx') && T.el('#tankFx').tagName === 'CANVAS', 'a canvas in the tank');
+    T.ok(!T.el('.tank-card svg'), 'no SVG left in the tank');
+    T.ok(fxHas(TANK_TASK), 'the clock keeps the water moving');
   });
 });
 
-test('the bubbles of a hot tank move on CSS, not an SVG animation', function (T) {
+test('a hot tank has bubbles, more of them the hotter it is', function (T) {
   mHot(function () {
-    var b = T.all('#waterFill .bubbles .bub');
-    T.ok(b.length >= 4, 'bubbles when hot');
-    T.ok(!T.el('#waterFill .bubbles animate'), 'no SVG animation');
-    T.ok(mAnim(b[0]) !== 'none', 'and they rise');
+    T.ok(_tank.bubbles >= 0, 'bubbles at 92: ' + _tank.bubbles);
+    var at92 = tankBubbleCount();
+    state.mixTemp = 97; updateWaterVisual();
+    T.ok(tankBubbleCount() > at92, 'more at 97: ' + tankBubbleCount() + ' > ' + at92);
   });
 });
 
-test('effects off stills the tank', function (T) {
+test('the tank canvas paints its water up to the level', function (T) {
+  mHot(function () {
+    tankLevel(60, true);
+    drawTank(performance.now());
+    var cv = T.el('#tankFx');
+    T.ok(mPainted(cv) > cv.width * cv.height * 0.3, 'water fills about half the tank');
+  });
+});
+
+test('effects off stills the tank but still shows its level', function (T) {
   mHot(function () {
     setFx(false);
-    T.ok(!T.el('#waterFill .bubbles'), 'no bubbles');
-    T.eq(mAnim(T.el('#waterFill svg')), 'none', 'the wave is still');
+    T.eq(_tank.bubbles, -1, 'no bubbles');
+    T.ok(!fxHas(TANK_TASK), 'the clock leaves it alone');
+    tankLevel(60, true);
+    var cv = T.el('#tankFx');
+    T.ok(mPainted(cv) > 0, 'one still frame is drawn');
   });
+});
+
+test('the clock stops behind the sleep screen and starts again on wake', function (T) {
+  mHot(function () {
+    T.ok(!fxIdle(), 'running while awake');
+    _asleep = true;
+    T.ok(fxIdle(), 'idle while asleep');
+    _asleep = false; fxKick();
+    T.ok(!fxIdle(), 'awake again');
+  });
+});
+
+test('the battery has no wave of its own', function (T) {
+  T.ok(!T.el('#battFluid svg'), 'too small to see, so not drawn');
+});
+
+test('no SVG animation anywhere on the main screen', function (T) {
+  mHot(function () {
+    var was = state.mixTemp;
+    updateMachineUI();
+    T.ok(!document.querySelector('.app animate, .app animateTransform'), 'none at all');
+    state.mixTemp = was;
+  });
+});
+
+test('a flowing gauge crest is moved by the clock', function (T) {
+  var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'gs-flow'); g.setAttribute('data-dur', '2');
+  document.querySelector('.app').appendChild(g);
+  try {
+    gsFlowTick(1000);
+    var a = g.getAttribute('transform');
+    gsFlowTick(1500);
+    T.ok(a && g.getAttribute('transform') !== a, 'moves with time: ' + a + ' -> ' + g.getAttribute('transform'));
+  } finally { g.parentNode.removeChild(g); }
+});
+
+test('the frame meter shows when asked and goes away again', function (T) {
+  setFpsMeter(true);
+  T.ok(T.el('#fpsMeter') && !T.el('#fpsMeter').hidden, 'shown');
+  setFpsMeter(false);
+  T.ok(!T.el('#fpsMeter') || T.el('#fpsMeter').hidden, 'hidden');
 });
 
 test('the recipe alert pulses without animating its shadow', function (T) {

@@ -73,8 +73,9 @@ style.
 | `thermo` | a plugin thermometer: its cell in the sheet, the milk reading and target on the steam card, the stop at the target |
 | `doser` | RedxKey dosing modules: their cell in the sheet, the four-module limit, grams per module, dispense one or all, an uncertain dispense asked about before it is repeated, the bean card's XDOSING tab with every module, a bean per module that becomes the recipe's bean when it pours or is used |
 | `grinder` | capability gating against what the xBloom Studio and the Mahlkoenig E64 actually declare: a reading is never the editable setting |
-| `motion` | what moves on the main screen at rest runs on CSS, not SVG animation or an animated shadow; effects off stills the tank |
+| `motion` | the tank and the flowing gauge are drawn by one clock on canvas, with no SVG animation anywhere; the clock stops asleep; effects off stills the tank; the frame meter |
+| `chartfx` | graph curves pass through every sample without overshoot; a running shot is drawn a sample behind and read at one display time; water under the pressure line; the loaded cover in the middle moves on the clock; the dial needle eases on the clock |
 | `panes` | steam, flush and water: capped at the shot pane's height without being cut |
 | `profiles` | the library and the editor as two views of one page: covers full width, a profile opening into the fields, the way back |
-| `scales` | which scale is brewing and which is dosing, from the gateway's hold as well as the local preference |
+| `scales` | which scale is brewing and which is dosing, from the gateway's hold as well as the local preference; an absent dosing scale looked for less often each miss, never while hidden |
 | `workflow` | the header saying which drink is being made, chosen from the list or from a past workflow |

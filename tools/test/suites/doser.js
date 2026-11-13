@@ -285,7 +285,7 @@ test('use makes a module bean the recipe bean without dispensing', function (T) 
   }).then(function () { beans = was; }, function (e) { beans = was; throw e; });
 });
 
-test('extra cells widen the sheet to three columns instead of stacking it', function (T) {
+test('extra cells stay in two columns, each a full row, on a wider sheet', function (T) {
   openConnModal();
   setPluginDevices([]);
   _doserOn = false; _thermoPlugins = [];
@@ -294,7 +294,7 @@ test('extra cells widen the sheet to three columns instead of stacking it', func
   T.ok(!T.el('#connOverlay .modal').classList.contains('more'), 'and the narrow sheet');
   dzFleet(4, 1);
   setThermoPlugins(['lebrew-temp.reaplugin']);
-  T.ok(T.el('#connList .cn-grid').classList.contains('c3'), 'six cells take three columns');
+  T.ok(!T.el('#connList .cn-grid').classList.contains('c3'), 'six cells still take two columns');
   T.ok(T.el('#connOverlay .modal').classList.contains('more'), 'on a wider sheet');
   T.ok(!!T.el('#connList .cn-cell[data-cell="doser"] .cn-held'), 'the held modules scroll in their own list');
   var grid = T.el('#connList .cn-grid').getBoundingClientRect();
@@ -302,7 +302,8 @@ test('extra cells widen the sheet to three columns instead of stacking it', func
   var th = T.el('#connList .cn-cell[data-cell="thermo"]').getBoundingClientRect();
   var gr = T.el('#connList .cn-cell[data-cell="grinder"]').getBoundingClientRect();
   T.ok(Math.abs(dz.width - grid.width) < 2, 'the doser takes the whole width: ' + dz.width + ' of ' + grid.width);
-  T.ok(Math.abs(th.right - grid.right) < 2 && th.width > gr.width * 1.5, 'the thermometer fills its row');
+  T.ok(Math.abs(th.width - grid.width) < 2, 'the thermometer fills its row: ' + th.width);
+  T.ok(gr.width > grid.width * 0.45, 'a paired cell has half the sheet: ' + gr.width + ' of ' + grid.width);
   T.ok(T.el('#connList .cn-cell[data-cell="doser"] .cn-sec-h button[onclick^="openDoser("]'), 'dispense sits in the cell head');
   setThermoPlugins([]);
   closeModal(null, 'connOverlay');
