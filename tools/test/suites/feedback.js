@@ -150,3 +150,109 @@ test('a reading held back is dropped when the group head moves on', function (T)
     prefs.shotRead = wasMode; lastShotSummary = wasLast; syncShotRead();
   });
 });
+
+// The gateway stores a shot only after the scale settles, which can be
+// seconds after the machine leaves espresso. Until then "latest" is the shot
+// before, and reading that one again is the previous shot's feedback.
+function asLatest(seq, run) {
+  var real = api, calls = 0, seen = [];
+  var keep = { rs: runShotRead, sg: stampGrinderLine, rg: rememberGrind, ll: loadLastShot, dye: prefs.autoDye,
+    wait: AFTER_SHOT_WAIT, last: state.lastShotId, start: state.shotStart, before: state.shotBefore };
+  api = function (m, p) {
+    if (m === 'GET' && p === '/api/v1/shots/latest') { var s = seq[Math.min(calls, seq.length - 1)]; calls++; return Promise.resolve(s); }
+    return Promise.resolve({});
+  };
+  runShotRead = function (id) { seen.push(id); };
+  stampGrinderLine = function () {}; rememberGrind = function () {}; loadLastShot = function () {};
+  prefs.autoDye = false; AFTER_SHOT_WAIT = 10;
+  function back() {
+    api = real; runShotRead = keep.rs; stampGrinderLine = keep.sg; rememberGrind = keep.rg; loadLastShot = keep.ll;
+    prefs.autoDye = keep.dye; AFTER_SHOT_WAIT = keep.wait; state.lastShotId = keep.last; state.shotStart = keep.start;
+    state.shotBefore = keep.before;
+  }
+  return Promise.resolve().then(function () { return run(seen, function () { return calls; }); })
+    .then(function (v) { back(); return v; }, function (e) { back(); throw e; });
+}
+
+test('the reading after a shot waits for that shot, not the one before', function (T) {
+  var now = Date.now();
+  var old = { id: 'shot-1', timestamp: new Date(now - 100000).toISOString() };
+  var fresh = { id: 'shot-2', timestamp: new Date(now - 5000).toISOString() };
+  return asLatest([old, old, old, old, fresh], function (seen, calls) {
+    state.lastShotId = null; state.shotStart = now;
+    return noteShotBefore().then(function () {
+      T.eq(state.shotBefore, 'shot-1', 'the shot before is noted as this one starts');
+      return afterShot();
+    }).then(function () {
+      T.eq(seen.join(','), 'shot-2', 'only the new shot is read');
+      T.eq(state.lastShotId, 'shot-2', 'and it is the one kept');
+      T.ok(calls() >= 5, 'asked again until it was there');
+    });
+  });
+});
+
+test('a shot that never lands reads nothing', function (T) {
+  var now = Date.now();
+  var old = { id: 'shot-1', timestamp: new Date(now - 100000).toISOString() };
+  return asLatest([old], function (seen) {
+    state.lastShotId = 'shot-1'; state.shotStart = now; state.shotBefore = undefined;
+    return afterShot().then(function () {
+      T.eq(seen.length, 0, 'no reading of the old shot');
+      T.eq(state.lastShotId, 'shot-1', 'the last shot stays what it was');
+    });
+  });
+});
+
+// The shot feed names the shot before it is stored and says when it finished,
+// so the record is asked for by its id the moment it can exist.
+function byId(store, run) {
+  var real = api, seen = [], asks = [];
+  var keep = { rs: runShotRead, sg: stampGrinderLine, rg: rememberGrind, ll: loadLastShot, dye: prefs.autoDye,
+    wait: AFTER_SHOT_WAIT, last: state.lastShotId, before: state.shotBefore, ws: _shotWsId, done: _shotReadDone };
+  api = function (m, p) {
+    asks.push(m + ' ' + p);
+    var id = decodeURIComponent(p.split('/').pop());
+    if (m === 'GET' && p.indexOf('/api/v1/shots/') === 0 && store[id]) {
+      var left = store[id].misses--;
+      return left > 0 ? Promise.reject(new Error('HTTP 404')) : Promise.resolve(store[id].shot);
+    }
+    if (m === 'GET' && p === '/api/v1/shots/latest') return Promise.resolve(null);
+    return Promise.resolve({});
+  };
+  runShotRead = function (id) { seen.push(id); };
+  stampGrinderLine = function () {}; rememberGrind = function () {}; loadLastShot = function () {};
+  prefs.autoDye = false; AFTER_SHOT_WAIT = 10;
+  function back() {
+    api = real; runShotRead = keep.rs; stampGrinderLine = keep.sg; rememberGrind = keep.rg; loadLastShot = keep.ll;
+    prefs.autoDye = keep.dye; AFTER_SHOT_WAIT = keep.wait; state.lastShotId = keep.last; state.shotBefore = keep.before;
+    _shotWsId = keep.ws; _shotReadDone = keep.done;
+  }
+  return Promise.resolve().then(function () { return run(seen, asks); })
+    .then(function (v) { back(); return v; }, function (e) { back(); throw e; });
+}
+
+test('a finished frame reads its shot by id as soon as it is stored', function (T) {
+  var store = { 'shot-9': { misses: 2, shot: { id: 'shot-9', timestamp: new Date().toISOString() } } };
+  return byId(store, function (seen, asks) {
+    shotStateFrame({ event: 'state', state: 'pouring', shotId: 'shot-9' });
+    return shotStateFrame({ event: 'state', state: 'finished', shotId: 'shot-9' }).then(function () {
+      T.eq(seen.join(','), 'shot-9', 'the shot the feed named');
+      T.eq(state.lastShotId, 'shot-9', 'kept as the last shot');
+      T.ok(asks.indexOf('GET /api/v1/shots/latest') < 0, 'no guessing at the latest');
+    });
+  });
+});
+
+test('the feed and the machine ending read a shot only once', function (T) {
+  var store = { 'shot-8': { misses: 0, shot: { id: 'shot-8', timestamp: new Date().toISOString() } } };
+  return byId(store, function (seen) {
+    state.shotBefore = 'shot-7';
+    shotStateFrame({ event: 'state', state: 'pouring', shotId: 'shot-8' });
+    return Promise.all([
+      shotStateFrame({ event: 'state', state: 'finished', shotId: 'shot-8' }),
+      afterShot()
+    ]).then(function () {
+      T.eq(seen.join(','), 'shot-8', 'one reading');
+    });
+  });
+});

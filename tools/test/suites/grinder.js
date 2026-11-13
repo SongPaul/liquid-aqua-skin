@@ -1186,3 +1186,38 @@ test('a corrected speed is written to the shot as data', function (T) {
   T.el('#slRpm').value = '1200'; T.el('#slFeed').value = '40';
   T.eq(shotContextEdits(), null, 'unchanged speeds are no edit');
 });
+
+// Switching the grinder in use redraws everything the card shows for it: a
+// connected one brings its speed row, a manual one takes it away again.
+function gSwitchCase(T, pick) {
+  asGrinder(MT80, { setting: '420', rpm: 1000 });
+  var linked = context.grinderId;
+  var manual = { id: 'rec:manual', model: 'Hand Mill', archived: false, settingType: 'numeric', extras: {} };
+  grinders = grinders.filter(function (g) { return g.id !== manual.id; }).concat([manual]);
+  return withApi(function () { return Promise.resolve({}); }, function () {
+    return pick(manual.id);
+  }).then(function () {
+    T.ok(T.el('#rpmRow').hidden, 'the manual grinder has no speed row');
+    T.eq(T.el('#grindModel').textContent, 'Hand Mill', 'and its own name');
+    return withApi(function () { return Promise.resolve({}); }, function () { return pick(linked); });
+  }).then(function () {
+    T.ok(!T.el('#rpmRow').hidden, 'the connected one brings it back');
+    T.eq(T.el('#grindModel').textContent, 'Test Grinder', 'with the device name');
+  });
+}
+
+test('picking a grinder on the bean page redraws the card for it', function (T) {
+  return gSwitchCase(T, bgPickGrinder);
+});
+
+test('a workflow that changes the grinder redraws the card for it', function (T) {
+  return gSwitchCase(T, function (id) {
+    var g = grinders.filter(function (x) { return x.id === id; })[0];
+    var w = { context: Object.assign({}, context, { grinderId: g.id, grinderModel: g.model }) };
+    var real = api;
+    api = function (m, p) { return Promise.resolve(m === 'GET' && p === '/api/v1/workflow' ? w : {}); };
+    loadFree('workflow');
+    loadWorkflow();
+    return new Promise(function (r) { setTimeout(r, 50); }).then(function () { api = real; });
+  });
+});

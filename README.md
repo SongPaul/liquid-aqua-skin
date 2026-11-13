@@ -177,13 +177,14 @@ While steaming, the bar under the live controls shows the milk against its targe
 
 With the RedxKey bean doser plugin (`redxkey.reaplugin`) turned on, the connection sheet gains a **Bean doser** cell. It lists every connected module, each with its own disconnect, and the modules in reach with connect. Up to four modules can be connected at once, which is the gateway's limit for one plugin.
 
-**Dispense** on the bean card (and **Dispense beans** in the cell) opens the dispense sheet:
+With a module connected, the bean card has two tabs: **Bean** and **XDOSING**, which shows how many modules are connected. **Dispense beans** in the cell opens XDOSING too.
 
-- Each connected module has its own grams, from 0 to 25.5 g in 0.1 g steps, kept on this tablet under the module's name. A single module with nothing kept starts at the recipe dose.
+- XDOSING lists every connected module on one line each: its number, its bean, its grams, **Dispense** and **Use**. **Dispense all · N g** sits beside the tabs.
+- Modules are numbered in the order they are connected. Each can be given a bean from the bean list, shown as the coffee and then the roaster, and kept on this tablet under the module's name with its grams.
+- Grams run from 0 to 25.5 g in 0.1 g steps and are typed on the skin keypad. A single module with nothing kept starts at the recipe dose.
 - **Dispense** pours one module; **Dispense all** pours every module with grams above zero, together.
-- A dispense that failed after the start byte was sent may have poured. The row says so, and the next dispense on it asks first.
-
-With two modules or more connected, the bean card becomes tabs: **Bean** first, then one tab per module. Modules are numbered in the order they are connected, and each can be given a bean from the bean list, so the tabs read like **1 Libre**, **2 Momos** (a module with no bean reads **Doser 2**). The bean is kept on this tablet under the module's name. A module's tab holds its bean picker, its status, its grams and its own **Dispense**; the tab turns green once it has poured, amber if it failed or may have poured.
+- A module that pours makes its bean the recipe's bean, so the next shot is saved with it. **Dispense all** takes the bean of the module that poured the most. **Use** does the same without pouring, and reads **In use** for the module whose bean the recipe has.
+- A module's number turns green once it has poured, amber if it failed or may have poured; the XDOSING tab does the same. A dispense that failed after the start byte was sent may have poured, and the next dispense on it asks first.
 
 ---
 

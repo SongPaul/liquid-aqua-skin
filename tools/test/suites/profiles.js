@@ -312,3 +312,22 @@ test('choosing several stays choosing, and does not load', function (T) {
   T.ok(!!_epSel[p.id], 'it was picked');
   epSetWide(false); shut();
 });
+
+test('a profile brings back its last dose and ratio, and the yield follows from them', function (T) {
+  var real = api, was = { i: settings.doseIn, o: settings.doseOut };
+  api = function (m, p) {
+    if (m === 'GET' && p.indexOf('/api/v1/shots') === 0)
+      return Promise.resolve({ items: [{ id: 's1', timestamp: new Date().toISOString(),
+        workflow: { profile: { title: 'Ratio Test' }, context: { targetDoseWeight: 20, targetYield: 50 } },
+        annotations: { actualDoseWeight: 20.2, actualYield: 49.3 } }] });
+    return Promise.resolve({});
+  };
+  settings.doseIn = 18; settings.doseOut = 36;
+  return Promise.resolve(applyProfileRecipe({ profile: { title: 'Ratio Test' } })).then(function () {
+    api = real;
+    T.eq(settings.doseIn, 20, 'the dose it was set to, not the scale');
+    T.eq(settings.doseOut, 50, 'the yield from its 1:2.5, not the scale');
+    T.eq(recipeRatioText(), '2.5', 'so the ratio is exactly the one it had');
+    settings.doseIn = was.i; settings.doseOut = was.o; syncRecipe();
+  }, function (e) { api = real; settings.doseIn = was.i; settings.doseOut = was.o; throw e; });
+});

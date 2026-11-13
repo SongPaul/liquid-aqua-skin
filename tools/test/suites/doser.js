@@ -57,7 +57,7 @@ test('the sheet holds every connected module and offers the rest', function (T) 
   var spare = c.querySelectorAll('.cn-line:not(.up)');
   T.eq(spare.length, 1, 'the one in reach');
   T.ok(spare[0].querySelector('button[onclick^="connSet(\'doser\',\'' + dzId(3) + '\',true)"]'), 'can be joined');
-  T.ok(!!c.querySelector('button[onclick^="openDoser("]'), 'and the dispense sheet is one tap away');
+  T.ok(!!c.querySelector('button[onclick^="openDoser("]'), 'and XDOSING is one tap away');
   var owned = T.el('#connList .cn-owned');
   T.ok(!owned || owned.textContent.indexOf('RedXKey') < 0, 'not listed as the machine\'s');
 });
@@ -85,7 +85,7 @@ test('a single module starts at the recipe dose', function (T) {
   var rows = T.all('#doserList .dz-row');
   T.eq(rows.length, 1, 'one row');
   T.eq(rows[0].querySelector('.dz-g').textContent, '18.2', 'the dose');
-  closeModal(null, 'doserOverlay');
+  pickDzTab('');
 });
 
 test('grams are kept per module and held to what a module can pour', function (T) {
@@ -98,7 +98,7 @@ test('grams are kept per module and held to what a module can pour', function (T
   T.eq(prefs.doserGrams['RedXKey_01'], 9, 'kept under the module name');
   doserAdj(dzId(1), -10);
   T.eq(doserGrams(deviceById(dzId(1))), 0, 'not below zero');
-  closeModal(null, 'doserOverlay');
+  pickDzTab('');
 });
 
 test('dispense sends the module its grams', function (T) {
@@ -119,6 +119,7 @@ test('dispense all sends each module with grams, and skips the empty ones', func
   dzFleet(3);
   setDoserGrams(dzId(1), 9); setDoserGrams(dzId(2), 0); setDoserGrams(dzId(3), 7.5);
   return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
+    window.confirm = function () { return true; };
     return doserDispenseAll();
   }).then(function (got) {
     T.eq(got.map(function (c) { return decodeURIComponent(c.path.split('/')[4]) + '=' + c.body.params.grams; }).join(' '),
@@ -154,57 +155,68 @@ test('a module that refuses says so', function (T) {
   }, function (e) { api = real; throw e; });
 });
 
-test('the recipe card offers dispensing only with a module connected', function (T) {
+test('the bean card offers XDOSING only with a module connected', function (T) {
   dzFleet(0, 1);
-  T.ok(T.el('#rcDoser').hidden, 'hidden with none connected');
+  T.ok(T.el('#dzTabs').hidden, 'no tabs with none connected');
   dzFleet(1);
-  T.ok(!T.el('#rcDoser').hidden, 'shown with one');
+  T.ok(!T.el('#dzTabs').hidden, 'tabs with one');
   setPluginDevices([]);
-  T.ok(T.el('#rcDoser').hidden, 'hidden with the plugin off');
+  syncDoser();
+  T.ok(T.el('#dzTabs').hidden, 'none with the plugin off');
 });
 
-test('one module keeps the bean card as it is', function (T) {
-  dzFleet(1);
-  T.ok(T.el('#dzTabs').hidden, 'no tabs');
-  T.ok(T.el('#dzPanel').hidden, 'no module panel');
-});
-
-test('two modules turn the bean card into tabs, the bean first', function (T) {
-  dzFleet(2);
+test('the bean card has two tabs, the bean and XDOSING, however many modules', function (T) {
+  dzFleet(3);
   var tabs = T.all('#dzTabs .dz-tab');
-  T.eq(tabs.length, 3, 'the bean and two modules');
+  T.eq(tabs.length, 2, 'two tabs');
   T.eq(tabs[0].textContent, t('dzBeanTab'), 'the bean first');
-  T.eq(tabs[1].textContent, t('dzSlot').replace('{n}', '1'), 'a module with no bean by its number');
+  T.ok(tabs[1].textContent.indexOf('XDOSING') === 0, 'then XDOSING');
+  T.ok(tabs[1].textContent.indexOf('3') > 0, 'with the module count');
   T.ok(tabs[0].classList.contains('on'), 'the bean is open');
   T.ok(T.el('#dzPanel').hidden, 'no module panel yet');
 });
 
-test('a module tab holds that module: its grams and its own dispense', function (T) {
+test('XDOSING holds every connected module, each with its own dispense', function (T) {
   dzFleet(2);
   setDoserGrams(dzId(2), 8);
-  pickDzTab(dzId(2));
+  pickDzTab('x');
   T.ok(T.el('#beanInfo').classList.contains('dz-mod'), 'the bean row steps aside');
   var p = T.el('#dzPanel');
   T.ok(!p.hidden, 'the panel shows');
-  T.ok(p.querySelector('.dz-n').textContent.indexOf(t('dzSlot').replace('{n}', '2')) === 0, 'numbered');
-  T.ok(p.textContent.indexOf('RedXKey_02') >= 0, 'and named');
-  T.eq(p.querySelector('.dz-g').textContent, '8.0', 'its grams');
+  var rows = T.all('#dzPanel .dz-row');
+  T.eq(rows.length, 2, 'both modules');
+  T.eq(rows[1].querySelector('.dz-num').textContent, '2', 'numbered');
+  T.ok(rows[1].title.indexOf('RedXKey_02') >= 0, 'and named');
+  T.eq(rows[1].querySelector('.dz-g').textContent, '8.0', 'its grams');
   doserAdj(dzId(2), 0.1);
-  T.eq(T.el('#dzPanel .dz-g').textContent, '8.1', 'plus moves it');
+  T.eq(T.all('#dzPanel .dz-row')[1].querySelector('.dz-g').textContent, '8.1', 'plus moves it');
+  T.ok(!!T.el('#dzTabs #doserAllBtn'), 'dispense all sits beside the tabs');
   return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
     return doserDispense(dzId(2));
   }).then(function (got) {
-    T.eq(got.length, 1, 'one module only');
-    T.eq(decodeURIComponent(got[0].path.split('/')[4]), dzId(2), 'the open one');
-    T.ok(T.el('#dzPanel .dz-st').textContent.indexOf('8.1') >= 0, 'and the tab says it poured');
-    T.ok(T.el('#dzTabs .dz-tab.on').classList.contains('ok'), 'the tab is marked done');
+    var ex = got.filter(function (c) { return /\/execute$/.test(c.path); });
+    T.eq(ex.length, 1, 'one module only');
+    T.eq(decodeURIComponent(ex[0].path.split('/')[4]), dzId(2), 'the one pressed');
+    var r = T.all('#dzPanel .dz-row')[1];
+    T.ok(r.querySelector('.dz-num').classList.contains('ok'), 'its number turns done');
+    T.ok(r.title.indexOf('8.1') >= 0, 'and its row says it poured');
+    T.ok(T.el('#dzTabs .dz-xtab').classList.contains('ok'), 'the tab is marked done');
   });
 });
 
-test('dropping to one module returns the bean card', function (T) {
-  dzFleet(2);
-  pickDzTab(dzId(2));
-  state.devices = state.devices.filter(function (d) { return d.id !== dzId(2); });
+test('the connection sheet takes you to XDOSING', function (T) {
+  dzFleet(1);
+  openConnModal();
+  openDoser();
+  T.ok(!T.el('#connOverlay').classList.contains('show'), 'the sheet closes');
+  T.ok(T.el('#dzTabs .dz-xtab').classList.contains('on'), 'and XDOSING is open');
+  pickDzTab('');
+});
+
+test('without modules the bean card comes back', function (T) {
+  dzFleet(1);
+  pickDzTab('x');
+  state.devices = state.devices.filter(function (d) { return d.id !== dzId(1); });
   syncDoser();
   T.ok(T.el('#dzTabs').hidden, 'tabs gone');
   T.ok(T.el('#dzPanel').hidden, 'panel gone');
@@ -219,49 +231,58 @@ function dzBeans(run) {
   try { return run(); } finally { beans = was; }
 }
 
-test('each module holds a bean, and its tab says which', function (T) {
+test('each module row holds a bean, the coffee before the roaster', function (T) {
   dzBeans(function () {
     dzFleet(2);
     setDoserBean(dzId(1), 'b-libre');
     setDoserBean(dzId(2), 'b-momos');
-    var tabs = T.all('#dzTabs .dz-tab');
-    T.eq(tabs[1].textContent, '1 리브레', 'doser 1 is Libre');
-    T.eq(tabs[2].textContent, '2 모모스', 'doser 2 is Momos');
     T.eq(prefs.doserBeans['RedXKey_01'], 'b-libre', 'kept under the module name');
-    pickDzTab(dzId(1));
-    var sel = T.el('#dzPanel select.dz-bean');
-    T.ok(!!sel, 'the panel picks the bean');
-    T.eq(sel.value, 'b-libre', 'showing the one it holds');
-    T.eq(sel.querySelectorAll('option').length, 3, 'none, and the two beans not used up');
-    T.ok(T.el('#dzPanel .dz-n').textContent.indexOf('리브레 · 콜롬비아') >= 0, 'the bean in full');
+    pickDzTab('x');
+    var sel = T.all('#dzPanel select.dz-bean');
+    T.eq(sel.length, 2, 'a bean per module');
+    T.eq(sel[0].value, 'b-libre', 'showing the one it holds');
+    T.eq(sel[0].querySelectorAll('option').length, 3, 'none, and the two beans not used up');
+    T.eq(sel[0].selectedOptions[0].textContent, '콜롬비아 · 리브레', 'the coffee, then the roaster');
+    pickDzTab('');
   });
 });
 
-test('the bean is picked from the panel, and none clears it', function (T) {
+test('the bean is picked in the row, and none clears it', function (T) {
   dzBeans(function () {
     dzFleet(2);
-    pickDzTab(dzId(2));
-    var sel = T.el('#dzPanel select.dz-bean');
+    pickDzTab('x');
+    var sel = T.all('#dzPanel select.dz-bean')[1];
     sel.value = 'b-momos';
     sel.dispatchEvent(new Event('change'));
-    T.eq(T.all('#dzTabs .dz-tab')[2].textContent, '2 모모스', 'the tab follows');
-    sel = T.el('#dzPanel select.dz-bean');
+    T.eq(prefs.doserBeans['RedXKey_02'], 'b-momos', 'kept');
+    sel = T.all('#dzPanel select.dz-bean')[1];
     sel.value = '';
     sel.dispatchEvent(new Event('change'));
-    T.eq(T.all('#dzTabs .dz-tab')[2].textContent, t('dzSlot').replace('{n}', '2'), 'back to its number');
+    T.ok(!prefs.doserBeans['RedXKey_02'], 'cleared');
+    pickDzTab('');
   });
 });
 
-test('the dispense sheet names each module by number and bean too', function (T) {
-  dzBeans(function () {
+test('use makes a module bean the recipe bean without dispensing', function (T) {
+  var was = beans;
+  beans = [{ id: 'b-libre', roaster: '리브레', name: '콜롬비아' }];
+  return dzCtx(function () {
     dzFleet(2);
-    setDoserBean(dzId(2), 'b-momos');
-    openDoser();
-    var rows = T.all('#doserList .dz-row');
-    T.ok(rows[1].querySelector('.dz-n').textContent.indexOf(t('dzSlot').replace('{n}', '2') + ' · 모모스') === 0,
-      'got ' + rows[1].querySelector('.dz-n').textContent);
-    closeModal(null, 'doserOverlay');
-  });
+    setDoserBean(dzId(1), 'b-libre');
+    pickDzTab('x');
+    var pick = T.all('#dzPanel .dz-pick');
+    T.ok(pick[1].disabled, 'a module without a bean has nothing to use');
+    return dzStub({}, function () { return doserPick(dzId(1)); }).then(function (got) {
+      T.eq(got.filter(function (c) { return /\/execute$/.test(c.path); }).length, 0, 'nothing dispensed');
+      var w = dzWf(got);
+      T.eq(w.length, 1, 'the workflow is told');
+      T.eq(w[0].coffeeName, '콜롬비아', 'the module bean');
+      var b = T.all('#dzPanel .dz-pick')[0];
+      T.ok(b.classList.contains('on'), 'marked in use');
+      T.eq(b.textContent, t('dzInUse'), 'and says so');
+      pickDzTab('');
+    });
+  }).then(function () { beans = was; }, function (e) { beans = was; throw e; });
 });
 
 test('extra cells widen the sheet to three columns instead of stacking it', function (T) {
@@ -302,7 +323,7 @@ test('grams are typed on the skin keypad, not the system keyboard', function (T)
   T.el('#doserList .dz-g').click();
   kpPress('9'); kpPress('9'); kpConfirm();
   T.eq(doserGrams(deviceById(dzId(1))), 25.5, 'held to what a module can pour');
-  closeModal(null, 'doserOverlay');
+  pickDzTab('');
 });
 
 test('a module keeps its bean and grams when the skin loads again', function (T) {
@@ -319,4 +340,73 @@ test('a module keeps its bean and grams when the skin loads again', function (T)
   applyPrefsObject({ doserBeans: 'junk', doserGrams: [1] });
   T.eq((dzBean(deviceById(dzId(1))) || {}).id, b.id, 'junk does not wipe them');
   setDoserBean(dzId(1), '');
+});
+
+function dzCtx(run) {
+  var was = { n: context.coffeeName, r: context.coffeeRoaster, b: context.beanBatchId };
+  context.coffeeName = '케냐'; context.coffeeRoaster = '프릳츠'; context.beanBatchId = null;
+  return Promise.resolve().then(run).then(function (v) {
+    context.coffeeName = was.n; context.coffeeRoaster = was.r; context.beanBatchId = was.b; return v;
+  }, function (e) {
+    context.coffeeName = was.n; context.coffeeRoaster = was.r; context.beanBatchId = was.b; throw e;
+  });
+}
+function dzWf(got) {
+  return got.filter(function (c) { return c.method === 'PUT' && c.path === '/api/v1/workflow'; })
+    .map(function (c) { return c.body.context; });
+}
+
+test('a dispense makes its bean the one the shot is saved with', function (T) {
+  var was = beans;
+  beans = [{ id: 'b-libre', roaster: '리브레', name: '콜롬비아' }, { id: 'b-momos', roaster: '모모스', name: '에스쇼콜라' }];
+  return dzCtx(function () {
+    dzFleet(2);
+    setDoserBean(dzId(1), 'b-libre'); setDoserGrams(dzId(1), 9);
+    return dzStub({ status: 'ok', result: { result: 'ok' } }, function () { return doserDispense(dzId(1)); })
+      .then(function (got) {
+        var w = dzWf(got);
+        T.eq(w.length, 1, 'the workflow is told');
+        T.eq(w[0].coffeeName + ' / ' + w[0].coffeeRoaster, '콜롬비아 / 리브레', 'the module bean');
+        T.eq(context.coffeeName, '콜롬비아', 'and the card follows');
+        return dzStub({ status: 'ok', result: { result: 'ok' } }, function () { return doserDispense(dzId(1)); });
+      }).then(function (got) {
+        T.eq(dzWf(got).length, 0, 'nothing to change the second time');
+      });
+  }).then(function () { beans = was; }, function (e) { beans = was; throw e; });
+});
+
+test('a failed dispense leaves the bean alone, and dispense all takes the biggest share', function (T) {
+  var was = beans;
+  beans = [{ id: 'b-libre', roaster: '리브레', name: '콜롬비아' }, { id: 'b-momos', roaster: '모모스', name: '에스쇼콜라' }];
+  return dzCtx(function () {
+    dzFleet(2);
+    setDoserBean(dzId(1), 'b-libre'); setDoserGrams(dzId(1), 7);
+    setDoserBean(dzId(2), 'b-momos'); setDoserGrams(dzId(2), 11);
+    return dzStub({ status: 'ok', result: { result: 'failed', error: 'x' } }, function () { return doserDispense(dzId(1)); })
+      .then(function (got) {
+        T.eq(dzWf(got).length, 0, 'no bean from a failed dispense');
+        return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
+          window.confirm = function () { return true; };
+          return doserDispenseAll();
+        });
+      }).then(function (got) {
+        var w = dzWf(got);
+        T.eq(w.length, 1, 'one bean for the shot');
+        T.eq(w[0].coffeeName, '에스쇼콜라', 'the module that gave the most');
+      });
+  }).then(function () { beans = was; }, function (e) { beans = was; throw e; });
+});
+
+test('dispense all asks first, naming what each module will pour', function (T) {
+  dzFleet(2);
+  setDoserGrams(dzId(1), 9); setDoserGrams(dzId(2), 7.5);
+  var asked = '';
+  return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
+    window.confirm = function (m) { asked = m; return false; };
+    return doserDispenseAll();
+  }).then(function (got) {
+    T.eq(got.length, 0, 'declined, nothing sent');
+    T.ok(asked.indexOf('9.0') >= 0 && asked.indexOf('7.5') >= 0, 'each module grams: ' + asked);
+    T.ok(asked.indexOf('16.5') >= 0, 'and the total');
+  });
 });
