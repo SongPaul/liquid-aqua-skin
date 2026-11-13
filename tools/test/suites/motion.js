@@ -135,3 +135,19 @@ test('a dialog over the screen stills what moves behind it, and lets it go again
     T.ok(!document.body.classList.contains('ov-open'), 'and the glass comes back');
   });
 });
+
+test('once a dialog has faded in, the screen behind it is not drawn at all', function (T) {
+  if (_asleep) endSleepUI();
+  var ov = document.getElementById('dyeOverlay');
+  ov.classList.add('show');
+  return Promise.resolve().then(function () {
+    T.ok(document.body.classList.contains('ov-open'), 'noticed the moment it opens');
+    T.eq(T.css(T.el('.app'), 'visibility'), 'visible', 'still seen through the dim while it fades in');
+    return new Promise(function (r) { setTimeout(r, OV_SETTLE + 80); });
+  }).then(function () {
+    T.eq(T.css(T.el('.app'), 'visibility'), 'hidden', 'then the screen behind is not drawn');
+    T.eq(T.css(ov, 'visibility'), 'visible', 'the dialog itself is');
+    closeModal(null, 'dyeOverlay');
+    T.eq(T.css(T.el('.app'), 'visibility'), 'visible', 'closing brings the screen straight back');
+  });
+});

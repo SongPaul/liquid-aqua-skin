@@ -162,6 +162,9 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .water-fill{visibility:hidden}
 .tank-fx{position:absolute;inset:0;width:100%;height:100%;display:block}
 body.ov-open .app .glass,body.ov-open .app .ep-cbody{backdrop-filter:none;-webkit-backdrop-filter:none}
+body.ov-settled .app{visibility:hidden}
+body.ov-settled .app *{animation:none!important}
+.overlay.show,.pic-ov.show{visibility:visible}
 .fps-meter{position:fixed;left:6px;bottom:6px;z-index:99999;font:700 11px Inter,monospace;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;pointer-events:none}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
@@ -5505,12 +5508,26 @@ function fxIdle(){ return _asleep||document.hidden||(_pageOpen&&!_monOpen)||_ovO
 // tablet's GPU still recomposes it and every blurred pane under the dim each
 // frame, which is what dropped a post-shot dialog to twenty frames. So the
 // clock rests and the glass stops blurring while one is open.
-var _ovOpen=false;
+// Once the dialog has faded in, the screen behind it is hidden outright, the
+// way a full page hides it: the readings keep arriving, nothing is painted or
+// composited under the dim, and closing shows it again at once.
+var _ovOpen=false, _ovSettleT=null, OV_SETTLE=240;
 function ovSync(){
   var on=!!document.querySelector('.overlay.show,.pic-ov.show');
   if(on===_ovOpen) return;
   _ovOpen=on; document.body.classList.toggle('ov-open',on);
-  if(!on) fxKick(); }
+  if(_ovSettleT){ clearTimeout(_ovSettleT); _ovSettleT=null; }
+  if(on) _ovSettleT=setTimeout(function(){ _ovSettleT=null;
+    if(_ovOpen) document.body.classList.add('ov-settled'); },OV_SETTLE);
+  else { document.body.classList.remove('ov-settled'); fxKick(); } }
+(function(){
+  if(typeof MutationObserver!=='function') return;
+  var mo=new MutationObserver(ovSync);
+  function watch(){ Array.prototype.forEach.call(document.querySelectorAll('.overlay,.pic-ov'),function(el){
+    if(el._ovWatched) return; el._ovWatched=true;
+    mo.observe(el,{attributes:true,attributeFilter:['class']}); }); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',watch); else watch();
+  setInterval(watch,5000); })();
 setInterval(ovSync,300);
 function fxHas(k){ return FX.tasks.indexOf(k)>=0; }
 function fxRun(k){ if(!fxHas(k)) FX.tasks.push(k); fxKick(); }
