@@ -161,7 +161,12 @@ header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:f
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill{visibility:hidden}
 .tank-fx{position:absolute;inset:0;width:100%;height:100%;display:block}
-.fps-meter{position:fixed;left:6px;bottom:6px;z-index:99999;font:700 11px Inter,monospace;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;pointer-events:none}
+.fps-meter{position:fixed;left:6px;bottom:6px;z-index:99999;font:700 11px Inter,monospace;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;cursor:pointer}
+.fps-log{position:fixed;left:6px;bottom:30px;z-index:99999;width:min(620px,calc(100vw - 12px));max-height:62vh;overflow:auto;border-radius:8px;background:rgba(0,0,0,.86);color:#fff;font:11px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:8px 10px}
+.fps-log .fl-head{display:flex;gap:8px;align-items:center;margin-bottom:6px;font:600 11px Inter,sans-serif}
+.fps-log .fl-head span{flex:1}
+.fps-log .fl-head button{background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:5px;padding:4px 10px;font:600 11px Inter,sans-serif}
+.fps-log pre{margin:0;white-space:pre-wrap;font:inherit}
 .wave-path{fill:rgba(56,189,248,.45);transition:fill .9s ease}
 .wave-path2{fill:rgba(99,102,241,.32);transition:fill .9s ease}
 header>*{position:relative;z-index:1}
@@ -3838,7 +3843,8 @@ var I18N={
     dose:'Dose', yield:'Yield', ratio:'Ratio', time:'Time', peak:'Peak', volume:'Volume',
     camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are. Scan the code it puts there with a phone: it can send its own camera, or the address of an IP-camera app on it.',
     camUrlName:'Stream address', camUrlDesc:'For the IP-camera app way: the MJPEG address of a camera on this network, usually ending in /video. A phone sending its own camera does not use this.',
-    fpsMeter:'Frame meter', fpsMeterDesc:'Shows frames per second and the time the animations take, in a corner of the screen. For checking how smoothly this tablet runs.',
+    fpsMeter:'Frame meter', fpsMeterDesc:'Shows frames per second and the time the animations take, in a corner of the screen. For checking how smoothly this tablet runs. Tap it for a log of slow frames.',
+    fpsLogHint:'Frames slower than 34 ms and what ran around them', fpsLogClear:'Clear', fpsLogEmpty:'No slow frames yet.',
     fx:'Screen effects', fxDesc:'The moving water in the tank, the graph and the loaded profile\u2019s cover, the ripple under a touch, and the blur behind the glass. Turn it off if the screen stutters.',
     camRotate:'Turn the picture', camRotateDesc:'For a phone lying on its side or clipped upside down.',
     camFit:'Fill the pane', camFitDesc:'Crop to the edges instead of leaving bars.',
@@ -4308,7 +4314,8 @@ var I18N={
     dose:'도징', yield:'추출량', ratio:'추출 비율', time:'시간', peak:'최고', volume:'용량',
     camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다. 거기 뜨는 QR을 폰으로 스캔하면 폰 카메라를 보내거나 IP 카메라 앱 주소를 넣을 수 있습니다.',
     camUrlName:'스트리밍 주소', camUrlDesc:'IP 카메라 앱 방식용 주소입니다. 같은 네트워크의 MJPEG 주소로, 보통 /video 로 끝납니다. 폰 카메라를 직접 보내는 경우에는 쓰지 않습니다.',
-    fpsMeter:'프레임 표시', fpsMeterDesc:'화면 구석에 초당 프레임 수와 애니메이션이 쓰는 시간을 보여 줍니다. 이 태블릿에서 화면이 얼마나 부드럽게 도는지 확인할 때 켜세요.',
+    fpsMeter:'프레임 표시', fpsMeterDesc:'화면 구석에 초당 프레임 수와 애니메이션이 쓰는 시간을 보여 줍니다. 이 태블릿에서 화면이 얼마나 부드럽게 도는지 확인할 때 켜세요. 누르면 느린 프레임 기록이 나옵니다.',
+    fpsLogHint:'34ms보다 느린 프레임과 그때 실행된 일', fpsLogClear:'지우기', fpsLogEmpty:'아직 느린 프레임이 없습니다.',
     fx:'화면 효과', fxDesc:'탱크, 그래프, 로드된 프로파일 커버에서 움직이는 물, 터치할 때 퍼지는 물결, 유리 뒤의 블러. 화면이 끊기면 끄세요.',
     camRotate:'화면 회전', camRotateDesc:'폰을 누이거나 거꾸로 물렸을 때.',
     camFit:'여백 없이 채우기', camFitDesc:'상하 좌우 여백 대신 가장자리를 잘라 채웁니다.',
@@ -5524,6 +5531,7 @@ function ovSync(){
   var on=!!document.querySelector('.overlay.show,.pic-ov.show');
   if(on===_ovOpen) return;
   _ovOpen=on;
+  if(prefs.fpsMeter) flog({k:'ov',n:on?'open':'closed'});
   if(!on) fxKick(); }
 (function(){
   if(typeof MutationObserver!=='function') return;
@@ -5611,23 +5619,85 @@ function gsFlowTick(now){
   return list.length; }
 // A corner readout of frames per second and of what the clock spends per
 // frame, for judging a tablet rather than guessing.
-var _fpsN=0, _fpsAt=0, _fpsRaf=null;
+var _fpsN=0, _fpsAt=0, _fpsRaf=null, _fpsLast=0;
 function setFpsMeter(on){ prefs.fpsMeter=!!on; savePrefs(); applyFpsMeter(); }
 function applyFpsMeter(){
   var el=document.getElementById('fpsMeter');
   if(prefs.fpsMeter){
-    if(!el){ el=document.createElement('div'); el.id='fpsMeter'; el.className='fps-meter'; document.body.appendChild(el); }
-    el.hidden=false;
-    if(_fpsRaf==null){ _fpsAt=performance.now(); _fpsN=0; _fpsRaf=requestAnimationFrame(fpsTick); } }
-  else { if(el) el.hidden=true;
+    if(!el){ el=document.createElement('div'); el.id='fpsMeter'; el.className='fps-meter';
+      el.onclick=function(){ flogToggle(); }; document.body.appendChild(el); }
+    el.hidden=false; flogWrap(); flogObserve(true);
+    if(_fpsRaf==null){ _fpsAt=_fpsLast=performance.now(); _fpsN=0; _fpsRaf=requestAnimationFrame(fpsTick); } }
+  else { if(el) el.hidden=true; flogObserve(false); flogShow(false);
     if(_fpsRaf!=null){ cancelAnimationFrame(_fpsRaf); _fpsRaf=null; } } }
 function fpsTick(now){
   _fpsRaf=null; if(!prefs.fpsMeter) return;
   _fpsN++;
-  if(now-_fpsAt>=1000){ var el=document.getElementById('fpsMeter');
-    if(el) el.textContent=Math.round(_fpsN*1000/(now-_fpsAt))+' fps \u00b7 '+FX.cost.toFixed(1)+' ms';
-    _fpsN=0; _fpsAt=now; }
+  var gap=now-_fpsLast; _fpsLast=now;
+  if(gap>FLOG_SLOW&&gap<3000&&!document.hidden) flog({k:'frame',ms:gap},now-gap);
+  if(now-_fpsAt>=1000){ var el=document.getElementById('fpsMeter'), fps=Math.round(_fpsN*1000/(now-_fpsAt));
+    if(el) el.textContent=fps+' fps · '+FX.cost.toFixed(1)+' ms';
+    if(fps<45&&!document.hidden) flog({k:'fps',n:fps},_fpsAt);
+    _fpsN=0; _fpsAt=now; if(_flogOpen) renderFlog(); }
   _fpsRaf=requestAnimationFrame(fpsTick); }
+// A log behind the meter, opened by tapping it: the frames that came late and
+// what the skin was doing around them. A late frame with no script, style or
+// layout of its own went on drawing, which only the tablet itself can show.
+var FLOG=[], FLOG_MAX=200, FLOG_SLOW=34, FLOG_GPU=60, _flogObs=null, _flogWrapped=false, _flogOpen=false, _flogState='';
+var FLOG_FNS=['afterShot','shotLanded','afterLanding','openDyeModal','primeDye','runShotRead','loadLastShot',
+  'syncCarouselLock','renderCarousel','drawSimCurve','stopTimer','startTimer'];
+var FLOG_QUIET={drawSimCurve:4, renderCarousel:4};
+function flog(e,at){ e.at=(at==null)?performance.now():at; e.wall=Date.now()-(performance.now()-e.at);
+  FLOG.push(e); if(FLOG.length>FLOG_MAX) FLOG.shift(); }
+function flogWrap(){
+  if(_flogWrapped) return; _flogWrapped=true;
+  FLOG_FNS.forEach(function(n){ var f=window[n]; if(typeof f!=='function') return;
+    window[n]=function(){ var s=performance.now(), r=f.apply(this,arguments), d=performance.now()-s;
+      if(prefs.fpsMeter&&d>=(FLOG_QUIET[n]||0)) flog({k:'fn',n:n,ms:d},s);
+      return r; }; });
+  var oms=window.onMachineState;
+  window.onMachineState=function(ms){ var r=oms.apply(this,arguments);
+    var key=ms?(ms.state+'/'+(ms.substate||'')):'';
+    if(prefs.fpsMeter&&key!==_flogState){ _flogState=key; flog({k:'state',n:key}); }
+    return r; }; }
+function flogObserve(on){
+  if(!on){ if(_flogObs){ _flogObs.disconnect(); _flogObs=null; } return; }
+  if(_flogObs||!window.PerformanceObserver) return;
+  function seen(l){ l.getEntries().forEach(function(e){
+    var js=0, top=null;
+    (e.scripts||[]).forEach(function(x){ js+=x.duration; if(!top||x.duration>top.duration) top=x; });
+    flog({k:'main',ms:e.duration,js:js,lay:e.styleAndLayoutStart?(e.startTime+e.duration-e.styleAndLayoutStart):null,
+      top:top?(top.sourceFunctionName||top.invoker||''):''},e.startTime); }); }
+  try{ _flogObs=new PerformanceObserver(seen); _flogObs.observe({type:'long-animation-frame'}); }
+  catch(_){ try{ _flogObs=new PerformanceObserver(seen); _flogObs.observe({entryTypes:['longtask']}); }catch(__){ _flogObs=null; } } }
+function flogToggle(){ flogShow(!_flogOpen); }
+function flogShow(on){
+  _flogOpen=!!on; var box=document.getElementById('fpsLog');
+  if(!_flogOpen){ if(box) box.hidden=true; return; }
+  if(!box){ box=document.createElement('div'); box.id='fpsLog'; box.className='fps-log'; document.body.appendChild(box); }
+  box.hidden=false; renderFlog(); }
+function flogClear(){ FLOG=[]; renderFlog(); }
+function flogClock(w){ var d=new Date(w);
+  return [d.getHours(),d.getMinutes(),d.getSeconds()].map(function(x){ return (x<10?'0':'')+x; }).join(':')
+    +'.'+String(Math.floor(d.getMilliseconds()/100)); }
+function flogLine(e,all){
+  var ms=function(v){ return Math.round(v)+'ms'; };
+  if(e.k==='state') return 'state  '+e.n;
+  if(e.k==='ov') return 'dialog '+e.n;
+  if(e.k==='fps') return 'meter  '+e.n+' fps';
+  if(e.k==='fn') return '  fn   '+e.n+' '+ms(e.ms);
+  if(e.k==='main') return '  main '+ms(e.ms)+' (script '+ms(e.js)+(e.lay!=null?', style+layout '+ms(e.lay):'')+')'+(e.top?' '+e.top:'');
+  if(e.k==='frame'){ var busy=all.some(function(m){ return m.k==='main'&&m.at<e.at+e.ms&&m.at+m.ms>e.at; });
+    return 'SLOW   '+ms(e.ms)+(e.ms>=FLOG_GPU&&!busy?'  no main-thread work: drawing (GPU)':''); }
+  return ''; }
+function renderFlog(){
+  var box=document.getElementById('fpsLog'); if(!box||box.hidden) return;
+  var all=FLOG.slice().sort(function(a,b){ return b.at-a.at; });
+  var lines=all.map(function(e){ return flogClock(e.wall)+'  '+flogLine(e,all); });
+  box.innerHTML='<div class="fl-head"><span>'+escapeHtml(t('fpsLogHint'))+'</span>'
+    +'<button onclick="flogClear()">'+escapeHtml(t('fpsLogClear'))+'</button>'
+    +'<button onclick="flogShow(false)">×</button></div>'
+    +'<pre>'+escapeHtml(lines.join('\n')||t('fpsLogEmpty'))+'</pre>'; }
 function updateWaterVisual(){ if(_asleep) return; var pct=tankPercent(state.water.current);
   var low=!plumbed()&&(state.water.current<=state.water.refill||pct<15);
   // Mix (brew water) temperature is the meaningful reference during a shot; the

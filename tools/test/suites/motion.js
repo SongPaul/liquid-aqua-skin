@@ -112,6 +112,29 @@ test('the frame meter shows when asked and goes away again', function (T) {
   T.ok(!T.el('#fpsMeter') || T.el('#fpsMeter').hidden, 'hidden');
 });
 
+test('tapping the frame meter opens a log of slow frames and what ran then', function (T) {
+  var was = prefs.fpsMeter;
+  setFpsMeter(true); flogClear();
+  primeDye(false);
+  if (_fpsRaf != null) { cancelAnimationFrame(_fpsRaf); _fpsRaf = null; }
+  var now = performance.now();
+  _fpsLast = now - 120;
+  fpsTick(now);
+  return Promise.resolve().then(function () {
+    T.ok(FLOG.some(function (e) { return e.k === 'fn' && e.n === 'primeDye'; }), 'a call is noted');
+    T.ok(FLOG.some(function (e) { return e.k === 'frame' && e.ms >= 100; }), 'the late frame is noted');
+    T.el('#fpsMeter').click();
+    var box = T.el('#fpsLog');
+    T.ok(box && !box.hidden, 'the log opens');
+    T.ok(/SLOW/.test(box.textContent) && /primeDye/.test(box.textContent), 'and lists them');
+    T.el('#fpsMeter').click();
+    T.ok(box.hidden, 'and closes');
+    setFpsMeter(false);
+    T.ok(T.el('#fpsLog').hidden, 'turning the meter off closes it too');
+    if (was) setFpsMeter(true);
+  });
+});
+
 test('the recipe alert pulses without animating its shadow', function (T) {
   var found = null;
   Array.prototype.forEach.call(document.styleSheets, function (s) {
