@@ -127,6 +127,8 @@ test('tapping the frame meter opens a log of slow frames and what ran then', fun
     var box = T.el('#fpsLog');
     T.ok(box && !box.hidden, 'the log opens');
     T.ok(/SLOW/.test(box.textContent) && /primeDye/.test(box.textContent), 'and lists them');
+    T.ok(/SLOW/.test(flogText()) && /primeDye/.test(flogText()), 'the same lines can be copied as text');
+    T.ok(/flogCopy\(\)/.test(box.innerHTML), 'with a copy button');
     T.el('#fpsMeter').click();
     T.ok(box.hidden, 'and closes');
     setFpsMeter(false);

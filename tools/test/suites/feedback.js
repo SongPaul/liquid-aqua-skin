@@ -280,7 +280,7 @@ test('the log form is laid down unseen when a shot starts', function (T) {
     primeDye(true);
     T.ok(o.classList.contains('primed'), 'primed');
     T.eq(T.css(o, 'visibility'), 'visible', 'drawn ahead');
-    T.eq(T.css(o, 'opacity'), '0', 'but not seen');
+    T.ok(parseFloat(T.css(o, 'opacity')) <= 0.01, 'but not seen: ' + T.css(o, 'opacity'));
     T.eq(T.css(o, 'pointerEvents'), 'none', 'and not in the way');
     ovSync();
     T.ok(!_ovOpen, 'the screen behind keeps moving');

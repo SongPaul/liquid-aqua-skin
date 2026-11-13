@@ -2408,7 +2408,8 @@ body.night .ep-grid .gname{color:var(--ink)}
    toast (300) and the lock screen (400). */
 .overlay{position:fixed;inset:0;background:rgba(30,27,58,.72);display:flex;visibility:hidden;contain:layout paint;align-items:center;justify-content:center;z-index:260;opacity:0;pointer-events:none;transition:opacity .2s,visibility 0s linear .2s;padding:24px}
 .overlay.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .2s}
-.overlay.primed{visibility:visible;will-change:opacity}
+.overlay.primed:not(.show){visibility:visible;opacity:.01;will-change:opacity}
+.overlay.primed.show{will-change:opacity}
 .overlay.primed .modal{will-change:transform}
 .modal{background:#fbfaff;border:1px solid var(--glass-line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:600px;max-width:94vw;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.98);transition:transform .25s}
 .modal.wide{width:1000px}
@@ -3844,7 +3845,7 @@ var I18N={
     camStream:'Camera', camStreamDesc:'Show a camera where the profile albums are. Scan the code it puts there with a phone: it can send its own camera, or the address of an IP-camera app on it.',
     camUrlName:'Stream address', camUrlDesc:'For the IP-camera app way: the MJPEG address of a camera on this network, usually ending in /video. A phone sending its own camera does not use this.',
     fpsMeter:'Frame meter', fpsMeterDesc:'Shows frames per second and the time the animations take, in a corner of the screen. For checking how smoothly this tablet runs. Tap it for a log of slow frames.',
-    fpsLogHint:'Frames slower than 34 ms and what ran around them', fpsLogClear:'Clear', fpsLogEmpty:'No slow frames yet.',
+    fpsLogHint:'Frames slower than 34 ms and what ran around them', fpsLogClear:'Clear', fpsLogCopy:'Copy', fpsLogCopied:'Log copied', fpsLogEmpty:'No slow frames yet.',
     fx:'Screen effects', fxDesc:'The moving water in the tank, the graph and the loaded profile\u2019s cover, the ripple under a touch, and the blur behind the glass. Turn it off if the screen stutters.',
     camRotate:'Turn the picture', camRotateDesc:'For a phone lying on its side or clipped upside down.',
     camFit:'Fill the pane', camFitDesc:'Crop to the edges instead of leaving bars.',
@@ -4315,7 +4316,7 @@ var I18N={
     camStream:'카메라', camStreamDesc:'프로파일 앨범 자리에 카메라를 보여줍니다. 거기 뜨는 QR을 폰으로 스캔하면 폰 카메라를 보내거나 IP 카메라 앱 주소를 넣을 수 있습니다.',
     camUrlName:'스트리밍 주소', camUrlDesc:'IP 카메라 앱 방식용 주소입니다. 같은 네트워크의 MJPEG 주소로, 보통 /video 로 끝납니다. 폰 카메라를 직접 보내는 경우에는 쓰지 않습니다.',
     fpsMeter:'프레임 표시', fpsMeterDesc:'화면 구석에 초당 프레임 수와 애니메이션이 쓰는 시간을 보여 줍니다. 이 태블릿에서 화면이 얼마나 부드럽게 도는지 확인할 때 켜세요. 누르면 느린 프레임 기록이 나옵니다.',
-    fpsLogHint:'34ms보다 느린 프레임과 그때 실행된 일', fpsLogClear:'지우기', fpsLogEmpty:'아직 느린 프레임이 없습니다.',
+    fpsLogHint:'34ms보다 느린 프레임과 그때 실행된 일', fpsLogClear:'지우기', fpsLogCopy:'복사', fpsLogCopied:'기록을 복사했습니다', fpsLogEmpty:'아직 느린 프레임이 없습니다.',
     fx:'화면 효과', fxDesc:'탱크, 그래프, 로드된 프로파일 커버에서 움직이는 물, 터치할 때 퍼지는 물결, 유리 뒤의 블러. 화면이 끊기면 끄세요.',
     camRotate:'화면 회전', camRotateDesc:'폰을 누이거나 거꾸로 물렸을 때.',
     camFit:'여백 없이 채우기', camFitDesc:'상하 좌우 여백 대신 가장자리를 잘라 채웁니다.',
@@ -5643,9 +5644,9 @@ function fpsTick(now){
 // A log behind the meter, opened by tapping it: the frames that came late and
 // what the skin was doing around them. A late frame with no script, style or
 // layout of its own went on drawing, which only the tablet itself can show.
-var FLOG=[], FLOG_MAX=200, FLOG_SLOW=34, FLOG_GPU=60, _flogObs=null, _flogWrapped=false, _flogOpen=false, _flogState='';
+var _flogImg=null, FLOG=[], FLOG_MAX=200, FLOG_SLOW=34, FLOG_GPU=60, _flogObs=null, _flogWrapped=false, _flogOpen=false, _flogState='';
 var FLOG_FNS=['afterShot','shotLanded','afterLanding','openDyeModal','primeDye','runShotRead','loadLastShot',
-  'syncCarouselLock','renderCarousel','drawSimCurve','stopTimer','startTimer'];
+  'syncCarouselLock','renderCarousel','drawSimCurve','stopTimer','startTimer','stampGrinderLine','rememberGrind','syncShotRead','syncProfileCut'];
 var FLOG_QUIET={drawSimCurve:4, renderCarousel:4};
 function flog(e,at){ e.at=(at==null)?performance.now():at; e.wall=Date.now()-(performance.now()-e.at);
   FLOG.push(e); if(FLOG.length>FLOG_MAX) FLOG.shift(); }
@@ -5661,15 +5662,32 @@ function flogWrap(){
     if(prefs.fpsMeter&&key!==_flogState){ _flogState=key; flog({k:'state',n:key}); }
     return r; }; }
 function flogObserve(on){
-  if(!on){ if(_flogObs){ _flogObs.disconnect(); _flogObs=null; } return; }
+  if(!on){ if(_flogObs){ _flogObs.disconnect(); _flogObs=null; } if(_flogImg){ _flogImg.disconnect(); _flogImg=null; } return; }
   if(_flogObs||!window.PerformanceObserver) return;
   function seen(l){ l.getEntries().forEach(function(e){
     var js=0, top=null;
     (e.scripts||[]).forEach(function(x){ js+=x.duration; if(!top||x.duration>top.duration) top=x; });
     flog({k:'main',ms:e.duration,js:js,lay:e.styleAndLayoutStart?(e.startTime+e.duration-e.styleAndLayoutStart):null,
       top:top?(top.sourceFunctionName||top.invoker||''):''},e.startTime); }); }
+  try{ _flogImg=new PerformanceObserver(function(l){ l.getEntries().forEach(function(e){
+      if(e.initiatorType!=='img'&&e.initiatorType!=='css') return;
+      var kb=Math.round((e.encodedBodySize||e.transferSize||0)/1024);
+      flog({k:'img',n:(String(e.name).split('/').pop()||'').slice(0,40)+(kb?' '+kb+'KB':'')},e.responseEnd||e.startTime); }); });
+    _flogImg.observe({type:'resource'}); }catch(_){ _flogImg=null; }
   try{ _flogObs=new PerformanceObserver(seen); _flogObs.observe({type:'long-animation-frame'}); }
   catch(_){ try{ _flogObs=new PerformanceObserver(seen); _flogObs.observe({entryTypes:['longtask']}); }catch(__){ _flogObs=null; } } }
+var _flogCnt={}, _flogCntT=null;
+function flogCount(n){ _flogCnt[n]=(_flogCnt[n]||0)+1;
+  if(_flogCntT) return;
+  _flogCntT=setTimeout(function(){ _flogCntT=null;
+    Object.keys(_flogCnt).forEach(function(k){ flog({k:'count',n:k+' x'+_flogCnt[k]}); }); _flogCnt={}; },0); }
+function flogText(){ return FLOG.slice().sort(function(a,b){ return a.at-b.at; })
+  .map(function(e,i,all){ return flogClock(e.wall)+'  '+flogLine(e,all); }).join('\n'); }
+function flogCopy(){ var txt=flogText();
+  function done(){ toast(t('fpsLogCopied'),'ok'); }
+  function fallback(){ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(_){} ta.remove(); }
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,fallback); else fallback(); }
 function flogToggle(){ flogShow(!_flogOpen); }
 function flogShow(on){
   _flogOpen=!!on; var box=document.getElementById('fpsLog');
@@ -5685,6 +5703,8 @@ function flogLine(e,all){
   if(e.k==='state') return 'state  '+e.n;
   if(e.k==='ov') return 'dialog '+e.n;
   if(e.k==='fps') return 'meter  '+e.n+' fps';
+  if(e.k==='count') return '  ui   '+e.n;
+  if(e.k==='img') return '  img  '+e.n;
   if(e.k==='fn') return '  fn   '+e.n+' '+ms(e.ms);
   if(e.k==='main') return '  main '+ms(e.ms)+' (script '+ms(e.js)+(e.lay!=null?', style+layout '+ms(e.lay):'')+')'+(e.top?' '+e.top:'');
   if(e.k==='frame'){ var busy=all.some(function(m){ return m.k==='main'&&m.at<e.at+e.ms&&m.at+m.ms>e.at; });
@@ -5695,6 +5715,7 @@ function renderFlog(){
   var all=FLOG.slice().sort(function(a,b){ return b.at-a.at; });
   var lines=all.map(function(e){ return flogClock(e.wall)+'  '+flogLine(e,all); });
   box.innerHTML='<div class="fl-head"><span>'+escapeHtml(t('fpsLogHint'))+'</span>'
+    +'<button onclick="flogCopy()">'+escapeHtml(t('fpsLogCopy'))+'</button>'
     +'<button onclick="flogClear()">'+escapeHtml(t('fpsLogClear'))+'</button>'
     +'<button onclick="flogShow(false)">×</button></div>'
     +'<pre>'+escapeHtml(lines.join('\n')||t('fpsLogEmpty'))+'</pre>'; }
@@ -10794,6 +10815,7 @@ function syncCarouselLock(){
 function carDrawn(p,on){
   if(!p._el||(p._drawnOn===on)) return;
   p._drawnOn=on; p._el.style.display=on?'':'none';
+  if(on&&prefs.fpsMeter) flogCount('cover shown');
   if(on&&p._curveCv) setTimeout(function(){ drawSimCurve(p._curveCv,p.profile,true); },0); }
 function renderCarousel(){
   var lock=brewLocked();
