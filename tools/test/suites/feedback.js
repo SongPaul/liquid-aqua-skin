@@ -256,3 +256,74 @@ test('the feed and the machine ending read a shot only once', function (T) {
     });
   });
 });
+
+// ── the log form is ready before the shot ends ──
+function landing(run) {
+  var keep = { rs: runShotRead, sg: stampGrinderLine, rg: rememberGrind, ll: loadLastShot, dye: prefs.autoDye,
+    last: state.lastShotId, done: _shotReadDone, settle: DYE_SETTLE };
+  var seen = [];
+  runShotRead = function (id) { seen.push(id); };
+  stampGrinderLine = function () {}; rememberGrind = function () {}; loadLastShot = function () {};
+  prefs.autoDye = true; DYE_SETTLE = 40; shutAll();
+  function back() {
+    runShotRead = keep.rs; stampGrinderLine = keep.sg; rememberGrind = keep.rg; loadLastShot = keep.ll;
+    prefs.autoDye = keep.dye; state.lastShotId = keep.last; _shotReadDone = keep.done; DYE_SETTLE = keep.settle;
+    shutAll(); primeDye(false); ovSync();
+  }
+  return Promise.resolve().then(function () { return run(seen, document.getElementById('dyeOverlay')); })
+    .then(function (v) { back(); return v; }, function (e) { back(); throw e; });
+}
+function later(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+test('the log form is laid down unseen when a shot starts', function (T) {
+  return landing(function (seen, o) {
+    primeDye(true);
+    T.ok(o.classList.contains('primed'), 'primed');
+    T.eq(T.css(o, 'visibility'), 'visible', 'drawn ahead');
+    T.eq(T.css(o, 'opacity'), '0', 'but not seen');
+    T.eq(T.css(o, 'pointerEvents'), 'none', 'and not in the way');
+    ovSync();
+    T.ok(!_ovOpen, 'the screen behind keeps moving');
+  });
+});
+
+test('with the log turned off nothing is laid down', function (T) {
+  return landing(function (seen, o) {
+    prefs.autoDye = false;
+    primeDye(true);
+    T.ok(!o.classList.contains('primed'), 'not primed');
+  });
+});
+
+test('a landed shot fades the form in first and reads once it has appeared', function (T) {
+  return landing(function (seen, o) {
+    primeDye(true);
+    shotLanded({ id: 'land-1', timestamp: new Date().toISOString() });
+    T.ok(o.classList.contains('show'), 'the form at once');
+    T.eq(seen.length, 0, 'the reading waits');
+    T.eq(state.lastShotId, 'land-1', 'the shot is already the last one');
+    return later(90).then(function () {
+      T.eq(seen.join(','), 'land-1', 'then it reads');
+      closeModal(null, 'dyeOverlay');
+      T.ok(!o.classList.contains('primed'), 'closing puts the form away');
+    });
+  });
+});
+
+test('a shot that never lands puts the form away', function (T) {
+  return landing(function (seen, o) {
+    primeDye(true);
+    shotLanded(null);
+    T.ok(!o.classList.contains('primed'), 'put away');
+    T.eq(seen.length, 0, 'nothing read');
+  });
+});
+
+test('dismissing every dialog puts the laid-down form away too', function (T) {
+  return landing(function (seen, o) {
+    primeDye(true);
+    o.classList.add('show');
+    dismissAllOverlays();
+    T.ok(!o.classList.contains('primed') && !o.classList.contains('show'), 'gone');
+  });
+});

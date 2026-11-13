@@ -2403,6 +2403,8 @@ body.night .ep-grid .gname{color:var(--ink)}
    toast (300) and the lock screen (400). */
 .overlay{position:fixed;inset:0;background:rgba(30,27,58,.72);display:flex;visibility:hidden;contain:layout paint;align-items:center;justify-content:center;z-index:260;opacity:0;pointer-events:none;transition:opacity .2s,visibility 0s linear .2s;padding:24px}
 .overlay.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .2s}
+.overlay.primed{visibility:visible;will-change:opacity}
+.overlay.primed .modal{will-change:transform}
 .modal{background:#fbfaff;border:1px solid var(--glass-line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:600px;max-width:94vw;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.98);transition:transform .25s}
 .modal.wide{width:1000px}
 .overlay.show .modal{transform:translateY(0) scale(1)}
@@ -5150,6 +5152,7 @@ function onMachineState(ms,prev){
   if(ms.state!==prev){
     syncRecipeMode(ms,prev);
     if(prev==='sleeping') maybeAutoScanDosing(); }
+  if(inEspresso&&!state.shotActive) primeDye(true);
   state.shotActive=inEspresso;
   // Steam session lifecycle (records flow/pressure/steam temp; no DYE)
   if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
@@ -5203,11 +5206,21 @@ function afterShotById(id){
       if(++tries>=AFTER_SHOT_TRIES) return null;
       return new Promise(function(r){ setTimeout(r,AFTER_SHOT_WAIT); }).then(ask); }); }
   return ask().then(shotLanded); }
+// The log form is laid down unseen when a shot starts, so the end of the shot
+// only fades it in. Building a full-screen layer at that moment, together with
+// the reading and the shot card, is what cost the tablet its frames; those
+// wait until the form has finished appearing.
+var DYE_SETTLE=350;
+function primeDye(on){ var o=document.getElementById('dyeOverlay');
+  if(o) o.classList.toggle('primed',!!on&&!!prefs.autoDye); }
 function shotLanded(s){
-  if(!s||_shotReadDone===s.id) return;
+  if(!s){ primeDye(false); return; }
+  if(_shotReadDone===s.id) return;
   _shotReadDone=s.id;
-  state.lastShotId=s.id; stampGrinderLine(s); rememberGrind(s); if(prefs.autoDye) openDyeModal(); runShotRead(s.id);
-  loadLastShot(); }
+  state.lastShotId=s.id;
+  if(prefs.autoDye){ openDyeModal(); setTimeout(function(){ afterLanding(s); },DYE_SETTLE); }
+  else { primeDye(false); afterLanding(s); } }
+function afterLanding(s){ stampGrinderLine(s); rememberGrind(s); runShotRead(s.id); loadLastShot(); }
 function noteShotBefore(){
   state.shotBefore=undefined;
   return api('GET','/api/v1/shots/latest').then(function(s){ state.shotBefore=(s&&s.id)||null; })
@@ -5226,7 +5239,7 @@ function afterShot(){
       if(++tries>=AFTER_SHOT_TRIES) return null;
       return new Promise(function(r){ setTimeout(r,AFTER_SHOT_WAIT); }).then(ask); }); }
   return ask().then(function(s){
-    if(s) shotLanded(s); else loadLastShot(); }).catch(function(){}); }
+    if(s) shotLanded(s); else { primeDye(false); loadLastShot(); } }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
 // A pressure step targets its own pressure, and a flow step's limiter is the
@@ -7429,7 +7442,7 @@ function setStopHotWaterAtWeight(on){
   api('POST','/api/v1/settings',{stopHotWaterAtWeight:on})
     .then(function(){ toast(t('saved'),'ok'); })
     .catch(function(){ toast(t('saveFailed'),'err'); syncWaterStop(); }); }
-function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show'); ovSync();
+function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show'); if(id==='dyeOverlay') primeDye(false); ovSync();
   if(id==='dyeOverlay'&&_rsWaiting) showShotRead(); }
 // Whoever is working the machine from the group head is done with the screen,
 // so starting or stopping from there puts away any dialog left open, the way a
@@ -7439,7 +7452,7 @@ function dismissOverlay(el){
   if(el.id==='dupOverlay'&&_dupResolve){ dupChoose(null); return; }
   if(el.id==='plgOverlay'){ closePluginPanel(); return; }
   if(el.id==='picOverlay'){ closePicBig(); ovSync(); return; }
-  el.classList.remove('show'); ovSync(); }
+  el.classList.remove('show','primed'); ovSync(); }
 function dismissAllOverlays(){
   _rsWaiting=false;
   Array.prototype.forEach.call(document.querySelectorAll('.overlay.show,.pic-ov.show'),dismissOverlay); }
