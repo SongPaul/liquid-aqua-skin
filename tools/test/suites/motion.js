@@ -36,6 +36,20 @@ test('a hot tank has bubbles, more of them the hotter it is', function (T) {
   });
 });
 
+test('a cool tank still has a few slow bubbles, so the water reads as water', function (T) {
+  mHot(function () {
+    state.mixTemp = 40; state.groupTemp = 40; updateWaterVisual();
+    T.eq(_tank.bubbles, -1, 'not the hot bubbles');
+    T.eq(tankBubbleCount(), 3, 'but three slow ones');
+  });
+});
+
+test('the tank surface moves enough to be seen', function (T) {
+  mHot(function () {
+    T.ok(_tank.amp >= 6 || TANK_AMP_REST >= 6, 'a rest swell of at least 6 px: ' + TANK_AMP_REST);
+  });
+});
+
 test('the tank canvas paints its water up to the level', function (T) {
   mHot(function () {
     tankLevel(60, true);

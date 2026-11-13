@@ -5519,7 +5519,8 @@ function fxFrame(now){
 // The tank is two waves over a body of water, drawn on one canvas. The level
 // eases toward the reading, the surface swells while water is being drawn
 // off, and a hot tank bubbles.
-var _tank={lvl:-1,target:0,color:[56,189,248],bubbles:-1,amp:4,at:0};
+var TANK_AMP_REST=7, TANK_AMP_RUN=10, TANK_COOL_BUBBLES=3;
+var _tank={lvl:-1,target:0,color:[56,189,248],bubbles:-1,amp:TANK_AMP_REST,at:0};
 var TANK_TASK={name:'tank',hz:30,draw:function(now){ drawTank(now); return !!prefs.fx; }};
 function tankLevel(pct,snap){
   _tank.target=Math.max(0,Math.min(pct,100))*0.9;
@@ -5528,7 +5529,7 @@ function tankLevel(pct,snap){
 function tankWake(){
   if(prefs.fx&&!_asleep) fxRun(TANK_TASK);
   else { fxStop(TANK_TASK); if(!_asleep) drawTank(performance.now()); } }
-function tankBubbleCount(){ return _tank.bubbles<0?0:4+_tank.bubbles; }
+function tankBubbleCount(){ if(!prefs.fx) return 0; return _tank.bubbles<0?TANK_COOL_BUBBLES:4+_tank.bubbles; }
 function drawTank(now){
   var cv=document.getElementById('tankFx'); if(!cv) return;
   var r=cv.getBoundingClientRect(); if(!r.width||!r.height) return;
@@ -5540,25 +5541,27 @@ function drawTank(now){
   if(_tank.lvl<0) _tank.lvl=_tank.target;
   _tank.lvl+=(_tank.target-_tank.lvl)*Math.min(1,dt*2.5);
   var run=state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning;
-  _tank.amp+=((run?6.5:4)-_tank.amp)*Math.min(1,dt*1.5);
+  _tank.amp+=((run?TANK_AMP_RUN:TANK_AMP_REST)-_tank.amp)*Math.min(1,dt*1.5);
   ctx.clearRect(0,0,W,H);
   if(_tank.lvl<=0.2) return;
-  var c=_tank.color, t=fx?now/1000:0, top=H*(1-_tank.lvl/100), A=_tank.amp;
+  var c=_tank.color, t=fx?now/1000:0, A=_tank.amp;
+  var top=H*(1-_tank.lvl/100)+(fx?1.6*Math.sin(t*0.9):0);
   function rgba(a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
   function surface(amp,len,speed,ph){
     ctx.beginPath(); ctx.moveTo(0,H);
     for(var x=0;x<=W+6;x+=6) ctx.lineTo(x,top+amp*Math.sin(x/len*Math.PI*2+t*speed+ph));
     ctx.lineTo(W,H); ctx.closePath(); }
-  surface(A*0.8,W/1.6,-0.8,1.7); ctx.fillStyle=rgba(.22); ctx.fill();
-  surface(A,W/2.3,1.15,0);
+  surface(A*0.8,W/2.2,-1.7,1.7); ctx.fillStyle=rgba(.22); ctx.fill();
+  surface(A,W/3,2.3,0);
   var g=ctx.createLinearGradient(0,top-A,0,H); g.addColorStop(0,rgba(.36)); g.addColorStop(1,rgba(.55));
   ctx.fillStyle=g; ctx.fill();
   ctx.beginPath();
-  for(var x=0;x<=W+6;x+=6){ var y=top+A*Math.sin(x/(W/2.3)*Math.PI*2+t*1.15); if(x) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
+  for(var x=0;x<=W+6;x+=6){ var y=top+A*Math.sin(x/(W/3)*Math.PI*2+t*2.3); if(x) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
   ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=1.3; ctx.stroke();
-  var n=fx?tankBubbleCount():0;
-  for(var i=0;i<n;i++){
-    var dur=5.8-_tank.bubbles*0.5+(i%4)*0.35, ph=((t+TANK_BUBBLE_DELAY[i])/dur)%1;
+  var n=tankBubbleCount(), heat=_tank.bubbles<0?-2:_tank.bubbles;
+  for(var j=0;j<n;j++){
+    var i=heat<0?[1,4,7][j]:j;
+    var dur=5.8-heat*0.5+(i%4)*0.35, ph=((t+TANK_BUBBLE_DELAY[i])/dur)%1;
     var bx=TANK_BUBBLE_X[i]/1280*W+Math.sin(t*2.2+i)*3, by=H+4-ph*(H+4-top);
     var a=0.85*Math.min(1,ph/0.12)*Math.min(1,(1-ph)/0.28);
     ctx.beginPath(); ctx.arc(bx,by,(5+(i%3))/2,0,Math.PI*2);
