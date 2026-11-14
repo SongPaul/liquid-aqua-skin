@@ -115,19 +115,19 @@ test('the frame meter shows when asked and goes away again', function (T) {
 test('tapping the frame meter opens a log of slow frames and what ran then', function (T) {
   var was = prefs.fpsMeter;
   setFpsMeter(true); flogClear();
-  primeDye(false);
+  primeShotDialog(false);
   if (_fpsRaf != null) { cancelAnimationFrame(_fpsRaf); _fpsRaf = null; }
   var now = performance.now();
   _fpsLast = now - 120;
   fpsTick(now);
   return Promise.resolve().then(function () {
-    T.ok(FLOG.some(function (e) { return e.k === 'fn' && e.n === 'primeDye'; }), 'a call is noted');
+    T.ok(FLOG.some(function (e) { return e.k === 'fn' && e.n === 'primeShotDialog'; }), 'a call is noted');
     T.ok(FLOG.some(function (e) { return e.k === 'frame' && e.ms >= 100; }), 'the late frame is noted');
     T.el('#fpsMeter').click();
     var box = T.el('#fpsLog');
     T.ok(box && !box.hidden, 'the log opens');
-    T.ok(/SLOW/.test(box.textContent) && /primeDye/.test(box.textContent), 'and lists them');
-    T.ok(/SLOW/.test(flogText()) && /primeDye/.test(flogText()), 'the same lines can be copied as text');
+    T.ok(/SLOW/.test(box.textContent) && /primeShotDialog/.test(box.textContent), 'and lists them');
+    T.ok(/SLOW/.test(flogText()) && /primeShotDialog/.test(flogText()), 'the same lines can be copied as text');
     T.ok(/flogCopy\(\)/.test(box.innerHTML), 'with a copy button');
     T.el('#fpsMeter').click();
     T.ok(box.hidden, 'and closes');
@@ -183,6 +183,20 @@ test('a closed dialog is not drawn', function (T) {
   var o = T.el('#dyeOverlay');
   T.ok(!o.classList.contains('show'), 'closed');
   T.eq(T.css(o, 'visibility'), 'hidden', 'not drawn');
+});
+
+test('while a shot pours, the neighbours wait faintly in place behind it', function (T) {
+  if (!carItems || carItems.length < 3) { T.ok(true, 'too few profiles to tell'); return; }
+  var was = state.machine;
+  try {
+    state.machine = { state: 'espresso', substate: 'pouring' }; syncCarouselLock();
+    var c = carItems[carIndex], n = carItems[carIndex + 1] || carItems[carIndex - 1];
+    T.ok(n._el.style.display !== 'none', 'a neighbour stays drawn');
+    T.ok(parseFloat(n._el.style.opacity) > 0 && parseFloat(n._el.style.opacity) < 0.05, 'but faint: ' + n._el.style.opacity);
+    T.ok(+n._el.style.zIndex < +c._el.style.zIndex, 'behind the one pouring');
+    var far = carItems.filter(function (p, i) { return Math.abs(i - carIndex) > 3; })[0];
+    if (far) T.eq(far._el.style.display, 'none', 'a far one is still not drawn');
+  } finally { state.machine = was; syncCarouselLock(); }
 });
 
 test('covers far off the strip are not drawn, near ones are', function (T) {

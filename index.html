@@ -5160,7 +5160,7 @@ function onMachineState(ms,prev){
   if(ms.state!==prev){
     syncRecipeMode(ms,prev);
     if(prev==='sleeping') maybeAutoScanDosing(); }
-  if(inEspresso&&!state.shotActive) primeDye(true);
+  if(inEspresso&&!state.shotActive) primeShotDialog(true);
   state.shotActive=inEspresso;
   // Steam session lifecycle (records flow/pressure/steam temp; no DYE)
   if(steaming&&!state.steamRunning){ startTimer(); resetChart('steam'); }
@@ -5214,21 +5214,31 @@ function afterShotById(id){
       if(++tries>=AFTER_SHOT_TRIES) return null;
       return new Promise(function(r){ setTimeout(r,AFTER_SHOT_WAIT); }).then(ask); }); }
   return ask().then(shotLanded); }
-// The log form is laid down unseen when a shot starts, so the end of the shot
-// only fades it in. Building a full-screen layer at that moment, together with
-// the reading and the shot card, is what cost the tablet its frames; those
-// wait until the form has finished appearing.
-var DYE_SETTLE=350;
-function primeDye(on){ var o=document.getElementById('dyeOverlay');
-  if(o) o.classList.toggle('primed',!!on&&!!prefs.autoDye); }
+// The dialog a shot ends in -- the log form, or the reading when the form is
+// off -- is laid down unseen when the shot starts, so the end of the shot only
+// fades it in. Building a full-screen layer at that moment, together with the
+// reading and the shot card, is what cost the tablet its frames; those wait
+// until the form has finished appearing.
+var DYE_SETTLE=350, SHOT_DIALOGS=['dyeOverlay','aiGuideOverlay'];
+function shotDialogId(){
+  if(prefs.autoDye) return 'dyeOverlay';
+  return shotReadMode()==='modal'?'aiGuideOverlay':null; }
+function primeShotDialog(on){ var want=on?shotDialogId():null;
+  SHOT_DIALOGS.forEach(function(id){ var o=document.getElementById(id);
+    if(o&&!o.classList.contains('show')) o.classList.toggle('primed',id===want); }); }
+function dropUnusedPrime(){
+  Array.prototype.forEach.call(document.querySelectorAll('.overlay.primed:not(.show)'),
+    function(o){ o.classList.remove('primed'); }); }
 function shotLanded(s){
-  if(!s){ primeDye(false); return; }
+  if(!s){ primeShotDialog(false); return; }
   if(_shotReadDone===s.id) return;
   _shotReadDone=s.id;
   state.lastShotId=s.id;
   if(prefs.autoDye){ openDyeModal(); setTimeout(function(){ afterLanding(s); },DYE_SETTLE); }
-  else { primeDye(false); afterLanding(s); } }
-function afterLanding(s){ stampGrinderLine(s); rememberGrind(s); runShotRead(s.id); loadLastShot(); }
+  else afterLanding(s); }
+function afterLanding(s){ stampGrinderLine(s); rememberGrind(s);
+  Promise.resolve(runShotRead(s.id)).catch(function(){}).then(dropUnusedPrime);
+  loadLastShot(); }
 function noteShotBefore(){
   state.shotBefore=undefined;
   return api('GET','/api/v1/shots/latest').then(function(s){ state.shotBefore=(s&&s.id)||null; })
@@ -5247,7 +5257,7 @@ function afterShot(){
       if(++tries>=AFTER_SHOT_TRIES) return null;
       return new Promise(function(r){ setTimeout(r,AFTER_SHOT_WAIT); }).then(ask); }); }
   return ask().then(function(s){
-    if(s) shotLanded(s); else { primeDye(false); loadLastShot(); } }).catch(function(){}); }
+    if(s) shotLanded(s); else { primeShotDialog(false); loadLastShot(); } }).catch(function(){}); }
 
 // ── UI ──────────────────────────────────────────────────────────────
 // A pressure step targets its own pressure, and a flow step's limiter is the
@@ -5645,7 +5655,7 @@ function fpsTick(now){
 // what the skin was doing around them. A late frame with no script, style or
 // layout of its own went on drawing, which only the tablet itself can show.
 var _flogImg=null, FLOG=[], FLOG_MAX=200, FLOG_SLOW=34, FLOG_GPU=60, _flogObs=null, _flogWrapped=false, _flogOpen=false, _flogState='';
-var FLOG_FNS=['afterShot','shotLanded','afterLanding','openDyeModal','primeDye','runShotRead','loadLastShot',
+var FLOG_FNS=['afterShot','shotLanded','afterLanding','openDyeModal','primeShotDialog','dropUnusedPrime','openAiGuide','runShotRead','loadLastShot',
   'syncCarouselLock','renderCarousel','drawSimCurve','stopTimer','startTimer','stampGrinderLine','rememberGrind','syncShotRead','syncProfileCut'];
 var FLOG_QUIET={drawSimCurve:4, renderCarousel:4};
 function flog(e,at){ e.at=(at==null)?performance.now():at; e.wall=Date.now()-(performance.now()-e.at);
@@ -7533,7 +7543,7 @@ function setStopHotWaterAtWeight(on){
   api('POST','/api/v1/settings',{stopHotWaterAtWeight:on})
     .then(function(){ toast(t('saved'),'ok'); })
     .catch(function(){ toast(t('saveFailed'),'err'); syncWaterStop(); }); }
-function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show'); if(id==='dyeOverlay') primeDye(false); ovSync();
+function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show','primed'); ovSync();
   if(id==='dyeOverlay'&&_rsWaiting) showShotRead(); }
 // Whoever is working the machine from the group head is done with the screen,
 // so starting or stopping from there puts away any dialog left open, the way a
@@ -10822,15 +10832,18 @@ function renderCarousel(){
   carItems.forEach(function(p,i){ var off=i-carIndex-carDragSteps; var abs=Math.abs(off);
     if(lock){
       // one card, filling the space the neighbours and the strip gave up
-      var here=(i===carIndex);
-      // the centre one is given the box by CSS, so it is not scaled into it
-      p._el.style.transform=here?'none':'translateX(0) scale(1)';
-      p._el.style.opacity=here?1:0;
+      var here=(i===carIndex), near=!here&&abs<=2.4;
+      // The neighbours that come back when the shot ends wait faintly in their
+      // places behind it: one that was not drawn has to be drawn whole the
+      // moment it returns, and five at once cost the tablet a second.
+      var nsc=abs<=1?(1.12-abs*0.35):Math.max(0.7,0.77-(abs-1)*0.09);
+      p._el.style.transform=here?'none':(near?'translateX('+(off*CAR_STEP)+'px) scale('+nsc+')':'translateX(0) scale(1)');
+      p._el.style.opacity=here?1:(near?0.01:0);
       p._el.style.zIndex=here?100:0;
       p._el.style.pointerEvents='none';
       p._el.classList.toggle('center',here); p._el.classList.toggle('side',!here);
       p._el.classList.toggle('loaded',here);
-      carDrawn(p,here);
+      carDrawn(p,here||near);
       return; }
     // One curve through the whole range rather than a centre case and a rest:
     // mid-drag a cover is genuinely between two places and has to look it.
