@@ -4944,7 +4944,9 @@ function openWs(name,path,onMsg,opts){ var url=GATEWAY.ws+path;
     ws.onopen=function(){ everOpened=true; misses=0;
       if(name==='display'){ _wakeHeld=null; syncWakeLock(); } };
     ws.onmessage=function(e){ _wsSeen[name]=Date.now();
-      try{ onMsg(JSON.parse(e.data)); }catch(_){} };
+      var t0=prefs.fpsMeter?performance.now():0;
+      try{ onMsg(JSON.parse(e.data)); }catch(_){}
+      if(t0) flogWs(name,performance.now()-t0,e.data&&e.data.length||0); };
     // The reconnect is what keeps a dropped socket alive, so parking has to be
     // checked here too or a socket closed for sleep would come straight back.
     ws.onclose=function(){ if(_wsParked[name]) return;
@@ -5648,7 +5650,7 @@ function fpsTick(now){
   if(gap>FLOG_SLOW&&gap<3000&&!document.hidden) flog({k:'frame',ms:gap},now-gap);
   if(now-_fpsAt>=1000){ var el=document.getElementById('fpsMeter'), fps=Math.round(_fpsN*1000/(now-_fpsAt));
     if(el) el.textContent=fps+' fps · '+FX.cost.toFixed(1)+' ms';
-    if(fps<45&&!document.hidden) flog({k:'fps',n:fps},_fpsAt);
+    if(fps<45&&!document.hidden) flog({k:'fps',n:fps+' fps'+flogHeap()},_fpsAt);
     _fpsN=0; _fpsAt=now; if(_flogOpen) renderFlog(); }
   _fpsRaf=requestAnimationFrame(fpsTick); }
 // A log behind the meter, opened by tapping it: the frames that came late and
@@ -5677,15 +5679,34 @@ function flogObserve(on){
   function seen(l){ l.getEntries().forEach(function(e){
     var js=0, top=null;
     (e.scripts||[]).forEach(function(x){ js+=x.duration; if(!top||x.duration>top.duration) top=x; });
-    flog({k:'main',ms:e.duration,js:js,lay:e.styleAndLayoutStart?(e.startTime+e.duration-e.styleAndLayoutStart):null,
+    var end=e.startTime+e.duration;
+    var render=e.renderStart?end-e.renderStart:0, draw=e.styleAndLayoutStart?end-e.styleAndLayoutStart:null;
+    flog({k:'main',ms:e.duration,js:js,other:Math.max(0,e.duration-js-render),raf:draw!=null?Math.max(0,render-draw):null,lay:draw,
       top:top?(top.sourceFunctionName||top.invoker||''):''},e.startTime); }); }
   try{ _flogImg=new PerformanceObserver(function(l){ l.getEntries().forEach(function(e){
-      if(e.initiatorType!=='img'&&e.initiatorType!=='css') return;
       var kb=Math.round((e.encodedBodySize||e.transferSize||0)/1024);
+      if(e.initiatorType==='fetch'||e.initiatorType==='xmlhttprequest'){
+        var dkb=Math.round((e.decodedBodySize||0)/1024);
+        if(dkb>=20||e.duration>=500) flog({k:'net',n:String(e.name).replace(/^https?:\/\/[^\/]+/,'').slice(0,60)+' '+dkb+'KB '+Math.round(e.duration)+'ms'},e.responseEnd||e.startTime);
+        return; }
+      if(e.initiatorType!=='img'&&e.initiatorType!=='css') return;
       flog({k:'img',n:(String(e.name).split('/').pop()||'').slice(0,40)+(kb?' '+kb+'KB':'')},e.responseEnd||e.startTime); }); });
     _flogImg.observe({type:'resource'}); }catch(_){ _flogImg=null; }
   try{ _flogObs=new PerformanceObserver(seen); _flogObs.observe({type:'long-animation-frame'}); }
   catch(_){ try{ _flogObs=new PerformanceObserver(seen); _flogObs.observe({entryTypes:['longtask']}); }catch(__){ _flogObs=null; } } }
+// Socket messages are each too short to be named as script, so they are added
+// up per second and only listed when they come in a crowd or take real time.
+var _flogWs={}, _flogWsT=null, FLOG_WS_MS=30, FLOG_WS_N=40;
+function flogWs(name,ms,len){
+  var w=_flogWs[name]||(_flogWs[name]={n:0,ms:0,kb:0,at:performance.now()-ms});
+  w.n++; w.ms+=ms; w.kb+=len/1024;
+  if(ms>=20) flog({k:'ws',n:name+' 1 msg '+Math.round(ms)+'ms '+Math.round(len/1024)+'KB'},performance.now()-ms);
+  if(_flogWsT) return;
+  _flogWsT=setTimeout(function(){ _flogWsT=null;
+    Object.keys(_flogWs).forEach(function(k){ var x=_flogWs[k];
+      if(x.ms>=FLOG_WS_MS||x.n>=FLOG_WS_N) flog({k:'ws',n:k+' '+x.n+' msgs '+Math.round(x.ms)+'ms '+Math.round(x.kb)+'KB /1s'},x.at); });
+    _flogWs={}; },1000); }
+function flogHeap(){ var m=performance.memory; return m&&m.usedJSHeapSize?' · heap '+Math.round(m.usedJSHeapSize/1048576)+'MB':''; }
 var _flogCnt={}, _flogCntT=null;
 function flogCount(n){ _flogCnt[n]=(_flogCnt[n]||0)+1;
   if(_flogCntT) return;
@@ -5712,11 +5733,15 @@ function flogLine(e,all){
   var ms=function(v){ return Math.round(v)+'ms'; };
   if(e.k==='state') return 'state  '+e.n;
   if(e.k==='ov') return 'dialog '+e.n;
-  if(e.k==='fps') return 'meter  '+e.n+' fps';
+  if(e.k==='fps') return 'meter  '+e.n;
+  if(e.k==='ws') return '  ws   '+e.n;
+  if(e.k==='net') return '  net  '+e.n;
   if(e.k==='count') return '  ui   '+e.n;
   if(e.k==='img') return '  img  '+e.n;
   if(e.k==='fn') return '  fn   '+e.n+' '+ms(e.ms);
-  if(e.k==='main') return '  main '+ms(e.ms)+' (script '+ms(e.js)+(e.lay!=null?', style+layout '+ms(e.lay):'')+')'+(e.top?' '+e.top:'');
+  if(e.k==='main') return '  main '+ms(e.ms)+' (script '+ms(e.js)
+    +(e.other!=null?', other '+ms(e.other):'')+(e.raf!=null?', rAF '+ms(e.raf):'')
+    +(e.lay!=null?', style/layout/paint '+ms(e.lay):'')+')'+(e.top?' '+e.top:'');
   if(e.k==='frame'){ var busy=all.some(function(m){ return m.k==='main'&&m.at<e.at+e.ms&&m.at+m.ms>e.at; });
     return 'SLOW   '+ms(e.ms)+(e.ms>=FLOG_GPU&&!busy?'  no main-thread work: drawing (GPU)':''); }
   return ''; }

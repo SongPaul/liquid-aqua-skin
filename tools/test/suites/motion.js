@@ -137,6 +137,19 @@ test('tapping the frame meter opens a log of slow frames and what ran then', fun
   });
 });
 
+test('the frame log adds up a crowd of socket messages and splits a long frame', function (T) {
+  var was = prefs.fpsMeter;
+  setFpsMeter(true); flogClear();
+  for (var i = 0; i < 50; i++) flogWs('machine', 1, 2048);
+  T.eq(flogLine({ k: 'main', ms: 500, js: 8, other: 470, raf: 3, lay: 19 }, []),
+    '  main 500ms (script 8ms, other 470ms, rAF 3ms, style/layout/paint 19ms)', 'the frame is split by phase');
+  return new Promise(function (r) { setTimeout(r, 1100); }).then(function () {
+    var line = FLOG.filter(function (e) { return e.k === 'ws'; })[0];
+    T.ok(line && /machine 50 msgs 50ms 100KB/.test(line.n), 'listed once for the second: ' + (line && line.n));
+    setFpsMeter(!!was);
+  });
+});
+
 test('the recipe alert pulses without animating its shadow', function (T) {
   var found = null;
   Array.prototype.forEach.call(document.styleSheets, function (s) {
