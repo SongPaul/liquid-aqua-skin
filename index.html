@@ -4858,7 +4858,7 @@ var state={ machine:{state:'idle',substate:'idle'}, pressure:0, flow:0, mixTemp:
   connected:false, scaleWeight:null, scaleConnected:false, dosingWeight:null, dosingConnected:false, devices:[], shotRunning:false, shotActive:false, steamRunning:false, waterRunning:false, shotStart:null, shotTick:null, shotPourEnd:null,
   flushRunning:false, snapTime:null, water:{current:0,refill:0}, ghc:false, battery:null, lastShotId:null, machineName:null, scaleName:null, targetGroupTemp:0, targetMixTemp:0, targetFlow:0, targetPressure:0 };
 var settings={ groupTemp:93.0, doseIn:18.0, doseOut:36.0, steamTemp:150, steamDur:50, steamFlow:0.8, milkStop:0, flushTemp:88, flushDur:10, flushFlow:6.0, waterTemp:75, waterVol:200, waterDur:30, waterFlow:10.0 };
-var chart={ pressure:[], flow:[], weight:[], wflow:[], frame:[], steamTemp:[], waterTemp:[],
+var chart={ pressure:[], flow:[], weight:[], wflow:[], frame:[], steamTemp:[], waterTemp:[], milkTemp:[],
   groupTemp:[], mixTemp:[], targetGroup:[], targetMix:[], targetFlow:[], targetPressure:[],
   t:[], wt:[], mode:'espresso', max:600 };
 // The shot chart people read elsewhere uses one convention: a solid line for
@@ -4871,7 +4871,8 @@ var SERIES={ pressure:'#1fbfa8', pressureGoal:'#0e7c6b',
              mix:'#d6402b',      mixGoal:'#9c4a9c',
              // steam and hot-water temperature read in the same red the
              // espresso mix temperature does -- one colour means one thing
-             steam:'#d6402b',    water:'#d6402b' };
+             steam:'#d6402b',    water:'#d6402b',
+             milk:'#d99a2b' };
 var GOAL_DASH=[5,4];
 // The scrub guide is not a series -- it marks a moment, so it takes the
 // interface accent rather than any line's colour.
@@ -5142,7 +5143,7 @@ function onMachineState(ms,prev){
   // would draw nothing at all, which is worse than drawing the brackets.
   var phased=(sub==='preparingForShot'||sub==='preinfusion'||sub==='pouring'||sub==='pouringDone');
   var pouringNow=(!phased)||(sub==='pouring'||sub==='preinfusion');
-  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.steamTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; _chartOff=null; }
+  function resetChart(mode){ chart.mode=mode; chartReviewing=false; chartReviewLabel=null; reviewProfile=null; _chartLegendMode=null; _guideKey=null; resetWeightFlow(); chart.pressure=[];chart.flow=[];chart.weight=[];chart.wflow=[];chart.frame=[];chart.steamTemp=[];chart.milkTemp=[];chart.waterTemp=[];chart.groupTemp=[];chart.mixTemp=[];chart.targetGroup=[];chart.targetMix=[];chart.targetFlow=[];chart.targetPressure=[];chart.t=[];chart.wt=[];_axisSpan=0; _chartOff=null; }
   // Espresso session: the graph starts when actual extraction begins (first
   // preinfusion/pouring sample), not during prep. DYE fires when the whole
   // espresso state ends (after pouringDone returns to idle).
@@ -5189,7 +5190,8 @@ function onMachineState(ms,prev){
   // which draws a setting in the shape of a measurement -- the same fault as
   // showing a temperature the machine is not holding.
   else if(steaming&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chartArrived(); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.steamTemp.push(state.steamTemp);
-    if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); drawChart(); }
+    chart.milkTemp.push(milkChartValue());
+    if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.steamTemp.length>chart.max)chart.steamTemp.shift(); if(chart.milkTemp.length>chart.max)chart.milkTemp.shift(); drawChart(); }
   else if((watering||flushing)&&pouringNow){ chart.t.push(state.snapTime||Date.now()); chartArrived(); chart.pressure.push(state.pressure); chart.flow.push(state.flow); chart.waterTemp.push(state.mixTemp);
     chart.targetMix.push(state.targetMixTemp||0);
     if(chart.t.length>chart.max)chart.t.shift(); if(chart.pressure.length>chart.max)chart.pressure.shift(); if(chart.flow.length>chart.max)chart.flow.shift(); if(chart.waterTemp.length>chart.max)chart.waterTemp.shift(); if(chart.targetMix.length>chart.max)chart.targetMix.shift(); drawChart(); }
@@ -5585,7 +5587,16 @@ function fxFrame(now){
 // eases toward the reading, the surface swells while water is being drawn
 // off, and a hot tank bubbles.
 var TANK_AMP_REST=7, TANK_AMP_RUN=10, TANK_COOL_BUBBLES=3;
-var _tank={lvl:-1,target:0,color:[56,189,248],bubbles:-1,amp:TANK_AMP_REST,at:0};
+// The water moves faster the more of it is flowing: at rest it keeps its own
+// pace, and at a full pour it runs about two and a half times as fast. Its
+// phase is a clock of its own that speed is added to, so a change of pace
+// never jumps the surface.
+var TANK_FLOW_FULL=8, TANK_FLOW_GAIN=1.5;
+var _tank={lvl:-1,target:0,color:[56,189,248],bubbles:-1,amp:TANK_AMP_REST,at:0,spd:1,wt:0};
+function tankPace(){
+  var run=state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning;
+  var f=run?Math.max(0,Math.min(+state.flow||0,TANK_FLOW_FULL)):0;
+  return 1+TANK_FLOW_GAIN*f/TANK_FLOW_FULL; }
 var TANK_TASK={name:'tank',hz:30,draw:function(now){ drawTank(now); return !!prefs.fx; }};
 function tankLevel(pct,snap){
   _tank.target=Math.max(0,Math.min(pct,100))*0.9;
@@ -5607,27 +5618,29 @@ function drawTank(now){
   _tank.lvl+=(_tank.target-_tank.lvl)*Math.min(1,dt*2.5);
   var run=state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning;
   _tank.amp+=((run?TANK_AMP_RUN:TANK_AMP_REST)-_tank.amp)*Math.min(1,dt*1.5);
+  _tank.spd+=(tankPace()-_tank.spd)*Math.min(1,dt*1.2);
+  if(fx) _tank.wt+=dt*_tank.spd;
   ctx.clearRect(0,0,W,H);
   if(_tank.lvl<=0.2) return;
-  var c=_tank.color, t=fx?now/1000:0, A=_tank.amp;
+  var c=_tank.color, t=fx?now/1000:0, wt=_tank.wt, A=_tank.amp;
   var top=H*(1-_tank.lvl/100)+(fx?1.6*Math.sin(t*0.9):0);
   function rgba(a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
   function surface(amp,len,speed,ph){
     ctx.beginPath(); ctx.moveTo(0,H);
-    for(var x=0;x<=W+6;x+=6) ctx.lineTo(x,top+amp*Math.sin(x/len*Math.PI*2+t*speed+ph));
+    for(var x=0;x<=W+6;x+=6) ctx.lineTo(x,top+amp*Math.sin(x/len*Math.PI*2+wt*speed+ph));
     ctx.lineTo(W,H); ctx.closePath(); }
   surface(A*0.8,W/2.2,-1.7,1.7); ctx.fillStyle=rgba(.22); ctx.fill();
   surface(A,W/3,2.3,0);
   var g=ctx.createLinearGradient(0,top-A,0,H); g.addColorStop(0,rgba(.36)); g.addColorStop(1,rgba(.55));
   ctx.fillStyle=g; ctx.fill();
   ctx.beginPath();
-  for(var x=0;x<=W+6;x+=6){ var y=top+A*Math.sin(x/(W/3)*Math.PI*2+t*2.3); if(x) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
+  for(var x=0;x<=W+6;x+=6){ var y=top+A*Math.sin(x/(W/3)*Math.PI*2+wt*2.3); if(x) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
   ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=1.3; ctx.stroke();
   var n=tankBubbleCount(), heat=_tank.bubbles<0?-2:_tank.bubbles;
   for(var j=0;j<n;j++){
     var i=heat<0?[1,4,7][j]:j;
-    var dur=5.8-heat*0.5+(i%4)*0.35, ph=((t+TANK_BUBBLE_DELAY[i])/dur)%1;
-    var bx=TANK_BUBBLE_X[i]/1280*W+Math.sin(t*2.2+i)*3, by=H+4-ph*(H+4-top);
+    var dur=5.8-heat*0.5+(i%4)*0.35, ph=((wt+TANK_BUBBLE_DELAY[i])/dur)%1;
+    var bx=TANK_BUBBLE_X[i]/1280*W+Math.sin(wt*2.2+i)*3, by=H+4-ph*(H+4-top);
     var a=0.85*Math.min(1,ph/0.12)*Math.min(1,(1-ph)/0.28);
     ctx.beginPath(); ctx.arc(bx,by,(5+(i%3))/2,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,'+a.toFixed(3)+')'; ctx.fill(); } }
@@ -6168,7 +6181,7 @@ function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'ch
         +lt('flow',SERIES.flow,t('flow'))+ltg('flowGoal',SERIES.flowGoal,t('flowGoal'))
         +lt('weight',SERIES.weight,t('legWeight'))+lt('wflow',SERIES.wflow,t('legWeightFlow'))
         +(hasTempAxis?lt('basket',SERIES.basket,t('tempBasket'))+lt('mix',SERIES.mix,t('tempMix')):'');
-    var tHtml=isSteam?lt('steam',SERIES.steam,t('steam')+' °')
+    var tHtml=isSteam?lt('steam',SERIES.steam,t('steam')+' °')+((thermoOn()||milkCharted())?lt('milk',SERIES.milk,t('milkLbl')+' °'):'')
       :isWater?lt('water',SERIES.water,t('water')+' °')+ltg('mixGoal',SERIES.mixGoal,t('mixGoal'))
       :lt('basket',SERIES.basket,t('tempBasket'))+ltg('basketGoal',SERIES.basketGoal,t('basketGoal'))
        +lt('mix',SERIES.mix,t('tempMix'))+ltg('mixGoal',SERIES.mixGoal,t('mixGoal'));
@@ -7023,6 +7036,17 @@ function isThermo(d){
 function thermoDevices(){ return (state.devices||[]).filter(isThermo); }
 function thermoDevice(){
   return thermoDevices().filter(function(d){ return d.state==='connected'; })[0]||null; }
+// The milk is charted beside the steam it is heated by, on the steam's own
+// temperature axis. A reading that drops out holds its last value rather than
+// breaking the line; before the first reading there is no line at all.
+function milkChartValue(){
+  if(state.milkTemp!=null&&isFinite(state.milkTemp)) return state.milkTemp;
+  var d=chart.milkTemp; return d.length?d[d.length-1]:null; }
+function milkCharted(){ return chart.milkTemp.some(function(v){ return v!=null; }); }
+function milkLiveVal(disp){
+  var d=chart.milkTemp, k=0; while(k<d.length&&d[k]==null) k++;
+  if(k>=d.length) return null;
+  return liveVal(d.slice(k),chart.t.length===d.length?chart.t.slice(k):null,disp); }
 function milkTempText(){
   return state.milkTemp==null?'':(state.milkTemp.toFixed(1)+'°'); }
 function milkStopTarget(){ return +settings.milkStop||0; }
@@ -7043,7 +7067,7 @@ function openThermoWs(id){
 function syncThermoWs(){
   var d=thermoDevice(), id=d?d.id:'';
   if(id!==_thermoWsId){
-    _thermoWsId=id; state.milkTemp=null;
+    _thermoWsId=id; state.milkTemp=null; _chartLegendMode=null;
     if(id) openThermoWs(id); else closeThermoWs(); }
   syncMilkTemp(); }
 function milkFrame(text){
@@ -19150,19 +19174,31 @@ function drawTempChart(){
     ctx.beginPath(); guide.pts.forEach(function(pt,i){ var x=X0+Math.min(pt.t/SPAN,1)*PW, y=py(pt.temp);
       if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
     ctx.strokeStyle=SERIES.basket; ctx.stroke(); ctx.globalAlpha=1; ctx.restore(); }
-  if(isSteam){ if(vis('steam')) tline(chart.steamTemp,SERIES.steam); }
+  if(isSteam){ if(vis('steam')) tline(chart.steamTemp,SERIES.steam);
+    if(vis('milk')) milkLine(); }
   else if(isWater){ if(vis('mixGoal')) tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
     if(vis('water')) tline(chart.waterTemp,SERIES.water); }
   else { if(vis('basketGoal')) tline(chart.targetGroup,SERIES.basketGoal,GOAL_DASH);
          if(vis('mixGoal')) tline(chart.targetMix,SERIES.mixGoal,GOAL_DASH);
          if(vis('basket')) tline(chart.groupTemp,SERIES.basket);
          if(vis('mix')) tline(chart.mixTemp,SERIES.mix); }
+  function milkLine(){
+    var d=chart.milkTemp, k=0; while(k<d.length&&d[k]==null) k++;
+    var goal=milkStopTarget();
+    if(goal>0&&(k<d.length||thermoOn())){ ctx.save(); ctx.setLineDash(GOAL_DASH); ctx.globalAlpha=.7;
+      ctx.beginPath(); ctx.moveTo(X0,py(goal)); ctx.lineTo(X0+PW,py(goal));
+      ctx.strokeStyle=SERIES.milk; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore(); }
+    if(d.length-k<2||chart.t.length!==d.length) return;
+    var p=livePts(d.slice(k),chart.t.slice(k),DISP,function(i){ return px(i+k); },pxAt,py);
+    if(p.xs.length<2) return;
+    ctx.beginPath(); smoothPath(ctx,p.xs,p.ys);
+    ctx.strokeStyle=SERIES.milk; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); }
   // the same readouts the extraction chart carries, for the lines that live here
   var running=state.shotRunning||state.steamRunning||state.waterRunning;
   if(N>=1 && running){
     var last=function(d){ return liveVal(d,chart.t,DISP); };
     // a line that is not drawn has no reading to place against it
-    var rows=(isSteam?[{k:'steam',v:last(chart.steamTemp),c:SERIES.steam}]
+    var rows=(isSteam?[{k:'steam',v:last(chart.steamTemp),c:SERIES.steam},{k:'milk',v:milkLiveVal(DISP),c:SERIES.milk}]
       :isWater?[{k:'water',v:last(chart.waterTemp),c:SERIES.water},{k:'mixGoal',v:last(chart.targetMix),c:SERIES.mixGoal}]
       :[{k:'basket',v:last(chart.groupTemp),c:SERIES.basket},{k:'mix',v:last(chart.mixTemp),c:SERIES.mix}])
       .filter(function(r){ return vis(r.k); });

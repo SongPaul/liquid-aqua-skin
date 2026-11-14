@@ -13,7 +13,7 @@ function cfCtx() {
 
 function cfReset() {
   chart.mode = 'espresso'; chartReviewing = false;
-  ['pressure', 'flow', 'weight', 'wflow', 'frame', 'steamTemp', 'waterTemp', 'groupTemp', 'mixTemp',
+  ['pressure', 'flow', 'weight', 'wflow', 'frame', 'steamTemp', 'milkTemp', 'waterTemp', 'groupTemp', 'mixTemp',
    'targetGroup', 'targetMix', 'targetFlow', 'targetPressure', 't', 'wt'].forEach(function (k) { chart[k] = []; });
   _axisSpan = 0; _chartOff = null;
 }
@@ -131,4 +131,60 @@ test('the dial needle eases on the clock, not a loop of its own', function (T) {
   T.ok(typeof _gsRAF === 'undefined', 'no separate loop');
   if (prefs.fx !== was) setFx(was);
   updateMachineUI();
+});
+
+// ── milk on the steam temperature graph ──
+function cfMilk(run) {
+  var keep = { milk: state.milkTemp, mode: chart.mode, stop: settings.milkStop, hide: prefs.chartHide };
+  try { cfReset(); prefs.chartHide = {}; return run(); }
+  finally { state.milkTemp = keep.milk; settings.milkStop = keep.stop; prefs.chartHide = keep.hide; cfReset(); chart.mode = keep.mode; _chartLegendMode = null; }
+}
+function cfMilkPixels(cv) {
+  var x = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data, n = 0;
+  for (var i = 0; i < x.length; i += 4)
+    if (x[i + 3] > 200 && Math.abs(x[i] - 0xd9) < 24 && Math.abs(x[i + 1] - 0x9a) < 24 && Math.abs(x[i + 2] - 0x2b) < 30) n++;
+  return n;
+}
+
+test('a dropped milk reading holds its last value; before the first there is none', function (T) {
+  cfMilk(function () {
+    state.milkTemp = null;
+    T.eq(milkChartValue(), null, 'nothing before the first reading');
+    chart.milkTemp.push(milkChartValue());
+    state.milkTemp = 41.5; chart.milkTemp.push(milkChartValue());
+    state.milkTemp = null;
+    T.eq(milkChartValue(), 41.5, 'a gap holds the last reading');
+    T.ok(milkCharted(), 'there is a line to draw');
+  });
+});
+
+test('while steaming, the milk is drawn on the temperature graph', function (T) {
+  cfMilk(function () {
+    chart.mode = 'steam'; _chartLegendMode = null;
+    var t0 = Date.now() - 4000;
+    for (var i = 0; i < 20; i++) {
+      chart.t.push(t0 + i * 200); chart.pressure.push(1.5); chart.flow.push(0.8); chart.steamTemp.push(150);
+      chart.milkTemp.push(i < 3 ? null : 20 + i * 2);
+    }
+    var cv = T.el('#tempChart');
+    var before = cfMilkPixels(cv);
+    drawTempChart();
+    T.ok(cfMilkPixels(cv) > 40, 'a milk line is drawn: ' + cfMilkPixels(cv) + ' (was ' + before + ')');
+    T.ok(Math.abs(milkLiveVal(Infinity) - 58) < 0.01, 'the reading is the last milk temperature');
+  });
+});
+
+test('with no thermometer reading the steam graph has no milk line', function (T) {
+  cfMilk(function () {
+    chart.mode = 'steam';
+    var t0 = Date.now() - 4000;
+    for (var i = 0; i < 20; i++) {
+      chart.t.push(t0 + i * 200); chart.pressure.push(1.5); chart.flow.push(0.8); chart.steamTemp.push(150);
+      chart.milkTemp.push(null);
+    }
+    settings.milkStop = 0;
+    drawTempChart();
+    T.eq(cfMilkPixels(T.el('#tempChart')), 0, 'nothing in the milk colour');
+    T.eq(milkLiveVal(Infinity), null, 'and no reading');
+  });
 });

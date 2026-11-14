@@ -50,6 +50,34 @@ test('the tank surface moves enough to be seen', function (T) {
   });
 });
 
+test('the tank water runs faster the more is flowing', function (T) {
+  var keep = { run: state.shotRunning, flow: state.flow };
+  try {
+    state.shotRunning = false; state.flow = 6;
+    T.eq(tankPace(), 1, 'at rest it keeps its own pace, whatever the last reading');
+    state.shotRunning = true; state.flow = 0;
+    T.eq(tankPace(), 1, 'nothing flowing yet');
+    state.flow = 4;
+    var half = tankPace();
+    state.flow = 8;
+    var full = tankPace();
+    state.flow = 20;
+    T.ok(half > 1 && full > half, 'faster with more flow: ' + half + ' < ' + full);
+    T.eq(tankPace(), full, 'and no faster past a full pour');
+  } finally { state.shotRunning = keep.run; state.flow = keep.flow; }
+});
+
+test('a change of pace does not jump the surface', function (T) {
+  var keep = { at: _tank.at, wt: _tank.wt, spd: _tank.spd };
+  try {
+    _tank.at = 1000; _tank.wt = 5; _tank.spd = 1;
+    var before = _tank.wt;
+    _tank.spd = 2.5;
+    drawTank(1033);
+    T.ok(_tank.wt - before < 0.1, 'it moves on by one frame, not to a new place: ' + (_tank.wt - before).toFixed(3));
+  } finally { _tank.at = keep.at; _tank.wt = keep.wt; _tank.spd = keep.spd; }
+});
+
 test('the tank canvas paints its water up to the level', function (T) {
   mHot(function () {
     tankLevel(60, true);
