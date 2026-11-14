@@ -17,37 +17,25 @@ function shutAll() {
   Array.prototype.forEach.call(document.querySelectorAll('.overlay.show'), function (el) { el.classList.remove('show'); });
 }
 
-// ── the reading waits for the tasting log ──
-test('a reading held back by the tasting log opens when the log closes', function (T) {
+// ── the reading stays behind its mark ──
+test('a reading never opens by itself, and an old open-it setting reads as the mark', function (T) {
   return keepLs(['aurora_shotread'], function () {
     var wasMode = prefs.shotRead, wasLast = lastShotSummary;
     prefs.shotRead = 'modal';
+    T.eq(shotReadMode(), 'icon', 'open-it is now the mark');
     lastShotSummary = { id: 'fb-last' };
     shotReadSet({ shotId: 'fb-last', verdict: 'v', observations: [], suggestions: [] });
     shutAll();
-    document.getElementById('dyeOverlay').classList.add('show');
-    showShotRead();
-    T.ok(!document.getElementById('aiGuideOverlay').classList.contains('show'), 'not over the log');
-    closeModal(null, 'dyeOverlay');
-    T.ok(document.getElementById('aiGuideOverlay').classList.contains('show'), 'opened once the log closed');
-    shutAll();
+    T.ok(typeof showShotRead === 'undefined', 'nothing left to open it');
+    T.ok(!document.getElementById('aiGuideOverlay').classList.contains('show'), 'not opened');
     prefs.shotRead = wasMode; lastShotSummary = wasLast; syncShotRead();
   });
 });
 
-test('a reading set to wait behind the mark stays there', function (T) {
-  return keepLs(['aurora_shotread'], function () {
-    var wasMode = prefs.shotRead, wasLast = lastShotSummary;
-    prefs.shotRead = 'icon';
-    lastShotSummary = { id: 'fb-last' };
-    shotReadSet({ shotId: 'fb-last', verdict: 'v', observations: [], suggestions: [] });
-    shutAll();
-    document.getElementById('dyeOverlay').classList.add('show');
-    showShotRead();
-    closeModal(null, 'dyeOverlay');
-    T.ok(!document.getElementById('aiGuideOverlay').classList.contains('show'), 'not opened');
-    prefs.shotRead = wasMode; lastShotSummary = wasLast; syncShotRead();
-  });
+test('the reading setting offers on and off only', function (T) {
+  var h = shotReadChips();
+  T.ok(h.indexOf("setShotRead('icon')") >= 0 && h.indexOf("setShotRead('off')") >= 0, 'on and off');
+  T.ok(h.indexOf("setShotRead('modal')") < 0, 'no open-it');
 });
 
 // ── keeping a reading for the next shot ──
@@ -130,25 +118,6 @@ test('a turbo shot pulled as intended is not told to grind finer', function (T) 
 test('step times that exit early are not a plan for the shot', function (T) {
   T.eq(rsPlanSeconds(fbProfile(9, true)), 0, 'a profile that exits on conditions has no clock plan');
   T.eq(rsPlanSeconds(fbProfile(9, false)), 80, 'one that runs on the clock does');
-});
-
-test('a reading held back is dropped when the group head moves on', function (T) {
-  return keepLs(['aurora_shotread'], function () {
-    var wasMode = prefs.shotRead, wasLast = lastShotSummary;
-    prefs.shotRead = 'modal';
-    lastShotSummary = { id: 'fb-last' };
-    shotReadSet({ shotId: 'fb-last', verdict: 'v', observations: [], suggestions: [] });
-    shutAll();
-    document.getElementById('dyeOverlay').classList.add('show');
-    showShotRead();
-    onMachineState({ state: 'steam', substate: 'preparingForShot' }, 'idle');
-    onMachineState({ state: 'idle', substate: 'ready' }, 'steam');
-    document.getElementById('dyeOverlay').classList.add('show');
-    closeModal(null, 'dyeOverlay');
-    T.ok(!document.getElementById('aiGuideOverlay').classList.contains('show'), 'not opened later');
-    shutAll();
-    prefs.shotRead = wasMode; lastShotSummary = wasLast; syncShotRead();
-  });
 });
 
 // The gateway stores a shot only after the scale settles, which can be
@@ -260,14 +229,14 @@ test('the feed and the machine ending read a shot only once', function (T) {
 // ── the log form is ready before the shot ends ──
 function landing(run) {
   var keep = { rs: runShotRead, sg: stampGrinderLine, rg: rememberGrind, ll: loadLastShot, dye: prefs.autoDye,
-    last: state.lastShotId, done: _shotReadDone, settle: DYE_SETTLE, read: prefs.shotRead };
+    last: state.lastShotId, done: _shotReadDone, settle: DYE_SETTLE, read: prefs.shotRead, calm: CALM_MAX };
   var seen = [];
   runShotRead = function (id) { seen.push(id); };
   stampGrinderLine = function () {}; rememberGrind = function () {}; loadLastShot = function () {};
-  prefs.autoDye = true; DYE_SETTLE = 40; shutAll();
+  prefs.autoDye = true; DYE_SETTLE = 40; CALM_MAX = 30; shutAll();
   function back() {
     runShotRead = keep.rs; stampGrinderLine = keep.sg; rememberGrind = keep.rg; loadLastShot = keep.ll;
-    prefs.autoDye = keep.dye; state.lastShotId = keep.last; _shotReadDone = keep.done; DYE_SETTLE = keep.settle; prefs.shotRead = keep.read;
+    prefs.autoDye = keep.dye; state.lastShotId = keep.last; _shotReadDone = keep.done; DYE_SETTLE = keep.settle; prefs.shotRead = keep.read; CALM_MAX = keep.calm;
     shutAll(); primeShotDialog(false); ovSync();
   }
   return Promise.resolve().then(function () { return run(seen, document.getElementById('dyeOverlay')); })
@@ -295,14 +264,17 @@ test('with the log turned off nothing is laid down', function (T) {
   });
 });
 
-test('a landed shot fades the form in first and reads once it has appeared', function (T) {
+test('a landed shot fades the form in once the screen is calm, then reads', function (T) {
   return landing(function (seen, o) {
     primeShotDialog(true);
     shotLanded({ id: 'land-1', timestamp: new Date().toISOString() });
-    T.ok(o.classList.contains('show'), 'the form at once');
-    T.eq(seen.length, 0, 'the reading waits');
-    T.eq(state.lastShotId, 'land-1', 'the shot is already the last one');
-    return later(90).then(function () {
+    T.eq(state.lastShotId, 'land-1', 'the shot is the last one at once');
+    T.ok(!o.classList.contains('show'), 'the form waits for calm');
+    return later(50).then(function () {
+      T.ok(o.classList.contains('show'), 'then it appears');
+      T.eq(seen.length, 0, 'the reading waits for it');
+      return later(60);
+    }).then(function () {
       T.eq(seen.join(','), 'land-1', 'then it reads');
       closeModal(null, 'dyeOverlay');
       T.ok(!o.classList.contains('primed'), 'closing puts the form away');
@@ -328,34 +300,22 @@ test('dismissing every dialog puts the laid-down form away too', function (T) {
   });
 });
 
-test('with the log off, the reading dialog is the one laid down', function (T) {
-  return landing(function (seen, o) {
-    prefs.autoDye = false; prefs.shotRead = 'modal';
-    primeShotDialog(true);
-    var g = document.getElementById('aiGuideOverlay');
-    T.ok(g.classList.contains('primed'), 'the reading is ready');
-    T.ok(!o.classList.contains('primed'), 'the log form is not');
-    g.classList.remove('primed');
-  });
-});
-
-test('a reading that does not open puts its laid-down dialog away', function (T) {
-  return landing(function (seen) {
-    prefs.autoDye = false; prefs.shotRead = 'modal';
-    primeShotDialog(true);
-    var g = document.getElementById('aiGuideOverlay');
-    shotLanded({ id: 'land-2', timestamp: new Date().toISOString() });
-    return later(20).then(function () {
-      T.eq(seen.join(','), 'land-2', 'read straight away');
-      T.ok(!g.classList.contains('primed'), 'nothing opened, so it is put away');
-    });
-  });
-});
-
 test('nothing is laid down when the shot ends in no dialog', function (T) {
   return landing(function (seen, o) {
-    prefs.autoDye = false; prefs.shotRead = 'icon';
+    prefs.autoDye = false;
     primeShotDialog(true);
     T.ok(!document.querySelector('.overlay.primed'), 'none');
   });
+});
+
+test('a dialog waits for frames to come on time, but not for ever', function (T) {
+  var keep = { n: CALM_FRAMES, ms: CALM_FRAME_MS, max: CALM_MAX };
+  var ran = [];
+  CALM_FRAME_MS = 0; CALM_MAX = 40;
+  whenCalm(function () { ran.push('busy'); });
+  T.eq(ran.length, 0, 'not straight away');
+  return later(80).then(function () {
+    T.eq(ran.join(','), 'busy', 'opened once the wait ran out');
+  }).then(function () { CALM_FRAMES = keep.n; CALM_FRAME_MS = keep.ms; CALM_MAX = keep.max; },
+    function (e) { CALM_FRAMES = keep.n; CALM_FRAME_MS = keep.ms; CALM_MAX = keep.max; throw e; });
 });
