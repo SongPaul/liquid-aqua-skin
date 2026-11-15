@@ -2,7 +2,7 @@
 
 A bright, liquid-glass WebUI skin for [Decaid](https://github.com/decentespresso/decaid), the Decent Espresso gateway app.
 
-**한국어 설명서: [README.ko.md](README.ko.md)**
+**한국어 설명서: [README.ko.md](README.ko.md)** · **[简体中文使用说明](README.zh-CN.md)**
 
 ![Main screen](docs/main.png)
 
@@ -389,7 +389,7 @@ Readings are cached in your browser against the shots they were made from, so re
 
 | | |
 |---|---|
-| Language | Auto, English, 한국어 |
+| Language | Auto, English, 한국어, 简体中文; other languages via AI translation |
 | Temperature | °C / °F |
 | Weight | g / oz |
 | Night mode | Dark theme |
@@ -492,6 +492,10 @@ The first run after an update finds an empty store only if you have never saved 
 ---
 
 ## Development
+
+English, Korean and Simplified Chinese are built in and require no AI key. Choose **Settings → General → Language → 简体中文**, or use Auto with a Simplified Chinese browser locale. Traditional Chinese remains a separate AI translation. Existing AI translations are kept; built-in translations take precedence. AI analysis and suggestions follow the selected language.
+
+Run `node tools/test/i18n.cjs` to check translation keys, placeholders, language detection and fallback behavior without a gateway.
 
 ```
 index.html          the entire skin
