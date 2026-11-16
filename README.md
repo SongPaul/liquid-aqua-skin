@@ -6,27 +6,27 @@ A bright, liquid-glass WebUI skin for [Decaid](https://github.com/decentespresso
 
 ![Main screen](docs/main.png)
 
-Everything you need for a shot is on one screen: the water tank and every temperature across the top, the scale and the recipe side by side, the extraction graph filling the left, and your profiles, your coffee and your last shot down the right. Nothing scrolls, nothing hides behind a menu.
+Everything for a shot is on one screen. The top bar holds the actions, each showing its own settings. The tank, the temperatures, the scale and the dials sit across the top. The extraction and temperature graphs fill the left. The right column holds your profiles, the recipe, the coffee and the last shot. Nothing scrolls, and nothing hides behind a menu.
 
-It is a single file. `index.html` holds the markup, the styles and the JavaScript — no build step, no dependencies. It talks to the Decaid gateway over its REST and WebSocket APIs on port `8080`.
+It is a single file. `index.html` holds the markup, the styles and the JavaScript. There is no build step and there are no dependencies. It talks to the Decaid gateway over its REST and WebSocket APIs on port `8080`. The same file also serves a [phone app](#phone).
 
 ---
 
 ## Contents
 
 - [Requirements](#requirements)
-- [Install](#install)
+- [Install and update](#install-and-update)
 - [The main screen](#the-main-screen)
-- [Pulling a shot](#pulling-a-shot)
+- [Workflow](#workflow)
+- [Devices](#devices)
 - [Steam, flush and hot water](#steam-flush-and-hot-water)
 - [Monitor](#monitor)
 - [Profiles](#profiles)
 - [Beans and grinders](#beans-and-grinders)
 - [Shot log](#shot-log)
-  - [Comparing shots](#comparing-shots)
-  - [AI reading](#ai-reading)
 - [Settings](#settings)
 - [Sleep screen](#sleep-screen)
+- [Phone](#phone)
 - [Where things are stored](#where-things-are-stored)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
@@ -37,28 +37,34 @@ It is a single file. `index.html` holds the markup, the styles and the JavaScrip
 
 | | |
 |---|---|
-| Gateway | Decaid, with the WebUI server running |
-| Display | Designed for 1280×800; scales to fit anything else, up to 1.6× |
-| Browser | Any current browser. Chrome, Safari and the Android WebView are what it is tested against |
-| Optional | A Google Gemini API key, for reading a coffee bag from a photo and for profile suggestions |
+| Gateway | A current Decaid with the WebUI server running |
+| Display | Designed for 1280×800. Scales to fit other sizes, up to 1.6× |
+| Browser | Any current browser. It is tested against Chrome, Safari and the Android WebView |
+| Optional | An API key for Gemini, Claude or OpenAI. Used for the AI features: reading a bag, suggesting and tuning profiles, reading a shot, and translating the interface |
 
-The skin needs nothing else. No account, no cloud service, no telemetry.
+Nothing else is needed: no account, no cloud service, no telemetry. Every AI feature is optional. The shot feedback, the profile tags and the yield warnings all work without a key.
 
-## Install
+## Install and update
 
-**From the app.** Open Decaid's skin manager and install from a GitHub release, pointing at `SongPaul/liquid-aqua-skin`.
-
-**From the API.**
+**Install.** Open the skin manager in Decaid and install from a GitHub release, pointing it at `SongPaul/liquid-aqua-skin`. The same can be done through the API:
 
 ```bash
 curl -X POST http://<gateway>:8080/api/v1/webui/skins/install/github-release \
      -H 'Content-Type: application/json' \
-     -d '{"repo":"SongPaul/liquid-aqua-skin","tag":"v1.2.35"}'
+     -d '{"repo":"SongPaul/liquid-aqua-skin"}'
 ```
 
-Omit `tag` to take the latest release.
+Leave out `tag` to take the latest release.
 
-**For development.** Serve the folder and point a browser at it — the skin finds the gateway on its own:
+**Update.** Updates are installed from the Decaid app, not from the skin. Current Decaid needs a management token for skin updates, plugin changes and turning on automatic updates, and a skin cannot create one. In the app:
+
+1. Open **Web Interface** on the dashboard.
+2. Open the menu at the top right.
+3. Tap **Check for updates**.
+
+Settings › Updates › Skin lists the release history and says when a newer version is out. From Decaid 0.9.3, on the tablet itself and with automatic updates turned on in the app, the same page also offers **Check for updates**. If a new version is installed but the page is still running the old one, the same page offers **Reload**.
+
+**For development.** Serve the folder and open it in a browser. The skin finds the gateway on its own:
 
 ```bash
 python -m http.server 8081
@@ -68,91 +74,114 @@ python -m http.server 8081
 
 ## The main screen
 
-### Header
+### Top bar
 
-The brand, then the machine and the scale with a dot each — green when connected, grey when not. On the right:
+On the left are the brand, the clock and the tablet battery. Beside them is the **device button**, with one small icon each for the machine, the scales, the grinder and, when their plugins are on, the thermometer and the bean doser. An icon turns green when that device is connected. Tap the button to open [Devices](#devices).
 
-| Button | Tap | Hold |
+In the middle, each action shows the settings it will run with:
+
+| | Shows | Tap |
 |---|---|---|
-| **Start** | Begins the shot; becomes **Stop** while one runs | — |
-| **Steam** / **Flush** / **Water** | Runs that action | Opens its options |
-| **Sleep** | Puts the machine to sleep and shows the [sleep screen](#sleep-screen) | — |
-| **⚙** | Opens [Settings](#settings) | — |
+| **Workflow** | the drink you are making | opens the [workflow](#workflow) |
+| **Extract** | the profile, temperature, dose → yield and ratio | starts the shot |
+| **Steam** | preset name, temperature, seconds, flow | starts steaming |
+| **Flush** | preset name, temperature, seconds, flow | starts a flush |
+| **Water** | preset name, temperature, volume | starts hot water |
 
-If the machine has a GHC (the physical button group), the machine's own buttons run the actions, so Steam, Flush and Water open their options on a plain tap instead, and Start is hidden. The skin detects this and relabels itself.
+Hold Steam, Flush or Water to open its options. If the machine has a GHC (the button group on the group head), the machine's own buttons start the actions instead. In that case a plain tap opens the options, and the skin notices this and labels itself to match.
 
-The tablet battery appears next to the brand when the gateway reports it, or from the browser as a fallback.
+On the right are **Sleep** and **⚙** [Settings](#settings). Hold **Sleep** to put the machine to sleep and leave the Decaid app: on Android it goes to the background with the machine connection still running, desktop builds quit, and iOS does not allow it, so there a hold is a plain sleep.
 
-### Water and temperature bar
+### Tank, scale and dials
 
-The tank fills from the bottom and carries a slow wave. Its colour is the **mix temperature**, which is the water that will actually hit the coffee:
+The **tank** tile fills from the bottom with moving water. Its colour follows the **mix temperature**, which is the water that will actually reach the coffee: blue up to 80 °C, then one shade per degree through teal, green, yellow and orange, and red from 95 °C. Over it are the group, mix and steam temperatures and the tank level. While water is moving, the waves and bubbles speed up with the machine's flow, up to about two and a half times at 8 ml/s. A tank that is genuinely low turns red whatever the temperature. If a refill kit gives up, the tank says **Refill stopped** instead, so check the water supply rather than the tank. On a plumbed machine with the refill kit, the tank always reads full.
+
+Next to it are the live **weight** and the **timer**. Tap the weight to tare.
+
+Pressure and flow are **dials**. Their bands are read from **the loaded profile**, so the same needle means different things under different profiles. The dials switch with the action: during hot water the left one shows mix temperature, and during steam the right one shows steam flow.
+
+| Band | |
+|---|---|
+| Grey | far short: the puck is not taking pressure at all |
+| Amber | short: usually a grind that is too coarse |
+| **Green** | **on profile**: where the profile asked to be |
+| Red | over: harder than the profile ever wanted |
+
+### Graphs
+
+The **Extraction** graph draws pressure, flow, weight and weight flow, with the profile's goals dotted and the step names along the top. A **Temperature** graph sits below it, so a moment on one is directly above the same moment on the other. Tap a legend entry to hide or show that line.
+
+- While steam, flush or hot water runs, both graphs switch to that action.
+- **Extraction guideline** (Settings › General › Display) draws what the shot should look like under the live trace. The guideline is either the loaded profile, or a past shot you chose in the shot log.
+- **View Graph** on the last-shot card puts the last shot's recording on the graph. **Back to live** returns it.
+- **Tap the graph** to open the [monitor](#monitor).
+
+### Profiles
+
+The carousel shows your profiles as covers. Each cover draws the profile's curve. The one with the **green ring** is loaded on the machine.
+
+- The tabs above it are **Favourites**, **No tag**, and the tags you have chosen to show on the main screen.
+- **Tap the centred cover** to load it. Swipe or use the arrows to move.
+- **☆** adds the profile to your favourites or removes it. **Profiles** opens the [profile list](#profiles).
+- While a shot runs, the profile is locked.
+- With **Camera** turned on in Settings, a camera picture takes the place of the album. Scan the code it shows with a phone to send that phone's camera, or an IP-camera app's stream.
+
+### Recipe
+
+Below the carousel is the recipe:
 
 | | |
 |---|---|
-| up to 80 °C | blue |
-| 80 → 95 °C | one shade per degree, through teal, green, yellow and orange |
-| 95 °C and above | red |
+| **Dose** | Tap to type it. With a dosing scale it shows that scale's reading: tap to take the reading, hold to type. **⚖** zeroes the dosing scale |
+| **Ratio** | Changes the yield, keeping the dose |
+| **Yield** | Weighed on the brewing scale. Changing the dose carries the yield with it |
+| **Grind** | Steps by your grinder's own step size. With a grinder plugin, the number is sent to the grinder |
+| **Brew temperature** | The thermometer. Changing it moves the whole profile up or down. **↺** puts the profile's own temperature back |
 
-If the tank is genuinely low it turns red regardless, and a warning appears next to the percentage. On a plumbed machine with the refill kit enabled the tank always reads full and the colour stays with the temperature.
+An amber **!** on the yield means the profile will probably stop before reaching it: it ends on its clock, its own volume or its own weight first. Tap it to see why and to match the yield in one tap.
 
-### Scale and recipe
+### Coffee and last shot
 
-Across the top of this card sit the current **steam, flush and water settings** — the preset name if the numbers match one, otherwise `Custom`. Tap any of them to open its options.
+The bean card shows the coffee in use, its days off roast and its details. **Edit** opens [Beans and grinders](#beans-and-grinders). With a [bean doser](#bean-doser) connected, the card gains an **XDOSING** tab.
 
-Below on the left: live weight with a **Tare** button, the shot timer, and the two [dials](#the-dials). On the right, the recipe as four steppers:
-
-| | |
-|---|---|
-| **Dose g** | ± 0.1 |
-| **Yield g** | ± 0.5 |
-| **Ratio** | ± 0.1, recalculating the yield from the dose |
-| **Grind** | ± one step of your grinder's own step size |
-
-Tap any number to type it on a keypad instead. The grinder's name sits under its stepper — tap it to open that grinder's page.
-
-### The dials
-
-![The dials](docs/gauges.png)
-
-Pressure and flow are arc gauges. The band is not decoration — it is read off **the profile you have loaded**, so the same needle means different things under different profiles.
-
-A pressure step targets its own pressure, and a flow step's limiter is the pressure it must not exceed; for flow the two roles swap. Steps that target almost nothing — the drip and pre-fill stages — are left out. What remains is the range the profile actually works in, and the dial is divided around it:
-
-| Band | | |
-|---|---|---|
-| Grey | far short | the puck is not taking pressure at all |
-| Amber | short | usually a grind that is too coarse |
-| **Green** | **on profile** | **where the profile asked to be** |
-| Red | over | the machine is pushing harder than the profile ever wanted |
-
-The label under the reading names the band you are in, in its colour. The scale is quartered, so pressure reads 0 · 3 · 6 · 9 · 12 and flow 0 · 2 · 4 · 6 · 8.
-
-The dials retarget with the action: during hot water the left one becomes mix temperature on a 0–100 scale, during steam the right one becomes steam flow on 0–2.5. Neither carries the espresso bands, because the profile's pressure range has nothing to say about them.
-
-With no profile loaded the arc is a single neutral band and only the scale reads.
-
-### Extraction graph
-
-Pressure, flow, weight, group and mix temperature and the target, with step boundaries marked and the final value labelled on each line. It switches to a steam, flush or hot-water graph while those run.
-
-**Tap the graph** to open the [monitor](#monitor).
+The last-shot card shows that shot's profile, dose, yield, ratio and time. **Shot Log** opens the [shot log](#shot-log). When there is something to read about the shot, the card is marked with **!**, and tapping it opens the [shot feedback](#shot-feedback).
 
 ---
 
-## Pulling a shot
+## Workflow
 
-1. Check the recipe — dose, yield, grind.
-2. Check the profile in the carousel. The one with the **green ring** is loaded.
-3. **Start**. The graph begins when real extraction does, not while the machine is heating.
-4. The shot ends, and if *Auto-open shot log* is on, the tasting form opens straight away.
+![Workflow](docs/workflow.png)
+
+**Workflow** in the top bar sets up a drink step by step: **Espresso**, **Americano** (an espresso, then hot water) or **Latte** (an espresso, then steamed milk).
+
+The rail across the top shows the steps: bean, profile, grind, recipe, and then water or milk. Each step offers what you used recently first. When it is done, everything is already set on the machine. Start the shot from **Extract** or from the group head. The workflow only prepares the drink; it never starts the machine.
+
+---
+
+## Devices
+
+![Devices](docs/devices.png)
+
+Tap the device button in the top bar. Each kind of device has its own cell, with what is **connected now** above and what else is **in reach** below:
+
+| Cell | |
+|---|---|
+| Machine | the DE1 |
+| Brewing scale | the scale a shot is weighed on. The gateway reconnects to it by itself |
+| Dosing scale | a second scale to weigh the dose on. It is held for this skin only, never weighs a shot, and is let go when the app closes |
+| Grinder | a grinder driven by a plugin |
+| Thermometer | appears when a thermometer plugin is on |
+| Bean doser | appears when the RedxKey doser plugin is on |
+
+**Find** looks again without connecting anything. The gateway stops looking once it has a scale, so a scale switched on later is only noticed this way.
 
 ---
 
 ## Steam, flush and hot water
 
-Tap the chip in the recipe card, or hold the header button, to open the options for that action. Each has up to three named presets, and **+ Save current** stores what is on screen as a new one.
+Tap an action in the top bar to run it, or hold it for its options. Each has up to three named presets. **Save the current numbers as a preset** stores what is on screen.
 
-**While the action runs**, the recipe card turns into live controls for exactly the numbers that action uses, with the action and a **Stop** button underneath:
+**While the action runs**, the recipe card turns into live controls for that action's numbers. Changes take effect as you tap, and the skin batches your taps into one write.
 
 | | |
 |---|---|
@@ -160,31 +189,32 @@ Tap the chip in the recipe card, or hold the header button, to open the options 
 | Flush | temperature, seconds, flow |
 | Hot water | temperature, volume, seconds, flow |
 
-Changes take effect as you tap. The gateway does no debouncing of its own and drops requests that queue too long, so the skin batches your taps and writes once, 450 ms after you stop — five taps produce one write.
-
-The chip band stays visible the whole time, with the running one outlined, so you can see the other two settings without leaving.
+Hot water stops on its weight when a scale is connected, or on its volume, never on a short clock. **Stop timing** in Settings › Machine sets how early it stops so that the cup lands on the target.
 
 ### Milk thermometer
 
-With a thermometer plugin turned on (any plugin that drives a sensor, such as [LEBREW TEMP](https://github.com/SongPaul/lebrew-temp-plugin)), the connection sheet gains a **Thermometer** cell to connect and disconnect it, and the steam card gains two blocks:
+![Steaming with a thermometer](docs/steam-milk.png)
+
+With a thermometer plugin turned on, such as [LEBREW TEMP](https://github.com/SongPaul/lebrew-temp-plugin), the steam card gains two blocks:
 
 - **Milk now**: the thermometer's reading, green once it reaches the target.
-- **Milk target**: the temperature steaming stops at, from 30 to 90 °C, or *off*. It is saved as the workflow's `steamSettings.stopAtTemperature`, and the gateway stops the steam at it. The skin only marks the reading and says so; a second stop request from the skin would count as the second tap of the two-tap steam purge setting and purge straight away.
+- **Milk target**: the temperature steaming stops at, from 30 to 90 °C, or *off*. It is saved as the workflow's `steamSettings.stopAtTemperature`, and the gateway stops the steam there. The skin does not send a stop of its own, because a second stop would count as the second tap of the two-tap steam purge and purge straight away.
 
-While steaming, the bar under the live controls shows the milk against its target.
+While steaming, the temperature graph draws the milk in orange with its live reading, and the milk target as a dashed line. Tap **Milk °** in the legend to hide or show it.
+
+With a dosing scale, the steam card also weighs the milk. **→ Shot** records that weight in the last shot's notes.
 
 ### Bean doser
 
-With the RedxKey bean doser plugin (`redxkey.reaplugin`) turned on, the connection sheet gains a **Bean doser** cell. It lists every connected module, each with its own disconnect, and the modules in reach with connect. Up to four modules can be connected at once, which is the gateway's limit for one plugin.
+![XDOSING](docs/xdosing.png)
 
-With a module connected, the bean card has two tabs: **Bean** and **XDOSING**, which shows how many modules are connected. **Dispense beans** in the cell opens XDOSING too.
+With the RedxKey bean doser plugin (`redxkey.reaplugin`) turned on, the device sheet gains a **Bean doser** cell. Up to four modules can be connected at once, which is the gateway's limit for one plugin. With a module connected, the bean card has two tabs: **Bean** and **XDOSING**, which shows how many modules are connected.
 
-- XDOSING lists every connected module on one line each: its number, its bean, its grams, **Dispense** and **Use**. **Dispense all · N g** sits beside the tabs.
-- Modules are numbered in the order they are connected. Each can be given a bean from the bean list, shown as the coffee and then the roaster, and kept on this tablet under the module's name with its grams.
-- Grams run from 0 to 25.5 g in 0.1 g steps and are typed on the skin keypad. A single module with nothing kept starts at the recipe dose.
-- **Dispense** pours one module; **Dispense all** pours every module with grams above zero, together.
-- A module that pours makes its bean the recipe's bean, so the next shot is saved with it. **Dispense all** takes the bean of the module that poured the most. **Use** does the same without pouring, and reads **In use** for the module whose bean the recipe has.
-- A module's number turns green once it has poured, amber if it failed or may have poured; the XDOSING tab does the same. A dispense that failed after the start byte was sent may have poured, and the next dispense on it asks first.
+- XDOSING lists every connected module on one line: its number, its bean, its grams, **Dispense** and **Use**. **Dispense all · N g** sits beside the tabs.
+- Each module can be given a bean from the bean list. The bean and grams are kept on this tablet under the module's name.
+- Grams run from 0 to 25.5 g in 0.1 g steps. A single module with nothing kept starts at the recipe dose.
+- A module that pours makes its bean the recipe's bean, so the next shot is saved with it. **Dispense all** takes the bean of the module that poured the most. **Use** does the same without pouring.
+- A module's number turns green once it has poured, and amber if it failed or may have poured. A dispense that failed after the start byte was sent may still have poured, so the next dispense on that module asks first.
 
 ---
 
@@ -192,62 +222,44 @@ With a module connected, the bean card has two tabs: **Bean** and **XDOSING**, w
 
 ![Monitor](docs/monitor.png)
 
-One action, full screen: the graph worth watching and the numbers worth reading from across the room. It opens itself when a shot, steam, flush or hot water starts — turn that off with *Full-screen monitor* in Settings — and tapping the extraction graph opens it at any time.
+One action at full screen: the graphs worth watching and the numbers worth reading from across the room. It opens itself when an action starts. Settings › General › Display chooses which actions open it, and which close it again when they finish. Tapping the graph opens it at any time.
 
 | | |
 |---|---|
-| Heading | for a shot, the profile name on its own with the bean, roaster, grinder and grind beneath. Steam, flush and water are not pulled on a profile and have nothing to do with the bean, so the **action names itself** instead |
-| **Extraction** | the large graph: pressure, flow and weight |
-| **Temperature** | a second, smaller graph beneath it — group, mix and target, or steam / water temperature depending on the action |
+| Heading | for a shot, the profile with the bean, grinder and grind beneath. For steam, flush and water, the action itself |
 | Weight · Elapsed | large enough to read at a distance |
-| The two dials | the same bands and scale as the main screen, at twice the size |
-| Settings | the recipe for a shot — dose, yield, ratio. For the other actions, that action's own settings: `150° · 50s · 0.8 ml/s` |
-| **Stop** | stops whatever is running, without leaving the page |
+| The two dials | the same bands as the main screen |
+| Recipe | dose → yield and ratio for a shot, or the action's own settings |
+| Graphs | Extraction above, Temperature below, on the same time axis |
 
-**Close puts the page away; it does not stop the machine.** Those are separate acts, so the monitor carries its own **Stop** while an action runs. It is hidden when a GHC is fitted — the group head owns starting and stopping there, which is why the main screen hides its Start for the same reason.
-
-The two graphs share a width, a padding and a sample count, so a moment on one is directly above the same moment on the other. Splitting them lets the extraction graph keep its whole height for pressure and flow instead of sharing it with a temperature axis.
-
-**The monitor outlives the action.** However it was opened, it stays until you close it — the graph and the numbers are worth reading after the pour, not just during it. Stop withdraws when there is nothing left to stop, and the heading keeps describing what is on screen: a finished steam still reads *Steam*, with its own settings, until you close the page or the next action starts.
+**Close puts the page away; it does not stop the machine.** While an action runs, the monitor carries its own **Stop**. That Stop is hidden when a GHC is fitted, because the group head owns starting and stopping there. The monitor stays up after the action ends until you close it, so the result can still be read.
 
 ---
 
 ## Profiles
 
-![Profile editor](docs/profiles.png)
+![Profiles](docs/profiles.png)
 
-### The carousel
+**Profiles** on the main screen opens the list. Every profile is a card with its curve, peak, temperature and expected time.
 
-Your **favourites**, plus whatever is **loaded** even if it is not a favourite. Two markers, two meanings:
-
-| | |
-|---|---|
-| **★** amber | a favourite |
-| **green ring** | currently loaded on the machine |
-
-The caption says which is which. When the centred card *is* the loaded one it reads `● Currently loaded`; when you scroll past it, `● Loaded: <name> · tap center to change`.
-
-- **Tap the centred card**, or a chip in the strip below, to load that profile.
-- **☆ in the header** adds the profile you are looking at to your favourites, or removes it.
-- **Edit ✎** opens the editor.
-
-Favour as many as you like. The carousel draws a few at a time and the strip beneath scrolls, keeping the centred card in view.
-
-Favour as many as you like. The carousel draws a few at a time and the strip beneath scrolls, keeping the centred card in view.
+- **Search** by name or notes. Filter by **Espresso / Brew · tea / Clean · manual / All**, **Hidden**, or the **Bin**.
+- Profiles are grouped into **Favourites** and **Recently used**, followed by the rest.
+- **Tags** come from each profile's own shape (pressure, flow, mixed, low pressure, bloom, declining, hot, cool), plus any roast level you set. Filled tags are the ones the main screen offers as tabs; hold a tag to change that. **Tags** at the top renames, deletes and picks tags across every profile.
+- **✨ Classify with AI** reads the whole catalogue once and tags each profile with a roast level.
+- **+ New profile** starts one. **Add** imports profiles from Visualizer (a share code, a shot link, or by browsing the community) or from `.tcl` and `.json` files, including a whole folder at once.
+- **Edit list** selects several profiles to hide, show or delete together. A deleted profile goes to the Bin, where it can be put back. A profile that ships with the app is hidden rather than deleted.
 
 ### The editor
 
-The left column lists every profile with its curve, its tags and a star. Above it:
+![Profile editor](docs/profile-editor.png)
 
-- **Search** by name.
-- **Espresso / Brew · tea / Clean · manual / All** filters, and **Hidden** for profiles you have hidden.
-- **✨ Classify with AI** reads your whole catalogue once and tags each profile — roast level and shape.
-- **Tag chips** filter the list, with a count each. Tags come from the profile's own shape (pressure, flow, blooming, decline, low pressure, high or low temperature) so they work with no AI at all.
-- The **eye** hides a profile from the pickers without deleting it. The **star** favourites it.
+At the top are the title, the **card colour**, the **roast level**, the notes, tags, kind, author and the weight to stop at. **More** opens the remaining fields the profile carries.
 
-The right column edits the selected profile: title, notes, **card colour** (nine presets or a colour picker — this is the colour its card shows everywhere), **roast level**, and the steps, one at a time, with a live curve above.
-
-At the bottom: **Cancel**, **Use for shot** and **Save Profile**. *Use for shot* loads what is on screen, so unsaved edits are what the machine gets; the stored profile is untouched until you save.
+- The **curve** shows pressure, flow and temperature for every step. Press a stretch of the curve to edit the step that drew it.
+- The **step table** lists every step with its target, temperature, seconds, volume, weight and exit condition. Drag a step to reorder it, or use the buttons to move, duplicate and delete.
+- The **step panel** on the right edits one step: pressure or flow, the temperature and where it is measured (basket or water), the ramp (step or ease), the limiter, seconds, the volume and weight limits, and the exit condition.
+- **Tune profile** sends the shots pulled on this profile to the AI. It adjusts only the values of the steps the profile already has; no step is added, removed or renamed. Save the result as a copy, or over the profile.
+- **Use for shot** loads what is on screen, so unsaved edits are what the machine gets. **Save Profile** stores it.
 
 ---
 
@@ -255,74 +267,48 @@ At the bottom: **Cancel**, **Use for shot** and **Save Profile**. *Use for shot*
 
 ![Beans](docs/beans.png)
 
-Reachable from **Edit** on the bean card, or by tapping the grinder name in the recipe.
+Open it from **Edit** on the bean card, or by holding the grinder name in the recipe. Beans and grinders are cards: **tap to use one**, and hold or use the pencil to edit.
 
-### Beans
+- A bean's card shows its bag photo, its days off roast and how far past roast it is (**Resting**, **Ready**, **Fading**, **Past peak**, or **Frozen**).
+- Filter by **All / Ready / Frozen / Used up**, and order by **Suggested**, roast date or name. **Select** acts on several beans at once: put them away, bring them back, or delete.
 
-A coffee is one bean; each time you buy it again is a **batch** with its own roast date and roast level. The bean carries what does not change — roaster, name, origin, region, producer, processing, variety, altitude, species, decaf. Days off roast on the main screen come from the batch you are using.
+### A bean
 
-**Use for shot** puts the bean in the workflow so every shot records what it was pulled with.
+![Editing a bean](docs/bean-edit.png)
 
-### Reading the bag
+A coffee is one bean. Each time you buy it again is a **batch**, with its own roast date, roast level and bag weight. The bean carries what does not change: roaster, name, roasting machine and its heat transfer, origin, region, producer, processing, variety, altitude, species and decaf. A **blend** lists its coffees with their shares.
 
-With a Gemini key set, **✨ Scan label with AI** fills the form from a photo of the bag.
-
-- **📷 Camera** or **🖼 Attach** on the tablet.
-- **📱 Use phone** shows a QR code. Open it on a phone, photograph the bag there, and the result saves straight to the gateway — useful because the tablet is usually mounted.
-
-The scan keeps what the bag says, in the language the bag says it, and puts anything that has no field of its own into the notes. Scanning a coffee you already have offers to add it as a **new batch** rather than a duplicate bean.
-
-### Three panes
-
-A bean page does three separate jobs, so it has a tab each:
-
-| | |
-|---|---|
-| **Bean** | the scan strip, every field, the batch |
-| **Profiles** | which profile for this coffee |
-| **History** | what it has actually been pulled at |
-
-It opens on **Bean**. A new bean has no History tab yet, and the Profiles tab carries a count as soon as a scan produces suggestions, so a scan's result is visible from the pane you are typing in.
+- **Freeze** and **Used up** mark the batch. With a bag weight, the card counts the shots and estimates what is left.
+- **✨ Scan label with AI** fills the form from photos of the bag (up to five). **Camera** and **Attach** work on the tablet. **Use phone** shows a QR code: photograph the bag on the phone, and the result is saved straight to the gateway. The scan keeps what the bag says, in the bag's language. What it found by searching rather than on the bag is marked for checking. Scanning a coffee you already have offers to add a **new batch** rather than a duplicate bean.
+- Up to three bag photos are kept with the bean. They become its cover and fill the [sleep screen](#sleep-screen).
+- **Use for shot** puts the bean in the workflow, so every shot records what it was pulled with.
 
 ### Profiles for this bean
 
 ![Profiles for this bean](docs/bean-profiles.png)
 
-One list, whatever the source. Each row is the profile's curve, its name and the badges that apply — `Pick 1` with the reason the AI gave, `14 shots` with the date it was last used, or both on the same row when a suggestion is also something you already brew.
+One list, whatever the source. Each row shows the profile's curve, how many shots you pulled with it on this bean, and when. **Use** loads it, **Edit** opens it in the editor, and **History** shows only the shots pulled with it.
 
-| | |
-|---|---|
-| **Use** | loads it onto the machine |
-| **Edit** | opens it in the profile editor |
-| **History** | jumps to the History tab showing only the shots pulled with it — the averages recompute for that profile alone, and the chip clears the filter |
-
-- **Suggest a profile for this bean** asks AI which of *your installed* profiles suits this coffee, and ranks five. Saved with the bean, so reopening it costs no API call.
-- The counts come from your own shot history — no AI needed.
+**✨ Suggest a profile for this bean** asks the AI which of *your installed* profiles suits this coffee, and ranks five. The answer is saved with the bean, so reopening it costs no API call.
 
 ### This bean so far
 
 ![This bean so far](docs/bean-history.png)
 
-Everything the shot history knows about this coffee. It appears once the bean has been pulled at least once.
-
-| | |
-|---|---|
-| **Avg dose / yield / ratio / grind** | Averaged over every recorded shot. A shot's own annotation wins over the recipe it was pulled with, because that is what really landed on the scale. The ratio is averaged per shot, not derived from the two averages. Grind averages the numbers when the grinder uses a dial, and falls back to the setting used most when it uses named positions |
-| **Avg rating** | Shown only if you have rated any of them |
-| **Shot count and date range** | Beside the heading |
-| **Every shot** | The latest 20, each with its profile's curve, when it was pulled, dose to yield with the ratio, the grinder and grind it went through, and its rating. **Tap one** to open it in the shot log — the graph there is the recording, not the profile's shape, alongside every metric and the tasting log |
+The shot history for this coffee: average dose, yield, ratio, grind and rating, the number of shots and their date range, and the latest 20 shots. Tap one to open it in the shot log.
 
 ### Grinders
 
-A grinder is a **brand** and a **model**, and then whatever its burrs are.
+![Editing a grinder](docs/grinder.png)
 
-**✨ Fill from AI** takes the two names and fills in the burr set, the geometry, the diameter and a few sentences on what the grinder is like to use. It is told never to guess a burr size: a grinder it does not recognise comes back empty rather than plausible, because a wrong 64mm would go on to mislead every reading that follows. Everything it fills stays editable.
+A grinder is a **brand** and a **model**, a grind setting, an optional speed, and its burrs.
 
-The gateway stores a grinder under a single name, so the brand and model are joined for it and the skin remembers where they split.
+- The setting is either a **numeric dial** with your own fine and coarse step, or a list of **named presets**.
+- **Burrs** are the burr brand, type, size, coating and geometry, with a note on what they do.
+- **Auto-fill grinder** looks the grinder up by brand and model and fills only the empty fields. It is told never to guess a burr size: a grinder it does not recognise comes back empty rather than plausible.
+- A grinder driven by a plugin (Bookoo MT80, xBloom, Eureka E64 and others) is added by itself and marked **Linked**. Its name and dial follow the plugin, and the recipe card sets it while it is in use. Settings › Plugins installs grinder plugins.
 
-**What it grinds with reaches the rest.** The AI reading of a shot and the profile recommendations for a bean are both given the grinder — geometry, size, burr set, its notes and the dial it was on. A grind change is then suggested in terms of *your* grinder's dial, and a profile is weighed against burrs that can actually feed it.
-
-Model, burrs, burr type and size, and a grind setting that is either a **numeric dial** with your own fine and coarse step, or a list of **named presets**. Notes for anything else.
+The AI shot reading and the profile suggestions are both given the grinder, so a grind change is suggested in terms of *your* dial.
 
 ---
 
@@ -330,54 +316,51 @@ Model, burrs, burr type and size, and a grind setting that is either a **numeric
 
 ![Shot log](docs/shotlog.png)
 
-Every recorded shot, newest first, with its rating. Pick one to see the recorded curve — pressure, flow, weight and the temperatures as they actually happened — the headline numbers, and the tasting log:
+Every recorded shot, newest first. **★ 4+** beside the search shows only the shots you rated four stars or more, among the latest 200. Pick one to see the recording on the left and the record on the right.
+
+**On the left:** the extraction and temperature graphs as they actually happened, with the steps named along the top, and why the shot ended ("Stopped at the target weight").
+
+**On the right:**
 
 | | |
 |---|---|
-| Bean & grinder | the roaster, coffee, grinder and grind the shot was recorded with — correct them here when the wrong bean was loaded or the grind was typed after the fact |
-| Actual dose / yield | what really landed on the scale |
-| TDS % / Extraction yield % | if you measure it |
-| Enjoyment | five stars |
-| Notes | free text |
+| AI reading | **Analyse** and **Tune profile** |
+| Bean & grinder | the coffee, batch, grinder, grind and speeds the shot was recorded with. Correct them here if the wrong bean was loaded |
+| Basket | from your own basket list |
+| Tasting log | actual dose and yield, TDS, extraction yield, and a tasting card: acidity, bitterness, sweetness, body, dry finish, aftertaste, and whether you would have another |
 
-**Save Log** writes it back to the gateway. Turn on *Auto-open shot log* in Settings to have this open by itself when a shot ends.
+At the bottom: **Use as guideline** draws this shot under the live graph. **Upload to Visualizer** sends the shot, or updates it if it is already there. **Save Log** writes it to the gateway.
+
+**By machine** groups your shots by the roaster's machine, its heat transfer and batch size. It is a record of what you dialled in, not a verdict on the machine.
 
 ### Comparing shots
 
 ![Comparing shots](docs/shot-compare.png)
 
-A shot on its own tells you what happened. Two of them tell you what changed.
+Every row has a **+** on its right. Press it to add the shot to a comparison, where it takes a colour. Up to four shots can be compared.
 
-Every row in the list carries a **+** on its right. Press it and the shot joins a comparison, taking a colour and a number; press it again to drop it. Up to four at once.
+With two or more picked, the detail becomes an overlay: one measurement across every shot on a shared axis. **Pressure / Flow / Weight / Weight flow / Group** picks the measurement, and **All** draws every one at once with dash patterns. Below is a table of dose, yield, ratio, time, peak pressure, group temperature, grind, TDS, EY and rating, one column per shot. **Clear** returns to the single shot.
 
-With two or more picked, the detail becomes an overlay instead: one measurement across every shot, on a shared axis, so the difference between two pulls is the distance between two lines.
+### Shot feedback
 
-| | |
-|---|---|
-| **Pressure / Flow / Weight / Group** | pick which one to overlay; the axis rescales to whichever is showing |
-| **All** | every measurement at once — colour still says which shot, the dash says which measurement |
-| Colour key | which line is which shot, with the time it was pulled |
-| The table below | dose, yield, ratio, time, peak pressure, group temperature, grind setting, TDS, EY and rating, one column per shot |
+![Shot feedback](docs/shot-feedback.png)
 
-The time axis comes from the recordings themselves, not from the measurement on show, so switching tabs never moves a shot along it.
+When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. The shot card is marked with **!** when there is something to read. Tap it to open:
 
-![All measurements at once](docs/shot-compare-all.png)
+- a verdict: ran normally, ran fast (grind coarse), choked (grind fine), channelled, or mixed signs;
+- the shot time, yield and ratio against their targets, puck resistance and extraction yield;
+- if the profile ran out before the target weight, how many seconds the last step needs, or the yield to set instead.
 
-**All** draws the same two scales a single recorded shot uses — pressure down the left, temperature down the right, flow and weight between them — with a key under the chart for the dash patterns.
+**Use next time** keeps the suggestion and shows it on the card the next time that profile is loaded. Settings › General › Display turns the feedback on or off.
 
-**Clear** puts you back on the single shot you had open. Picking a single shot never disturbs a comparison — the **+** buttons and the row selection are independent.
+With a scale, the skin also learns **when to stop**. After each shot it compares the settled weight with the target and moves the stop a little earlier or later. A toast says what it changed, and **Undo** puts it back. Settings › Machine › Stop timing turns this off.
 
 ### AI reading
 
-![AI reading](docs/shot-ai.png)
+**Analyse** sends the shot to the AI and asks what the curve did. The AI gets the profile, the bean and grinder, the measured figures, your tasting notes and the curve itself, downsampled to about two dozen points. It answers with a verdict, a few observations and up to three changes, each with its reason. It works on a comparison too: what actually differs between these shots, and which one to chase.
 
-Under the numbers, **Analyse** sends the shot to Gemini and asks it what the curve did. It gets the profile it was pulled on, the bean and grind, the measured figures, your tasting notes, and the curve itself downsampled to about two dozen points — the same recording you are looking at, not a summary of it.
-
-It comes back as a verdict, a few observations and up to three things to change next, each with its reason.
-
-It works on a comparison too, and then the question changes: what actually differs between these shots, and which one to chase. The prompt tells it to ground every claim in the numbers it was given and to say so where the data cannot settle something.
-
-Readings are cached in your browser against the shots they were made from, so reopening a shot brings its reading back without spending another call. Needs a Gemini API key in Settings — without one, **Analyse** takes you there instead.
+- Readings are cached against the shots they were made from, so reopening a shot costs no call.
+- Mark a suggestion **Worked** or **Did not**. Those reactions go with the next reading, so it stops repeating what did not work. Settings › AI shows what is remembered and can forget it.
 
 ---
 
@@ -385,35 +368,24 @@ Readings are cached in your browser against the shots they were made from, so re
 
 ![Settings](docs/settings.png)
 
-### General
+Settings is a list of categories, each with its own tabs.
 
-| | |
+| Category | Tabs and what is in them |
 |---|---|
-| Language | Auto, English, 한국어, 简体中文; other languages via AI translation |
-| Temperature | °C / °F |
-| Weight | g / oz |
-| Night mode | Dark theme |
-| Auto night mode | Switches by time of day |
-| Auto-open shot log | Shows the tasting form as soon as a shot ends |
+| **General** | **General**: language, °C/°F, g/oz, night mode and auto night mode, auto-open the shot log, a way back to the Decaid dashboard. **Display**: brightness, keep the screen awake, low-battery dimming, the extraction guideline, which actions open and close the monitor, the shot feedback, screen effects, the frame meter, and the sleep screen's photos, motion and dimming. **Camera**: the camera in the album, and how to turn, fill, enlarge and mirror it |
+| **Machine** | **Tank** (refill warning, refill kit), **Machine flow calibration**, **Stop timing** (with the learned shot stop), **Machine settings** (USB charger, fan, tank heater, steam purge), **Presence** (sleep after inactivity), **Sensor calibration** (read only), **Maintenance** (clean, descale, air purge), **Machine info** |
+| **Scale** | refuse to start without a scale, room to reach the target, and what to do with the scale when the machine sleeps |
+| **Phone** | the address and QR code for the [phone app](#phone) |
+| **Updates** | **Firmware** (update, or upload a file), **App update** for Decaid, **Skin** release history |
+| **AI** | the provider (Gemini, Claude or OpenAI) and its key, with a key check. **What the reader remembers** |
+| **Plugins** | installed plugins, and grinder plugins with their GitHub addresses. From Decaid 0.9.2, plugins are installed, switched and configured in the Decaid app, and this page says so instead of offering switches that would be refused |
 
-### Display
+![Machine settings](docs/settings-machine.png)
 
-| | |
-|---|---|
-| Brightness | Panel brightness; 100 = auto |
-| Full-screen monitor | Open the [monitor](#monitor) by itself when an action starts |
-| Keep screen awake | Holds the screen on while the machine is awake. Released the moment it sleeps, so the tablet's own timeout can take over |
-| Low-battery dimming | Caps brightness when the battery is low |
-| Dim on sleep | Lowers brightness while the sleep screen shows |
-| Sleep brightness | How far it dims |
-
-### Machine
-
-Refill warning level, water calibration (two-point or by pouring a measured amount), refill kit and its override, and flow calibration multipliers.
-
-### Firmware · AI · Plugins
-
-Firmware version and update. The **Gemini API key**, stored on that device only and used for label scanning, profile suggestions and classification. Installed plugins and their configuration.
+- **Language** offers English, Korean and Simplified Chinese built in, plus twelve more languages that are translated once with your AI key and kept.
+- **Room to reach the target**: when a profile would end on its clock before the target weight, its last step is held up to 20 seconds longer. The shot still stops at the target. The stored profile is not changed.
+- **Machine flow calibration**: the DE1 estimates flow from its pump. Pour hot water onto a connected scale and the skin offers the corrected multiplier, which is written to the machine.
+- **Screen effects** turns off the moving water, the curved graph's motion, the cover ripple, the touch ripple and the glass blur, for a tablet that stutters. The **frame meter** shows frames per second; tap it for a log of slow frames and what ran around them.
 
 ---
 
@@ -421,95 +393,103 @@ Firmware version and update. The **Gemini API key**, stored on that device only 
 
 ![Sleep screen](docs/sleep.png)
 
-Sleep from the header button, or let the machine sleep on its own — the skin follows either way. A clock, the date, the battery, and a hint to tap.
+Sleep from the top bar, or let the machine sleep on its own; the skin follows either way. It shows a clock, the date and the battery over a wall of your bag photos. Until there are enough photos, drawn bags make up the numbers. Settings › Display sets whether the wall moves always, in bursts or not at all.
 
 It is built to cost as close to nothing as a screen can:
 
-- the wake-lock override is **released**, so the tablet's own display timeout applies
-- the interface behind the lock stops painting, and the graph stops redrawing
-- the tank's wave animation is paused, not merely hidden
+- the wake lock is released, so the tablet's own display timeout applies;
+- the interface behind it stops painting, and every animation stops;
+- brightness drops to your sleep level and comes back on wake;
+- the sockets with nothing to say while asleep are closed and reopened on wake. Only the machine's state stays open, so a machine woken at the group head is noticed.
 
-The full-screen pages — beans, the profile editor, the shot log, settings — do the same while they are open: the interface behind them stops painting and its wave stops ticking, which takes a page from 38 to 5 ms of CPU per second.
-- brightness drops to your sleep level and is restored on wake
-- **four of the five WebSockets are closed** and reopened on wake
+The full-screen pages (beans, profiles, the shot log, settings) do the same while they are open: the screen behind them stops painting.
 
-That last one is about the radio, not the processor. Water levels are not on the lock screen and cost a packet a second; the scale, devices and display channels send nothing at all and only hold connections open. Only the machine snapshot stays, because that is how a machine woken at the group head is noticed.
+---
 
-Measured with the machine driven through idle and sleeping:
+## Phone
 
-| | awake | asleep |
-|---|---|---|
-| CPU | 26 ms/s | **0.6 ms/s** |
-| WebSocket frames | 2.8 /s | **1.8 /s** |
+<p>
+<img src="docs/phone.png" alt="Phone: machine" width="280">
+<img src="docs/phone-shots.png" alt="Phone: shots" width="280">
+</p>
 
-The scale is not this skin's to manage: the gateway's *Scale power mode* already disconnects it when the machine sleeps.
+Open the address from Settings › Phone on a phone and the skin shows its phone app. Add it to the home screen and it opens like an app. Its tabs are:
+
+| | |
+|---|---|
+| **Machine** | state, temperatures, pressure, flow and tank, with wake and sleep |
+| **Shots** | the last shots, with their graph, tasting notes and upload to Visualizer. When the machine is out of reach, it reads your shots from Visualizer instead |
+| **Beans** | photograph a bag and add it, or update a bean's batch |
+| **Camera** | send this phone's camera to the album on the tablet |
+| **Setup** | the phone's own settings, the AI key, and a Visualizer account |
 
 ---
 
 ## Where things are stored
 
-**On the gateway**, so every device sees the same thing: the workflow (profile, dose, yield, grinder, coffee), steam, flush and hot-water settings, beans and batches, grinders, shots and their tasting notes. A profile's colour, tags and roast level ride along in its `metadata`; a bean's saved suggestions in its `extras`.
+**On the gateway**, so every device sees the same thing: the workflow (profile, dose, yield, grinder, coffee), the steam, flush and hot-water settings, beans and batches, grinders, and shots with their tasting notes. A profile's colour, tags and roast level go in its `metadata`, and a bean's saved suggestions and photos in its `extras`.
 
-**On the device**, in `localStorage`:
+**The skin's own data** lives in the gateway's key-value store, under the namespace `liquid-aqua`, and the browser keeps a copy. The skin keeps one browser origin across updates, but the phone, another address for the tablet, or a run where Decaid has to fall back to a temporary port each start with an empty `localStorage`. The store is the same for all of them; the local copy makes the skin start instantly and keeps it working when the gateway cannot be reached.
 
 | Key | |
 |---|---|
-Settings live on **the gateway**, under the key-value namespace `liquid-aqua`, and the browser keeps a copy.
-
-The gateway serves each skin generation from its own port, so every update lands the browser on a new origin and `localStorage` starts empty — anything kept only there is lost on the next patch. The store outlives a generation; the local copy makes the skin start instantly and keeps working when the gateway cannot be reached.
-
-| On the gateway | |
-|---|---|
-| `prefs` | language, units, night mode, monitor and sleep options, water calibration, Gemini key |
+| `prefs` | language, units, night mode, display, monitor and sleep options, AI provider and key |
 | `favs` | favourite profiles |
 | `presets` | steam, flush and water presets |
-| `shotai` | AI readings, keyed by the shots they were made from |
+| `shotai`, `aifb`, `aipin` | AI readings, your reactions to them, and a suggestion kept for next time |
+| `shotread`, `ranout` | the last shot feedback, and profiles that ran out before the target |
+| `grindmem`, `gspeed`, `gfeed`, `gburr`, `gbrands` | grind settings per bean, grinder speeds, burrs and brands |
+| `baskets`, `rmachines`, `beanfav`, `wfhist` | your basket list, the roasting-machine list, favourite beans, recent workflow choices |
+| `hwmeasure` | the last hot water's estimated and weighed amounts, for flow calibration |
+| `i18n` | languages translated with AI |
 
-The first run after an update finds an empty store only if you have never saved anything; otherwise whatever this browser still holds is pushed up, so existing settings carry over rather than being lost.
-
-| Cached in the browser | |
-|---|---|
-| `aurora_prefs` | language, units, night mode, sleep options, water calibration |
-| `aurora_favs` | favourite profiles |
-| `aurora_presets` | steam, flush and water presets |
-| `aurora_shotai` | AI readings, keyed by the shots they were made from |
-| `aurora_gemini` | the API key on a phone that scanned a bag |
+In the browser the same keys are kept with an `aurora_` prefix.
 
 ---
 
 ## Troubleshooting
 
-**The tank is red and the water is not hot.** The tank is reading at or below the refill level. On a plumbed machine, turn *Refill kit* on in Settings › Machine — the gauge then reads full and the colour follows the temperature.
+**There is no update button.** On Decaid 0.9.2 skin updates are installed from the Decaid app: Web Interface on the dashboard, then the menu at the top right, then Check for updates. From 0.9.3 the button comes back on the tablet when automatic updates are on.
 
-**AI buttons do nothing.** No Gemini key. Settings › AI.
+**The tank is red and the water is not hot.** The tank is at or below the refill level. On a plumbed machine, set *Refill kit* in Settings › Machine › Tank.
 
-**The phone QR opens a page that cannot reach the gateway.** The gateway is reporting an address the phone cannot see. Open the skin once on the phone using the gateway's LAN address; it remembers it for the QR.
+**AI buttons do nothing, or take me to Settings.** There is no key for the chosen provider. Settings › AI, then **Check the key**.
 
-**The screen never turns off.** *Keep screen awake* is on and the machine is awake. It is released automatically once the machine sleeps.
+**The yield has an amber !.** The loaded profile will probably end before that weight. Tap it to match the yield, or give the profile more room in the editor.
 
-**Everything is tiny or clipped.** The skin lays out at 1280×800 and scales to fit. Very narrow windows will letterbox rather than reflow.
+**A second scale is not found.** Turn it on, then **Find** in Devices. The gateway stops looking once it has one scale.
+
+**The phone QR opens a page that cannot reach the gateway.** The gateway is reporting an address the phone cannot see. Type the tablet's Wi-Fi address in Settings › Phone.
+
+**The screen stutters.** Turn off *Screen effects* in Settings › General › Display. The frame meter there shows how smoothly the tablet runs.
+
+**Everything is tiny or clipped.** The skin lays out at 1280×800 and scales to fit. Very narrow windows letterbox rather than reflow, except on a phone, which gets the phone app.
 
 ---
 
 ## Development
 
-English, Korean and Simplified Chinese are built in and require no AI key. Choose **Settings → General → Language → 简体中文**, or use Auto with a Simplified Chinese browser locale. Traditional Chinese remains a separate AI translation. Existing AI translations are kept; built-in translations take precedence. AI analysis and suggestions follow the selected language.
+Simplified Chinese requires no AI key. Choose **Settings → General → Language → 简体中文**, or use Auto with a Simplified Chinese browser locale. Traditional Chinese remains a separate AI translation. Existing AI translations are kept; built-in translations take precedence. AI analysis and suggestions follow the selected language.
 
 Run `node tools/test/i18n.cjs` to check translation keys, placeholders, language detection and fallback behavior without a gateway.
 
 ```
-index.html          the entire skin
-inter-*.woff2       the interface font, so nothing is fetched from the internet
-skin-manifest.json  id, name, description, version
-docs/               screenshots for this README
+index.html             the entire skin
+skin-manifest.json     id, name, description, version
+sw.js                  the service worker that caches the skin
+de1-translations.csv   Decent's official translations, used to seed AI translation
+inter-*.woff2          the interface font, so nothing is fetched from the internet
+sample-bags.json       drawn bags for the sleep screen
+docs/                  screenshots for this README
+tools/test/            headless browser tests
 ```
 
-No build, no package manager. Edit `index.html`, reload.
+No build and no package manager: edit `index.html` and reload. `python tools/test/run.py` runs the browser tests against a gateway on `127.0.0.1:8080`. The tests never write to the gateway; see [tools/test/README.md](tools/test/README.md).
 
 Conventions that keep it coherent:
 
 - Every control is at least 40 px on its shortest side, and nothing renders below 11 px.
-- One gradient-filled control per view — the primary action. Everything else that carries the accent colour is tinted, not filled.
+- One gradient-filled control per view, for the primary action. Everything else that carries the accent colour is tinted, not filled.
 - Values are the content and buttons are chrome: the number is larger than the buttons around it.
 - Layout is a fixed 1280×800 stage. If something new does not fit, something else gives up height on purpose.
 
