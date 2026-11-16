@@ -7,11 +7,13 @@ function suSkinBox() {
   return box;
 }
 
-test('the skin page points at the app instead of checking for updates itself', function (T) {
+test('on a gateway that would refuse it, the skin page points at the app instead of checking itself', function (T) {
+  var v = _gwVersion;
+  _gwVersion = '0.9.2';
   var box = suSkinBox();
+  _gwVersion = v;
   T.ok(!box.querySelector('[onclick^="skinCheckUpdate"]'), 'no update button that the gateway would refuse');
   T.ok(box.textContent.indexOf(t('skinViaApp')) >= 0, 'says where updates are installed');
-  T.ok(typeof skinCheckUpdate === 'undefined', 'the call is gone');
   if (box.__temp) box.parentNode.removeChild(box);
 });
 

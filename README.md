@@ -62,7 +62,7 @@ Leave out `tag` to take the latest release.
 2. Open the menu at the top right.
 3. Tap **Check for updates**.
 
-Settings › Updates › Skin lists the release history and says when a newer version is out. If a new version is installed but the page is still running the old one, the same page offers **Reload**.
+Settings › Updates › Skin lists the release history and says when a newer version is out. From Decaid 0.9.3, on the tablet itself and with automatic updates turned on in the app, the same page also offers **Check for updates**. If a new version is installed but the page is still running the old one, the same page offers **Reload**.
 
 **For development.** Serve the folder and open it in a browser. The skin finds the gateway on its own:
 
@@ -90,11 +90,11 @@ In the middle, each action shows the settings it will run with:
 
 Hold Steam, Flush or Water to open its options. If the machine has a GHC (the button group on the group head), the machine's own buttons start the actions instead. In that case a plain tap opens the options, and the skin notices this and labels itself to match.
 
-On the right are **Sleep** and **⚙** [Settings](#settings).
+On the right are **Sleep** and **⚙** [Settings](#settings). Hold **Sleep** to put the machine to sleep and leave the Decaid app: on Android it goes to the background with the machine connection still running, desktop builds quit, and iOS does not allow it, so there a hold is a plain sleep.
 
 ### Tank, scale and dials
 
-The **tank** tile fills from the bottom with moving water. Its colour follows the **mix temperature**, which is the water that will actually reach the coffee: blue up to 80 °C, then one shade per degree through teal, green, yellow and orange, and red from 95 °C. Over it are the group, mix and steam temperatures and the tank level. While water is moving, the waves and bubbles speed up with the machine's flow, up to about two and a half times at 8 ml/s. A tank that is genuinely low turns red whatever the temperature. On a plumbed machine with the refill kit, the tank always reads full.
+The **tank** tile fills from the bottom with moving water. Its colour follows the **mix temperature**, which is the water that will actually reach the coffee: blue up to 80 °C, then one shade per degree through teal, green, yellow and orange, and red from 95 °C. Over it are the group, mix and steam temperatures and the tank level. While water is moving, the waves and bubbles speed up with the machine's flow, up to about two and a half times at 8 ml/s. A tank that is genuinely low turns red whatever the temperature. If a refill kit gives up, the tank says **Refill stopped** instead, so check the water supply rather than the tank. On a plumbed machine with the refill kit, the tank always reads full.
 
 Next to it are the live **weight** and the **timer**. Tap the weight to tare.
 
@@ -316,7 +316,7 @@ The AI shot reading and the profile suggestions are both given the grinder, so a
 
 ![Shot log](docs/shotlog.png)
 
-Every recorded shot, newest first. Pick one to see the recording on the left and the record on the right.
+Every recorded shot, newest first. **★ 4+** beside the search shows only the shots you rated four stars or more, among the latest 200. Pick one to see the recording on the left and the record on the right.
 
 **On the left:** the extraction and temperature graphs as they actually happened, with the steps named along the top, and why the shot ended ("Stopped at the target weight").
 
@@ -378,7 +378,7 @@ Settings is a list of categories, each with its own tabs.
 | **Phone** | the address and QR code for the [phone app](#phone) |
 | **Updates** | **Firmware** (update, or upload a file), **App update** for Decaid, **Skin** release history |
 | **AI** | the provider (Gemini, Claude or OpenAI) and its key, with a key check. **What the reader remembers** |
-| **Plugins** | installed plugins, and grinder plugins to install |
+| **Plugins** | installed plugins, and grinder plugins with their GitHub addresses. From Decaid 0.9.2, plugins are installed, switched and configured in the Decaid app, and this page says so instead of offering switches that would be refused |
 
 ![Machine settings](docs/settings-machine.png)
 
@@ -429,7 +429,7 @@ Open the address from Settings › Phone on a phone and the skin shows its phone
 
 **On the gateway**, so every device sees the same thing: the workflow (profile, dose, yield, grinder, coffee), the steam, flush and hot-water settings, beans and batches, grinders, and shots with their tasting notes. A profile's colour, tags and roast level go in its `metadata`, and a bean's saved suggestions and photos in its `extras`.
 
-**The skin's own data** lives in the gateway's key-value store, under the namespace `liquid-aqua`, and the browser keeps a copy. The gateway serves each skin version from its own port, so every update lands the browser on a new origin where `localStorage` starts empty. The store survives that; the local copy makes the skin start instantly and keeps it working when the gateway cannot be reached.
+**The skin's own data** lives in the gateway's key-value store, under the namespace `liquid-aqua`, and the browser keeps a copy. The skin keeps one browser origin across updates, but the phone, another address for the tablet, or a run where Decaid has to fall back to a temporary port each start with an empty `localStorage`. The store is the same for all of them; the local copy makes the skin start instantly and keeps it working when the gateway cannot be reached.
 
 | Key | |
 |---|---|
@@ -449,7 +449,7 @@ In the browser the same keys are kept with an `aurora_` prefix.
 
 ## Troubleshooting
 
-**The update button is gone.** Skin updates are installed from the Decaid app: Web Interface on the dashboard, then the menu at the top right, then Check for updates.
+**There is no update button.** On Decaid 0.9.2 skin updates are installed from the Decaid app: Web Interface on the dashboard, then the menu at the top right, then Check for updates. From 0.9.3 the button comes back on the tablet when automatic updates are on.
 
 **The tank is red and the water is not hot.** The tank is at or below the refill level. On a plumbed machine, set *Refill kit* in Settings › Machine › Tank.
 

@@ -112,3 +112,32 @@ test('a speed corrected in the shot log is written into the notes line', functio
     });
   });
 });
+
+// Decaid 0.9.2 records the RPM as workflow configuration in context.grinderRpm,
+// a non-negative integer. The feed speed has no field there and stays in extras.
+test('a shot with only the gateway RPM field shows that RPM', function (T) {
+  var s = pulledShot('', {});
+  s.workflow.context.grinderRpm = 1150;
+  T.eq(shotSpeeds(s).grinderRpm, 1150, 'read from context.grinderRpm');
+});
+
+test('the workflow carries the RPM in the gateway field as well as extras', function (T) {
+  var p = speedsContextPatch({ grinderRpm: 1200.4, grinderFeedRpm: 40 });
+  T.eq(p.grinderRpm, 1200, 'a whole number');
+  T.eq(p.extras.grinderFeedRpm, 40, 'feed stays in extras');
+  T.eq(speedsContextPatch({ grinderRpm: null, grinderFeedRpm: null }).grinderRpm, null, 'cleared with an explicit null');
+});
+
+test('an RPM corrected in the shot log is written to the gateway field too', function (T) {
+  var s = pulledShot('sweet', {});
+  s.workflow.context.grinderRpm = 1200;
+  slSel = s;
+  renderShotDetail(s);
+  T.eq(T.el('#slRpm').value, '1200', 'the form shows the gateway field');
+  T.el('#slRpm').value = '1300';
+  var edits = shotContextEdits();
+  T.eq(edits && edits.grinderRpm, 1300, 'the gateway field');
+  T.eq(edits && edits.extras && edits.extras.grinderRpm, 1300, 'and extras, for older readers');
+  T.el('#slRpm').value = '1200';
+  T.eq(shotContextEdits(), null, 'unchanged against the gateway field means nothing to save');
+});

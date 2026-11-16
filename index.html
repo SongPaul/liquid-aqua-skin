@@ -2235,6 +2235,7 @@ body.night .mon-state{background:rgba(139,92,246,.18);color:#c4b5fd}
 .cmp-styles svg{flex-shrink:0}
 .cmp-key b{color:var(--ink-mute);font-weight:700}
 .cmp-tabs{display:flex;gap:8px;margin-bottom:12px}
+.sl-liked{margin:0 0 8px}
 .cmp-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .cmp-table th{width:24%;text-align:left;font-size:11px;font-weight:800;color:var(--ink-mute);text-transform:uppercase;padding:9px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cmp-table td{text-align:center;font-size:15px;font-weight:800;color:var(--ink);padding:9px 8px}
@@ -2772,7 +2773,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     </div>
 
     <div class="hdr-group">
-      <button class="act-btn sleep" id="btnSleep" onclick="doSleep()" disabled>
+      <button class="act-btn sleep" id="btnSleep" disabled>
         <span class="ico">🌙</span><span data-i18n="sleep">Sleep</span>
       </button>
       <button class="icon-btn" id="btnSettings" onclick="openSettingsPage()" title="Settings">⚙</button>
@@ -3732,6 +3733,7 @@ var I18N={
     gatewayName:'Gateway', gatewayDesc:'Open the Decaid gateway web interface in a new tab.', open:'Open ↗',
     geminiName:'Gemini API key', geminiPh:'Paste your Gemini API key — reads bean labels, stored on this device only', geminiGet:'Get a key', language:'Language', tempUnit:'Temperature', weightUnit:'Weight',
     plugins:'Plugins', pluginsDesc:"Gateway plugins. Toggle to enable, or open a plugin's page.", loading:'Loading…', noPlugins:'No plugins installed', enabled:'Enabled', disabled:'Disabled',
+    gpStep1App:'Install the plugin for your grinder in the Decaid app, under Plugins on its dashboard. Each one’s GitHub address is below.', gpViaApp:'In the Decaid app',
     gpTitle:'Grinder plugins', gpStep1:'Install the plugin for your grinder below (it comes from the GitHub release).',
     gpStep2:'Connect the grinder from the connection info in the header.',
     gpStep3:'It is added to the grinder list by itself, kept in line with the plugin.',
@@ -3793,6 +3795,7 @@ var I18N={
     vizGraph:'Visualizer shot',
     catSkin:'Skin', skinHistory:'Update history', 
     pluginViaApp:'Plugins are installed, switched and set up in the Decaid app, under Plugins on its dashboard.', skinViaApp:'Skin updates are installed from the Decaid app: Web Interface on its dashboard, then the menu at the top right, then Check for updates.', skinOpenApp:'Open the Decaid app', autoUpdViaApp:'Automatic updates are turned on in the Decaid app’s settings.', skinUpToDate:'This skin is up to date.',
+    skinCheck:'Check for updates', skinChecking:'Checking\u2026', skinUpdated:'Updated \u2014 reload to use it', skinThrottled:'Checked a moment ago. Try again in half a minute.', skinCheckFailed:'Update check failed',
     skinNewer:'v{v} is available.', skinNewsFail:'Could not load the update history.',
     skinInstalledTag:'running', skinAll:'All releases',
     skinStale:'v{v} is installed but this page is still running v{r}. Reload to use it.', skinReload:'Reload',
@@ -3807,6 +3810,7 @@ var I18N={
     sleepDim:'Dim on sleep', sleepDimDesc:'Lower screen brightness while the sleep screen shows (saves the panel and battery).', sleepBright:'Sleep brightness', sleepBrightDesc:'Brightness level used while asleep.',
     refillLevel:'Refill warning level', refillLevelDesc:'Warn when the tank drops below this level (mm).',
     waterCalNow:'Current reading',
+    refillStoppedLbl:'Refill stopped', refillStoppedToast:'The refill kit could not fill the tank \u2014 check the water supply',
     needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
     sawAuto:'Adjust the shot stop after each shot', sawLearned:'Shot stop moved {a}s \u2192 {b}s ({y}g for {w}g)',
     flowCal:'Stop timing', flowCalDesc:'How many seconds before the target the shot or hot water is stopped. The scale reports a little late and drops keep falling after the pump stops, so stopping a moment early lands on the target. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', fcDefault:'Default {v}s', fcReset:'Default', fcSec:'s', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSet:'Machine estimate (ml)', mcalGot:'Weighed on the scale (g)', mcalCalc:'Calculate', mcalSave:'Save to the machine', mcalHow:'Pour hot water with the cup on a connected scale, as usual: the machine\u2019s estimate and the weight are taken during the pour and offered above. Without a connected scale, weigh the cup yourself and enter both numbers.', mcalNeed:'Enter both amounts', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalOpen:'Flow calibration', mcalNew:'New value', mcalCalcTitle:'Work it out from a pour', mcalRange:'The machine takes 0.13 to 2.0', mcalLast:'Last hot water: estimated {e}ml, weighed {g}g ({d})', mcalUse:'Use these', hwOff:'Hot water: the machine estimated {e}ml, the scale weighed {g}g. The machine flow calibration looks off.',
@@ -3948,7 +3952,7 @@ var I18N={
     brewingNow:'Brewing — this profile is locked',
     exitDash:'Decaid dashboard', exitDashDesc:'The app’s own settings and skin picker. This leaves the skin; it does not close Decaid.', exitDashBtn:'Go to dashboard', exitDashFailed:'Could not leave the skin',
     newGrinder:'New Grinder', editGrinder:'Edit Grinder', bgGuideLead:'Pick something on the left to edit it, or add a new one. Nothing here is required \u2014 a name alone is a usable record, and the rest earns its place by being worth looking up later.', bgGuideBean:'A bean', bgGBeanA:'Name & roaster', bgGBeanAd:'All that is needed to log a shot against it.', bgGBeanB:'Roast date', bgGBeanBd:'Drives the days-since-roast the recipe card shows.', bgGBeanC:'Origin & process', bgGBeanCd:'What the profile recommendation reads. Worth filling for beans you will dial in.', bgGuideGrinder:'A grinder', bgGGrA:'Brand & model', bgGGrAd:'Enough to tell two grinders apart in the log.', bgGGrB:'Setting type', bgGGrBd:'A numeric dial with its step size, or named positions like Fine and Medium.', bgGGrC:'Burrs', bgGGrCd:'Recorded with the shot, so a burr change is visible later.', bgGuideFoot:'Closing a form leaves it without saving.',
-    noSettings:'No settings', connectToLoad:'Connect to load', noProfilesFound:'No profiles', stepsLabel:'Steps', cancel:'Cancel', saveProfile:'Save Profile', secondsLabel:'Seconds', grindSetting:'Grind Setting', settingType:'Setting type', numericDial:'Numeric dial', namedPresets:'Named presets', presetPositions:'Preset positions (comma separated)', currentSetting:'Current setting', currentSettingDial:'Current setting (dial)', fineStep:'Fine step', coarseStep:'Coarse step', notesLabel:'Notes', noShotsYet:'No shots recorded yet', connectForShots:'Connect to load shots', noShots2:'No shots', notFound:'Not found', tastingLog:'Tasting log', actualDose:'Actual dose (g)', actualYield:'Actual yield (g)', tdsPct:'TDS %', eyPct:'Extraction yield %', enjoyment:'Enjoyment',     stop_targetWeight:'Stopped at the target weight.', stop_targetVolume:'Stopped at the profile\u2019s target volume.', stop_profileAdvance:'The profile ended before the target weight', stop_apiStop:'Stopped by the app or an outside request', stop_appStop:'Stopped from the app', stop_machineEnded:'Stopped at the machine', stop_profileSkip:'A step was skipped and the profile ended early.', stop_noScale:'No scale, so the shot could not stop on weight.', stop_stoppingBackstop:'The machine did not stop when asked; the backstop ended it.', stop_error:'The shot ended on an error.', stop_disconnected:'The machine disconnected during the shot.',
+    slLikedHint:'Only the shots rated four stars or more', noSettings:'No settings', connectToLoad:'Connect to load', noProfilesFound:'No profiles', stepsLabel:'Steps', cancel:'Cancel', saveProfile:'Save Profile', secondsLabel:'Seconds', grindSetting:'Grind Setting', settingType:'Setting type', numericDial:'Numeric dial', namedPresets:'Named presets', presetPositions:'Preset positions (comma separated)', currentSetting:'Current setting', currentSettingDial:'Current setting (dial)', fineStep:'Fine step', coarseStep:'Coarse step', notesLabel:'Notes', noShotsYet:'No shots recorded yet', connectForShots:'Connect to load shots', noShots2:'No shots', notFound:'Not found', tastingLog:'Tasting log', actualDose:'Actual dose (g)', actualYield:'Actual yield (g)', tdsPct:'TDS %', eyPct:'Extraction yield %', enjoyment:'Enjoyment',     stop_targetWeight:'Stopped at the target weight.', stop_targetVolume:'Stopped at the profile\u2019s target volume.', stop_profileAdvance:'The profile ended before the target weight', stop_apiStop:'Stopped by the app or an outside request', stop_appStop:'Stopped from the app', stop_machineEnded:'Stopped at the machine', stop_profileSkip:'A step was skipped and the profile ended early.', stop_noScale:'No scale, so the shot could not stop on weight.', stop_stoppingBackstop:'The machine did not stop when asked; the backstop ended it.', stop_error:'The shot ended on an error.', stop_disconnected:'The machine disconnected during the shot.',
     tFailed:'Failed', tStartFailed:'Could not start', tProfileError:'Profile error', tProfileSaved:'Profile saved', tSleepFailed:'Could not sleep', tWakeFailed:'Could not wake', tScanFailed:'Scan failed', tBrightFailed:'Could not set brightness', tSteamFailed:'Steam failed', tSteamStarted:'Steam started', tSteamStopped:'Steam stopped', tSteamSaved:'Steam options saved', tFlushFailed:'Flush failed', tFlushStarted:'Flush started', tFlushStopped:'Flush stopped', tFlushSaved:'Flush options saved', tWaterFailed:'Hot water failed', tWaterStarted:'Hot water started', tWaterStopped:'Hot water stopped', tWaterSaved:'Hot water options saved', tRefillSaved:'Refill warning level saved', tTempError:'Could not set the temperature', tLogFailed:'Could not save the log', tShotLogged:'Shot logged', tShotNotFound:'Shot not found', tShotLoadFailed:'Could not load the shot', tNoMeasurements:'This shot has no measurements', tBusyFirst:'Busy \u2014 finish the current action first', tBeanSet:'Bean set for the shot', tGrinderSet:'Grinder set for the shot', tGrinderSaved:'Grinder saved', tModelRequired:'A model is required', tNoPresets:'No preset positions', tPresetSaved:'Preset saved', tPluginSaved:'Plugin settings saved', tPluginToggleFailed:'Could not switch the plugin', tAiFailed:'Analysis failed', tMaxImages:'Up to 5 images', tGatewayUnreachable:'Gateway not reachable', tShowingLastShot:'Showing last shot', tDevicesBadResponse:'Unexpected response from devices',
     rkAutoDetected:'Follow the machine ({s})', rkUnknown:'not read yet',
     hintTapHold:'steam · flush · water: hold for options',
@@ -4198,6 +4202,7 @@ var I18N={
     gatewayName:'게이트웨이', gatewayDesc:'Decaid 게이트웨이 웹 화면을 새 탭에서 열기.', open:'열기 ↗',
     geminiName:'Gemini API 키', geminiPh:'Gemini API 키 붙여넣기 — 원두 라벨 읽기에 사용, 이 기기에만 저장', geminiGet:'키 발급받기', language:'언어', tempUnit:'온도', weightUnit:'무게',
     plugins:'플러그인', pluginsDesc:'게이트웨이 플러그인. 토글로 활성화하거나 플러그인 페이지를 엽니다.', loading:'불러오는 중…', noPlugins:'설치된 플러그인 없음', enabled:'활성화', disabled:'비활성화',
+    gpStep1App:'그라인더에 맞는 플러그인은 Decaid 앱 대시보드의 플러그인에서 설치합니다. 각 플러그인의 GitHub 주소는 아래에 있습니다.', gpViaApp:'Decaid 앱에서 설치',
     gpTitle:'그라인더 플러그인', gpStep1:'아래에서 그라인더에 맞는 플러그인을 설치합니다 (GitHub 릴리스에서 받습니다).',
     gpStep2:'헤더의 연결 정보에서 그라인더를 연결합니다.',
     gpStep3:'그라인더 목록에 자동으로 등록되고, 플러그인 정보에 맞춰 유지됩니다.',
@@ -4260,6 +4265,7 @@ var I18N={
     vizGraph:'Visualizer 샷',
     catSkin:'스킨', skinHistory:'업데이트 내역', 
     pluginViaApp:'플러그인 설치, 켜기·끄기, 설정은 Decaid 앱 대시보드의 Plugins에서 할 수 있습니다.', skinViaApp:'스킨 업데이트는 Decaid 앱에서 설치합니다. 대시보드의 Web Interface 화면 오른쪽 위 메뉴에서 Check for updates를 누르세요.', skinOpenApp:'Decaid 앱 열기', autoUpdViaApp:'자동 업데이트는 Decaid 앱의 설정에서 켤 수 있습니다.', skinUpToDate:'스킨이 최신입니다.',
+    skinCheck:'업데이트 확인', skinChecking:'확인 중\u2026', skinUpdated:'업데이트했습니다 \u2014 새로고침하면 적용됩니다', skinThrottled:'방금 확인했습니다. 30초 뒤에 다시 해 보세요.', skinCheckFailed:'업데이트 확인 실패',
     skinNewer:'v{v}를 사용할 수 있습니다.', skinNewsFail:'업데이트 내역을 불러오지 못했습니다.',
     skinInstalledTag:'사용 중', skinAll:'전체 릴리스',
     skinStale:'v{v}가 설치되었지만 이 화면은 아직 v{r}입니다. 새로고침하면 적용됩니다.', skinReload:'새로고침',
@@ -4278,6 +4284,7 @@ var I18N={
     sleepDim:'절전 시 화면 어둡게', sleepDimDesc:'절전 화면이 표시되는 동안 밝기를 낮춥니다 (액정 잔상·배터리 보호).', sleepBright:'절전 밝기', sleepBrightDesc:'절전 중 사용할 밝기 레벨.',
     refillLevel:'리필 경고 레벨', refillLevelDesc:'탱크가 이 수위(mm) 아래로 내려가면 경고.',
     waterCalNow:'현재 수위',
+    refillStoppedLbl:'급수 멈춤', refillStoppedToast:'리필 키트가 탱크를 채우지 못했습니다 \u2014 급수를 확인하세요',
     needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
     sawAuto:'샷마다 추출 정지 시간 자동 맞춤', sawLearned:'추출 정지 시간을 {a}초 \u2192 {b}초로 맞췄습니다 (목표 {w}g에 {y}g)',
     flowCal:'정지 시간 보정', flowCalDesc:'목표에 닿기 몇 초 전에 멈출지 정합니다. 저울은 무게를 조금 늦게 알리고 펌프가 멈춘 뒤에도 방울이 떨어지므로, 이 시간만큼 미리 멈춰야 목표에 맞습니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', fcDefault:'기본 {v}초', fcReset:'기본값', fcSec:'초', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSet:'머신이 추정한 양 (ml)', mcalGot:'저울로 잰 양 (g)', mcalCalc:'계산', mcalSave:'머신에 저장', mcalHow:'저울이 연결된 상태로 평소처럼 온수를 내리면, 머신이 추정한 양과 저울 무게를 그동안 재어 위에 보여 줍니다. 저울이 연결돼 있지 않으면 컵을 직접 재어 두 값을 넣으세요.', mcalNeed:'두 값을 모두 넣으세요', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalOpen:'유량 보정', mcalNew:'새 값', mcalCalcTitle:'온수로 계산하기', mcalRange:'0.13~2.0 사이로 넣으세요', mcalLast:'마지막 온수: 머신 추정 {e}ml, 저울 {g}g ({d})', mcalUse:'이 값 쓰기', hwOff:'온수: 머신은 {e}ml로 추정했고 저울은 {g}g을 쟀습니다. 머신 유량 보정이 필요해 보입니다.',
@@ -4419,7 +4426,7 @@ var I18N={
     brewingNow:'추출 중 — 프로파일 잠김',
     exitDash:'Decaid 대시보드', exitDashDesc:'앱 자체 설정과 스킨 선택 화면입니다. 스킨을 벗어날 뿐, Decaid를 종료하지는 않습니다.', exitDashBtn:'대시보드로', exitDashFailed:'스킨을 벗어나지 못했습니다',
     newGrinder:'새 그라인더', editGrinder:'그라인더 편집', bgGuideLead:'왼쪽에서 골라 편집하거나 새로 추가하세요. 필수 항목은 없습니다 — 이름만 있어도 기록으로 쓸 수 있고, 나머지는 나중에 찾아볼 가치가 있을 때 채우면 됩니다.', bgGuideBean:'원두', bgGBeanA:'이름·로스터', bgGBeanAd:'샷을 기록하는 데 필요한 전부입니다.', bgGBeanB:'로스팅 날짜', bgGBeanBd:'레시피 카드의 로스팅 경과일을 계산합니다.', bgGBeanC:'원산지·가공', bgGBeanCd:'프로파일 추천이 읽는 값입니다. 다이얼인할 원두라면 채울 만합니다.', bgGuideGrinder:'그라인더', bgGGrA:'브랜드·모델', bgGGrAd:'기록에서 둘을 구별할 만큼이면 충분합니다.', bgGGrB:'눈금 방식', bgGGrBd:'숫자 다이얼과 한 칸 크기, 또는 세밀·중간 같은 이름 단계.', bgGGrC:'버리', bgGGrCd:'샷과 함께 기록되어 버 교체가 나중에 보입니다.', bgGuideFoot:'닫기를 누르면 저장하지 않고 나갑니다.',
-    noSettings:'설정 없음', connectToLoad:'연결해야 불러옵니다', noProfilesFound:'프로파일 없음', stepsLabel:'추출 단계', cancel:'취소', saveProfile:'프로파일 저장', secondsLabel:'초', grindSetting:'분쇄도 설정', settingType:'눈금 방식', numericDial:'숫자 다이얼', namedPresets:'이름 단계', presetPositions:'단계 이름 (쉼표로 구분)', currentSetting:'현재 눈금', currentSettingDial:'현재 눈금 (다이얼)', fineStep:'세밀 간격', coarseStep:'거친 간격', notesLabel:'메모', noShotsYet:'아직 기록된 샷이 없습니다', connectForShots:'연결해야 샷을 불러옵니다', noShots2:'샷 없음', notFound:'찾을 수 없음', tastingLog:'테이스팅 기록', actualDose:'실제 도징 (g)', actualYield:'실제 추출량 (g)', tdsPct:'TDS %', eyPct:'추출 수율 %', enjoyment:'만족도',     stop_targetWeight:'목표 무게에 도달해 정지했습니다.', stop_targetVolume:'프로파일의 목표 볼륨에 도달해 정지했습니다.', stop_profileAdvance:'프로파일 단계가 끝나 목표 무게 전에 멈췄습니다', stop_apiStop:'앱이나 외부 요청으로 멈췄습니다', stop_appStop:'앱에서 멈췄습니다', stop_machineEnded:'머신에서 멈췄습니다', stop_profileSkip:'스텝이 건너뛰어져 프로파일이 일찍 끝났습니다.', stop_noScale:'저울이 없어 무게로 정지할 수 없었습니다.', stop_stoppingBackstop:'머신이 정지 요청에 응답하지 않아 안전장치가 끝냈습니다.', stop_error:'오류로 샷이 종료됐습니다.', stop_disconnected:'추출 중 머신 연결이 끊겼습니다.',
+    slLikedHint:'별 네 개 이상 준 샷만', noSettings:'설정 없음', connectToLoad:'연결해야 불러옵니다', noProfilesFound:'프로파일 없음', stepsLabel:'추출 단계', cancel:'취소', saveProfile:'프로파일 저장', secondsLabel:'초', grindSetting:'분쇄도 설정', settingType:'눈금 방식', numericDial:'숫자 다이얼', namedPresets:'이름 단계', presetPositions:'단계 이름 (쉼표로 구분)', currentSetting:'현재 눈금', currentSettingDial:'현재 눈금 (다이얼)', fineStep:'세밀 간격', coarseStep:'거친 간격', notesLabel:'메모', noShotsYet:'아직 기록된 샷이 없습니다', connectForShots:'연결해야 샷을 불러옵니다', noShots2:'샷 없음', notFound:'찾을 수 없음', tastingLog:'테이스팅 기록', actualDose:'실제 도징 (g)', actualYield:'실제 추출량 (g)', tdsPct:'TDS %', eyPct:'추출 수율 %', enjoyment:'만족도',     stop_targetWeight:'목표 무게에 도달해 정지했습니다.', stop_targetVolume:'프로파일의 목표 볼륨에 도달해 정지했습니다.', stop_profileAdvance:'프로파일 단계가 끝나 목표 무게 전에 멈췄습니다', stop_apiStop:'앱이나 외부 요청으로 멈췄습니다', stop_appStop:'앱에서 멈췄습니다', stop_machineEnded:'머신에서 멈췄습니다', stop_profileSkip:'스텝이 건너뛰어져 프로파일이 일찍 끝났습니다.', stop_noScale:'저울이 없어 무게로 정지할 수 없었습니다.', stop_stoppingBackstop:'머신이 정지 요청에 응답하지 않아 안전장치가 끝냈습니다.', stop_error:'오류로 샷이 종료됐습니다.', stop_disconnected:'추출 중 머신 연결이 끊겼습니다.',
     tFailed:'실패', tStartFailed:'시작하지 못했습니다', tProfileError:'프로파일 오류', tProfileSaved:'프로파일 저장됨', tSleepFailed:'절전으로 전환하지 못했습니다', tWakeFailed:'깨우지 못했습니다', tScanFailed:'검색 실패', tBrightFailed:'밝기를 바꾸지 못했습니다', tSteamFailed:'스팀 실패', tSteamStarted:'스팀 시작', tSteamStopped:'스팀 정지', tSteamSaved:'스팀 설정 저장됨', tFlushFailed:'플러시 실패', tFlushStarted:'플러시 시작', tFlushStopped:'플러시 정지', tFlushSaved:'플러시 설정 저장됨', tWaterFailed:'온수 실패', tWaterStarted:'온수 시작', tWaterStopped:'온수 정지', tWaterSaved:'온수 설정 저장됨', tRefillSaved:'리필 경고 레벨 저장됨', tTempError:'온도를 바꾸지 못했습니다', tLogFailed:'기록을 저장하지 못했습니다', tShotLogged:'샷 기록됨', tShotNotFound:'샷을 찾을 수 없습니다', tShotLoadFailed:'샷을 불러오지 못했습니다', tNoMeasurements:'이 샷에는 측정 기록이 없습니다', tBusyFirst:'진행 중입니다 \u2014 현재 동작을 먼저 끝내세요', tBeanSet:'추출에 사용할 원두로 지정됨', tGrinderSet:'추출에 사용할 그라인더로 지정됨', tGrinderSaved:'그라인더 저장됨', tModelRequired:'모델명이 필요합니다', tNoPresets:'단계 이름이 없습니다', tPresetSaved:'프리셋 저장됨', tPluginSaved:'플러그인 설정 저장됨', tPluginToggleFailed:'플러그인을 전환하지 못했습니다', tAiFailed:'분석 실패', tMaxImages:'이미지는 최대 5장', tGatewayUnreachable:'게이트웨이에 연결할 수 없습니다', tShowingLastShot:'마지막 샷 표시', tDevicesBadResponse:'기기 목록 응답이 올바르지 않습니다',
     rkAutoDetected:'머신이 보고한 대로 ({s})', rkUnknown:'아직 읽지 못함',
     hintTapHold:'스팀 · 플러시 · 물: 길게 누르면 설정',
@@ -5051,6 +5058,7 @@ function applyActionMode(){
   // No GHC -> our buttons perform the ACTION; long-press opens settings.
   var steam=document.getElementById('btnSteam'), flush=document.getElementById('btnFlush'), water=document.getElementById('btnWater');
   var ah=document.getElementById('auxHint');
+  bindSleepBtn();
   // Espresso is one of the four modes the card can show, so its button is the
   // way back to it -- which means it is wanted even where the GHC owns starting
   // a shot, and there it does nothing else.
@@ -5108,6 +5116,8 @@ function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/m
 function doWaterAction(){ if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tWaterStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast(t('tWaterStarted'),'ok');}).catch(function(){toast(t('tWaterFailed'),'err');}); }
 
 // ── Machine state ───────────────────────────────────────────────────
+var _wasRefillStopped=false;
+function refillStopped(ms){ return !!ms&&ms.state==='needsWater'&&ms.substate==='refillStopped'; }
 function onMachineState(ms,prev){
   // Keep the screen-saver lock in sync with the machine's sleep state.
   var lockShown=document.getElementById('lockScreen').classList.contains('show');
@@ -5118,8 +5128,10 @@ function onMachineState(ms,prev){
   if(MAINT[ms.state]) maintTrack(ms.state,ms.substate||'');
   if(ms.state!==prev&&(MAINT[ms.state]||MAINT[prev])&&spOpen()&&spCat==='machine') renderSpContent();
   if(prev&&ms.state!==prev&&(GHC_ACTIONS[ms.state]||GHC_ACTIONS[prev])) dismissAllOverlays();
-  if(ms.state!==prev){ updateWaterUI();
-    if(ms.state==='needsWater') toast(t('needsWaterToast'),'err'); }
+  var rs=refillStopped(ms);
+  if(ms.state!==prev||rs!==_wasRefillStopped){ updateWaterUI();
+    if(ms.state==='needsWater') toast(t(rs?'refillStoppedToast':'needsWaterToast'),'err'); }
+  _wasRefillStopped=rs;
   var inEspresso=(ms.state==='espresso');
   if(ms.state!==prev) syncCarouselLock();
   // Only the preinfusion + pouring substates are real extraction. preparingForShot
@@ -5798,7 +5810,7 @@ function updateWaterUI(){ if(_asleep) return; var pct=tankPercent(state.water.cu
   var dry=(state.machine.state==='needsWater');
   var chip=document.getElementById('tankCard'), lbl=document.getElementById('tankLbl');
   if(chip) chip.classList.toggle('dry',dry);
-  if(lbl) lbl.textContent=dry?t('needsWater'):t('tank');
+  if(lbl) lbl.textContent=dry?t(refillStopped(state.machine)?'refillStoppedLbl':'needsWater'):t('tank');
   // Refill kit ON = plumbed supply, tank is effectively always full.
   if(plumbed()&&!dry){
     document.getElementById('waterPct').textContent=100; document.getElementById('waterFill').style.height=fillHeight(100); tankLevel(100);
@@ -6728,6 +6740,13 @@ function doTare(){
   if(!state.scaleConnected){ toast(t('doseNoScale'),'err'); return; }
   api('PUT','/api/v1/scale/tare').then(function(){toast(t('tared'),'ok');}).catch(function(e){toast(e.message,'err');}); }
 function doSleep(){ if(state.machine.state==='sleeping'){ wakeFromSleep(); } else { enterSleep(); } }
+function canExitApp(){ try{ return !!(window.decentApp&&typeof window.decentApp.exitApp==='function'); }catch(_){ return false; } }
+function sleepAndLeave(){
+  beginSleepUI();
+  return api('PUT','/api/v1/machine/state/sleeping').catch(function(){ toast(t('tSleepFailed'),'err'); })
+    .then(function(){ try{ window.decentApp.exitApp(); }catch(_){} }); }
+function sleepHold(){ if(canExitApp()&&state.machine.state!=='sleeping') sleepAndLeave(); else doSleep(); }
+function bindSleepBtn(){ var b=document.getElementById('btnSleep'); if(!b||b._hold) return; b._hold=true; bindHold(b,doSleep,sleepHold); }
 // Show the screen-saver lock, pause background animation, and tell the machine to sleep.
 // H:MM, so it wakes on the minute rather than once a second, the same way
 // the sleep screen’s clock does.
@@ -8332,12 +8351,13 @@ function syncRecipe(){
     document.getElementById('monRatio').textContent=ratio?('1:'+recipeRatioText()):'—'; } }
 
 // ── Settings that survive an update ─────────────────────────────────
-// The gateway serves each skin generation from its own port, so every update
-// lands the browser on a new origin and localStorage starts empty. Anything kept
-// only there is lost on the next patch. The gateway's key-value store is the one
-// place that outlives a generation, so it holds the settings and localStorage
-// stays as a same-origin cache -- which also keeps the skin usable when the
-// gateway cannot be reached.
+// Since Decaid 0.8.6 a skin keeps one origin across updates and restarts, but
+// when its port cannot be bound the gateway serves it from a temporary origin
+// for that run, where localStorage starts empty; a phone, or the tablet reaching
+// the skin by another address, is a different origin as well. The gateway's
+// key-value store is the one place every one of those sees, so it holds the
+// settings and localStorage stays as a same-origin cache -- which also keeps the
+// skin usable when the gateway cannot be reached.
 var STORE_NS='liquid-aqua';
 // Settings are one store key each, "pref_"-prefixed so a whole-namespace read
 // can tell them from the other keys. They used to be a single "prefs" blob,
@@ -9259,15 +9279,15 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+=spTabsHtml('ai',[[t('aiProvider'),keyPane],[t('aiMemory'),memPane]]);
   } else if(spCat==='plugins'){
     h+='<div class="sp-cat-title">'+t('plugins')+'</div>';
-    h+='<div class="set-desc" style="margin-bottom:12px">'+t('pluginsDesc')+'</div>';
+    h+='<div id="pluginsIntro">'+pluginsIntroHtml()+'</div>';
     h+='<div id="pluginList" class="plugin-list"><div class="ls-empty">'+t('loading')+'</div></div>';
     h+='<div class="ep-section-title" style="margin-top:22px">'+escapeHtml(t('gpTitle'))+'</div>';
-    h+='<ol class="gp-steps">'+['gpStep1','gpStep2','gpStep3'].map(function(k){ return '<li>'+escapeHtml(t(k))+'</li>'; }).join('')+'</ol>';
+    h+='<ol class="gp-steps" id="gpSteps">'+gpStepsHtml()+'</ol>';
     h+='<div id="gpList" class="plugin-list">'+grinderPluginGuideHtml()+'</div>';
   }
   box.innerHTML=h;
   if(spCat==='plugins') loadPlugins();
-  if(spCat==='updates'){ loadFirmware(); renderAppUpdate(); renderSkinBox(); }
+  if(spCat==='updates'){ loadFirmware(); renderAppUpdate(); renderSkinBox(); loadGatewayVersion().then(skinBoxRefresh); }
   if(spCat==='machine') loadMachineCal();
   if(spCat==='phone') renderPhoneQrBox();
 }
@@ -9992,7 +10012,29 @@ function loadSkinNews(force){
 // Decaid installs skin updates only for a caller holding a management token,
 // which a skin can neither mint nor safely keep, so the update is the app's to
 // do and this page says where.
+var _skinCheckRefused=false, _skinChecking=false, SKIN_CHECK_FROM='0.9.3';
+function versionCoreAtLeast(v,want){ var m=/^(\d+)\.(\d+)\.(\d+)/.exec(String(v||'')); return !!m&&versionAtLeast(m[0],want); }
+function canSkinCheck(){
+  return !_skinCheckRefused&&isLocalHost(window.location.hostname)
+    &&!!gwSettings&&gwSettings.automaticUpdateCheck!==false&&versionCoreAtLeast(_gwVersion,SKIN_CHECK_FROM); }
+function skinCheckUpdate(){
+  if(_skinChecking) return Promise.resolve(null);
+  _skinChecking=true; skinBoxRefresh();
+  return api('POST','/api/v1/webui/skins/update',null,90000).then(function(r){
+      var mine=((r&&r.results)||[]).filter(function(x){ return x&&x.item===SKIN_ID; })[0]||{};
+      var msg=mine.status==='updated'?t('skinUpdated'):mine.status==='failed'?(t('skinCheckFailed')+(mine.error?': '+mine.error:'')):t('skinUpToDate');
+      toast(msg,mine.status==='failed'?'err':'ok'); return msg; },
+    function(e){
+      var msg;
+      if(needsApp(e)){ _skinCheckRefused=true; msg=t('skinViaApp'); }
+      else msg=(e&&e.status===429)?t('skinThrottled'):t('skinCheckFailed');
+      toast(msg,'err'); return msg; })
+    .then(function(msg){ _skinChecking=false; loadSkinInfo(); loadSkinNews(true); skinBoxRefresh(); return msg; }); }
+function skinCheckHtml(){
+  return '<button class="m-btn" onclick="skinCheckUpdate()"'+(_skinChecking?' disabled':'')+'>'
+    +escapeHtml(_skinChecking?t('skinChecking'):t('skinCheck'))+'</button>'; }
 function skinViaAppHtml(){
+  if(canSkinCheck()) return skinCheckHtml();
   return '<div class="set-desc">'+escapeHtml(t('skinViaApp'))+'</div>'
     +(canExitToDashboard()?'<button class="m-btn tinted" onclick="exitToDashboard()">'+escapeHtml(t('skinOpenApp'))+'</button>':''); }
 // A release is titled "v1.96.0 - something", and the version is already its own
@@ -10066,7 +10108,7 @@ function renderSkinBox(){
 // ── Gateway plugins (list + enable/disable + open UI) ───────────────
 var pluginsCache=[];
 function loadPlugins(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
-  api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:[]; setPluginDevices(pluginsCache); renderPluginList(); renderGrinderPluginGuide(); })
+  loadGatewayVersion().then(function(){ return api('GET','/api/v1/plugins'); }).then(function(list){ pluginsCache=Array.isArray(list)?list:[]; setPluginDevices(pluginsCache); syncPluginsIntro(); renderPluginList(); renderGrinderPluginGuide(); })
     .catch(function(){ box.innerHTML='<div class="ls-empty">'+t('noPlugins')+'</div>'; }); }
 function pluginHasUI(p){ var a=p.api; if(!a) return false; a=Array.isArray(a)?a:[a]; return a.some(function(e){ return e&&e.id==='ui'&&e.type==='http'; }); }
 function renderPluginList(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='';
@@ -10076,10 +10118,12 @@ function renderPluginList(){ var box=document.getElementById('pluginList'); if(!
     info.innerHTML='<div class="plugin-name">'+escapeHtml(p.name||p.id)+' <span class="plugin-ver">v'+escapeHtml(p.version||'')+'</span></div>'+(p.author?'<div class="plugin-author">'+escapeHtml(p.author)+'</div>':'');
     var actions=document.createElement('div'); actions.className='plugin-actions';
     var hasCfg=p.settings&&Object.keys(p.settings).length>0;
-    if(hasCfg){ var cfg=document.createElement('button'); cfg.className='m-btn'; cfg.textContent='⚙'; cfg.title=t('settings'); cfg.onclick=function(){ openPluginCfg(p.id); }; actions.appendChild(cfg); }
+    var managed=pluginsManaged();
+    if(hasCfg&&!managed){ var cfg=document.createElement('button'); cfg.className='m-btn'; cfg.textContent='⚙'; cfg.title=t('settings'); cfg.onclick=function(){ openPluginCfg(p.id); }; actions.appendChild(cfg); }
     if(pluginHasUI(p)){ var open=document.createElement('button'); open.className='m-btn'; open.textContent=t('open'); open.onclick=function(){ window.open(GATEWAY.http+'/api/v1/plugins/'+encodeURIComponent(p.id)+'/ui','_blank'); }; actions.appendChild(open); }
-    var lbl=document.createElement('label'); lbl.className='switch'; var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!p.loaded;
-    cb.onchange=function(){ togglePlugin(p.id,cb.checked,cb); }; var tr=document.createElement('span'); tr.className='track'; lbl.appendChild(cb); lbl.appendChild(tr); actions.appendChild(lbl);
+    if(managed){ var st=document.createElement('span'); st.className='gp-state'+(p.loaded?' on':''); st.textContent=t(p.loaded?'enabled':'disabled'); actions.appendChild(st); }
+    else { var lbl=document.createElement('label'); lbl.className='switch'; var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!p.loaded;
+    cb.onchange=function(){ togglePlugin(p.id,cb.checked,cb); }; var tr=document.createElement('span'); tr.className='track'; lbl.appendChild(cb); lbl.appendChild(tr); actions.appendChild(lbl); }
     row.appendChild(info); row.appendChild(actions); box.appendChild(row); }); }
 var GRINDER_PLUGINS=[
   { id:'bookoo-mt80.reaplugin', repo:'Sofronio/decaid-bookoo-mt80', name:'Bookoo MT80', note:'gpNoteMt80' },
@@ -10092,6 +10136,7 @@ function grinderPluginGuideHtml(){
     var url='https://github.com/'+g.repo;
     var status=p
       ?'<span class="gp-state'+(p.loaded?' on':'')+'">'+escapeHtml((p.loaded?t('gpOn'):t('gpOff'))+' \u00b7 v'+(p.version||''))+'</span>'
+      :pluginsManaged()?'<span class="gp-state">'+escapeHtml(t('gpViaApp'))+'</span>'
       :'<button class="m-btn" data-gp="'+escapeAttr(g.id)+'"'+(_gpBusy[g.id]?' disabled':'')
         +' onclick="installGrinderPlugin(\''+g.id+'\')">'+escapeHtml(_gpBusy[g.id]?t('gpInstalling'):t('gpInstall'))+'</button>';
     return '<div class="plugin-item gp-item"><div class="plugin-info">'
@@ -10099,10 +10144,28 @@ function grinderPluginGuideHtml(){
       +'<a class="gp-repo" href="'+escapeAttr(url)+'" target="_blank" rel="noopener">'+escapeHtml(url.replace('https://',''))+'</a>'
       +'<div class="plugin-author">'+escapeHtml(t(g.note))+'</div></div>'
       +'<div class="plugin-actions">'+status+'</div></div>'; }).join(''); }
-function renderGrinderPluginGuide(){ var box=document.getElementById('gpList'); if(box) box.innerHTML=grinderPluginGuideHtml(); }
+function renderGrinderPluginGuide(){ var box=document.getElementById('gpList'); if(box) box.innerHTML=grinderPluginGuideHtml(); syncPluginsIntro(); }
+function pluginsIntroHtml(){ return pluginsManaged()?pluginsViaAppHtml():'<div class="set-desc" style="margin-bottom:12px">'+t('pluginsDesc')+'</div>'; }
+function gpStepsHtml(){ return [pluginsManaged()?'gpStep1App':'gpStep1','gpStep2','gpStep3'].map(function(k){ return '<li>'+escapeHtml(t(k))+'</li>'; }).join(''); }
+function syncPluginsIntro(){
+  var a=document.getElementById('pluginsIntro'), b=document.getElementById('gpSteps');
+  if(a) a.innerHTML=pluginsIntroHtml(); if(b) b.innerHTML=gpStepsHtml(); }
 // Installing, switching and configuring plugins need a management token the
 // skin does not have; a refusal for that says where it can be done instead.
-function needsApp(e){ return !!e&&(e.status===401||e.status===403); }
+function needsApp(e){ var no=!!e&&(e.status===401||e.status===403); if(no) _mgmtRefused=true; return no; }
+var _gwVersion=null, _mgmtRefused=false, MGMT_GATED_FROM='0.9.2';
+function versionAtLeast(v,want){
+  var m=/^(\d+)\.(\d+)\.(\d+)(-.+)?/.exec(String(v||'')), w=/^(\d+)\.(\d+)\.(\d+)/.exec(want);
+  if(!m||!w) return false;
+  for(var i=1;i<=3;i++){ var a=+m[i], b=+w[i]; if(a!==b) return a>b; }
+  return !m[4]; }
+function pluginsManaged(){ return _mgmtRefused||versionAtLeast(_gwVersion,MGMT_GATED_FROM); }
+function loadGatewayVersion(){
+  if(_gwVersion!=null) return Promise.resolve(_gwVersion);
+  return api('GET','/api/v1/info').then(function(i){ _gwVersion=(i&&i.version)||''; return _gwVersion; },function(){ return ''; }); }
+function pluginsViaAppHtml(){
+  return '<div class="set-desc" style="margin-bottom:12px">'+escapeHtml(t('pluginViaApp'))
+    +(canExitToDashboard()?' <button class="m-btn tinted" onclick="exitToDashboard()">'+escapeHtml(t('skinOpenApp'))+'</button>':'')+'</div>'; }
 function installGrinderPlugin(id){
   var g=GRINDER_PLUGINS.filter(function(x){ return x.id===id; })[0];
   if(!g||_gpBusy[id]) return Promise.resolve();
@@ -14024,7 +14087,7 @@ function beanStatsFrom(rows){
     if(d) dose.push(d);
     if(y) yld.push(y);
     if(d&&y) ratio.push(y/d);
-    if(num(a.enjoyment)) stars.push(num(a.enjoyment));
+    if(shotStars(sh)) stars.push(shotStars(sh));
     var g=c.grinderModel||'', gs=(c.grinderSetting!=null&&c.grinderSetting!=='')?String(c.grinderSetting):'';
     if(g||gs){ var k=g+'\u0000'+gs;
       if(!grind[k]) grind[k]={model:g,setting:gs,n:0,last:''};
@@ -14079,7 +14142,7 @@ function renderBeanStatsNow(){
     var bits=[];
     if(d&&y) bits.push(d.toFixed(1)+' \u2192 '+y.toFixed(1)+'g \u00b7 1:'+(y/d).toFixed(1));
     if(c.grinderSetting!=null&&c.grinderSetting!=='') bits.push('\u2699\ufe0f '+(c.grinderModel?c.grinderModel+' \u00b7 ':'')+c.grinderSetting);
-    if(num(a.enjoyment)) bits.push('\u2605'+Math.round(num(a.enjoyment)));
+    if(shotStars(sh)) bits.push(starsText(sh));
     return '<div class="prow tapable" onclick="openShotFromHistory('+i+')" title="'+escapeAttr(t('openShot'))+'">'
       +'<div class="prow-curve" style="background:'+albumGrad({id:sh.id,profile:pr,metadata:{}},i)+'"><canvas></canvas></div>'
       +'<div class="prow-body"><div class="prow-name">'+escapeHtml(splitTitle(pr.title||t('shotLog')).name)+'</div>'
@@ -17847,7 +17910,7 @@ function vizToShot(v){
     annotations:{
       actualDoseWeight:vizNum(v.bean_weight),
       actualYield:vizNum(v.drink_weight),
-      enjoyment:vizNum(v.espresso_enjoyment)||null,
+      enjoyment:(parseFloat(v.espresso_enjoyment)>0)?Math.round(parseFloat(v.espresso_enjoyment))/10:null,
       espressoNotes:v.espresso_notes||'' } }; }
 // Everything Visualizer holds about a shot, in the order it is worth reading.
 // 'n' means a number that is only worth printing when it is not zero \u2014 the
@@ -18496,12 +18559,12 @@ function grinderSpeedsNow(){
 function adoptGrinderSpeeds(){
   if(state.shotRunning) return;
   var now=grinderSpeedsNow(), ex=context.extras||{};
-  if(ex.grinderRpm===now.grinderRpm&&ex.grinderFeedRpm===now.grinderFeedRpm) return;
+  if(ex.grinderRpm===now.grinderRpm&&ex.grinderFeedRpm===now.grinderFeedRpm&&(context.grinderRpm==null?null:context.grinderRpm)===rpmField(now.grinderRpm)) return;
   if(ex.grinderRpm==null&&now.grinderRpm==null&&ex.grinderFeedRpm==null&&now.grinderFeedRpm==null) return;
-  context.extras=Object.assign({},ex,now);
+  context.extras=Object.assign({},ex,now); context.grinderRpm=rpmField(now.grinderRpm);
   clearTimeout(adoptGrinderSpeeds._t);
   adoptGrinderSpeeds._t=setTimeout(function(){
-    api('PUT','/api/v1/workflow',{context:{extras:grinderSpeedsNow()}}).catch(function(){}); },600); }
+    api('PUT','/api/v1/workflow',{context:speedsContextPatch(grinderSpeedsNow())}).catch(function(){}); },600); }
 // Adjust the grind setting from the main screen and persist to the workflow.
 function adjustGrind(dir){ var gr=currentGrinder();
   var cur=(gSetting()!=null)?gSetting():context.grinderSetting;
@@ -18565,7 +18628,7 @@ function fmtShotDate(s){ var d=new Date(s.createdAt||s.timestamp); if(isNaN(d)) 
 var slLoading=false;
 function loadShotList(pick,keep){ slLoading=true; renderShotList();
   var list=document.getElementById('slList');
-  return api('GET','/api/v1/shots?limit=50').then(function(r){ shotList=(r&&(r.items||r.shots))||[]; slLoading=false; renderShotList();
+  return api('GET','/api/v1/shots?limit='+(slLiked?200:50)).then(function(r){ shotList=(r&&(r.items||r.shots))||[]; slLoading=false; renderShotList();
     if(keep) return;
     // a shot older than the newest fifty is still openable -- slSelect only needs its id
     var want=pick&&(shotList.find(function(x){ return x.id===pick.id; })||pick);
@@ -18665,7 +18728,10 @@ function renderMachinePanel(){
         +mpCell(st.stars,base.stars,1,'',t('tcTitle'))
       +'</div></div>'; });
   box.innerHTML=h; }
+var slLiked=false, LIKED_STARS=4;
+function setSlLiked(on){ slLiked=!!on; return loadShotList(null,true); }
 function slMatches(s){
+  if(slLiked&&!((shotStars(s)||0)>=LIKED_STARS)) return false;
   var needle=slNeedle();
   if(!needle) return true;
   var pr=(s.workflow&&s.workflow.profile)||{}, cx=(s.workflow&&s.workflow.context)||{};
@@ -18681,6 +18747,9 @@ function renderShotList(){ var list=document.getElementById('slList'); if(!list)
   sb.placeholder=t('searchShots'); sb.value=slQuery; sb.style.margin='0 0 8px';
   sb.oninput=function(){ slSetQuery(this.value); };
   list.appendChild(sb);
+  var lk=document.createElement('button'); lk.id='slLiked'; lk.className='bg-tab2 sl-liked'+(slLiked?' on':'');
+  lk.textContent='\u2605 '+LIKED_STARS+'+'; lk.title=t('slLikedHint'); lk.onclick=function(){ setSlLiked(!slLiked); };
+  list.appendChild(lk);
   var shownS=shotList.filter(slMatches);
   var hd=document.createElement('div'); hd.className='ep-group-head';
   hd.textContent='Recent \u00b7 '+shownS.length+(slNeedle()?(' / '+shotList.length):''); list.appendChild(hd);
@@ -18688,7 +18757,7 @@ function renderShotList(){ var list=document.getElementById('slList'); if(!list)
     se.style.marginTop='30px'; se.textContent=t('noMatches'); list.appendChild(se); }
   shownS.forEach(function(s){ var pr=(s.workflow&&s.workflow.profile)||{}; var st=splitTitle(pr.title||'Shot'); var an=s.annotations||{};
     var it=document.createElement('div'); it.className='ep-item'+(slSel&&slSel.id===s.id?' active':'');
-    var stars=an.enjoyment?('★'+Math.round(an.enjoyment)):'';
+    var stars=starsText(s);
     var ry=(an.actualDoseWeight&&an.actualYield)?(' · 1:'+(an.actualYield/an.actualDoseWeight).toFixed(1)):'';
     var secs=shotSeconds(s); if(secs) ry+=' · '+secs.toFixed(0)+'s';
     var badge=document.createElement('div'); badge.className='sl-badge'; badge.textContent=stars||'☕';
@@ -18840,6 +18909,14 @@ function renderShotDetail(s){ var wrap=document.getElementById('slDetail'); if(s
 // than replaces, so writing them leaves the Visualizer bookkeeping kept in the
 // same place untouched. Visualizer itself takes only a star and a note, so the
 // card is also written out as one line of words into the note it uploads.
+var ENJOY_MAX=10, STARS_MAX=5;
+function starsToEnjoy(st){ var n=parseInt(st,10); return isFinite(n)&&n>0?Math.min(STARS_MAX,n)*ENJOY_MAX/STARS_MAX:null; }
+function shotStars(sh){
+  var an=(sh&&sh.annotations)||{}, card=parseInt(((an.extras||{}).lqTaste||{}).again,10);
+  if(isFinite(card)&&card>0) return card;
+  var e=parseFloat(an.enjoyment);
+  return isFinite(e)&&e>0?Math.max(1,Math.round(e*STARS_MAX/ENJOY_MAX)):null; }
+function starsText(sh,sep){ var st=shotStars(sh); return st?('\u2605'+(sep||'')+st):''; }
 var TASTE_ITEMS=[
   ['acid','tcTaste','tcAcid',5],['bitter','tcTaste','tcBitter',5],['sweet','tcTaste','tcSweet',5],
   ['body','tcFeel','tcBody',5],['dry','tcFeel','tcDry',2],
@@ -18850,7 +18927,7 @@ function tasteOf(sh){
   TASTE_ITEMS.forEach(function(it){ var n=parseInt(v[it[0]],10); out[it[0]]=isFinite(n)?n:null; });
   // A shot rated before this card carries one star, and the star is the
   // question the card ends on.
-  if(out.again==null){ var e=parseInt(an.enjoyment,10); if(isFinite(e)) out.again=e; }
+  if(out.again==null) out.again=shotStars(sh);
   return out; }
 function tasteNoteOf(sh){
   var an=(sh&&sh.annotations)||{}, ex=an.extras||{};
@@ -18925,7 +19002,7 @@ function tasteCompose(v,note,basket,machine,speeds){
     .filter(Boolean);
   return notesWithGrinderLine(parts.join('\n'),speeds); }
 function tasteAnn(v,note,basket,machine,speeds){
-  return { enjoyment:v.again||null, espressoNotes:tasteCompose(v,note,basket,machine,speeds),
+  return { enjoyment:starsToEnjoy(v.again), espressoNotes:tasteCompose(v,note,basket,machine,speeds),
     extras:{ lqTaste:v, lqNote:String(note||'').trim()||null } }; }
 var _tcOpen=null;
 function tasteCardHtml(id,v,mode){
@@ -18986,7 +19063,8 @@ function shotContextEdits(){
     var old=was[pair[1]]; old=(old==null?'':String(old));
     if(v!==old){ out[pair[1]]=v; any=true; } });
   var speeds=shotSpeedEdits(was);
-  if(speeds){ out.extras=speeds; any=true; }
+  if(speeds){ out.extras=speeds; any=true;
+    if('grinderRpm' in speeds) out.grinderRpm=rpmField(speeds.grinderRpm); }
   // untouched means unchanged: a shot whose id and names disagree is shown as
   // the id reads it, but nothing is written back until someone picks
   if(!_slBeanTouched||!document.getElementById('slBean')) return any?out:null;
@@ -19036,8 +19114,11 @@ function notesWithGrinderLine(notes,sp){
 function shotSpeeds(sh){
   var fromNotes=parseGrinderLine(((sh&&sh.annotations)||{}).espressoNotes);
   if(fromNotes) return fromNotes;
-  var ex=(sh&&sh.workflow&&sh.workflow.context&&sh.workflow.context.extras)||{};
-  return { grinderRpm:speedNum(ex.grinderRpm), grinderFeedRpm:speedNum(ex.grinderFeedRpm) }; }
+  var ctx=(sh&&sh.workflow&&sh.workflow.context)||{}, ex=ctx.extras||{};
+  var rpm=speedNum(ctx.grinderRpm);
+  return { grinderRpm:rpm!=null?rpm:speedNum(ex.grinderRpm), grinderFeedRpm:speedNum(ex.grinderFeedRpm) }; }
+function rpmField(v){ var n=parseFloat(v); return isFinite(n)&&n>=0?Math.round(n):null; }
+function speedsContextPatch(sp){ return { grinderRpm:rpmField(sp.grinderRpm), extras:sp }; }
 function shotSpeedShown(sh,k){ var v=shotSpeeds(sh)[k]; return v==null?'':String(v); }
 function shotSpeedsInForm(sh){
   var sp=shotSpeeds(sh);
@@ -19055,7 +19136,9 @@ function stampGrinderLine(sh){
   var notes=notesWithGrinderLine(was,shotSpeeds(sh))||'';
   if(notes===String(was)) return;
   api('PUT','/api/v1/shots/'+encodeURIComponent(sh.id),{annotations:{espressoNotes:notes}}).catch(function(){}); }
-function shotSpeedText(ctx,k){ var v=ctx&&ctx.extras&&ctx.extras[k]; return (v==null||v==='')?'':String(v); }
+function shotSpeedText(ctx,k){
+  var v=(k==='grinderRpm'&&ctx&&ctx.grinderRpm!=null)?ctx.grinderRpm:(ctx&&ctx.extras&&ctx.extras[k]);
+  return (v==null||v==='')?'':String(v); }
 function shotSpeedEdits(was){
   var out={}, any=false;
   [['slRpm','grinderRpm'],['slFeed','grinderFeedRpm']].forEach(function(pair){
@@ -19598,7 +19681,7 @@ function cmpMetricRows(){ return [
     return (x!=null&&x!=='')?String(x):null; }],
   ['TDS %',          function(c){ var a=c.sh.annotations||{}; return a.drinkTds!=null?a.drinkTds:null; }],
   ['EY %',           function(c){ var a=c.sh.annotations||{}; return a.drinkEy!=null?a.drinkEy:null; }],
-  [t('rating'),      function(c){ var a=c.sh.annotations||{}; return a.enjoyment?('★'+Math.round(a.enjoyment)):null; }]
+  [t('rating'),      function(c){ return starsText(c.sh)||null; }]
 ]; }
 function cmpCell(v){ return (v==null||v==='')?'—':escapeHtml(String(v)); }
 function renderCompare(){
@@ -20517,7 +20600,7 @@ function renderTunePick(){
   if(!Object.keys(tunePickSel).length) tunePickSel[rows[0].id]=1;
   box.innerHTML=rows.map(function(r){
     var a=r.annotations||{}, bits=[];
-    if(a.enjoyment!=null) bits.push('\u2605 '+a.enjoyment);
+    if(shotStars(r)) bits.push(starsText(r,' '));
     if(a.actualYield!=null) bits.push(a.actualYield+'g');
     var c=(r.workflow&&r.workflow.context)||{};
     if(c.coffeeName) bits.push(c.coffeeName);
@@ -21625,6 +21708,10 @@ function phStatusPoll(on){
         _phTimer=setTimeout(tick,PH_RUN[st]?1000:2500); }); };
   tick(); }
 function phSnapState(){ var st=(_phSnap&&_phSnap.state)||{}; return String(st.state||'idle'); }
+function phStateLabel(warming){
+  if(warming) return t('phStWarming');
+  if(refillStopped((_phSnap&&_phSnap.state)||null)) return t('refillStoppedLbl');
+  return t(PH_STATES[phSnapState()]||'phStOther'); }
 // Waking it and sending it to sleep are the same request with a different
 // destination, so they are the same call.
 var _phBusy='';
@@ -21657,7 +21744,7 @@ function renderPhoneStatus(){
   var tgt=parseFloat(d.targetGroupTemperature), now=parseFloat(d.groupTemperature);
   var short=(isFinite(tgt)&&tgt>0&&isFinite(now))?(tgt-now):null;
   var warming=(!run&&st==='idle'&&short!=null&&short>2);
-  var label=warming?t('phStWarming'):t(PH_STATES[st]||'phStOther');
+  var label=phStateLabel(warming);
   var cls=(st==='needsWater'||warming)?'warn':(st==='sleeping')?'off':(run?'run':(st==='idle'?'ready':''));
   if(sub) sub.textContent=_phFail?t('phStale'):'';
   // Nothing here carries a start time, so one is kept from when the phone first
@@ -22011,7 +22098,7 @@ function renderPhoneLog(){
     return '<div class="pl-item'+(sh._viz?' pl-flat':'')+'"'
       +(sh._viz?'':' onclick="phLogToggle(\''+sh.id+'\')"')+'>'
       +'<div class="pl-top"><span class="pl-prof">'+escapeHtml(pr.title||t('noProfile'))+'</span>'
-        +(a.enjoyment!=null?'<span class="pl-rate">\u2605 '+escapeHtml(String(a.enjoyment))+'</span>':'')
+        +(shotStars(sh)?'<span class="pl-rate">'+escapeHtml(starsText(sh,' '))+'</span>':'')
         +'<span class="pl-when">'+escapeHtml(fmtShotWhen(sh))+'</span></div>'
       +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
       +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
