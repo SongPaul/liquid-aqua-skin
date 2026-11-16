@@ -1427,6 +1427,7 @@ body.night.scaled .ep-item.defp .ep-cbody,body.night.no-fx .ep-item.defp .ep-cbo
 #slDetail .sl-view{grid-column:1;grid-row:1;min-width:0;min-height:0;overflow-y:auto;align-self:stretch;padding-right:2px}
 #slDetail .sl-edit{grid-column:2;grid-row:1;min-width:0;min-height:0;overflow-y:auto;align-self:stretch;padding-right:2px}
 #slDetail .ep-save-bar{grid-column:1/-1;grid-row:2;align-self:end}
+#slDetail .sl-cmpview{grid-column:1/-1;grid-row:1/-1}
 /* Wider than they were, so they can be shorter and still read; the metrics
    below them start in view, which is what says the column scrolls. */
 #slDetail .sl-canvas-wrap{height:230px}
@@ -19607,7 +19608,7 @@ function renderCompare(){
   withFullShots(rows).then(function(shots){
     if(tok!==_cmpToken||slCompare.length<2) return;
     var cols=cmpShotCols(shots);
-    wrap.innerHTML='<div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(t('cmpHead'))+'</div>'
+    wrap.innerHTML='<div class="sl-view sl-cmpview"><div class="sl-detail-head"><div><div class="sl-dt-title">'+escapeHtml(t('cmpHead'))+'</div>'
         +'<div class="sl-dt-sub">'+escapeHtml(t('cmpSub').replace('{n}',shots.length))+'</div></div>'
         +'<button class="m-btn" onclick="clearCompare()">'+escapeHtml(t('cmpClear'))+'</button></div>'
       +'<div class="cmp-keys">'+cols.map(function(c){
@@ -19622,7 +19623,7 @@ function renderCompare(){
       +'<table class="cmp-table"><tbody>'+cmpMetricRows().map(function(mr){
           return '<tr><th>'+escapeHtml(mr[0])+'</th>'+cols.map(function(c){
             return '<td>'+cmpCell(mr[1](c))+'</td>'; }).join('')+'</tr>'; }).join('')+'</tbody></table>'
-      +aiPanelHtml();
+      +aiPanelHtml()+'</div>';
     var cv=document.getElementById('cmpCurve');
     if(cv) requestAnimationFrame(function(){ drawCompare(cv,shots); }); }); }
 

@@ -79,3 +79,4 @@ style.
 | `profiles` | the library and the editor as two views of one page: covers full width, a profile opening into the fields, the way back |
 | `scales` | which scale is brewing and which is dosing, from the gateway's hold as well as the local preference; an absent dosing scale looked for less often each miss, never while hidden |
 | `workflow` | the header saying which drink is being made, chosen from the list or from a past workflow |
+| `compare` | the shot comparison takes the whole width of the shot detail, with its heading above its tabs and the overlay below them |
