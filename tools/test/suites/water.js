@@ -87,12 +87,32 @@ test('a new hot water preset keeps only temperature and volume', function (T) {
   });
 });
 
-test('stop-at-weight is kept on, so a connected scale always stops the hot water', function (T) {
+test('the scale stop is the gateway setting as it stands, never forced on', function (T) {
   wSaved(function (sent) {
     gwSettings.stopHotWaterAtWeight = false;
-    syncWaterStop();
-    var post = sent.filter(function (c) { return c.m === 'POST' && c.p === '/api/v1/settings'; })[0];
-    T.ok(!!post && post.b.stopHotWaterAtWeight === true, 'turned back on');
+    var mode = recipeMode;
+    openWaterModal();
+    setRecipeMode(mode);
+    T.eq(typeof syncWaterStop, 'undefined', 'no forcing helper');
+    T.eq(sent.filter(function (c) { return c.m === 'POST' && c.p === '/api/v1/settings'; }).length, 0, 'nothing posted');
+    T.eq(gwSettings.stopHotWaterAtWeight, false, 'left off');
+  });
+});
+
+test('the scale stop switch sits with the stop timing, and needs a scale', function (T) {
+  return wSaved(function (sent) {
+    var was = state.scaleConnected;
+    state.scaleConnected = false;
+    var box = document.createElement('div'); box.innerHTML = stopHwRowHtml();
+    var inp = box.querySelector('#setStopHw');
+    T.ok(!!inp && inp.disabled && !inp.checked, 'off and locked without a scale');
+    state.scaleConnected = true; gwSettings.stopHotWaterAtWeight = true;
+    box.innerHTML = stopHwRowHtml(); inp = box.querySelector('#setStopHw');
+    T.ok(!inp.disabled && inp.checked, 'on with a scale');
+    setStopHotWaterAtWeight(false);
+    state.scaleConnected = was;
+    var post = sent.filter(function (c) { return c.m === 'POST' && c.p === '/api/v1/settings'; }).pop();
+    T.ok(!!post && post.b.stopHotWaterAtWeight === false, 'switching it off is saved');
   });
 });
 
@@ -103,16 +123,13 @@ test('the skin does not stop hot water on a clock of its own', function (T) {
   settings.waterDur = was;
 });
 
-// With a scale the machine is asked for more than the target, as de1app does,
-// and the skin stops the pour on the scale. The machine's own volume estimate
-// runs ahead of the cup, so handing it the target stopped pours short.
+// The machine is given the target itself, as Streamline gives it, and the
+// gateway stops the pour on the scale.
 function wScale(on, run) {
-  var was = { sc: state.scaleConnected, w: state.scaleWeight, f: state.scaleFlow, snap: state.snapTime,
-    sent: _waterVolSent, mine: localStorage.getItem('aurora_water_target') };
+  var was = { sc: state.scaleConnected, mine: localStorage.getItem('aurora_water_target') };
   state.scaleConnected = on;
   function back() {
-    state.scaleConnected = was.sc; state.scaleWeight = was.w; state.scaleFlow = was.f; state.snapTime = was.snap;
-    _waterVolSent = was.sent; _hww = null;
+    state.scaleConnected = was.sc;
     if (was.mine == null) localStorage.removeItem('aurora_water_target'); else localStorage.setItem('aurora_water_target', was.mine);
   }
   var r;
@@ -121,84 +138,66 @@ function wScale(on, run) {
   back(); return r;
 }
 
-test('with a scale the machine gets room above the target, without one the target', function (T) {
-  wSaved(function () {
-    settings.waterVol = 100;
-    wScale(true, function () { T.eq(waterMachineVol(), 150, 'half again with a scale'); });
-    settings.waterVol = 200;
-    wScale(true, function () { T.eq(waterMachineVol(), 250, 'never past what de1app asks'); });
-    settings.waterVol = 300;
-    wScale(true, function () { T.eq(waterMachineVol(), 300, 'and never under the target'); });
-    settings.waterVol = 100;
-    wScale(false, function () { T.eq(waterMachineVol(), 100, 'the target itself without a scale'); });
-  });
-});
-
-test('a volume change with a scale sends the room and keeps the target', function (T) {
+test('with a scale the machine gets the target itself', function (T) {
   return wSaved(function (sent) {
     return wScale(true, function () {
       settings.waterVol = 90;
       auxAdj('waterVol', 10);
       return wWait().then(function () {
-        T.eq(JSON.stringify(wPuts(sent)), JSON.stringify([{ hotWaterData: { volume: 150 } }]), 'the machine gets the room');
-        T.eq(settings.waterVol, 100, 'the card keeps the target');
-        T.eq(lsGet('aurora_water_target'), 100, 'remembered');
+        T.eq(JSON.stringify(wPuts(sent)), JSON.stringify([{ hotWaterData: { volume: 100 } }]), 'the target, no room');
       });
     });
   });
 });
 
-test('the room read back from the workflow is the target again', function (T) {
-  wScale(true, function () {
+test('the skin leaves stopping hot water to the gateway', function (T) {
+  T.eq(typeof waterWeightTick, 'undefined', 'no stop of its own');
+  T.eq(typeof waterMachineVol, 'undefined', 'no room over the target');
+  T.eq(typeof syncWaterRoom, 'undefined', 'nothing rewritten when the scale comes or goes');
+});
+
+test('a room an earlier version left on the machine is put back to the target, once', function (T) {
+  return wScale(true, function () {
     localStorage.setItem('aurora_water_target', '100');
-    T.eq(waterTargetFrom(150), 100, 'our own room');
-    T.eq(waterTargetFrom(120), 120, 'a value another skin wrote');
-    T.eq(waterTargetFrom(100), 100, 'the target as is');
+    T.eq(legacyWaterTarget(150), 100, 'the old room over 100 is 100');
+    T.eq(localStorage.getItem('aurora_water_target'), null, 'and the memory is gone');
+    T.eq(legacyWaterTarget(150), null, 'so a 150 chosen later stays 150');
+    localStorage.setItem('aurora_water_target', '100');
+    T.eq(legacyWaterTarget(120), null, 'a value another skin wrote is kept');
+    localStorage.setItem('aurora_water_target', '200');
+    T.eq(legacyWaterTarget(250), 200, 'the room was capped at 250');
   });
 });
 
-test('the scale connecting or leaving rewrites the machine volume', function (T) {
+// Streamline keeps the hot water flow and time limit on a settings page, off
+// the card; so does this skin, in the machine settings' hot water tab.
+test('the hot water tab holds the flow, the time limit and the scale stop', function (T) {
+  var box = document.createElement('div'); box.innerHTML = hwPaneHtml();
+  T.ok(!!box.querySelector('#hw-waterFlow') && !!box.querySelector('#hw-waterDur'), 'flow and time limit');
+  T.ok(!!box.querySelector('#setStopHw'), 'the scale stop switch');
+  T.ok(!!box.querySelector('#fm-hotWaterFlowMultiplier'), 'and its stop timing');
+  T.eq(document.getElementById('waterFlowV'), null, 'still nothing of it on the card');
+});
+
+test('a flow or time limit change sends only that value, inside its range', function (T) {
   return wSaved(function (sent) {
-    return wScale(false, function () {
-      settings.waterVol = 100; _waterVolSent = 100;
-      state.scaleConnected = true; syncWaterRoom();
-      return wWait().then(function () {
-        T.eq(JSON.stringify(wPuts(sent).pop()), JSON.stringify({ hotWaterData: { volume: 150 } }), 'room when it comes');
-        state.scaleConnected = false; syncWaterRoom();
-        return wWait();
-      }).then(function () {
-        T.eq(JSON.stringify(wPuts(sent).pop()), JSON.stringify({ hotWaterData: { volume: 100 } }), 'the target when it goes');
-        var n = wPuts(sent).length; syncWaterRoom();
-        return wWait().then(function () { T.eq(wPuts(sent).length, n, 'nothing when nothing changed'); });
-      });
+    settings.waterFlow = 9.9; settings.waterDur = 115;
+    hwAdj('waterFlow', 1); hwAdj('waterFlow', 1);
+    hwAdj('waterDur', 1);
+    return wWait().then(function () {
+      var p = wPuts(sent).map(function (b) { return JSON.stringify(b.hotWaterData); }).sort();
+      T.eq(p.join(' '), '{"duration":120} {"flow":10}', 'capped at 10 ml/s and 120 s: ' + p.join(' '));
+      settings.waterFlow = 1; hwAdj('waterFlow', -1); T.eq(settings.waterFlow, 1, 'not under 1 ml/s');
+      settings.waterDur = 5; hwAdj('waterDur', -1); T.eq(settings.waterDur, 5, 'not under 5 s');
     });
   });
 });
 
-test('the skin stops the pour on the scale at the target', function (T) {
-  wSaved(function (sent) {
-    wScale(true, function () {
-      settings.waterVol = 100; _waterVolSent = 150; _hww = null;
-      gwSettings.hotWaterFlowMultiplier = 0.5;
-      var t0 = 1e12;
-      function at(sec, w, f) { state.snapTime = t0 + sec * 1000; state.scaleWeight = w; state.scaleFlow = f; waterWeightTick(true); }
-      function stops() { return sent.filter(function (c) { return c.m === 'PUT' && c.p === '/api/v1/machine/state/idle'; }).length; }
-      at(0, 300, 0); at(1, 0.2, 0); at(2, 1, 4);
-      at(10, 60, 4); at(19, 97, 4); T.eq(stops(), 0, 'not yet at 97 g plus 2 g of flow');
-      at(20, 98.5, 4); T.eq(stops(), 1, 'stopped when the weight and half a second of flow reach 100');
-      at(21, 101, 4); T.eq(stops(), 1, 'once');
-      waterWeightTick(false); T.eq(_hww, null, 'cleared at the end');
-    });
-  });
-});
-
-test('the skin leaves the stop to the machine when it holds the target itself', function (T) {
-  wSaved(function (sent) {
-    wScale(true, function () {
-      settings.waterVol = 100; _waterVolSent = 100; _hww = null;
-      var t0 = 1e12;
-      [0, 1, 5, 20].forEach(function (s, i) { state.snapTime = t0 + s * 1000; state.scaleWeight = [0, 0, 20, 120][i]; state.scaleFlow = 4; waterWeightTick(true); });
-      T.eq(sent.filter(function (c) { return c.p === '/api/v1/machine/state/idle'; }).length, 0, 'no stop from the skin');
-    });
+test('a time limit too short for the volume at that flow is pointed out', function (T) {
+  return wSaved(function () {
+    settings.waterVol = 200; settings.waterFlow = 2.5; settings.waterDur = 30;
+    T.ok(/80/.test(hwDurWarnHtml()), 'needs 80 s: ' + hwDurWarnHtml());
+    settings.waterDur = 90;
+    T.eq(hwDurWarnHtml(), '', 'quiet when it fits');
   });
 });

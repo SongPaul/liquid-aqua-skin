@@ -51,67 +51,24 @@ test('a set amount and a measured one give the new calibration', function (T) {
   });
 });
 
-// The machine estimates its flow from the pump; the scale weighs what came out.
-// A hot water pour is measured against both while it runs, with nothing switched off.
-function fcPour(opts, run) {
-  var was = { conn: state.scaleConnected, w: state.scaleWeight, f: state.flow, t: state.snapTime,
-    mem: localStorage.getItem('aurora_hwmeasure') };
-  state.scaleConnected = true;
-  var el = document.getElementById('toast'); el.className = 'toast'; el.innerHTML = '';
-  var t0 = 1700000000000, rate = opts.got / opts.secs;
-  _hwm = null;
-  for (var i = 0; i <= opts.secs * 5; i++) {
-    var tt = i / 5 + ((opts.gapAt != null && i / 5 >= opts.gapAt) ? 2 : 0);
-    state.snapTime = t0 + tt * 1000;
-    state.flow = opts.est / opts.secs;
-    state.scaleWeight = i === 0 ? (opts.cup || 0) : Math.round(rate * (i / 5) * 10) / 10 + (opts.cup || 0) * 0;
-    hwMeasureTick(true);
-  }
-  var m = _hwm; _hwm = null;
-  state.scaleWeight = opts.got;
-  try { return run(hwMeasureFinish(m)); } finally {
-    state.scaleConnected = was.conn; state.scaleWeight = was.w; state.flow = was.f; state.snapTime = was.t;
-    if (was.mem == null) localStorage.removeItem('aurora_hwmeasure'); else localStorage.setItem('aurora_hwmeasure', was.mem);
-  }
-}
-
-test('a hot water pour is measured against the scale while the scale stop stays on', function (T) {
-  fcPour({ est: 200, got: 170, secs: 20 }, function (r) {
-    T.ok(!!r, 'measured');
-    T.ok(r && Math.abs(r.est - 200) < 3, 'the machine estimated about 200ml: ' + (r && r.est));
-    T.eq(r && r.got, 170, 'the scale weighed 170g');
-    var el = document.getElementById('toast');
-    T.ok(el.classList.contains('show') && /170/.test(el.textContent), 'said: ' + el.textContent);
-    var act = el.querySelector('.toast-act');
-    T.ok(!!act && act.textContent === t('mcalOpen'), 'with a way to the calibration');
-    T.ok(!!lsGet('aurora_hwmeasure'), 'and the measurement is kept for the calibration tab');
-  });
+test('hot water is not measured behind the scenes', function (T) {
+  T.eq(typeof hwMeasureTick, 'undefined', 'no pour measurement');
+  T.eq(typeof hotWaterCheck, 'undefined', 'no calibration nudge after a pour');
+  T.eq(typeof mcalLastHtml, 'undefined', 'no last pour offered');
 });
 
-test('a pour that agrees with its estimate says nothing', function (T) {
-  fcPour({ est: 200, got: 196, secs: 20 }, function (r) {
-    T.ok(!!r, 'measured');
-    T.ok(!document.getElementById('toast').classList.contains('show'), 'quiet');
-  });
-});
-
-test('a pour with gaps in its record, or too short to trust, is not used', function (T) {
-  fcPour({ est: 200, got: 170, secs: 20, gapAt: 8 }, function (r) { T.eq(r, null, 'a gap in the samples'); });
-  fcPour({ est: 60, got: 50, secs: 6 }, function (r) { T.eq(r, null, 'six seconds is too short'); });
-});
-
-test('the calibration tab offers the last pour as its numbers', function (T) {
-  return fcWith(fcApi(1.0), function () {
-    var was = localStorage.getItem('aurora_hwmeasure');
-    lsSet('aurora_hwmeasure', { est: 200, got: 170, at: Date.now() });
+test('a saved calibration is read back from the machine', function (T) {
+  return fcWith(fcApi(1.0), function (gw) {
     var box = document.createElement('div'); box.id = 'mcalBox'; document.body.appendChild(box);
     _mcal.set = ''; _mcal.got = '';
     return loadMachineCal().then(function () {
-      T.ok(/200/.test(box.textContent) && /170/.test(box.textContent), 'the last pour is shown: ' + box.textContent.slice(0, 160));
-      box.querySelector('.mcal-use').click();
-      T.eq(document.getElementById('mcalNew').value, '0.850', 'and using it gives the new value');
-      box.remove();
-      if (was == null) localStorage.removeItem('aurora_hwmeasure'); else localStorage.setItem('aurora_hwmeasure', was);
+      document.getElementById('mcalNew').value = '0.9';
+      var n = gw.sent.length;
+      return mcalSave().then(function () {
+        var after = gw.sent.slice(n).map(function (c) { return c.m + ' ' + c.p; });
+        T.eq(after.join(), 'POST /api/v1/machine/calibration,GET /api/v1/machine/calibration', 'written, then read');
+        box.remove();
+      });
     });
   });
 });
