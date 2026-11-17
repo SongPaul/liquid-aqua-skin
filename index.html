@@ -1648,24 +1648,11 @@ html.mobile-scan,body.mobile-scan{height:auto;min-height:100%;overflow:visible}
 .mb-actions{display:flex;gap:10px;justify-content:center}
 /* the ripple lives in the control it was pressed on, clipped to its shape */
 .rip-clip{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:6}
-.rip{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;--rip-to:1;border-radius:50%;pointer-events:none;transform-origin:50% 50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.92) 0 8%,rgba(198,240,255,.62) 20%,rgba(56,168,222,.34) 44%,rgba(12,74,110,.16) 68%,rgba(56,168,222,0) 100%);will-change:transform,opacity;animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) forwards}
-.rip::after{content:'';position:absolute;inset:6%;border-radius:50%;border:2px solid rgba(255,255,255,.5);animation:ripSwell .8s cubic-bezier(.2,.62,.3,1) .13s forwards}
-.rip::before{content:'';position:absolute;left:16%;top:12%;width:34%;height:26%;border-radius:50%;background:radial-gradient(ellipse at 40% 40%,rgba(255,255,255,.9),rgba(255,255,255,.25) 55%,rgba(255,255,255,0) 100%);animation:ripGlint .8s ease-out forwards}
-body.night .rip{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.7) 0 9%,rgba(167,139,250,.5) 24%,rgba(99,102,241,.3) 48%,rgba(56,168,222,.12) 72%,rgba(56,168,222,0) 100%)}
-/* the two axes fight each other on the way out, which is what makes a drop
-   read as liquid rather than as a circle getting bigger */
-@keyframes ripSwell{
-  0%{transform:scale(calc(var(--rip-to) * .06)) scaleX(1.14) scaleY(.74);opacity:.95}
-  22%{transform:scale(calc(var(--rip-to) * .38)) scaleX(.90) scaleY(1.14);opacity:.8}
-  45%{transform:scale(calc(var(--rip-to) * .6)) scaleX(1.10) scaleY(.9);opacity:.6}
-  68%{transform:scale(calc(var(--rip-to) * .79)) scaleX(.95) scaleY(1.06);opacity:.38}
-  86%{transform:scale(calc(var(--rip-to) * .92)) scaleX(1.03) scaleY(.98);opacity:.18}
-  100%{transform:scale(var(--rip-to)) scaleX(1) scaleY(1);opacity:0}}
-/* light moving on a curved surface */
-@keyframes ripGlint{
-  0%{transform:translate(-14%,-16%) scale(.7);opacity:.75}
-  55%{transform:translate(10%,8%) scale(1.05);opacity:.35}
-  100%{transform:translate(20%,16%) scale(1.2);opacity:0}}
+.rip{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;--rip-to:1;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.55) 0,rgba(198,240,255,.32) 45%,rgba(56,168,222,0) 70%);animation:ripSwell .4s ease-out forwards}
+body.night .rip{background:radial-gradient(circle,rgba(196,181,253,.42) 0,rgba(99,102,241,.22) 45%,rgba(99,102,241,0) 70%)}
+/* one swell and one fade: the wobbling drop, its ring and its glint were three
+   animated layers per press and stuttered on the tablet */
+@keyframes ripSwell{from{transform:scale(calc(var(--rip-to) * .15));opacity:.9}to{transform:scale(var(--rip-to));opacity:0}}
 .cs-way{border:1px solid var(--glass-line);background:var(--glass-hi);border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
 .cs-way-h{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800;color:var(--ink)}
 .cs-way-n{flex:none;width:22px;height:22px;border-radius:100px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
@@ -2408,6 +2395,7 @@ body.night .ep-grid .gname{color:var(--ink)}
    profile editor -- and belongs on top of the one that opened it. Below the
    toast (300) and the lock screen (400). */
 .overlay{position:fixed;inset:0;background:rgba(30,27,58,.72);display:flex;visibility:hidden;contain:layout paint;align-items:center;justify-content:center;z-index:260;opacity:0;pointer-events:none;transition:opacity .2s,visibility 0s linear .2s;padding:24px}
+#keypadOverlay{z-index:270}
 .overlay.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .2s}
 .overlay.primed:not(.show){visibility:visible;opacity:.01;will-change:opacity}
 .overlay.primed.show{will-change:opacity}
@@ -6504,6 +6492,8 @@ var RIPPLE_SEL='button,.album,.tap,.kp-key,.m-btn,.ms-btn,'
 // of the control, so it covers that control exactly once and stops.
 function rippleIn(host,x,y){
   if(_asleep||!prefs.fx||!host||host.disabled) return;
+  requestAnimationFrame(function(){ rippleDraw(host,x,y); }); }
+function rippleDraw(host,x,y){
   var r=host.getBoundingClientRect(); if(!r.width||!r.height) return;
   if(getComputedStyle(host).position==='static') host.style.position='relative';
   var clip=host.querySelector('.rip-clip');
@@ -6518,11 +6508,40 @@ function rippleIn(host,x,y){
   d.style.left=lx+'px'; d.style.top=ly+'px';
   d.style.setProperty('--rip-to',(far*2/base).toFixed(3));
   clip.appendChild(d);
-  setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },900); }
+  setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },450); }
 document.addEventListener('pointerdown',function(e){
   if(e.pointerType==='mouse'&&e.button!==0) return;
   var host=e.target&&e.target.closest&&e.target.closest(RIPPLE_SEL);
   if(host) rippleIn(host,e.clientX,e.clientY); },{passive:true});
+// A number field takes the skin's keypad, as the recipe numbers do: the system
+// keyboard covers half the screen and differs from tablet to tablet.
+function numFieldQuiet(n){
+  if(n.nodeType!==1) return;
+  if(n.tagName==='INPUT'){ if(n.type==='number') n.setAttribute('inputmode','none'); return; }
+  if(!n.getElementsByTagName('input').length) return;
+  n.querySelectorAll('input[type=number]').forEach(function(el){ el.setAttribute('inputmode','none'); }); }
+numFieldQuiet(document.documentElement);
+new MutationObserver(function(ms){
+  for(var i=0;i<ms.length;i++){ var a=ms[i].addedNodes; for(var j=0;j<a.length;j++) numFieldQuiet(a[j]); } })
+  .observe(document.documentElement,{childList:true,subtree:true});
+function numFieldLabel(el){
+  var f=el.closest('.field,.set-row,label'), l=null;
+  if(f) l=(f.tagName==='LABEL')?f:f.querySelector('label,.set-name');
+  var s=(l&&l!==el)?l.textContent.trim():'';
+  return s||el.getAttribute('placeholder')||''; }
+function numFieldKeypad(el){
+  var st=el.getAttribute('step')||'1';
+  var dp=(st==='any')?2:((st.split('.')[1]||'').length);
+  var mn=parseFloat(el.min), mx=parseFloat(el.max), v=parseFloat(el.value);
+  openKeypadFor({ value:isFinite(v)?v:0, dp:dp, min:isFinite(mn)?mn:-1e9, max:isFinite(mx)?mx:1e9,
+    title:numFieldLabel(el), unit:'', empty:el.hasAttribute('placeholder'),
+    onOk:function(x){ el.value=(x==null)?'':String(x);
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+      el.dispatchEvent(new Event('change',{bubbles:true})); } }); }
+document.addEventListener('click',function(e){
+  var el=e.target;
+  if(!el||el.tagName!=='INPUT'||el.type!=='number'||el.disabled||el.readOnly) return;
+  el.blur(); numFieldKeypad(el); },true);
 function bindDoseGestures(){
   var el=document.getElementById('doseIn'); if(!el||el._bound) return;
   el._bound=true; el.onclick=null;
@@ -8827,7 +8846,9 @@ function kpPress(k){
   else if(k==='.'){ if(KP.str.indexOf('.')<0) KP.str=(KP.str.length?KP.str:'0')+'.'; }
   else { KP.str+=k; if(KP.str.replace('.','').length>5) KP.str=KP.str.slice(0,6); }
   kpRender(); }
-function kpConfirm(){ var v=parseFloat(KP.str); if(isNaN(v)){ closeModal(null,'keypadOverlay'); return; }
+function kpConfirm(){ var v=parseFloat(KP.str);
+  if(isNaN(v)){ var o0=(KP.field==='__cb'&&!KP.str.length&&KP.cb&&KP.cb.empty)?KP.cb:null;
+    closeModal(null,'keypadOverlay'); if(o0) o0.onOk(null); return; }
   if(KP.field==='__cb'){ var o=KP.cb, sg=KP.seg; closeModal(null,'keypadOverlay');
     v=Math.max(o.min,Math.min(o.max,v));
     if(sg&&sg.apply) sg.apply(sg.value);

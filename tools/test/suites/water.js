@@ -125,11 +125,19 @@ test('the skin does not stop hot water on a clock of its own', function (T) {
 
 // The machine is given the target itself, as Streamline gives it, and the
 // gateway stops the pour on the scale.
+// The gateway's device list keeps arriving during a case and would set the
+// scale back to what is really plugged in, so the case holds it.
+var _wScaleOn = false;
+function wScaleTo(on) { _wScaleOn = on; }
 function wScale(on, run, appStop) {
   var was = { sc: state.scaleConnected, mine: localStorage.getItem('aurora_water_target'), off: prefs.hwAppStopOff, sent: _waterVolSent };
-  state.scaleConnected = on; prefs.hwAppStopOff = !appStop;
+  _wScaleOn = on;
+  Object.defineProperty(state, 'scaleConnected', { configurable: true, enumerable: true,
+    get: function () { return _wScaleOn; }, set: function () {} });
+  prefs.hwAppStopOff = !appStop;
   function back() {
-    state.scaleConnected = was.sc; prefs.hwAppStopOff = was.off; _waterVolSent = was.sent;
+    delete state.scaleConnected; state.scaleConnected = was.sc;
+    prefs.hwAppStopOff = was.off; _waterVolSent = was.sent;
     if (was.mine == null) localStorage.removeItem('aurora_water_target'); else localStorage.setItem('aurora_water_target', was.mine);
   }
   var r;
@@ -228,7 +236,7 @@ test('the room follows the scale and the choice', function (T) {
   return wSaved(function (sent) {
     return wScale(false, function () {
       settings.waterVol = 100; _waterVolSent = 100;
-      state.scaleConnected = true; syncWaterRoom();
+      wScaleTo(true); syncWaterRoom();
       return wWait().then(function () {
         T.eq(JSON.stringify(wPuts(sent).map(function (b) { return b.hotWaterData.volume; })), '[150]', 'scale on: room');
         _waterVolSent = 150; prefs.hwAppStopOff = true; syncWaterRoom();
