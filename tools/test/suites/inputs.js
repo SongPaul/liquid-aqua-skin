@@ -84,3 +84,39 @@ test('the touch ripple is one plain fade', function (T) {
     prefs.fx = was; _asleep = wasAsleep; b.remove();
   });
 });
+
+// Settings show their numbers between - and + rather than in a text field;
+// touching the number opens the keypad all the same.
+function spStepBox(html) {
+  var box = document.createElement('div'); box.innerHTML = html; document.body.appendChild(box);
+  return box;
+}
+
+test('a hot water stepper value opens the keypad', function (T) {
+  var was = settings.waterFlow; settings.waterFlow = 4;
+  var box = spStepBox(hwStepRow('waterFlow', 'hwFlow', 'hwFlowDesc', 'ml/s'));
+  var v = box.querySelector('#hw-waterFlow');
+  v.click();
+  T.ok(document.getElementById('keypadOverlay').classList.contains('show'), 'the keypad is open');
+  T.eq(document.getElementById('kpTitle').textContent, t('hwFlow'), 'titled by its row');
+  T.eq(KP.cb && KP.cb.dp, 1, 'one place');
+  T.eq(KP.cb && KP.cb.max, 10, 'its range');
+  KP.str = '7.5'; KP.fresh = false; kpConfirm();
+  T.eq(settings.waterFlow, 7.5, 'the value is taken');
+  T.eq(box.querySelector('#hw-waterFlow').textContent, '7.5', 'and shown');
+  settings.waterFlow = was; box.remove();
+});
+
+test('a stop-timing stepper value opens the keypad', function (T) {
+  var was = gwSettings.hotWaterFlowMultiplier; gwSettings.hotWaterFlowMultiplier = 0.3;
+  var box = spStepBox(flowMultRow('hotWaterFlowMultiplier', 'Hot water', 0.05, 2));
+  box.querySelector('#fm-hotWaterFlowMultiplier').click();
+  T.ok(document.getElementById('keypadOverlay').classList.contains('show'), 'the keypad is open');
+  T.eq(document.getElementById('kpTitle').textContent, 'Hot water', 'titled by its row');
+  T.eq(KP.cb && KP.cb.dp, 2, 'two places');
+  KP.str = '0.55'; KP.fresh = false; kpConfirm();
+  T.eq(gwSettings.hotWaterFlowMultiplier, 0.55, 'the value is taken');
+  T.eq(box.querySelector('#fm-hotWaterFlowMultiplier').textContent, '0.55', 'and shown');
+  clearTimeout(adjustFlowMult._t);
+  gwSettings.hotWaterFlowMultiplier = was; box.remove();
+});

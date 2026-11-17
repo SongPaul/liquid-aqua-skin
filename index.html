@@ -923,6 +923,7 @@ body.night .bg-chip{background:rgba(255,255,255,.08);border-color:rgba(255,255,2
 .gr-name .gr-ico{font-size:11px;line-height:1}
 .gr-name #grindModel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grind-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.grind-val.sp-num{border:1px solid var(--glass-line);border-radius:10px;background:var(--field);padding:4px 8px;min-width:64px}
 .grind-val{min-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:18px;font-weight:800;color:var(--accent);cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
 .recipe .grind-val{flex:1;min-width:0;font-size:23px}
 .grind-val:hover{background:var(--glass-hi)}
@@ -7645,11 +7646,19 @@ function hwStepRow(key,nameKey,descKey,unit){
   return '<div class="set-row"><div class="set-info"><div class="set-name">'+escapeHtml(t(nameKey))+'</div>'
     +'<div class="set-desc">'+escapeHtml(t(descKey))+'</div></div>'
     +'<div class="grind-stepper"><button class="ms-btn" onclick="hwAdj(\''+key+'\',-1)">\u2212</button>'
-    +'<span class="grind-val" id="hw-'+key+'">'+v.toFixed(c.dp)+'</span><span class="fm-unit">'+escapeHtml(unit)+'</span>'
+    +'<span class="grind-val sp-num" id="hw-'+key+'" role="button" onclick="hwKeypad(this,\''+key+'\')">'+v.toFixed(c.dp)+'</span><span class="fm-unit">'+escapeHtml(unit)+'</span>'
     +'<button class="ms-btn" onclick="hwAdj(\''+key+'\',1)">+</button></div></div>'; }
+function spRowName(el){ var r=el.closest('.set-row'), n=r&&r.querySelector('.set-name'); return n?n.textContent.trim():''; }
+function hwKeypad(el,key){
+  var c=HW_NUM[key]; if(!c) return;
+  openKeypadFor({ value:+settings[key]||0, dp:c.dp, min:c.min, max:c.max, title:spRowName(el), unit:'',
+    onOk:function(x){ hwSet(key,x); } }); }
 function hwAdj(key,dir){
   var c=HW_NUM[key]; if(!c) return;
-  var v=Math.max(c.min,Math.min(c.max,parseFloat(((+settings[key]||0)+dir*c.step).toFixed(c.dp))));
+  hwSet(key,(+settings[key]||0)+dir*c.step); }
+function hwSet(key,raw){
+  var c=HW_NUM[key];
+  var v=Math.max(c.min,Math.min(c.max,parseFloat((+raw).toFixed(c.dp))));
   settings[key]=v;
   var el=document.getElementById('hw-'+key); if(el) el.textContent=v.toFixed(c.dp);
   pushAux('water',key); }
@@ -9649,9 +9658,13 @@ function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSett
   return '<div class="set-row"><div class="set-info"><div class="set-name">'+label+'</div>'
     +(d!=null?'<div class="set-desc">'+escapeHtml(t('fcDefault').replace('{v}',d.toFixed(digits)))+'</div>':'')+'</div>'
     +'<div class="grind-stepper"><button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+(-step)+','+digits+')">−</button>'
-    +'<span class="grind-val" id="fm-'+key+'">'+v.toFixed(digits)+'</span><span class="fm-unit">'+escapeHtml(t('fcSec'))+'</span>'
+    +'<span class="grind-val sp-num" id="fm-'+key+'" role="button" onclick="fmKeypad(this,\''+key+'\','+digits+')">'+v.toFixed(digits)+'</span><span class="fm-unit">'+escapeHtml(t('fcSec'))+'</span>'
     +'<button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+step+','+digits+')">+</button></div>'
     +(d!=null?'<button class="m-btn fm-reset" onclick="flowMultReset(\''+key+'\','+digits+')">'+escapeHtml(t('fcReset'))+'</button>':'')+'</div>'; }
+function fmKeypad(el,key,digits){
+  var cur=(gwSettings[key]!=null?gwSettings[key]:0);
+  openKeypadFor({ value:cur, dp:digits, min:0, max:10, title:spRowName(el), unit:t('fcSec'),
+    onOk:function(x){ adjustFlowMult(key,x-(gwSettings[key]!=null?gwSettings[key]:0),digits); } }); }
 function flowMultReset(key,digits){ var d=FLOW_MULT_DEF[key]; if(d==null) return;
   adjustFlowMult(key,d-(gwSettings[key]!=null?gwSettings[key]:0),digits==null?2:digits); }
 function adjustFlowMult(key,delta,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0)+delta; v=Math.max(0,parseFloat(v.toFixed(digits))); gwSettings[key]=v;
