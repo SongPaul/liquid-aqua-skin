@@ -5409,7 +5409,7 @@ function gsTick(){
   if(_asleep) return false;
   var now=Date.now(), busy=false;
   for(var pfx in _gsSeg){ var g=_gsSeg[pfx];
-    if(g.at===g.to) continue;
+    if(g.at===g.to||(_pageOpen&&pfx.indexOf('mon')!==0)) continue;
     var pr=g.dur>0?Math.min(1,(now-g.t0)/g.dur):1;
     g.at=pr>=1?g.to:(g.from+(g.to-g.from)*pr);
     gsPlace(pfx,g.at); if(pr<1) busy=true; }
@@ -5447,9 +5447,15 @@ function gaugeZoneIndex(kind,scale,frac){
   if(frac<band[0]/scale) return 0;
   if(frac<=band[1]/scale) return 1;
   return 2; }
+// The machine reports several times a second, mostly with the same values.
+// Writing a node with what it already holds still replaces its children and
+// restyles it, so these write only a change.
+function setText(el,v){ if(!el) return; v=String(v); if(el.textContent!==v) el.textContent=v; }
+function setHtml(el,h){ if(el&&el._html!==h){ el._html=h; el.innerHTML=h; } }
+function setDisplay(el,v){ if(el&&el.style.display!==v) el.style.display=v; }
 function setGauge(pfx,value,unit,frac,scale,kind,viz,raw){
   var f0=Math.max(0,Math.min(frac,1)), zi=gaugeZoneIndex(kind,scale,f0);
-  document.getElementById(pfx+'Val').innerHTML=value+'<span class="u"> '+unit+'</span>';
+  setHtml(document.getElementById(pfx+'Val'),value+'<span class="u"> '+unit+'</span>');
   var sv=document.getElementById(pfx+'Scene'), tile=sv&&sv.parentElement;
   if(tile){ tile.classList.toggle('z1',zi===0); tile.classList.toggle('z2',zi===1); tile.classList.toggle('z3',zi===2); }
   setGaugeScene(pfx,viz,raw,f0,scale,kind); }
@@ -5458,12 +5464,14 @@ function updateMachineUI(){
   // DOM writes (temps, gauges, water gradient) so the tablet isn't repainting for
   // nothing while the machine keeps streaming its snapshot. State is still tracked.
   if(_asleep) return;
-  document.getElementById('groupTemp').textContent=convTemp(state.groupTemp).toFixed(prefs.tempUnit==='F'?0:1);
-  document.getElementById('mixTemp').textContent=convTemp(state.mixTemp).toFixed(prefs.tempUnit==='F'?0:1);
-  document.getElementById('steamTempDisp').textContent=convTemp(state.steamTemp).toFixed(0);
-  applyGauges('pressure','flow');
+  // A page over the main screen hides it; closing the page repaints it.
+  if(!_pageOpen){
+    setText(document.getElementById('groupTemp'),convTemp(state.groupTemp).toFixed(prefs.tempUnit==='F'?0:1));
+    setText(document.getElementById('mixTemp'),convTemp(state.mixTemp).toFixed(prefs.tempUnit==='F'?0:1));
+    setText(document.getElementById('steamTempDisp'),convTemp(state.steamTemp).toFixed(0));
+    applyGauges('pressure','flow');
+    updateWaterVisual(); }
   if(_monOpen) applyGauges('monPressure','monFlow');
-  updateWaterVisual();
   updateShotBtn();
 }
 // The two gauges adapt to the current action: steam, hot water and flush report
@@ -5606,7 +5614,7 @@ function tankPace(){
   var run=state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning;
   var f=run?Math.max(0,Math.min(+state.flow||0,TANK_FLOW_FULL)):0;
   return 1+TANK_FLOW_GAIN*f/TANK_FLOW_FULL; }
-var TANK_TASK={name:'tank',hz:30,draw:function(now){ drawTank(now); return !!prefs.fx; }};
+var TANK_TASK={name:'tank',hz:30,draw:function(now){ if(!_pageOpen) drawTank(now); return !!prefs.fx; }};
 function tankLevel(pct,snap){
   _tank.target=Math.max(0,Math.min(pct,100))*0.9;
   if(snap||_tank.lvl<0) _tank.lvl=_tank.target;
@@ -5656,7 +5664,7 @@ function drawTank(now){
 // A flowing gauge crest travels at a rate set by its level. Its phase comes
 // from the clock rather than from when the surface was built, so a rebuild
 // does not jerk it back to the start.
-var GS_TASK={name:'gauge',hz:30,draw:function(now){ return gsFlowTick(now)>0&&!!prefs.fx; }};
+var GS_TASK={name:'gauge',hz:30,draw:function(now){ return (_pageOpen||gsFlowTick(now)>0)&&!!prefs.fx; }};
 function gsFlowTick(now){
   var list=document.querySelectorAll('.app .gs-flow');
   for(var i=0;i<list.length;i++){ var g=list[i], d=parseFloat(g.getAttribute('data-dur'))||3;
@@ -7898,9 +7906,9 @@ function syncAux(){
   ['steam','flush','water'].forEach(function(kind){
     var cap=kind.charAt(0).toUpperCase()+kind.slice(1);
     var pr=document.getElementById('auxPreset'+cap), el=document.getElementById('auxSum'+cap);
-    if(pr) pr.textContent=auxLabel(kind);
-    if(el) el.textContent=auxSummary(kind);
-    if(_monOpen) syncMonitorHead(); });
+    setText(pr,auxLabel(kind));
+    setText(el,auxSummary(kind)); });
+  if(_monOpen) syncMonitorHead();
   if(_auxLiveKind){ var def=AUX_KINDS[_auxLiveKind];
     def.fields.forEach(function(f){
       ['live_','mlive_'].forEach(function(p){
@@ -20744,14 +20752,14 @@ function syncMonitorHead(){
   // Steam, flush and water are not pulled on a profile and have nothing to do
   // with the bean, so the action names itself and the chip would only repeat it.
   if(kind){
-    document.getElementById('monTitle').textContent=t(kind);
-    document.getElementById('monBean').textContent='';
-    document.getElementById('monState').textContent='';
+    setText(document.getElementById('monTitle'),t(kind));
+    setText(document.getElementById('monBean'),'');
+    setText(document.getElementById('monState'),'');
   } else {
     var pr=(curProfileObj&&curProfileObj.profile)||null;
-    document.getElementById('monTitle').textContent=pr?splitTitle(pr.title||'').name:t('monNoProfile');
-    document.getElementById('monBean').textContent=monBeanLine();
-    document.getElementById('monState').textContent=MON_STATES[st]?t(st):'';
+    setText(document.getElementById('monTitle'),pr?splitTitle(pr.title||'').name:t('monNoProfile'));
+    setText(document.getElementById('monBean'),monBeanLine());
+    setText(document.getElementById('monState'),MON_STATES[st]?t(st):'');
   }
   var lbl=document.getElementById('monSetLbl'), rec=document.getElementById('monRecipeRow'),
       aux=document.getElementById('monAuxRow'), live=document.getElementById('monAuxLive');
@@ -20760,24 +20768,24 @@ function syncMonitorHead(){
   var run=auxRunning(), bar=document.querySelector('.mon-top');
   if(bar) bar.classList.toggle('aux',!!run);
   if(run){
-    lbl.textContent=t(run)+' \u00b7 '+t('liveAdjust');
-    rec.style.display='none'; aux.style.display='none'; live.style.display='';
+    setText(lbl,t(run)+' \u00b7 '+t('liveAdjust'));
+    setDisplay(rec,'none'); setDisplay(aux,'none'); setDisplay(live,'');
     if(_monAuxKind!==run){ _monAuxKind=run; renderMonAuxLive(run); } }
-  else if(kind){ _monAuxKind=null; live.style.display='none';
-    lbl.textContent=auxLabel(kind); rec.style.display='none';
-    aux.style.display=''; aux.textContent=auxSummary(kind); }
-  else { _monAuxKind=null; live.style.display='none';
-    lbl.textContent=t('monRecipe'); rec.style.display=''; aux.style.display='none'; }
+  else if(kind){ _monAuxKind=null; setDisplay(live,'none');
+    setText(lbl,auxLabel(kind)); setDisplay(rec,'none');
+    setDisplay(aux,''); setText(aux,auxSummary(kind)); }
+  else { _monAuxKind=null; setDisplay(live,'none');
+    setText(lbl,t('monRecipe')); setDisplay(rec,''); setDisplay(aux,'none'); }
   // Close is its own button in the head and is always there. This one only
   // stops, so it is only here when there is something to stop and the group
   // head is not the one in charge of stopping it.
   var stop=document.getElementById('monStop');
   if(stop){
     var canStop=!!MON_STATES[st]&&!state.ghc;
-    stop.className='mon-stop';
-    stop.innerHTML='\u23f9 <span>'+escapeHtml(t('stop'))+'</span>';
-    stop.onclick=monStop;
-    stop.style.display=canStop?'':'none'; } }
+    if(stop.className!=='mon-stop') stop.className='mon-stop';
+    setHtml(stop,'\u23f9 <span>'+escapeHtml(t('stop'))+'</span>');
+    if(stop.onclick!==monStop) stop.onclick=monStop;
+    setDisplay(stop,canStop?'':'none'); } }
 function syncMonitorLive(){
   var w=document.getElementById('monWeight'); if(!w) return;
   var u=document.getElementById('monWeightU');
