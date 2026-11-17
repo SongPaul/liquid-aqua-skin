@@ -31,24 +31,55 @@ test('the machine flow calibration is read and shown', function (T) {
   });
 });
 
-test('a set amount and a measured one give the new calibration', function (T) {
-  return fcWith(fcApi(1.0), function (gw) {
+// The calibration is typed on the skin's own keypad, and a pour worked out by
+// hand is no longer offered: the firmware's volume error depends on the flow,
+// so one hot water pour does not give a calibration (decaid #1128).
+test('the calibration is not worked out from a hot water pour', function (T) {
+  T.eq(typeof mcalCompute, 'undefined', 'no calculator');
+  return fcWith(fcApi(1.0), function () {
     var box = document.createElement('div'); box.id = 'mcalBox'; document.body.appendChild(box);
     return loadMachineCal().then(function () {
-      T.eq(mcalFrom(1.0, 200, 170), 0.85, 'current times measured over set');
-      T.eq(mcalFrom(1.0, 200, 10), 0.13, 'kept inside what the machine takes');
-      T.eq(mcalFrom(1.9, 100, 150), 2, 'and at the top');
-      document.getElementById('mcalSet').value = '200';
-      document.getElementById('mcalGot').value = '170';
-      mcalCompute();
-      T.eq(document.getElementById('mcalNew').value, '0.850', 'the new value is shown before saving');
-      return mcalSave();
-    }).then(function () {
-      var post = fcPosts(gw.sent, '/api/v1/machine/calibration')[0] || {};
-      T.eq(post.flowMultiplier, 0.85, 'and saved to the machine');
+      T.eq(box.querySelector('#mcalSet'), null, 'no set amount');
+      T.eq(box.querySelector('#mcalGot'), null, 'no weighed amount');
       box.remove();
     });
   });
+});
+
+test('the new value opens the keypad, not the system keyboard', function (T) {
+  return fcWith(fcApi(1.0), function () {
+    var box = document.createElement('div'); box.id = 'mcalBox'; document.body.appendChild(box);
+    return loadMachineCal().then(function () {
+      var el = document.getElementById('mcalNew');
+      T.ok(el && el.tagName !== 'INPUT', 'not a text field: ' + (el && el.tagName));
+      el.click();
+      T.ok(document.getElementById('keypadOverlay').classList.contains('show'), 'the keypad is open');
+      T.eq(KP.cb && KP.cb.dp, 3, 'to three places');
+      KP.str = '0.9'; KP.fresh = false; kpConfirm();
+      T.eq(document.getElementById('mcalNew').textContent, '0.900', 'the typed value is shown');
+      T.eq(_mcal.next, 0.9, 'and is what will be saved');
+      box.remove();
+    });
+  });
+});
+
+test('a calibration read before is shown at once, not after loading', function (T) {
+  return fcWith(fcApi(1.0), function () {
+    return loadMachineCal().then(function () {
+      var box = document.createElement('div'); box.innerHTML = mcalPaneHtml();
+      T.ok(!/loading|불러오는/i.test(box.textContent) && /1\.000/.test(box.textContent), 'shown from memory: ' + box.textContent.slice(0, 80));
+    });
+  });
+});
+
+test('the machine settings are four tabs', function (T) {
+  var box = document.createElement('div'); box.innerHTML = machinePaneHtml();
+  var tabs = Array.prototype.map.call(box.querySelectorAll('.sp-tab'), function (b) { return b.textContent; });
+  T.eq(tabs.length, 4, 'four: ' + tabs.join(' | '));
+  var panes = box.querySelectorAll('.sp-pane');
+  T.ok(!!panes[1].querySelector('#mcalBox') && !!panes[1].querySelector('#setStopHw') && !!panes[1].querySelector('#fm-weightFlowMultiplier'), 'flow and stopping together');
+  T.ok(!!panes[2].querySelector('#setUsb') && !!panes[2].querySelector('#setPresence'), 'the machine and its sleep together');
+  T.ok(/sp-info-grid/.test(panes[3].innerHTML) && /maint/.test(panes[3].innerHTML), 'care and info together');
 });
 
 // A recommendation taken from the steady part of hot water pours pointed the
@@ -71,9 +102,8 @@ test('hot water pours do not recommend a calibration', function (T) {
 test('a saved calibration is read back from the machine', function (T) {
   return fcWith(fcApi(1.0), function (gw) {
     var box = document.createElement('div'); box.id = 'mcalBox'; document.body.appendChild(box);
-    _mcal.set = ''; _mcal.got = '';
     return loadMachineCal().then(function () {
-      document.getElementById('mcalNew').value = '0.9';
+      mcalSetNext(0.9);
       var n = gw.sent.length;
       return mcalSave().then(function () {
         var after = gw.sent.slice(n).map(function (c) { return c.m + ' ' + c.p; });
@@ -115,19 +145,18 @@ test('an accepted write with no body is a success', function (T) {
 test('a calibration value can be typed in and saved directly', function (T) {
   return fcWith(fcApi(1.0), function (gw) {
     var box = document.createElement('div'); box.id = 'mcalBox'; document.body.appendChild(box);
-    _mcal.set = ''; _mcal.got = '';
     return loadMachineCal().then(function () {
       var inp = document.getElementById('mcalNew');
       T.ok(!!inp, 'a field for the value');
-      T.eq(inp && inp.value, '1.000', 'starting from the current one');
+      T.eq(inp && inp.textContent, '1.000', 'starting from the current one');
       mcalStep(-0.01);
-      T.eq(document.getElementById('mcalNew').value, '0.990', 'stepped down');
-      document.getElementById('mcalNew').value = '0.86';
+      T.eq(document.getElementById('mcalNew').textContent, '0.990', 'stepped down');
+      mcalSetNext(0.86);
       return mcalSave();
     }).then(function () {
       var post = fcPosts(gw.sent, '/api/v1/machine/calibration').pop() || {};
       T.eq(post.flowMultiplier, 0.86, 'the typed value saved');
-      document.getElementById('mcalNew').value = '3';
+      _mcal.next = 3;
       var n = fcPosts(gw.sent, '/api/v1/machine/calibration').length;
       return mcalSave().then(function () {
         T.eq(fcPosts(gw.sent, '/api/v1/machine/calibration').length, n, 'one outside 0.13-2.0 is not sent');
