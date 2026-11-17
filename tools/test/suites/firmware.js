@@ -127,3 +127,29 @@ test('a redraw of the panel keeps the flash progress and the buttons off', funct
   }).then(function () { _fwRunning = was.r; _fwLast = was.l; },
           function (e) { _fwRunning = was.r; _fwLast = was.l; throw e; });
 });
+
+// A DE1 keeps running the build it had until it is switched off and on, so a
+// finished flash still reads as the old build with the update on offer.
+function fwUpdatable(build) {
+  var cat = fwCatalog('DE1Pro', build, build < 1358, []);
+  cat.artifacts[1].eligibility = { status: build < 1358 ? 'applicable' : 'notApplicable', reasons: build < 1358 ? [] : ['not_newer'] };
+  cat.recommendedArtifactId = build < 1358 ? 'de1-1358' : null;
+  return cat;
+}
+
+test('after a flash the machine is to be switched off and on, not flashed again', function (T) {
+  T.ok(!/restart|재시작/.test(t('fwDone')), 'done does not promise a restart: ' + t('fwDone'));
+  T.ok(!/restart|재시작/.test(t('fwManual')), 'nor does the upload note: ' + t('fwManual'));
+  var was = { f: _fwFlashedFrom, l: _fwLast };
+  _fwFlashedFrom = 1333; _fwLast = { st: { phase: 'done', percent: 100, error: null } };
+  return withFirmwareBox(fwUpdatable(1333), function (box) {
+    T.ok(box.querySelector('#fwApply').disabled, 'install button off while the old build still runs');
+    T.ok(box.textContent.indexOf(t('fwPowerCycle')) >= 0, 'says to switch it off and on');
+  }).then(function () {
+    return withFirmwareBox(fwUpdatable(1358), function (box) {
+      T.eq(_fwFlashedFrom, null, 'forgotten once the new build runs');
+      T.ok(box.textContent.indexOf(t('fwPowerCycle')) < 0, 'and no longer said');
+    });
+  }).then(function () { _fwFlashedFrom = was.f; _fwLast = was.l; },
+          function (e) { _fwFlashedFrom = was.f; _fwLast = was.l; throw e; });
+});

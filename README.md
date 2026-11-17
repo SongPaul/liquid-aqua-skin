@@ -384,7 +384,7 @@ Settings is a list of categories, each with its own tabs.
 
 - **Language** offers English and Korean built in, plus thirteen more languages that are translated once with your AI key and kept.
 - **Room to reach the target**: when a profile would end on its clock before the target weight, its last step is held up to 20 seconds longer. The shot still stops at the target. The stored profile is not changed.
-- **Machine flow calibration**: the DE1 estimates flow from its pump. Turn the scale stop off, pour hot water, enter the amount that was set and what the cup weighed, and the skin works out the corrected multiplier, writes it to the machine and reads it back.
+- **Machine flow calibration**: the DE1 estimates flow from its pump. Turn the scale stop off, pour hot water, enter the amount that was set and what the cup weighed, and the skin works out the corrected multiplier, writes it to the machine and reads it back. Every hot water pour on a scale is also compared over its steady part, past the pump coming up to speed and short of the stop, and after 3 pours the middle of the latest 5 is shown as a recommended value. It is only filled in on request, never saved by itself.
 - **Screen effects** turns off the moving water, the curved graph's motion, the cover ripple, the touch ripple and the glass blur, for a tablet that stutters. The **frame meter** shows frames per second; tap it for a log of slow frames and what ran around them.
 
 ---
@@ -439,6 +439,7 @@ Open the address from Settings › Phone on a phone and the skin shows its phone
 | `shotai`, `aifb`, `aipin` | AI readings, your reactions to them, and a suggestion kept for next time |
 | `shotread`, `ranout` | the last shot feedback, and profiles that ran out before the target |
 | `grindmem`, `gspeed`, `gfeed`, `gburr`, `gbrands` | grind settings per bean, grinder speeds, burrs and brands |
+| `hwcal` | hot water pours measured for the recommended flow calibration, per machine |
 | `baskets`, `rmachines`, `beanfav`, `wfhist` | your basket list, the roasting-machine list, favourite beans, recent workflow choices |
 | `i18n` | languages translated with AI |
 
