@@ -59,3 +59,83 @@ test('with a page over the main screen, its gauges, temperatures and tank are le
     });
   } finally { delete _gsSeg.perfMain; delete _gsSeg.monPerf; gt.textContent = was; }
 });
+
+// The loaded profile's cover moves thirty times a second. Under the monitor, a
+// page or the camera nobody sees it, and drawing it there cost a shot a third
+// of its frames on a slow screen.
+test('the cover water rests while the monitor, a page or the camera covers it', function (T) {
+  var host = document.createElement('div'), cv = document.createElement('canvas');
+  host.className = 'album'; host.appendChild(cv); document.body.appendChild(host);
+  cv._prof = {};
+  var drawn = 0;
+  var stubs = { albumLiveCanvas: function () { return cv; }, drawSimCurve: function () { drawn++; } };
+  try {
+    perfWith(Object.assign({ _monOpen: true, _pageOpen: true }, stubs), function () {
+      T.ok(ALBUM_TASK.draw(performance.now()) !== false, 'kept for when the monitor closes');
+    });
+    T.eq(drawn, 0, 'not drawn under the monitor');
+    perfWith(Object.assign({ _monOpen: false, _pageOpen: true }, stubs), function () { ALBUM_TASK.draw(performance.now()); });
+    T.eq(drawn, 0, 'not drawn under a page');
+    host.classList.add('cam-host');
+    perfWith(Object.assign({ _monOpen: false, _pageOpen: false }, stubs), function () { ALBUM_TASK.draw(performance.now()); });
+    T.eq(drawn, 0, 'not drawn under the camera');
+    host.classList.remove('cam-host');
+    perfWith(Object.assign({ _monOpen: false, _pageOpen: false }, stubs), function () { ALBUM_TASK.draw(performance.now()); });
+    T.eq(drawn, 1, 'drawn when it can be seen');
+  } finally { host.remove(); }
+});
+
+// Measuring a box right after a reading changed the screen makes the browser
+// lay the page out there and then; the live graphs did it on every frame.
+function perfCountRects(el, run) {
+  var n = 0, own = el.getBoundingClientRect;
+  el.getBoundingClientRect = function () { n++; return Element.prototype.getBoundingClientRect.call(el); };
+  try { run(); } finally { if (own === Element.prototype.getBoundingClientRect) delete el.getBoundingClientRect; else el.getBoundingClientRect = own; }
+  return n;
+}
+
+test('the live graph measures its box once, not on every frame', function (T) {
+  perfWith({ _monOpen: false, _pageOpen: false, _asleep: false }, function () {
+    var box = document.getElementById('chart').parentElement;
+    var n = perfCountRects(box, function () { _drawChartNow(); _drawChartNow(); _drawChartNow(); });
+    T.ok(n <= 1, 'extraction graph measured ' + n + ' times for three frames');
+    var tbox = document.getElementById('tempChart').parentElement;
+    var m = perfCountRects(tbox, function () { drawTempChart(); drawTempChart(); drawTempChart(); });
+    T.ok(m <= 1, 'temperature graph measured ' + m + ' times for three frames');
+  });
+});
+
+test('a resize makes the live graph measure again', function (T) {
+  perfWith({ _monOpen: false, _pageOpen: false, _asleep: false }, function () {
+    var box = document.getElementById('chart').parentElement;
+    _drawChartNow();
+    var n = perfCountRects(box, function () { window.dispatchEvent(new Event('resize')); _drawChartNow(); });
+    T.ok(n >= 1, 'measured after a resize');
+  });
+});
+
+test('the moving cover measures its canvas once, not on every frame', function (T) {
+  var cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;left:0;top:0;width:120px;height:44px';
+  document.body.appendChild(cv);
+  try {
+    drawSimCurve(cv, {}, true);
+    var n = perfCountRects(cv, function () { drawSimCurve(cv, {}, true, true); drawSimCurve(cv, {}, true, true); drawSimCurve(cv, {}, true, true); });
+    T.ok(n <= 1, 'measured ' + n + ' times for three live frames');
+  } finally { cv.remove(); }
+});
+
+// The main screen's cards sit on a plain background, so their blur showed
+// nothing; it was worked out again on every frame all the same, and with the
+// camera bringing frames of its own it took a tablet down to a crawl.
+test('the main screen cards are not blurred', function (T) {
+  var body = document.body, quiet = ['cam-on', 'scaled', 'no-fx', 'asleep-settled'], was = {};
+  quiet.forEach(function (c) { was[c] = body.classList.contains(c); body.classList.remove(c); });
+  try {
+    Array.prototype.forEach.call(document.querySelectorAll('.app .glass'), function (el) {
+      T.eq(getComputedStyle(el).backdropFilter, 'none', 'no blur on ' + el.className);
+    });
+    var page = document.querySelector('#settingsPage .glass');
+    if (page) T.ok(getComputedStyle(page).backdropFilter !== 'none', 'the other pages keep theirs');
+  } finally { quiet.forEach(function (c) { body.classList.toggle(c, was[c]); }); }
+});

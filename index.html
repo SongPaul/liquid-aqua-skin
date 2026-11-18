@@ -109,13 +109,13 @@ body.night .ep-item.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(
 .stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 .app{width:1280px;height:800px;display:grid;grid-template-columns:1fr 440px;grid-template-rows:80px 1fr;gap:var(--pane-gap);padding:var(--pane-gap);flex-shrink:0}
 .glass{background:rgba(255,255,255,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-line);border-radius:var(--r-md);box-shadow:var(--shadow)}
-body.scaled .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.85)}
+body.scaled .glass,.app .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.85)}
 /* The main screen is one sheet: the panes meet edge to edge and a hairline
    on their right and bottom is what tells them apart. */
 .app>header.glass,.app .center>.glass,.app .live-row>.glass,.app .right>.glass{border:none;border-radius:0;
   box-shadow:inset -1px 0 0 var(--pane-line),inset 0 -1px 0 var(--pane-line)}
 .app .tank-card .water-bg{border-radius:0}
-body.scaled.night .glass{background:rgba(30,27,54,.9)}
+body.scaled.night .glass,body.night .app .glass{background:rgba(30,27,54,.9)}
 /* While a modal/full-page overlay is open, the background is hidden behind it —
    drop the (expensive) backdrop blur on background panels for a smoother modal. */
 
@@ -3839,7 +3839,7 @@ var I18N={
     camUrlName:'Stream address', camUrlDesc:'For the IP-camera app way: the MJPEG address of a camera on this network, usually ending in /video. A phone sending its own camera does not use this.',
     fpsMeter:'Frame meter', fpsMeterDesc:'Shows frames per second and the time the animations take, in a corner of the screen. For checking how smoothly this tablet runs. Tap it for a log of slow frames.',
     fpsLogHint:'Frames slower than 34 ms and what ran around them', fpsLogClear:'Clear', fpsLogCopy:'Copy', fpsLogCopied:'Log copied', fpsLogEmpty:'No slow frames yet.',
-    fx:'Screen effects', fxDesc:'The moving water in the tank, the graph and the loaded profile\u2019s cover, the ripple under a touch, and the blur behind the glass. Turn it off if the screen stutters.',
+    fx:'Screen effects', fxDesc:'The moving water in the tank, the graph and the loaded profile\u2019s cover, the ripple under a touch, and the blur behind the glass on the other pages. Turn it off if the screen stutters.',
     camRotate:'Turn the picture', camRotateDesc:'For a phone lying on its side or clipped upside down.',
     camFit:'Fill the pane', camFitDesc:'Crop to the edges instead of leaving bars.',
     camZoom:'Enlarge', camZoomDesc:'Crops in on the middle of the picture.',
@@ -4313,7 +4313,7 @@ var I18N={
     camUrlName:'스트리밍 주소', camUrlDesc:'IP 카메라 앱 방식용 주소입니다. 같은 네트워크의 MJPEG 주소로, 보통 /video 로 끝납니다. 폰 카메라를 직접 보내는 경우에는 쓰지 않습니다.',
     fpsMeter:'프레임 표시', fpsMeterDesc:'화면 구석에 초당 프레임 수와 애니메이션이 쓰는 시간을 보여 줍니다. 이 태블릿에서 화면이 얼마나 부드럽게 도는지 확인할 때 켜세요. 누르면 느린 프레임 기록이 나옵니다.',
     fpsLogHint:'34ms보다 느린 프레임과 그때 실행된 일', fpsLogClear:'지우기', fpsLogCopy:'복사', fpsLogCopied:'기록을 복사했습니다', fpsLogEmpty:'아직 느린 프레임이 없습니다.',
-    fx:'화면 효과', fxDesc:'탱크, 그래프, 로드된 프로파일 커버에서 움직이는 물, 터치할 때 퍼지는 물결, 유리 뒤의 블러. 화면이 끊기면 끄세요.',
+    fx:'화면 효과', fxDesc:'탱크, 그래프, 로드된 프로파일 커버에서 움직이는 물, 터치할 때 퍼지는 물결, 다른 화면의 유리 블러. 화면이 끊기면 끄세요.',
     camRotate:'화면 회전', camRotateDesc:'폰을 누이거나 거꾸로 물렸을 때.',
     camFit:'여백 없이 채우기', camFitDesc:'상하 좌우 여백 대신 가장자리를 잘라 채웁니다.',
     camZoom:'확대', camZoomDesc:'화면 가운데를 당겨 보여줍니다.',
@@ -4791,6 +4791,20 @@ function applyI18n(){ _lang=resolveLang(prefs.lang||'auto'); document.documentEl
 }
 
 // ── Fit 1280x800 ────────────────────────────────────────────────────
+// A box measured right after a reading changed the screen is laid out there and
+// then, so what is drawn every frame keeps its size until the box is resized.
+var _keptRO=null, _kept=[];
+function keptRect(el){
+  if(typeof ResizeObserver!=='function') return el.getBoundingClientRect();
+  var k=el._kept;
+  if(k&&!k.stale) return k;
+  var r=el.getBoundingClientRect();
+  el._kept={width:r.width,height:r.height,stale:false};
+  if(!el._keptSeen){ el._keptSeen=true; _kept.push(el);
+    if(!_keptRO) _keptRO=new ResizeObserver(function(es){ es.forEach(function(e){ if(e.target._kept) e.target._kept.stale=true; }); });
+    _keptRO.observe(el); }
+  return el._kept; }
+window.addEventListener('resize',function(){ _kept.forEach(function(el){ if(el._kept) el._kept.stale=true; }); });
 function fitStage(){ var a=document.querySelector('.app'); var s=Math.min(window.innerWidth/1280,window.innerHeight/800,1.6);
   // Snap near-1 scales to exactly 1 and drop the transform entirely so text stays pixel-crisp.
   var scaled=!(s>=0.97&&s<=1.04);
@@ -6153,7 +6167,7 @@ function toggleSerie(k){
 // a stream of samples, wrong for a press.
 function drawChartNow(){
   if(!_asleep&&(!_pageOpen||_monOpen)){ _drawChartNow(); drawTempChart(); } else drawChart(); }
-function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=cv.parentElement.getBoundingClientRect(); if(r.width===0||r.height===0) return;
+function _drawChartNow(){ var cv=document.getElementById(_monOpen?'monChart':'chart'); if(!cv) return; var dpr=window.devicePixelRatio||1; var r=keptRect(cv.parentElement); if(r.width===0||r.height===0) return;
   // Only resize the backing store when dimensions actually change (resize is expensive).
   if(_chartDims.w!==r.width||_chartDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _chartDims.w=r.width; _chartDims.h=r.height; }
   var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height;
@@ -10340,7 +10354,7 @@ function drawCardCurve(canvas,profile){
 function redrawCardCurves(){
   Array.prototype.forEach.call(document.querySelectorAll('#epList .ep-card:not(.bg-card) canvas'),function(cv){
     if(cv._drawn&&cv._profile) drawCardCurve(cv,cv._profile); }); }
-function drawSimCurve(canvas,profile,onColor,live){ var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
+function drawSimCurve(canvas,profile,onColor,live){ var dpr=window.devicePixelRatio||1; var r=live?keptRect(canvas):canvas.getBoundingClientRect(); if(r.width===0){ r={width:canvas.width||120,height:canvas.height||44}; }
   var cw=Math.round(r.width*dpr), ch=Math.round(r.height*dpr);
   if(canvas.width!==cw||canvas.height!==ch){ canvas.width=cw; canvas.height=ch; }
   var ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); var W=r.width,H=r.height; ctx.clearRect(0,0,W,H);
@@ -10366,6 +10380,7 @@ var ALBUM_TASK={name:'album',hz:30,draw:function(now){
   var cv=albumLiveCanvas();
   if(!cv) return false;
   if(!prefs.fx){ drawSimCurve(cv,cv._prof,true); return false; }
+  if(_pageOpen||_monOpen||cv.closest('.cam-host')) return true;
   drawSimCurve(cv,cv._prof,true,true); return true; }};
 function albumLiveCanvas(){
   var cv=document.querySelector('.album.center.loaded .al-curve canvas');
@@ -19246,7 +19261,7 @@ var _tempBg=null,_tempBgKey=null,_tempDims={w:0,h:0};
 function drawTempChart(){
   if(_asleep||(_pageOpen&&!_monOpen)) return;
   var cv=document.getElementById(_monOpen?'monTempChart':'tempChart'); if(!cv) return;
-  var dpr=window.devicePixelRatio||1, r=cv.parentElement.getBoundingClientRect();
+  var dpr=window.devicePixelRatio||1, r=keptRect(cv.parentElement);
   if(r.width===0||r.height===0) return;
   if(_tempDims.w!==r.width||_tempDims.h!==r.height){ cv.width=r.width*dpr; cv.height=r.height*dpr; _tempDims.w=r.width; _tempDims.h=r.height; }
   var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
