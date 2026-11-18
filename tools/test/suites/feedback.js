@@ -319,3 +319,72 @@ test('a dialog waits for frames to come on time, but not for ever', function (T)
   }).then(function () { CALM_FRAMES = keep.n; CALM_FRAME_MS = keep.ms; CALM_MAX = keep.max; },
     function (e) { CALM_FRAMES = keep.n; CALM_FRAME_MS = keep.ms; CALM_MAX = keep.max; throw e; });
 });
+
+// ── the reading on the shot card and in the log ──
+function fbCard(run) {
+  var box = document.getElementById('lsStats'), html = box.innerHTML, last = lastShotSummary;
+  box.innerHTML = ['dose', 'yield', 'ratio', 'time'].map(function (k) {
+    return '<div class="ls-stat" data-k="' + k + '"><div class="v">1</div><div class="l">x</div></div>'; }).join('');
+  lastShotSummary = { id: 'fb-card' };
+  try { return keepLs(['aurora_shotread'], run); }
+  finally { box.innerHTML = html; lastShotSummary = last; syncShotRead(); }
+}
+function fbStat(k) { return document.querySelector('#lsStats .ls-stat[data-k="' + k + '"]'); }
+
+test('the shot card has no badge to open', function (T) {
+  T.ok(!document.getElementById('lsAlert'), 'no badge');
+});
+
+test('a short cup and a slow shot are marked on their numbers', function (T) {
+  fbCard(function () {
+    shotReadSet({ shotId: 'fb-card', verdict: 'v', observations: [], suggestions: [],
+      marks: { yield: 'low', time: 'slow', tag: null } });
+    T.ok(fbStat('yield').classList.contains('lo'), 'yield low');
+    T.ok(fbStat('ratio').classList.contains('lo'), 'ratio follows the yield');
+    T.ok(fbStat('time').classList.contains('hi'), 'time long');
+    T.ok(!fbStat('dose').classList.contains('lo') && !fbStat('dose').classList.contains('hi'), 'dose left alone');
+    T.ok(document.getElementById('lsFlag').hidden, 'no word when the numbers say it');
+  });
+});
+
+test('what has no number on the card is said in a word', function (T) {
+  fbCard(function () {
+    shotReadSet({ shotId: 'fb-card', verdict: 'v', observations: [], suggestions: [],
+      marks: { yield: null, time: null, tag: 'rsTagChannel' } });
+    var f = document.getElementById('lsFlag');
+    T.ok(!f.hidden, 'shown');
+    T.eq(f.textContent, t('rsTagChannel'), 'channelling');
+  });
+});
+
+test('a reading of another shot marks nothing', function (T) {
+  fbCard(function () {
+    shotReadSet({ shotId: 'someone-else', verdict: 'v', observations: [], suggestions: [],
+      marks: { yield: 'low', time: 'fast', tag: 'rsTagChannel' } });
+    T.ok(!fbStat('yield').classList.contains('lo'), 'yield clean');
+    T.ok(document.getElementById('lsFlag').hidden, 'no word');
+  });
+});
+
+test('the reader names what it marks', function (T) {
+  var ch = readShot(fbShot(fbProfile(9, true), 25, 36, function (tt) {
+    return tt < 10 ? { p: 6.5, f: 3.0, tp: 9 } : { p: 5.9, f: 4.2, tp: 9 };
+  }));
+  T.eq(ch.marks.tag, 'rsTagChannel', 'channelling: ' + JSON.stringify(ch.marks));
+  var sh = fbShot(fbProfile(9, true), 25, 36, function () { return { p: 9, f: 2, tp: 9 }; });
+  sh.annotations = { actualYield: 25 }; sh.stopReason = 'targetWeight';
+  T.eq(readShot(sh).marks.yield, 'low', 'a short cup');
+  var over = fbShot(fbProfile(9, true), 25, 36, function () { return { p: 9, f: 2, tp: 9 }; });
+  over.annotations = { actualYield: 40 };
+  T.eq(readShot(over).marks.yield, 'high', 'a long cup');
+});
+
+test('the shot log shows the reading of the shot it opens', function (T) {
+  var sh = fbShot(fbProfile(9, true), 25, 36, function (tt) {
+    return tt < 10 ? { p: 6.5, f: 3.0, tp: 9 } : { p: 5.9, f: 4.2, tp: 9 };
+  });
+  var h = shotReadLogHtml(sh);
+  T.ok(h.indexOf(t('rsVChannel')) >= 0, 'the verdict');
+  T.ok(h.indexOf(t('rsTitle')) >= 0, 'under its own heading');
+  T.eq(shotReadLogHtml({ id: 'x', measurements: [] }), '', 'nothing for a shot with no curve');
+});

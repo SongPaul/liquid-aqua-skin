@@ -144,7 +144,7 @@ An amber **!** on the yield means the profile will probably stop before reaching
 
 The bean card shows the coffee in use, its days off roast and its details. **Edit** opens [Beans and grinders](#beans-and-grinders). With a [bean doser](#bean-doser) connected, the card gains an **XDOSING** tab.
 
-The last-shot card shows that shot's profile, dose, yield, ratio and time. **Shot Log** opens the [shot log](#shot-log). When there is something to read about the shot, the card is marked with **!**, and tapping it opens the [shot feedback](#shot-feedback).
+The last-shot card shows that shot's profile, dose, yield, ratio and time. **Shot Log** opens the [shot log](#shot-log). When the [shot feedback](#shot-feedback) finds a yield or time that is off, that number turns amber with a small arrow (short or long). Channelling, a grind that reads coarse or fine, and a temperature that was off are named in a small tag beside the profile; tapping it opens the shot log.
 
 ---
 
@@ -347,13 +347,13 @@ With two or more picked, the detail becomes an overlay: one measurement across e
 
 ![Shot feedback](docs/shot-feedback.png)
 
-When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. The shot card is marked with **!** when there is something to read. Tap it to open:
+When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. The last-shot card marks what is off on its numbers, and the shot log shows the full reading for any shot with a recorded curve:
 
 - a verdict: ran normally, ran fast (grind coarse), choked (grind fine), channelled, or mixed signs;
 - the shot time, yield and ratio against their targets, puck resistance and extraction yield;
 - if the profile ran out before the target weight, how many seconds the last step needs, or the yield to set instead.
 
-**Use next time** keeps the suggestion and shows it on the card the next time that profile is loaded. Settings › General › Display turns the feedback on or off.
+**Use next time** in the shot log keeps the suggestion and shows it on the card the next time that profile is loaded. Settings › General › Display turns the feedback on or off.
 
 With a scale, the skin also learns **when to stop**. After each shot it compares the settled weight with the target and moves the stop a little earlier or later. A toast says what it changed, and **Undo** puts it back. Settings › Machine › Stop timing turns this off.
 
