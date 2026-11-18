@@ -48,22 +48,20 @@ test('a shot stopped by hand mid-step is not a profile running out', function (T
   T.ok(!r.ranOut, 'nothing remembered');
 });
 
-test('the recipe card warns that this profile cannot pour the yield', function (T) {
-  var was = { prof: curProfileObj, out: settings.doseOut, scale: state.scaleConnected, recent: recentShots };
+test('the recipe card shows where this profile ends', function (T) {
+  var was = { prof: curProfileObj, out: settings.doseOut, scale: state.scaleConnected, recent: recentShots,
+    mem: localStorage.getItem('aurora_ranout') };
   curProfileObj = { id: 'ro', profile: RO_PROFILE };
-  settings.doseOut = 36; state.scaleConnected = true; recentShots = [];
+  settings.doseOut = 40; state.scaleConnected = true; recentShots = [];
+  localStorage.removeItem('aurora_ranout');
   try {
-    var c = profileCut();
+    var c = profileStop();
     T.eq(c && c.kind, 'time', 'its time runs out first');
-    T.ok(c && !c.soft, 'said plainly, not as a maybe');
-    T.ok(c && c.at < 33 && c.at > 28, 'about 31g in the cup, not 36ml of water: ' + (c && c.at));
-    openProfileCut();
-    var body = document.getElementById('cutBody').innerHTML;
-    T.ok(/cutMatch\(/.test(body), 'with a button to match the yield to it');
-    T.ok(body.indexOf(escapeHtml(t('cutElseTime'))) >= 0, 'and the other way out is the step time, not a target');
+    T.ok(c && Math.abs(c.at - 36) < 0.01, 'the water it pours after preinfusion: ' + (c && c.at));
   } finally {
     curProfileObj = was.prof; settings.doseOut = was.out; state.scaleConnected = was.scale; recentShots = was.recent;
-    document.getElementById('cutOverlay').classList.remove('show'); syncProfileCut();
+    if (was.mem == null) localStorage.removeItem('aurora_ranout'); else localStorage.setItem('aurora_ranout', was.mem);
+    syncProfileStop();
   }
 });
 
@@ -73,15 +71,17 @@ test('a profile that ran out last time is remembered on the card', function (T) 
   var flat = { title: 'Long flat', steps: [{ pump: 'pressure', pressure: '9', seconds: '120', temperature: '93' }] };
   curProfileObj = { id: 'lf', profile: flat };
   settings.doseOut = 36; state.scaleConnected = true; recentShots = [];
+  localStorage.removeItem('aurora_ranout');
   try {
-    T.ok(!profileCut(), 'no reason to warn yet');
+    T.eq(profileStop(), null, 'nothing to say yet');
     rememberRanOut({ title: 'Long flat', yld: 26.3, want: 36 });
-    var c = profileCut();
-    T.eq(c && c.kind, 'past', 'warned once it has happened');
+    var c = profileStop();
+    T.eq(c && c.kind, 'past', 'shown once it has happened');
+    T.eq(c && c.at, 26.3, 'with what it poured');
   } finally {
     curProfileObj = was.prof; settings.doseOut = was.out; state.scaleConnected = was.scale; recentShots = was.recent;
     if (was.mem == null) localStorage.removeItem('aurora_ranout'); else localStorage.setItem('aurora_ranout', was.mem);
-    syncProfileCut();
+    syncProfileStop();
   }
 });
 

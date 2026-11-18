@@ -138,7 +138,7 @@ Below the carousel is the recipe:
 | **Grind** | Steps by your grinder's own step size. With a grinder plugin, the number is sent to the grinder |
 | **Brew temperature** | The thermometer. Changing it moves the whole profile up or down. **↺** puts the profile's own temperature back |
 
-An amber **!** on the yield means the profile will probably stop before reaching it: it ends on its clock, its own volume or its own weight first. Tap it to see why and to match the yield in one tap.
+When the loaded profile ends the shot on its own before or about at the yield (on its clock, its own volume without a scale, or a last step that ends on weight), a small line under the yield says where: amber when that is short of the yield. If the profile ran out on an earlier shot, the yield it actually poured is shown instead of the estimate. The yield is also sent as the profile's target weight, as other skins do.
 
 ### Coffee and last shot
 
