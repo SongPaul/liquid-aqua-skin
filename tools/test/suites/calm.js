@@ -122,3 +122,43 @@ test('the main screen panels read as glass without a blur', function (T) {
     T.ok(/gradient/.test(cs.backgroundImage), 'a lit face: ' + cs.backgroundImage.slice(0, 60));
   } finally { quiet.forEach(function (c) { body.classList.toggle(c, was[c]); }); }
 });
+
+// A resting tank was woken by every machine report and drew one frame each
+// time, the phase having jumped by however long it slept: still water that
+// twitched three times a second.
+test('a resting tank is not woken by reports that change nothing', function (T) {
+  var was = { fx: prefs.fx, target: _tank.target }; prefs.fx = true; _tank.target = 50;
+  try {
+    calmRun(null, function () {
+      calmSettleTank();
+      drawTank(performance.now());
+      fxStop(TANK_TASK);
+      tankWake(); tankWake();
+      T.ok(!fxHas(TANK_TASK), 'still asleep');
+      _tank.target = 60; tankWake();
+      T.ok(fxHas(TANK_TASK), 'woken by a new level');
+    });
+  } finally { prefs.fx = was.fx; _tank.target = was.target; calmSettleTank(); fxStop(TANK_TASK); }
+});
+
+test('water that starts moving again picks up where it stopped', function (T) {
+  var was = { fx: prefs.fx, target: _tank.target }; prefs.fx = true; _tank.target = 50;
+  try {
+    calmRun(null, function () {
+      calmSettleTank();
+      var t = performance.now();
+      drawTank(t);
+      T.eq(TANK_TASK.draw(t + 16), false, 'rests');
+      var wt = _tank.wt;
+      _tank.target = 60;
+      drawTank(t + 5000);
+      T.eq(_tank.wt, wt, 'no jump across the time it rested');
+    });
+  } finally { prefs.fx = was.fx; _tank.target = was.target; calmSettleTank(); fxStop(TANK_TASK); }
+});
+
+test('the tank swell is low and drawn twenty times a second while it moves', function (T) {
+  T.ok(TANK_AMP_REST <= 4, 'rest swell ' + TANK_AMP_REST);
+  T.ok(TANK_AMP_RUN <= 6, 'pouring swell ' + TANK_AMP_RUN);
+  T.ok(TANK_TASK.hz <= 20, 'hz ' + TANK_TASK.hz);
+});

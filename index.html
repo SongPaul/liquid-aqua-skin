@@ -5634,7 +5634,7 @@ function fxFrame(now){
 // The tank is two waves over a body of water, drawn on one canvas. The level
 // eases toward the reading, the surface swells while water is being drawn
 // off, and a hot tank bubbles.
-var TANK_AMP_REST=7, TANK_AMP_RUN=10, TANK_COOL_BUBBLES=3;
+var TANK_AMP_REST=4, TANK_AMP_RUN=6, TANK_COOL_BUBBLES=3;
 // The water moves faster the more of it is flowing: at rest it keeps its own
 // pace, and at a full pour it runs about two and a half times as fast. Its
 // phase is a clock of its own that speed is added to, so a change of pace
@@ -5651,10 +5651,13 @@ function pouring(){ return !!(state.shotRunning||state.steamRunning||state.water
 function tankSettled(){
   return !pouring()&&Math.abs(_tank.lvl-_tank.target)<0.05
     &&Math.abs(_tank.amp-TANK_AMP_REST)<0.05&&Math.abs(_tank.spd-1)<0.01; }
-var TANK_TASK={name:'tank',hz:30,draw:function(now){
+var TANK_TASK={name:'tank',hz:20,draw:function(now){
   if(!prefs.fx) return false;
   if(_pageOpen) return true;
-  drawTank(now); return !tankSettled(); }};
+  drawTank(now);
+  if(!tankSettled()) return true;
+  _tank.rest=true; return false; }};
+function tankKey(){ return _tank.color.join(',')+'|'+_tank.target.toFixed(2); }
 function motionWake(){
   if(!prefs.fx||_asleep||!pouring()) return;
   if(!fxHas(TANK_TASK)) fxRun(TANK_TASK);
@@ -5663,8 +5666,12 @@ function tankLevel(pct,snap){
   _tank.target=Math.max(0,Math.min(pct,100))*0.9;
   if(snap||_tank.lvl<0) _tank.lvl=_tank.target;
   tankWake(); }
+// A report that changes nothing leaves resting water alone: waking it drew a
+// frame whose phase had jumped by however long it slept.
 function tankWake(){
-  if(prefs.fx&&!_asleep) fxRun(TANK_TASK);
+  if(prefs.fx&&!_asleep){
+    if(!fxHas(TANK_TASK)&&tankSettled()&&_tank.drawn===tankKey()) return;
+    fxRun(TANK_TASK); }
   else { fxStop(TANK_TASK); if(!_asleep) drawTank(performance.now()); } }
 function tankBubbleCount(){ if(!prefs.fx) return 0; return _tank.bubbles<0?TANK_COOL_BUBBLES:4+_tank.bubbles; }
 function tankBubblesShown(){ return pouring()?tankBubbleCount():0; }
@@ -5675,6 +5682,7 @@ function drawTank(now){
   if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
   var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
   var W=r.width, H=r.height, fx=!!prefs.fx;
+  if(_tank.rest){ _tank.at=now; _tank.rest=false; }
   var dt=(fx&&_tank.at)?Math.min(0.1,Math.max(0,(now-_tank.at)/1000)):1; _tank.at=now;
   if(_tank.lvl<0) _tank.lvl=_tank.target;
   _tank.lvl+=(_tank.target-_tank.lvl)*Math.min(1,dt*2.5);
@@ -5684,8 +5692,9 @@ function drawTank(now){
   if(fx) _tank.wt+=dt*_tank.spd;
   ctx.clearRect(0,0,W,H);
   if(_tank.lvl<=0.2) return;
-  var c=_tank.color, t=fx?now/1000:0, wt=_tank.wt, A=_tank.amp;
-  var top=H*(1-_tank.lvl/100)+(fx?1.6*Math.sin(t*0.9):0);
+  _tank.drawn=tankKey();
+  var c=_tank.color, wt=_tank.wt, A=_tank.amp;
+  var top=H*(1-_tank.lvl/100)+(fx?1.6*Math.sin(wt*0.9):0);
   function rgba(a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
   function surface(amp,len,speed,ph){
     ctx.beginPath(); ctx.moveTo(0,H);

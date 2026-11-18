@@ -46,7 +46,7 @@ test('a cool tank has a few slow bubbles while water runs', function (T) {
 
 test('the tank surface moves enough to be seen', function (T) {
   mHot(function () {
-    T.ok(_tank.amp >= 6 || TANK_AMP_REST >= 6, 'a rest swell of at least 6 px: ' + TANK_AMP_REST);
+    T.ok(TANK_AMP_REST >= 3, 'a rest swell of at least 3 px: ' + TANK_AMP_REST);
   });
 });
 
