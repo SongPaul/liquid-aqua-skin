@@ -21599,11 +21599,14 @@ var PHONE_PANES={status:'phStatusPage',log:'phLogPage',bean:'mobilePage',cam:'ca
 var phoneTab='', _phoneReady={};
 // A phone that simply opened the gateway address used to get the 1280x800 stage
 // scaled down to nothing. Touch and a short side say phone; a DE1 tablet is
-// touch too, which is why the size is what decides.
+// touch too, which is why the size is what decides. It is the device screen that
+// is measured: an 8-inch tablet's bars take its window below 600 in landscape.
+var PHONE_SIDE=520;
+function phoneSide(w,h){ return !!w&&!!h&&Math.min(w,h)<PHONE_SIDE; }
 function phoneSized(){
   try{ if(!window.matchMedia||!window.matchMedia('(pointer: coarse)').matches) return false; }catch(_){ return false; }
-  var w=window.innerWidth||0, h=window.innerHeight||0;
-  return !!w&&!!h&&Math.min(w,h)<600; }
+  var s=window.screen||{};
+  return phoneSide(s.width||window.innerWidth||0, s.height||window.innerHeight||0); }
 function viewForcedTablet(){ try{ return localStorage.getItem('aurora_view')==='tablet'; }catch(_){ return false; } }
 function phoneShowTablet(){
   try{ localStorage.setItem('aurora_view','tablet'); }catch(_){}
