@@ -99,7 +99,7 @@ test('the graph draws water under the pressure line', function (T) {
   cfReset();
 });
 
-test('the loaded cover in the middle carries moving water, and stops with effects off', function (T) {
+test('the loaded cover in the middle is drawn by the clock, and not with effects off', function (T) {
   var was = prefs.fx;
   if (!prefs.fx) setFx(true);
   var el = document.querySelector('.album.center');

@@ -1,7 +1,12 @@
 // The library and the editor are two views of one page: the covers get the
 // whole width, and a profile opens into the fields rather than beside them.
 
-function anyProfile() { return (allProfiles || [])[0] || null; }
+// The gateway's order is not ours to rely on: its first profile can be a
+// calibration one, which the library's default espresso list does not show.
+function listedProfile(p) {
+  return p.visibility !== 'deleted' && p.visibility !== 'hidden' && profileKind(p.profile) === 'espresso';
+}
+function anyProfile() { return (allProfiles || []).filter(listedProfile)[0] || null; }
 function shut() { closeEditPage(); }
 
 test('the library opens on the covers', function (T) {
@@ -276,7 +281,7 @@ function withLoads(run) {
 }
 function anotherProfile() {
   return (allProfiles || []).filter(function (p) {
-    return p.visibility !== 'deleted' && !(curProfileObj && curProfileObj.id === p.id); })[0] || null;
+    return listedProfile(p) && !(curProfileObj && curProfileObj.id === p.id); })[0] || null;
 }
 
 test('a tap on a profile in the list loads it and stays on the list', function (T) {

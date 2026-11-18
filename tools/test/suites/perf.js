@@ -139,3 +139,66 @@ test('the main screen cards are not blurred', function (T) {
     if (page) T.ok(getComputedStyle(page).backdropFilter !== 'none', 'the other pages keep theirs');
   } finally { quiet.forEach(function (c) { body.classList.toggle(c, was[c]); }); }
 });
+
+// The 90 s check-in closed and reopened every socket and re-applied every
+// setting even when nothing had changed; on a slow tablet that froze the
+// screen for a few hundred milliseconds, mid-shot included.
+test('a routine check-in keeps the sockets; coming back from away reopens them', function (T) {
+  var n = 0, was = window.resyncSockets;
+  window.resyncSockets = function () { n++; };
+  try {
+    resumeResync(false);
+    T.eq(n, 0, 'sockets kept on a routine check-in');
+    resumeResync(true);
+    T.eq(n, 1, 'reopened after being away');
+  } finally { window.resyncSockets = was; }
+});
+
+test('the periodic check-in waits while the machine is pouring', function (T) {
+  var n = 0, was = window.maybeResume, keys = ['shotRunning', 'steamRunning', 'waterRunning', 'flushRunning'], old = {};
+  keys.forEach(function (k) { old[k] = state[k]; state[k] = false; });
+  window.maybeResume = function () { n++; };
+  try {
+    perfWith({ _asleep: false }, function () {
+      state.shotRunning = true; periodicResume();
+      T.eq(n, 0, 'skipped during a shot');
+      state.shotRunning = false; state.steamRunning = true; periodicResume();
+      T.eq(n, 0, 'skipped during steam');
+      state.steamRunning = false; periodicResume();
+      T.eq(n, 1, 'runs when idle');
+    });
+  } finally { window.maybeResume = was; keys.forEach(function (k) { state[k] = old[k]; }); }
+});
+
+test('an unchanged store is not applied again', function (T) {
+  var applied = 0, was = window.applyNight;
+  return storeAll().then(function () {
+    window.applyNight = function () { applied++; };
+    return hydrateFromStore(true);
+  }).then(function (did) {
+    T.ok(!did, 'nothing to apply');
+    T.eq(applied, 0, 'settings not re-applied');
+  }).then(function () { window.applyNight = was; }, function (e) { window.applyNight = was; throw e; });
+});
+
+test('the tank measures its canvas once, not on every frame', function (T) {
+  var cv = document.getElementById('tankFx');
+  T.ok(!!cv, 'there is a tank canvas');
+  perfWith({ _asleep: false, _pageOpen: false }, function () {
+    drawTank(performance.now());
+    var n = perfCountRects(cv, function () { drawTank(performance.now()); drawTank(performance.now()); drawTank(performance.now()); });
+    T.ok(n <= 1, 'measured ' + n + ' times for three frames');
+  });
+});
+
+test('a temperature gauge is not rebuilt for a tenth of a degree', function (T) {
+  var tile = document.createElement('div'), sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  sv.id = 'perfTmpScene'; tile.appendChild(sv); document.body.appendChild(tile);
+  try {
+    setGaugeScene('perfTmp', 'temp', 88.0, 0.5, 100, null);
+    var first = sv.firstChild;
+    setGaugeScene('perfTmp', 'temp', 88.1, 0.5, 100, null);
+    setGaugeScene('perfTmp', 'temp', 88.2, 0.5, 100, null);
+    T.ok(sv.firstChild === first, 'same drawing through 88.0-88.2');
+  } finally { tile.remove(); delete _gsCache.perfTmp; delete _gsLvl.perfTmp; delete _gsSeg.perfTmp; }
+});

@@ -94,7 +94,7 @@ On the right are **Sleep** and **⚙** [Settings](#settings). Hold **Sleep** to 
 
 ### Tank, scale and dials
 
-The **tank** tile fills from the bottom with moving water. Its colour follows the **mix temperature**, which is the water that will actually reach the coffee: blue up to 80 °C, then one shade per degree through teal, green, yellow and orange, and red from 95 °C. Over it are the group, mix and steam temperatures and the tank level. While water is moving, the waves and bubbles speed up with the machine's flow, up to about two and a half times at 8 ml/s. A tank that is genuinely low turns red whatever the temperature. If a refill kit gives up, the tank says **Refill stopped** instead, so check the water supply rather than the tank. On a plumbed machine with the refill kit, the tank always reads full.
+The **tank** tile fills from the bottom with water that stands still at rest and moves while the machine pours. Its colour follows the **mix temperature**, which is the water that will actually reach the coffee: blue up to 80 °C, then one shade per degree through teal, green, yellow and orange, and red from 95 °C. Over it are the group, mix and steam temperatures and the tank level. While water is moving, waves and bubbles run and speed up with the machine's flow, up to about two and a half times at 8 ml/s; when the pour ends they settle and stop. A tank that is genuinely low turns red whatever the temperature. If a refill kit gives up, the tank says **Refill stopped** instead, so check the water supply rather than the tank. On a plumbed machine with the refill kit, the tank always reads full.
 
 Next to it are the live **weight** and the **timer**. Tap the weight to tare.
 
@@ -387,7 +387,7 @@ Settings is a list of categories, each with its own tabs.
 - **Language** offers English and Korean built in, plus thirteen more languages that are translated once with your AI key and kept.
 - **Room to reach the target**: when a profile would end on its clock before the target weight, its last step is held up to 20 seconds longer. The shot still stops at the target. The stored profile is not changed.
 - **Machine flow calibration**: the DE1 estimates flow from its pump, and this multiplier scales that estimate for espresso as well as hot water. The value is typed on the skin's keypad or stepped by 0.01, written to the machine and read back. It is not worked out from a hot water pour: the machine's hot water error changes with flow, so one pour does not give a calibration ([decaid #1128](https://github.com/decentespresso/decaid/issues/1128)). The last value read is shown at once and refreshed behind it.
-- **Screen effects** turns off the moving water, the curved graph's motion, the cover ripple, the touch ripple and the glass blur on the other pages, for a tablet that stutters. The **frame meter** shows frames per second; tap it for a log of slow frames and what ran around them.
+- **Screen effects** turns off the moving water, the curved graph's motion, the sheen across a cover, the touch ripple and the glass blur on the other pages, for a tablet that stutters. The **frame meter** shows frames per second; tap it for a log of slow frames and what ran around them.
 
 ---
 

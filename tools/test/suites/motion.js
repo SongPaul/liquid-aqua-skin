@@ -23,7 +23,7 @@ test('the tank is drawn on a canvas by the clock, with no SVG animation', functi
   mHot(function () {
     T.ok(T.el('#tankFx') && T.el('#tankFx').tagName === 'CANVAS', 'a canvas in the tank');
     T.ok(!T.el('.tank-card svg'), 'no SVG left in the tank');
-    T.ok(fxHas(TANK_TASK), 'the clock keeps the water moving');
+    T.ok(fxHas(TANK_TASK), 'the clock draws the water');
   });
 });
 
@@ -36,7 +36,7 @@ test('a hot tank has bubbles, more of them the hotter it is', function (T) {
   });
 });
 
-test('a cool tank still has a few slow bubbles, so the water reads as water', function (T) {
+test('a cool tank has a few slow bubbles while water runs', function (T) {
   mHot(function () {
     state.mixTemp = 40; state.groupTemp = 40; updateWaterVisual();
     T.eq(_tank.bubbles, -1, 'not the hot bubbles');

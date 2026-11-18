@@ -224,7 +224,8 @@ test('a bag can be marked used up from the editor', function (T) {
 
 // ── the profile list holds the same way ──
 test('a hold on a profile card opens it in the editor', function (T) {
-  var p = (allProfiles || []).filter(function (x) { return x.visibility !== 'deleted'; })[0];
+  var p = (allProfiles || []).filter(function (x) {
+    return x.visibility !== 'deleted' && x.visibility !== 'hidden' && profileKind(x.profile) === 'espresso'; })[0];
   T.ok(!!p, 'a profile to hold');
   openEditPage();
   var el = (epItemEls[p.id] || [])[0];
