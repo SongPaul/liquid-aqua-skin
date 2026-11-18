@@ -2438,6 +2438,21 @@ body.night .ep-grid .gname{color:var(--ink)}
    toast (300) and the lock screen (400). */
 .overlay{position:fixed;inset:0;background:rgba(30,27,58,.72);display:flex;visibility:hidden;contain:layout paint;align-items:center;justify-content:center;z-index:260;opacity:0;pointer-events:none;transition:opacity .2s,visibility 0s linear .2s;padding:24px}
 #keypadOverlay{z-index:270}
+.pl-ov{position:fixed;inset:0;z-index:265;background:rgba(30,27,58,.55);display:flex;align-items:center;justify-content:center}
+.pl-box{position:relative;width:min(1100px,94vw);height:min(760px,90vh);border-radius:16px;overflow:hidden;background:var(--bg,#fff);box-shadow:0 18px 48px rgba(0,0,0,.35)}
+.pl-box.full{width:100vw;height:100vh;border-radius:0}
+.pl-box.fit{background:transparent;box-shadow:none;overflow:visible}
+.pl-box.fit .pl-x{top:-14px;right:-14px;width:36px;height:36px;font-size:22px}
+.pl-box iframe{display:block;width:100%;height:100%;border:0}
+.pl-box.fit iframe{color-scheme:normal;background:transparent}
+.pl-x{position:absolute;top:8px;right:8px;z-index:1;width:44px;height:44px;border-radius:22px;border:0;font-size:28px;line-height:1;cursor:pointer;background:rgba(0,0,0,.55);color:#fff}
+.ep-afc{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--glass,rgba(255,255,255,.5));border:1px solid var(--glass-line,rgba(0,0,0,.08))}
+.ep-afc[hidden]{display:none}
+.ep-afc .afc-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ep-afc .afc-t{font-size:12px;font-weight:700;color:var(--ink-mute)}
+.ep-afc .afc-v{font-size:18px;font-weight:800;color:var(--ink)}
+.ep-afc .afc-n{font-size:12px;font-weight:600;color:var(--ink-mute);margin-top:4px;line-height:1.5}
+.ep-afc .m-btn{padding:6px 12px;font-size:12px}
 .overlay.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .2s}
 .overlay.primed:not(.show){visibility:visible;opacity:.01;will-change:opacity}
 .overlay.primed.show{will-change:opacity}
@@ -4122,7 +4137,7 @@ var I18N={
     wfWaterNote:'Poured at {t}\u00b0, as the hot-water options are set.',
     wfStage_espresso:'Espresso', wfStage_water:'Hot water', wfStage_steam:'Steam',
     wfSaved:'Done', wfRecent:'Recent', wfLoaded:'Loaded', wfAll:'All', wfHistEmpty:'None of these yet', wfStartWhere:'Everything above is already set on the machine. Start it from Extract in the top bar, or from the group head.',
-    rsTitle:'Shot feedback', ysVolume:'Profile stops at {a} ml', ysStep:'Profile stops at {a} g', ysTime:'Profile ends near {a} g', ysPast:'Last ended at {a} g', ysClock:'Profile ends at {n} s', rsTagChannel:'Channelling', rsTagCoarse:'Grind coarse', rsTagFine:'Grind fine', rsTagTemp:'Temperature off', rsVRanOut:'The profile ended before the target weight', rsMore:'Details', rsRanOut:'The profile\u2019s time ran out at {y}g ({p}% of {w}g)', rsRanOutFix:'Give the last step about {n}s more', rsRanOutWhy:'It was pouring about {f}g/s at the end, so {n}s more reaches the target.', rsRanOutTight:'Pressure sat at its limit, so less water came through than the profile asked. Change the grind first; lengthen the last step only if it still falls short.', rsRanOutYield:'Or, if it tasted good, set the yield to {y}g', rsRanOutYieldWhy:'That is what this profile pours in its time.', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. A yield or time that is off is marked on the last-shot card, and the full reading is in the shot log.',
+    rsTitle:'Shot feedback', afcTitle:'Flow calibration (auto)', afcOpen:'Open plugin', afcOwn:'Set for this profile by Auto Flow Calibration.', afcOther:'Set from its last two weighed shots when this profile is loaded.', afcDry:'Dry run: worked out but not written to the machine.', afcOff:'Automatic flow calibration is off.', afcNone:'Nothing worked out for this profile yet.', afcWhyOther:'Left as it is: {r}', afcWhy_insufficient_history:'Left as it is: needs two weighed shots of this profile.', afcWhy_shots_disagree:'Left as it is: the last two shots disagree.', afcWhy_deadband:'Left as it is: already close enough.', afcWhy_external_override:'Left as it is: it was changed elsewhere.', afcWhy_no_scale_data:'Left as it is: the shots have no scale data.', afcWhy_profile_mismatch:'Left as it is: the shots were on another version of the profile.', afcWhy_machine_busy:'Left as it is: the machine was busy.', afcWhy_no_machine:'Left as it is: no machine connected.', afcWhy_non_de1_machine:'Left as it is: not a DE1.', afcWhy_insufficient_stable_region:'Left as it is: the shots had no steady stretch to measure.', ysVolume:'Profile stops at {a} ml', ysStep:'Profile stops at {a} g', ysTime:'Profile ends near {a} g', ysPast:'Last ended at {a} g', ysClock:'Profile ends at {n} s', rsTagChannel:'Channelling', rsTagCoarse:'Grind coarse', rsTagFine:'Grind fine', rsTagTemp:'Temperature off', rsVRanOut:'The profile ended before the target weight', rsMore:'Details', rsRanOut:'The profile\u2019s time ran out at {y}g ({p}% of {w}g)', rsRanOutFix:'Give the last step about {n}s more', rsRanOutWhy:'It was pouring about {f}g/s at the end, so {n}s more reaches the target.', rsRanOutTight:'Pressure sat at its limit, so less water came through than the profile asked. Change the grind first; lengthen the last step only if it still falls short.', rsRanOutYield:'Or, if it tasted good, set the yield to {y}g', rsRanOutYieldWhy:'That is what this profile pours in its time.', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. A yield or time that is off is marked on the last-shot card, and the full reading is in the shot log.',
     rsModeIcon:'On', rsModeOff:'Off',
    
     rsYield:'Yield {y}g (target {w}g)', rsYieldOnly:'Yield {y}g', rsStopOther:'The shot was stopped ({r}), so this weight says nothing about the grind', rsVShort:'It came up short of the target',
@@ -4597,7 +4612,7 @@ var I18N={
     wfWaterNote:'온수 설정대로 {t}°로 내립니다.',
     wfStage_espresso:'에스프레소', wfStage_water:'온수', wfStage_steam:'스팀',
     wfSaved:'완료', wfRecent:'최근 워크플로우', wfLoaded:'불러왔습니다', wfAll:'전체', wfHistEmpty:'해당하는 기록이 없습니다', wfStartWhere:'위 내용은 이미 머신에 저장됐습니다. 상단의 추출 버튼이나 그룹헤드로 시작하세요.',
-    rsTitle:'추출 피드백', ysVolume:'프로파일 {a}ml에서 멈춤', ysStep:'프로파일 {a}g에서 멈춤', ysTime:'프로파일 끝 약 {a}g', ysPast:'지난번 {a}g에서 끝남', ysClock:'프로파일 {n}초에 끝', rsTagChannel:'채널링', rsTagCoarse:'분쇄 굵음', rsTagFine:'분쇄 고움', rsTagTemp:'온도 이탈', rsVRanOut:'목표 무게 전에 프로파일이 끝났습니다', rsMore:'자세히', rsRanOut:'프로파일 시간이 끝나 {y}g에서 멈췄습니다 (목표 {w}g, {p}%)', rsRanOutFix:'마지막 단계를 약 {n}초 늘리세요', rsRanOutWhy:'끝날 때 초당 약 {f}g씩 나오고 있었으니 {n}초를 더 주면 목표에 닿습니다.', rsRanOutTight:'압력이 상한에 걸려 물이 프로파일 요구만큼 나오지 못했습니다. 먼저 분쇄를 바꿔 보고, 그래도 모자라면 마지막 단계를 늘리세요.', rsRanOutYield:'또는 맛이 좋았다면 추출량을 {y}g으로', rsRanOutYieldWhy:'이 프로파일이 정해진 시간에 내리는 양입니다.', rsSetting:'추출 후 분석', rsSettingDesc:'샷이 끝나면 압력·유량·무게 기록을 이 기기에서 바로 분석합니다(AI·인터넷을 쓰지 않음). 추출량이나 시간이 벗어나면 이전 샷 카드에 작게 표시되고, 자세한 내용은 샷 기록에서 볼 수 있습니다.',
+    rsTitle:'추출 피드백', afcTitle:'유량 보정 (자동)', afcOpen:'플러그인 열기', afcOwn:'Auto Flow Calibration이 이 프로파일에 맞춘 값입니다.', afcOther:'이 프로파일을 불러오면 최근 저울 샷 두 개로 맞춥니다.', afcDry:'시험 모드: 계산만 하고 머신에는 쓰지 않습니다.', afcOff:'자동 유량 보정이 꺼져 있습니다.', afcNone:'아직 이 프로파일로 계산한 값이 없습니다.', afcWhyOther:'그대로 둠: {r}', afcWhy_insufficient_history:'그대로 둠: 이 프로파일의 저울 샷이 두 개 필요합니다.', afcWhy_shots_disagree:'그대로 둠: 최근 두 샷의 결과가 서로 다릅니다.', afcWhy_deadband:'그대로 둠: 지금 값과 차이가 작습니다.', afcWhy_external_override:'그대로 둠: 다른 곳에서 값을 바꿨습니다.', afcWhy_no_scale_data:'그대로 둠: 샷에 저울 기록이 없습니다.', afcWhy_profile_mismatch:'그대로 둠: 샷이 다른 버전의 프로파일입니다.', afcWhy_machine_busy:'그대로 둠: 머신이 사용 중이었습니다.', afcWhy_no_machine:'그대로 둠: 머신이 연결돼 있지 않습니다.', afcWhy_non_de1_machine:'그대로 둠: DE1이 아닙니다.', afcWhy_insufficient_stable_region:'그대로 둠: 샷에 쟴 만한 안정 구간이 없습니다.', ysVolume:'프로파일 {a}ml에서 멈춤', ysStep:'프로파일 {a}g에서 멈춤', ysTime:'프로파일 끝 약 {a}g', ysPast:'지난번 {a}g에서 끝남', ysClock:'프로파일 {n}초에 끝', rsTagChannel:'채널링', rsTagCoarse:'분쇄 굵음', rsTagFine:'분쇄 고움', rsTagTemp:'온도 이탈', rsVRanOut:'목표 무게 전에 프로파일이 끝났습니다', rsMore:'자세히', rsRanOut:'프로파일 시간이 끝나 {y}g에서 멈췄습니다 (목표 {w}g, {p}%)', rsRanOutFix:'마지막 단계를 약 {n}초 늘리세요', rsRanOutWhy:'끝날 때 초당 약 {f}g씩 나오고 있었으니 {n}초를 더 주면 목표에 닿습니다.', rsRanOutTight:'압력이 상한에 걸려 물이 프로파일 요구만큼 나오지 못했습니다. 먼저 분쇄를 바꿔 보고, 그래도 모자라면 마지막 단계를 늘리세요.', rsRanOutYield:'또는 맛이 좋았다면 추출량을 {y}g으로', rsRanOutYieldWhy:'이 프로파일이 정해진 시간에 내리는 양입니다.', rsSetting:'추출 후 분석', rsSettingDesc:'샷이 끝나면 압력·유량·무게 기록을 이 기기에서 바로 분석합니다(AI·인터넷을 쓰지 않음). 추출량이나 시간이 벗어나면 이전 샷 카드에 작게 표시되고, 자세한 내용은 샷 기록에서 볼 수 있습니다.',
     rsModeIcon:'사용', rsModeOff:'사용 안 함',
    
     rsYield:'추출량 {y}g (목표 {w}g)', rsYieldOnly:'추출량 {y}g', rsStopOther:'샷이 도중에 멈춰({r}) 이번 무게로는 분쇄를 판단할 수 없습니다', rsVShort:'목표보다 적게 나왔습니다',
@@ -7730,7 +7745,8 @@ function hwPaneHtml(){
 function stopHwRowHtml(){
   var sc=!!state.scaleConnected, on=sc&&(gwSettings||{}).stopHotWaterAtWeight!==false;
   return row('stopHwW',sc?'stopHwWDesc':'stopHwWNoScale',sw('setStopHw',on,'setStopHotWaterAtWeight(this.checked)',!sc)); }
-function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show','primed'); ovSync(); }
+function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show','primed'); ovSync();
+  if(id==='keypadOverlay'&&KP.field==='__cb'&&KP.cb&&KP.cb.onCancel) KP.cb.onCancel(); }
 // Whoever is working the machine from the group head is done with the screen,
 // so starting or stopping from there puts away any dialog left open, the way a
 // tap outside it would.
@@ -10165,6 +10181,129 @@ var pluginsCache=[];
 function loadPlugins(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
   loadGatewayVersion().then(function(){ return api('GET','/api/v1/plugins'); }).then(function(list){ pluginsCache=Array.isArray(list)?list:[]; setPluginDevices(pluginsCache); syncPluginsIntro(); renderPluginList(); renderGrinderPluginGuide(); })
     .catch(function(){ box.innerHTML='<div class="ls-empty">'+t('noPlugins')+'</div>'; }); }
+// A plugin's own page, over the skin. Streamline's contract, so a page made
+// for it works here as it is: the address carries embed=1 and the theme, the
+// page may say streamline:size and streamline:numpad, and says streamline:close.
+// The close button and a tap outside are the skin's own. A page that never
+// says streamline:ready cannot be framed, and opens as a page with returnTo,
+// which is the way back a plugin page offers.
+var PLUGIN_OV={maxW:1100,maxH:760,minW:280,minH:160,readyMs:3000}, _plOv=null;
+function pluginGoTo(url){ window.location.assign(url); }
+function pluginPageUrl(id,view,ctx){
+  var q=['returnTo='+encodeURIComponent(window.location.href)];
+  if(view) q.push('view='+encodeURIComponent(view));
+  return pluginUiQuery(id,q,ctx); }
+function pluginUiSrc(id,view,ctx){
+  var q=['embed=1','theme='+(document.body.classList.contains('night')?'dark':'light')];
+  if(view) q.push('view='+encodeURIComponent(view));
+  return pluginUiQuery(id,q,ctx); }
+function pluginUiQuery(id,q,ctx){
+  if(ctx) Object.keys(ctx).forEach(function(k){ var v=ctx[k];
+    if(v!=null&&typeof v!=='object') q.push(encodeURIComponent(k)+'='+encodeURIComponent(String(v))); });
+  return GATEWAY.http+'/api/v1/plugins/'+encodeURIComponent(id)+'/ui?'+q.join('&'); }
+function fitPluginBox(w,h){
+  if(!(typeof w==='number'&&isFinite(w)&&typeof h==='number'&&isFinite(h))) return null;
+  function cl(n,lo,hi){ return Math.round(Math.min(hi,Math.max(lo,n))); }
+  return { w:cl(w,PLUGIN_OV.minW,Math.max(PLUGIN_OV.minW,Math.min(PLUGIN_OV.maxW,window.innerWidth*.94))),
+           h:cl(h,PLUGIN_OV.minH,Math.max(PLUGIN_OV.minH,Math.min(PLUGIN_OV.maxH,window.innerHeight*.9))) }; }
+function openPluginPage(id,opts){
+  opts=opts||{};
+  if(_plOv) closePluginPage();
+  var src=pluginUiSrc(id,opts.view,opts.context);
+  var ov=document.createElement('div'); ov.className='pl-ov'; ov.id='pluginOverlay';
+  var box=document.createElement('div'); box.className='pl-box'+(opts.full?' full':'');
+  var fr=document.createElement('iframe');
+  fr.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms');
+  fr.title=opts.name||id; fr.src=src;
+  var x=document.createElement('button'); x.type='button'; x.className='pl-x';
+  x.setAttribute('aria-label',t('close')); x.textContent='\u00d7';
+  box.appendChild(fr); box.appendChild(x); ov.appendChild(box);
+  var origin=''; try{ origin=new URL(src).origin; }catch(_){}
+  var st={ov:ov,box:box,frame:fr,origin:origin,onClose:opts.onClose||null};
+  st.onMsg=function(e){ pluginPageMessage(st,e); };
+  st.onKey=function(e){ if(e.key==='Escape'&&!document.getElementById('keypadOverlay').classList.contains('show')) closePluginPage(); };
+  window.addEventListener('message',st.onMsg);
+  document.addEventListener('keydown',st.onKey);
+  x.onclick=closePluginPage;
+  ov.onclick=function(e){ if(e.target===ov) closePluginPage(); };
+  document.body.appendChild(ov);
+  _plOv=st;
+  st.timer=setTimeout(function(){
+    if(_plOv!==st||st.ready) return;
+    closePluginPage();
+    pluginGoTo(pluginPageUrl(id,opts.view,opts.context)); },PLUGIN_OV.readyMs);
+  return st; }
+function closePluginPage(){
+  var st=_plOv; if(!st) return;
+  _plOv=null;
+  clearTimeout(st.timer);
+  window.removeEventListener('message',st.onMsg);
+  document.removeEventListener('keydown',st.onKey);
+  if(st.ov.parentNode) st.ov.parentNode.removeChild(st.ov);
+  if(st.onClose) try{ st.onClose(); }catch(_){} }
+function pluginPageMessage(st,e){
+  if(_plOv!==st||!st.frame||e.source!==st.frame.contentWindow) return;
+  var d=e.data||{}, ty=d.type;
+  if(ty==='streamline:close'){ closePluginPage(); return; }
+  if(ty==='streamline:ready'){ st.ready=true; clearTimeout(st.timer); return; }
+  if(e.origin!==st.origin) return;
+  if(ty==='streamline:size'){
+    if(st.box.classList.contains('full')) return;
+    var f=fitPluginBox(d.width,d.height); if(!f) return;
+    st.box.style.width=f.w+'px'; st.box.style.height=f.h+'px'; st.box.classList.add('fit'); }
+  else if(ty==='streamline:numpad') pluginNumpad(st,d); }
+function pluginNumpadInput(raw){
+  if(!raw||typeof raw!=='object') return null;
+  var min=+raw.min, max=+raw.max;
+  if(!isFinite(min)||!isFinite(max)||min>=max||Math.abs(min)>1e6||Math.abs(max)>1e6) return null;
+  var dp=raw.decimals==null?0:raw.decimals;
+  if(dp!==Math.floor(dp)||dp<0||dp>2) return null;
+  if(min<0&&dp>0) return null;
+  var v=+raw.value; if(!isFinite(v)) v=min;
+  v=Math.max(min,Math.min(max,+v.toFixed(dp)));
+  return { min:min, max:max, decimals:dp, value:v,
+    title:String(raw.title||'').slice(0,24), unit:String(raw.unit||'').slice(0,6) }; }
+function pluginNumpad(st,d){
+  var id=(typeof d.id==='string'||typeof d.id==='number')?d.id:null, sent=false;
+  function reply(v){ if(sent) return; sent=true;
+    try{ st.frame.contentWindow.postMessage({type:'streamline:numpad-result',id:id,value:v},st.origin); }catch(_){} }
+  var n=pluginNumpadInput(d);
+  if(!n){ reply(null); return; }
+  openKeypadFor({ value:n.value, dp:n.decimals, min:n.min, max:n.max, title:n.title, unit:n.unit,
+    onOk:function(v){ reply(v==null?null:Math.max(n.min,Math.min(n.max,+(+v).toFixed(n.decimals)))); },
+    onCancel:function(){ setTimeout(function(){ reply(null); },0); } }); }
+// Auto Flow Calibration sets the machine's flow multiplier for the profile
+// that is loaded, from that profile's last two weighed shots. The editor says
+// what it holds for the profile open in it.
+var AFC_ID='auto-flow-cal.reaplugin', _afc=null;
+function afcLoad(){
+  return api('GET','/api/v1/plugins/'+AFC_ID+'/status')
+    .then(function(s){ _afc=(s&&s.schemaVersion===1&&s.plugin)?s:null; },function(){ _afc=null; })
+    .then(syncAfcRow); }
+function syncAfcRow(){
+  var el=document.getElementById('epAfc'); if(!el) return;
+  var h=afcLineHtml(_afc,editing&&editing.profile&&editing.profile.title);
+  el.hidden=!h; el.innerHTML=h; }
+function afcLineHtml(s,title){
+  if(!s||!s.plugin) return '';
+  var m=s.machine||{}, cal=m.calibration||{}, dec=(s.evaluation&&s.evaluation.lastDecision)||null;
+  var active=!!title&&s.profile&&s.profile.activeTitle===title;
+  var cur=(active&&m.currentMultiplier>0)?'\u00d7'+(+m.currentMultiplier).toFixed(3):'';
+  var note;
+  if(!s.plugin.enabled) note=t('afcOff');
+  else if(!active) note=t('afcOther');
+  else if(s.plugin.dryRun) note=t('afcDry');
+  else if(cal.ownsCurrentMultiplier) note=t('afcOwn');
+  else if(dec&&dec.reason) note=afcWhy(dec.reason);
+  else note=t('afcNone');
+  return '<div class="afc-head"><span class="afc-t">'+escapeHtml(t('afcTitle'))+'</span>'
+    +(cur?'<span class="afc-v">'+cur+'</span>':'')
+    +'<button type="button" class="m-btn" onclick="openPluginPage(AFC_ID,{name:\'Auto Flow Calibration\',onClose:afcLoad})">'
+      +escapeHtml(t('afcOpen'))+'</button></div>'
+    +'<div class="afc-n">'+escapeHtml(note)+'</div>'; }
+var AFC_WHY=['insufficient_history','shots_disagree','deadband','external_override','no_scale_data',
+  'profile_mismatch','machine_busy','no_machine','non_de1_machine','insufficient_stable_region'];
+function afcWhy(r){ return AFC_WHY.indexOf(r)>=0?t('afcWhy_'+r):t('afcWhyOther').replace('{r}',r); }
 function pluginHasUI(p){ var a=p.api; if(!a) return false; a=Array.isArray(a)?a:[a]; return a.some(function(e){ return e&&e.id==='ui'&&e.type==='http'; }); }
 function renderPluginList(){ var box=document.getElementById('pluginList'); if(!box) return; box.innerHTML='';
   if(!pluginsCache.length){ box.innerHTML='<div class="ls-empty">'+t('noPlugins')+'</div>'; return; }
@@ -10172,10 +10311,10 @@ function renderPluginList(){ var box=document.getElementById('pluginList'); if(!
     var info=document.createElement('div'); info.className='plugin-info';
     info.innerHTML='<div class="plugin-name">'+escapeHtml(p.name||p.id)+' <span class="plugin-ver">v'+escapeHtml(p.version||'')+'</span></div>'+(p.author?'<div class="plugin-author">'+escapeHtml(p.author)+'</div>':'');
     var actions=document.createElement('div'); actions.className='plugin-actions';
-    var hasCfg=p.settings&&Object.keys(p.settings).length>0;
+    var hasCfg=pluginCfgKeys(p.settings).length>0;
     var managed=pluginsManaged();
     if(hasCfg&&!managed){ var cfg=document.createElement('button'); cfg.className='m-btn'; cfg.textContent='⚙'; cfg.title=t('settings'); cfg.onclick=function(){ openPluginCfg(p.id); }; actions.appendChild(cfg); }
-    if(pluginHasUI(p)){ var open=document.createElement('button'); open.className='m-btn'; open.textContent=t('open'); open.onclick=function(){ window.open(GATEWAY.http+'/api/v1/plugins/'+encodeURIComponent(p.id)+'/ui','_blank'); }; actions.appendChild(open); }
+    if(pluginHasUI(p)){ var open=document.createElement('button'); open.className='m-btn'; open.textContent=t('open'); open.onclick=function(){ openPluginPage(p.id,{name:p.name}); }; actions.appendChild(open); }
     if(managed){ var st=document.createElement('span'); st.className='gp-state'+(p.loaded?' on':''); st.textContent=t(p.loaded?'enabled':'disabled'); actions.appendChild(st); }
     else { var lbl=document.createElement('label'); lbl.className='switch'; var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!p.loaded;
     cb.onchange=function(){ togglePlugin(p.id,cb.checked,cb); }; var tr=document.createElement('span'); tr.className='track'; lbl.appendChild(cb); lbl.appendChild(tr); actions.appendChild(lbl); }
@@ -10247,8 +10386,10 @@ function openPluginCfg(id){ var p=pluginsCache.find(function(x){return x.id===id
   // fetch current values (secure -> {isSet})
   api('GET','/api/v1/plugins/'+encodeURIComponent(id)+'/settings').then(function(cur){ renderPluginCfg(cur||{}); }).catch(function(){ renderPluginCfg({}); });
 }
+function pluginCfgKeys(sch){ return sch&&typeof sch==='object'?Object.keys(sch).filter(function(k){ return !(sch[k]&&sch[k].hidden===true); }):[]; }
 function renderPluginCfg(cur){ var box=document.getElementById('pluginCfgFields'); box.innerHTML='';
-  Object.keys(pluginCfgSchema).forEach(function(key){ var s=pluginCfgSchema[key]; var v=cur[key];
+  var keys=pluginCfgKeys(pluginCfgSchema);
+  keys.forEach(function(key){ var s=pluginCfgSchema[key]; var v=cur[key];
     var wrap=document.createElement('div'); wrap.className='field'; var lab=document.createElement('label'); lab.textContent=s.label||key;
     if(s.description) lab.title=s.description; wrap.appendChild(lab);
     var input;
@@ -10258,7 +10399,7 @@ function renderPluginCfg(cur){ var box=document.getElementById('pluginCfgFields'
     else { input=document.createElement('input'); input.type='text'; input.value=(v!=null&&typeof v!=='object')?v:''; }
     input.setAttribute('data-key',key); input.setAttribute('data-type',s.type||'string'); input.setAttribute('data-secure',s.secure?'1':'0');
     wrap.appendChild(input); box.appendChild(wrap); });
-  if(!Object.keys(pluginCfgSchema).length) box.innerHTML='<div class="ls-empty">'+t('noSettings')+'</div>';
+  if(!keys.length) box.innerHTML='<div class="ls-empty">'+t('noSettings')+'</div>';
 }
 function savePluginCfg(){ if(!pluginCfgId) return; var patch={};
   document.querySelectorAll('#pluginCfgFields [data-key]').forEach(function(el){ var k=el.getAttribute('data-key'), ty=el.getAttribute('data-type'), sec=el.getAttribute('data-secure')==='1';
@@ -12524,6 +12665,7 @@ function renderEpEditor(){ _epEdLang=_lang; var wrap=document.getElementById('ep
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
     +(editing.isNew?'':tagEditor(editing))
     +profFieldsHtml(pr)
+    +'<div class="ep-afc" id="epAfc"'+(_afc?'':' hidden')+'>'+afcLineHtml(_afc,pr.title)+'</div>'
     +aipResultHtml()
     +'</div>';
   wrap.innerHTML=meta
@@ -12545,6 +12687,7 @@ function renderEpEditor(){ _epEdLang=_lang; var wrap=document.getElementById('ep
   document.getElementById('epName').oninput=function(){ editing.profile.title=this.value; };
   document.getElementById('epNotes').oninput=function(){ editing.profile.notes=this.value; };
   bindProfFields();
+  afcLoad();
 }
 var epStepIdx=0;
 function bindStepVals(ed,st){
