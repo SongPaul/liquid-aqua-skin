@@ -167,7 +167,29 @@ body.asleep-settled .app .glass{backdrop-filter:none;-webkit-backdrop-filter:non
 header{grid-column:1 / -1;grid-row:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 20px}
 .water-fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,rgba(56,189,248,.28),rgba(99,102,241,.4));transition:height 1.2s cubic-bezier(.4,0,.2,1),background .9s ease}
 .water-fill{visibility:hidden}
-.tank-fx{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tank-water{position:absolute;left:0;right:0;top:0;height:100%;--tw:56,189,248;
+  transform:translateY(100%);transition:transform .9s cubic-bezier(.3,.7,.2,1);will-change:transform}
+.tank-water .tw-surf{position:absolute;left:0;right:0;top:-8px;bottom:-8px;overflow:hidden}
+.tank-water .tw-wv{position:absolute;left:0;top:0;width:200%;height:100%;display:flex;flex-direction:column;
+  will-change:transform;animation:twDrift 6s linear infinite}
+.tank-water .tw-wv.back{animation-duration:9s;animation-direction:reverse}
+.tank-water .tw-wv svg{display:block;width:100%;height:16px;flex:none}
+.tank-water .tw-wv i{display:block;flex:1}
+.tank-water .tw-wv.back i{background:rgba(var(--tw),.22)}
+.tank-water .tw-wv.front i{background:linear-gradient(180deg,rgba(var(--tw),.36),rgba(var(--tw),.55))}
+.tank-water .tw-wv.back path{fill:rgba(var(--tw),.22)}
+.tank-water .tw-wv.front path.f{fill:rgba(var(--tw),.36)}
+.tank-water .tw-wv.front path.s{fill:none;stroke:rgba(255,255,255,.45);stroke-width:1.3;vector-effect:non-scaling-stroke}
+@keyframes twDrift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tw-bubs{position:absolute;left:0;right:0;bottom:0;height:0;pointer-events:none}
+.tw-b{position:absolute;bottom:0;height:100%;display:none;will-change:transform,opacity}
+.tw-b.on{display:block;animation:twRise 4s cubic-bezier(.4,0,.8,.6) infinite}
+.tw-b i{position:absolute;bottom:-4px;left:-3px;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.85)}
+@keyframes twRise{0%{transform:translateY(0);opacity:0}12%{opacity:.85}72%{opacity:.85}100%{transform:translateY(-100%);opacity:0}}
+body.asleep .tank-water .tw-wv,body.asleep .tw-b.on{animation-play-state:paused}
+body.no-fx .tank-water .tw-wv{animation:none}
+body.no-fx .tw-bubs{display:none}
+body.no-fx .tank-water{transition:none}
 .fps-meter{position:fixed;left:6px;bottom:6px;z-index:99999;font:700 11px Inter,monospace;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;cursor:pointer}
 .fps-log{position:fixed;left:6px;bottom:30px;z-index:99999;width:min(620px,calc(100vw - 12px));max-height:62vh;overflow:auto;border-radius:8px;background:rgba(0,0,0,.86);color:#fff;font:11px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:8px 10px}
 .fps-log .fl-head{display:flex;gap:8px;align-items:center;margin-bottom:6px;font:600 11px Inter,sans-serif}
@@ -2794,7 +2816,13 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
     <div class="tank-card glass" id="tankCard" title="Water tank level">
       <div class="water-bg">
         <div class="water-fill" id="waterFill" style="height:0%"></div>
-        <canvas class="tank-fx" id="tankFx"></canvas>
+        <div class="tank-water" id="tankWater">
+          <div class="tw-surf">
+            <div class="tw-wv back"><svg viewBox="0 0 400 16" preserveAspectRatio="none" aria-hidden="true"><path d="M0 8 Q25 13 50 8 T100 8 T150 8 T200 8 T250 8 T300 8 T350 8 T400 8 V16 H0Z"/></svg><i></i></div>
+            <div class="tw-wv front"><svg viewBox="0 0 400 16" preserveAspectRatio="none" aria-hidden="true"><path class="f" d="M0 8 Q16.667 0 33.333 8 T66.666 8 T99.999 8 T133.332 8 T166.665 8 T199.998 8 T233.331 8 T266.664 8 T299.997 8 T333.330 8 T366.663 8 T399.996 8 V16 H0Z"/><path class="s" d="M0 8 Q16.667 0 33.333 8 T66.666 8 T99.999 8 T133.332 8 T166.665 8 T199.998 8 T233.331 8 T266.664 8 T299.997 8 T333.330 8 T366.663 8 T399.996 8"/></svg><i></i></div>
+          </div>
+        </div>
+        <div class="tw-bubs" id="tankBubs"></div>
       </div>
       <div class="tank-content">
         <div class="htemp" title="Group head temperature"><span class="ht-ico">🔥</span><span class="ht-v"><span id="groupTemp">—</span>°</span><span class="ht-l" data-i18n="group">Group</span></div>
@@ -5631,90 +5659,66 @@ function fxFrame(now){
     if(!keep) fxStop(k); });
   FX.cost=FX.cost*0.9+(performance.now()-t0)*0.1;
   fxKick(); }
-// The tank is two waves over a body of water, drawn on one canvas. The level
-// eases toward the reading, the surface swells while water is being drawn
-// off, and a hot tank bubbles.
-var TANK_AMP_REST=4, TANK_AMP_RUN=6, TANK_COOL_BUBBLES=3;
+// The tank is two wave strips over a still body of water. The compositor slides
+// the strips along for ever, so the water keeps moving at rest as it does in a
+// glass, and nothing here runs per frame: a report only restyles what changed.
+// The level glides to the reading, and while water is drawn off the waves
+// quicken with the flow and bubbles rise, more of them the hotter the tank.
+var TANK_COOL_BUBBLES=3;
 // The water moves faster the more of it is flowing: at rest it keeps its own
-// pace, and at a full pour it runs about two and a half times as fast. Its
-// phase is a clock of its own that speed is added to, so a change of pace
-// never jumps the surface.
+// pace, and at a full pour it runs about two and a half times as fast. The
+// rate is set on the running animation, which keeps its place at a new rate.
 var TANK_FLOW_FULL=8, TANK_FLOW_GAIN=1.5;
-var _tank={lvl:-1,target:0,color:[56,189,248],bubbles:-1,amp:TANK_AMP_REST,at:0,spd:1,wt:0};
+var _tank={target:0,color:[56,189,248],bubbles:-1};
+var _tankDom={lvl:null,col:'',run:null,bub:''};
 function tankPace(){
   var run=state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning;
   var f=run?Math.max(0,Math.min(+state.flow||0,TANK_FLOW_FULL)):0;
   return 1+TANK_FLOW_GAIN*f/TANK_FLOW_FULL; }
-// Water is still until something pours: once the level, swell and pace have
-// settled at rest, the last frame stays and the clock lets the tank go.
 function pouring(){ return !!(state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning); }
-function tankSettled(){
-  return !pouring()&&Math.abs(_tank.lvl-_tank.target)<0.05
-    &&Math.abs(_tank.amp-TANK_AMP_REST)<0.05&&Math.abs(_tank.spd-1)<0.01; }
-var TANK_TASK={name:'tank',hz:20,draw:function(now){
-  if(!prefs.fx) return false;
-  if(_pageOpen) return true;
-  drawTank(now);
-  if(!tankSettled()) return true;
-  _tank.rest=true; return false; }};
-function tankKey(){ return _tank.color.join(',')+'|'+_tank.target.toFixed(2); }
 function motionWake(){
   if(!prefs.fx||_asleep||!pouring()) return;
-  if(!fxHas(TANK_TASK)) fxRun(TANK_TASK);
   if(!fxHas(GS_TASK)) fxRun(GS_TASK); }
 function tankLevel(pct,snap){
   _tank.target=Math.max(0,Math.min(pct,100))*0.9;
-  if(snap||_tank.lvl<0) _tank.lvl=_tank.target;
   tankWake(); }
-// A report that changes nothing leaves resting water alone: waking it drew a
-// frame whose phase had jumped by however long it slept.
-function tankWake(){
-  if(prefs.fx&&!_asleep){
-    if(!fxHas(TANK_TASK)&&tankSettled()&&_tank.drawn===tankKey()) return;
-    fxRun(TANK_TASK); }
-  else { fxStop(TANK_TASK); if(!_asleep) drawTank(performance.now()); } }
 function tankBubbleCount(){ if(!prefs.fx) return 0; return _tank.bubbles<0?TANK_COOL_BUBBLES:4+_tank.bubbles; }
 function tankBubblesShown(){ return pouring()?tankBubbleCount():0; }
-function drawTank(now){
-  var cv=document.getElementById('tankFx'); if(!cv) return;
-  var r=keptRect(cv); if(!r.width||!r.height) return;
-  var dpr=Math.min(window.devicePixelRatio||1,2), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr);
-  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
-  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
-  var W=r.width, H=r.height, fx=!!prefs.fx;
-  if(_tank.rest){ _tank.at=now; _tank.rest=false; }
-  var dt=(fx&&_tank.at)?Math.min(0.1,Math.max(0,(now-_tank.at)/1000)):1; _tank.at=now;
-  if(_tank.lvl<0) _tank.lvl=_tank.target;
-  _tank.lvl+=(_tank.target-_tank.lvl)*Math.min(1,dt*2.5);
-  var run=state.shotRunning||state.steamRunning||state.waterRunning||state.flushRunning;
-  _tank.amp+=((run?TANK_AMP_RUN:TANK_AMP_REST)-_tank.amp)*Math.min(1,dt*1.5);
-  _tank.spd+=(tankPace()-_tank.spd)*Math.min(1,dt*1.2);
-  if(fx) _tank.wt+=dt*_tank.spd;
-  ctx.clearRect(0,0,W,H);
-  if(_tank.lvl<=0.2) return;
-  _tank.drawn=tankKey();
-  var c=_tank.color, wt=_tank.wt, A=_tank.amp;
-  var top=H*(1-_tank.lvl/100)+(fx?1.6*Math.sin(wt*0.9):0);
-  function rgba(a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
-  function surface(amp,len,speed,ph){
-    ctx.beginPath(); ctx.moveTo(0,H);
-    for(var x=0;x<=W+6;x+=6) ctx.lineTo(x,top+amp*Math.sin(x/len*Math.PI*2+wt*speed+ph));
-    ctx.lineTo(W,H); ctx.closePath(); }
-  surface(A*0.8,W/2.2,-1.7,1.7); ctx.fillStyle=rgba(.22); ctx.fill();
-  surface(A,W/3,2.3,0);
-  var g=ctx.createLinearGradient(0,top-A,0,H); g.addColorStop(0,rgba(.36)); g.addColorStop(1,rgba(.55));
-  ctx.fillStyle=g; ctx.fill();
-  ctx.beginPath();
-  for(var x=0;x<=W+6;x+=6){ var y=top+A*Math.sin(x/(W/3)*Math.PI*2+wt*2.3); if(x) ctx.lineTo(x,y); else ctx.moveTo(x,y); }
-  ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=1.3; ctx.stroke();
-  var n=tankBubblesShown(), heat=_tank.bubbles<0?-2:_tank.bubbles;
+function tankWake(){
+  var w=document.getElementById('tankWater'); if(!w) return;
+  var lvl=_tank.target;
+  if(_tankDom.lvl!==lvl){ _tankDom.lvl=lvl;
+    w.style.transform='translateY('+(100-lvl).toFixed(2)+'%)';
+    var bs=document.getElementById('tankBubs'); if(bs) bs.style.height=lvl.toFixed(2)+'%'; }
+  var col=_tank.color.join(',');
+  if(_tankDom.col!==col){ _tankDom.col=col; w.style.setProperty('--tw',col); }
+  var run=pouring();
+  if(_tankDom.run!==run){ _tankDom.run=run;
+    var card=document.getElementById('tankCard'); if(card) card.classList.toggle('pouring',run); }
+  tankBubbles();
+  if(prefs.fx) tankPaceApply(w); }
+function tankPaceApply(w){
+  if(!w.getAnimations) return;
+  var pace=Math.round(tankPace()*20)/20;
+  w.getAnimations({subtree:true}).forEach(function(a){
+    if(a.animationName!=='twDrift'&&a.animationName!=='twRise') return;
+    if(a.playbackRate!==pace) a.playbackRate=pace; }); }
+function tankBubbles(){
+  var box=document.getElementById('tankBubs'); if(!box) return;
+  var n=tankBubblesShown(), heat=_tank.bubbles<0?-2:_tank.bubbles, key=n+'|'+heat;
+  if(_tankDom.bub===key) return; _tankDom.bub=key;
+  if(!box.children.length){
+    for(var k=0;k<TANK_BUBBLE_X.length;k++){ var b=document.createElement('span'); b.className='tw-b';
+      b.innerHTML='<i></i>'; box.appendChild(b); } }
+  var on={};
   for(var j=0;j<n;j++){
-    var i=heat<0?[1,4,7][j]:j;
-    var dur=5.8-heat*0.5+(i%4)*0.35, ph=((wt+TANK_BUBBLE_DELAY[i])/dur)%1;
-    var bx=TANK_BUBBLE_X[i]/1280*W+Math.sin(wt*2.2+i)*3, by=H+4-ph*(H+4-top);
-    var a=0.85*Math.min(1,ph/0.12)*Math.min(1,(1-ph)/0.28);
-    ctx.beginPath(); ctx.arc(bx,by,(5+(i%3))/2,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,'+a.toFixed(3)+')'; ctx.fill(); } }
+    var i=heat<0?[1,4,7][j]:j; on[i]=1;
+    var el=box.children[i], sz=5+(i%3);
+    el.style.left=(TANK_BUBBLE_X[i]/1280*100).toFixed(2)+'%';
+    el.style.animationDuration=(5.8-heat*0.5+(i%4)*0.35).toFixed(2)+'s';
+    el.style.animationDelay=(-TANK_BUBBLE_DELAY[i]).toFixed(2)+'s';
+    el.firstChild.style.width=el.firstChild.style.height=sz+'px'; }
+  for(var m=0;m<box.children.length;m++) box.children[m].classList.toggle('on',!!on[m]); }
 // A flowing gauge crest travels at a rate set by its level. Its phase comes
 // from the clock rather than from when the surface was built, so a rebuild
 // does not jerk it back to the start.

@@ -13,19 +13,7 @@ function mHot(run) {
     updateWaterVisual();
   }
 }
-function mPainted(cv) {
-  var c = cv.getContext('2d'), d = c.getImageData(0, 0, cv.width, cv.height).data, n = 0;
-  for (var i = 3; i < d.length; i += 4) if (d[i] > 0) n++;
-  return n;
-}
 
-test('the tank is drawn on a canvas by the clock, with no SVG animation', function (T) {
-  mHot(function () {
-    T.ok(T.el('#tankFx') && T.el('#tankFx').tagName === 'CANVAS', 'a canvas in the tank');
-    T.ok(!T.el('.tank-card svg'), 'no SVG left in the tank');
-    T.ok(fxHas(TANK_TASK), 'the clock draws the water');
-  });
-});
 
 test('a hot tank has bubbles, more of them the hotter it is', function (T) {
   mHot(function () {
@@ -41,12 +29,6 @@ test('a cool tank has a few slow bubbles while water runs', function (T) {
     state.mixTemp = 40; state.groupTemp = 40; updateWaterVisual();
     T.eq(_tank.bubbles, -1, 'not the hot bubbles');
     T.eq(tankBubbleCount(), 3, 'but three slow ones');
-  });
-});
-
-test('the tank surface moves enough to be seen', function (T) {
-  mHot(function () {
-    T.ok(TANK_AMP_REST >= 3, 'a rest swell of at least 3 px: ' + TANK_AMP_REST);
   });
 });
 
@@ -67,36 +49,8 @@ test('the tank water runs faster the more is flowing', function (T) {
   } finally { state.shotRunning = keep.run; state.flow = keep.flow; }
 });
 
-test('a change of pace does not jump the surface', function (T) {
-  var keep = { at: _tank.at, wt: _tank.wt, spd: _tank.spd };
-  try {
-    _tank.at = 1000; _tank.wt = 5; _tank.spd = 1;
-    var before = _tank.wt;
-    _tank.spd = 2.5;
-    drawTank(1033);
-    T.ok(_tank.wt - before < 0.1, 'it moves on by one frame, not to a new place: ' + (_tank.wt - before).toFixed(3));
-  } finally { _tank.at = keep.at; _tank.wt = keep.wt; _tank.spd = keep.spd; }
-});
 
-test('the tank canvas paints its water up to the level', function (T) {
-  mHot(function () {
-    tankLevel(60, true);
-    drawTank(performance.now());
-    var cv = T.el('#tankFx');
-    T.ok(mPainted(cv) > cv.width * cv.height * 0.3, 'water fills about half the tank');
-  });
-});
 
-test('effects off stills the tank but still shows its level', function (T) {
-  mHot(function () {
-    setFx(false);
-    T.eq(_tank.bubbles, -1, 'no bubbles');
-    T.ok(!fxHas(TANK_TASK), 'the clock leaves it alone');
-    tankLevel(60, true);
-    var cv = T.el('#tankFx');
-    T.ok(mPainted(cv) > 0, 'one still frame is drawn');
-  });
-});
 
 test('the clock stops behind the sleep screen and starts again on wake', function (T) {
   mHot(function () {

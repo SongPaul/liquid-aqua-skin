@@ -39,17 +39,15 @@ test('a gauge reading is rewritten only when it changed', function (T) {
 test('with a page over the main screen, its gauges, temperatures and tank are left alone', function (T) {
   var gt = document.getElementById('groupTemp'), was = gt.textContent;
   gt.textContent = 'X';
-  var placed = [], tank = 0;
+  var placed = [];
   try {
     perfWith({ _pageOpen: true, _monOpen: true, _asleep: false }, function () {
       updateMachineUI();
       T.eq(gt.textContent, 'X', 'main temperature untouched');
       T.ok(document.getElementById('monPressureVal').textContent !== '', 'the monitor gauge is written');
     });
-    perfWith({ _pageOpen: true, _asleep: false, drawTank: function () { tank++; },
+    perfWith({ _pageOpen: true, _asleep: false,
                gsPlace: function (p) { placed.push(p); } }, function () {
-      TANK_TASK.draw(performance.now());
-      T.eq(tank, 0, 'tank not drawn');
       var now = Date.now();
       _gsSeg.perfMain = { at: 0, to: 1, from: 0, t0: now - 50, dur: 1000, last: now, viz: 'pressure' };
       _gsSeg.monPerf = { at: 0, to: 1, from: 0, t0: now - 50, dur: 1000, last: now, viz: 'pressure' };
@@ -181,15 +179,6 @@ test('an unchanged store is not applied again', function (T) {
   }).then(function () { window.applyNight = was; }, function (e) { window.applyNight = was; throw e; });
 });
 
-test('the tank measures its canvas once, not on every frame', function (T) {
-  var cv = document.getElementById('tankFx');
-  T.ok(!!cv, 'there is a tank canvas');
-  perfWith({ _asleep: false, _pageOpen: false }, function () {
-    drawTank(performance.now());
-    var n = perfCountRects(cv, function () { drawTank(performance.now()); drawTank(performance.now()); drawTank(performance.now()); });
-    T.ok(n <= 1, 'measured ' + n + ' times for three frames');
-  });
-});
 
 test('a temperature gauge is not rebuilt for a tenth of a degree', function (T) {
   var tile = document.createElement('div'), sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

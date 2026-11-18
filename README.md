@@ -94,7 +94,7 @@ On the right are **Sleep** and **⚙** [Settings](#settings). Hold **Sleep** to 
 
 ### Tank, scale and dials
 
-The **tank** tile fills from the bottom with water that stands still at rest and moves while the machine pours. Its colour follows the **mix temperature**, which is the water that will actually reach the coffee: blue up to 80 °C, then one shade per degree through teal, green, yellow and orange, and red from 95 °C. Over it are the group, mix and steam temperatures and the tank level. While water is moving, waves and bubbles run and speed up with the machine's flow, up to about two and a half times at 8 ml/s; when the pour ends they settle and stop. A tank that is genuinely low turns red whatever the temperature. If a refill kit gives up, the tank says **Refill stopped** instead, so check the water supply rather than the tank. On a plumbed machine with the refill kit, the tank always reads full.
+The **tank** tile fills from the bottom with gently moving water. Its colour follows the **mix temperature**, which is the water that will actually reach the coffee: blue up to 80 °C, then one shade per degree through teal, green, yellow and orange, and red from 95 °C. Over it are the group, mix and steam temperatures and the tank level. While water is moving, bubbles rise and the waves speed up with the machine's flow, up to about two and a half times at 8 ml/s. A tank that is genuinely low turns red whatever the temperature. If a refill kit gives up, the tank says **Refill stopped** instead, so check the water supply rather than the tank. On a plumbed machine with the refill kit, the tank always reads full.
 
 Next to it are the live **weight** and the **timer**. Tap the weight to tare.
 

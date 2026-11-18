@@ -7,25 +7,6 @@ function calmRun(flag, run) {
   if (flag) state[flag] = true;
   try { return run(); } finally { keys.forEach(function (k) { state[k] = old[k]; }); }
 }
-function calmSettleTank() {
-  _tank.lvl = _tank.target; _tank.amp = TANK_AMP_REST; _tank.spd = 1;
-}
-
-test('a settled tank at rest stops redrawing', function (T) {
-  var was = prefs.fx, target = _tank.target; prefs.fx = true; _tank.target = 50;
-  try {
-    calmRun(null, function () {
-      calmSettleTank();
-      T.eq(TANK_TASK.draw(performance.now()), false, 'stops once still');
-      _tank.lvl = _tank.target - 5;
-      T.ok(TANK_TASK.draw(performance.now()) !== false, 'keeps going while the level moves');
-    });
-    calmRun('shotRunning', function () {
-      calmSettleTank();
-      T.ok(TANK_TASK.draw(performance.now()) !== false, 'keeps going while a shot pours');
-    });
-  } finally { prefs.fx = was; _tank.target = target; calmSettleTank(); }
-});
 
 test('bubbles rise only while water runs', function (T) {
   calmRun(null, function () { T.eq(tankBubblesShown(), 0, 'none at rest'); });
@@ -73,12 +54,11 @@ test('gauge crests rest while the machine is idle', function (T) {
   } finally { g.remove(); prefs.fx = was.fx; _pageOpen = was.p; }
 });
 
-test('starting to pour sets the resting water moving again', function (T) {
+test('starting to pour sets the resting gauge crests moving again', function (T) {
   var was = prefs.fx; prefs.fx = true;
-  fxStop(TANK_TASK); fxStop(GS_TASK);
+  fxStop(GS_TASK);
   try {
     calmRun('shotRunning', function () { motionWake(); });
-    T.ok(fxHas(TANK_TASK), 'the tank');
     T.ok(fxHas(GS_TASK), 'the gauges');
   } finally { prefs.fx = was; }
 });
@@ -121,44 +101,4 @@ test('the main screen panels read as glass without a blur', function (T) {
     T.eq(cs.backdropFilter, 'none', 'no blur');
     T.ok(/gradient/.test(cs.backgroundImage), 'a lit face: ' + cs.backgroundImage.slice(0, 60));
   } finally { quiet.forEach(function (c) { body.classList.toggle(c, was[c]); }); }
-});
-
-// A resting tank was woken by every machine report and drew one frame each
-// time, the phase having jumped by however long it slept: still water that
-// twitched three times a second.
-test('a resting tank is not woken by reports that change nothing', function (T) {
-  var was = { fx: prefs.fx, target: _tank.target }; prefs.fx = true; _tank.target = 50;
-  try {
-    calmRun(null, function () {
-      calmSettleTank();
-      drawTank(performance.now());
-      fxStop(TANK_TASK);
-      tankWake(); tankWake();
-      T.ok(!fxHas(TANK_TASK), 'still asleep');
-      _tank.target = 60; tankWake();
-      T.ok(fxHas(TANK_TASK), 'woken by a new level');
-    });
-  } finally { prefs.fx = was.fx; _tank.target = was.target; calmSettleTank(); fxStop(TANK_TASK); }
-});
-
-test('water that starts moving again picks up where it stopped', function (T) {
-  var was = { fx: prefs.fx, target: _tank.target }; prefs.fx = true; _tank.target = 50;
-  try {
-    calmRun(null, function () {
-      calmSettleTank();
-      var t = performance.now();
-      drawTank(t);
-      T.eq(TANK_TASK.draw(t + 16), false, 'rests');
-      var wt = _tank.wt;
-      _tank.target = 60;
-      drawTank(t + 5000);
-      T.eq(_tank.wt, wt, 'no jump across the time it rested');
-    });
-  } finally { prefs.fx = was.fx; _tank.target = was.target; calmSettleTank(); fxStop(TANK_TASK); }
-});
-
-test('the tank swell is low and drawn twenty times a second while it moves', function (T) {
-  T.ok(TANK_AMP_REST <= 4, 'rest swell ' + TANK_AMP_REST);
-  T.ok(TANK_AMP_RUN <= 6, 'pouring swell ' + TANK_AMP_RUN);
-  T.ok(TANK_TASK.hz <= 20, 'hz ' + TANK_TASK.hz);
 });
