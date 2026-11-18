@@ -82,3 +82,29 @@ test('saving plugin settings, when refused for want of a token, points at the ap
     });
   });
 });
+
+// The skin update section always offers a reload: whether the page is behind
+// what the gateway installed is not always something it can tell, and without
+// the button the only way left was to restart the app.
+test('the skin update section always holds a reload button', function (T) {
+  var box = document.createElement('div'); box.id = 'skinBox'; document.body.appendChild(box);
+  var was = skinRunningVer;
+  try {
+    skinRunningVer = skinVer();
+    renderSkinBox();
+    var b = Array.prototype.filter.call(box.querySelectorAll('button'), function (x) { return x.textContent === t('skinReload'); })[0];
+    T.ok(!!b, 'there even when the page looks current');
+    T.ok(!document.getElementById('btnReload'), 'not in the header');
+  } finally { skinRunningVer = was; box.remove(); }
+});
+
+test('reload waits while the machine is pouring', function (T) {
+  var reloads = 0, real = window.skinReloadNow, was = state.shotRunning;
+  window.skinReloadNow = function () { reloads++; };
+  try {
+    state.shotRunning = true; reloadSkin();
+    T.eq(reloads, 0, 'not mid-shot');
+    state.shotRunning = false; reloadSkin();
+    T.eq(reloads, 1, 'at rest');
+  } finally { window.skinReloadNow = real; state.shotRunning = was; }
+});

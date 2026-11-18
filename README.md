@@ -62,7 +62,7 @@ Leave out `tag` to take the latest release.
 2. Open the menu at the top right.
 3. Tap **Check for updates**.
 
-Settings › Updates › Skin lists the release history and says when a newer version is out. From Decaid 0.9.3, on the tablet itself and with automatic updates turned on in the app, the same page also offers **Check for updates**. If a new version is installed but the page is still running the old one, the same page offers **Reload**.
+Settings › Updates › Skin lists the release history and says when a newer version is out. From Decaid 0.9.3, on the tablet itself and with automatic updates turned on in the app, the same page also offers **Check for updates**. The same page always has **Reload**, which puts a newly installed version on screen without restarting the app; it stands out when the page can tell it is behind, and waits while the machine is running.
 
 **For development.** Serve the folder and open it in a browser. The skin finds the gateway on its own:
 

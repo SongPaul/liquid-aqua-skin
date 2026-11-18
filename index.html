@@ -3806,7 +3806,7 @@ var I18N={
     skinCheck:'Check for updates', skinChecking:'Checking\u2026', skinUpdated:'Updated \u2014 reload to use it', skinThrottled:'Checked a moment ago. Try again in half a minute.', skinCheckFailed:'Update check failed',
     skinNewer:'v{v} is available.', skinNewsFail:'Could not load the update history.',
     skinInstalledTag:'running', skinAll:'All releases',
-    skinStale:'v{v} is installed but this page is still running v{r}. Reload to use it.', skinReload:'Reload',
+    skinStale:'v{v} is installed but this page is still running v{r}. Reload to use it.', skinReload:'Reload', reloadBusy:'Wait until the machine has finished, then reload.',
     catApp:'App update', appNotes:"What's new", appUpToDate:'Decaid is up to date.', appChecking:'Checking for updates…',
     appDownloading:'Downloading…', appInstalling:'Installing…', appCheck:'Check for updates', appUpdateBtn:'Update Decaid',
     appOpenRelease:'Open release page', appManual:'This platform installs updates outside the app. Open the release page and install it there.',
@@ -4276,7 +4276,7 @@ var I18N={
     skinCheck:'업데이트 확인', skinChecking:'확인 중\u2026', skinUpdated:'업데이트했습니다 \u2014 새로고침하면 적용됩니다', skinThrottled:'방금 확인했습니다. 30초 뒤에 다시 해 보세요.', skinCheckFailed:'업데이트 확인 실패',
     skinNewer:'v{v}를 사용할 수 있습니다.', skinNewsFail:'업데이트 내역을 불러오지 못했습니다.',
     skinInstalledTag:'사용 중', skinAll:'전체 릴리스',
-    skinStale:'v{v}가 설치되었지만 이 화면은 아직 v{r}입니다. 새로고침하면 적용됩니다.', skinReload:'새로고침',
+    skinStale:'v{v}가 설치되었지만 이 화면은 아직 v{r}입니다. 새로고침하면 적용됩니다.', skinReload:'새로고침', reloadBusy:'머신 동작이 끝난 뒤 새로고침하세요.',
     catApp:'앱 업데이트', appNotes:'업데이트 내역', appUpToDate:'Decaid가 최신입니다.', appChecking:'업데이트 확인 중…',
     appDownloading:'다운로드 중…', appInstalling:'설치 중…', appCheck:'업데이트 확인', appUpdateBtn:'Decaid 업데이트',
     appOpenRelease:'릴리즈 페이지 열기', appManual:'이 플랫폼은 앱 밖에서 업데이트를 설치합니다. 릴리즈 페이지를 열어 설치하세요.',
@@ -10192,7 +10192,7 @@ function renderPhSkin(){
     +escapeHtml(t('installed'))+' '+(inst?('v'+escapeHtml(inst)):'\u2014')
     +' \u00b7 '+escapeHtml(t('available'))+' '+(latest?('v'+escapeHtml(latest)):'\u2014')+'</div>';
   h+='<div style="display:flex;flex-direction:column;gap:8px">'+skinViaAppHtml()+'</div>';
-  if(stale) h+='<button class="m-btn mb-analyze" style="margin-top:8px" onclick="location.reload()">'
+  h+='<button class="m-btn'+(stale?' mb-analyze':'')+'" style="margin-top:8px" onclick="reloadSkin()">'
     +escapeHtml(t('skinReload'))+'</button>';
   var note=stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
     :(inst&&latest&&verCmp(latest,inst)>0)?t('skinNewer').replace('{v}',latest)
@@ -10208,10 +10208,11 @@ function renderSkinBox(){
     +skinViaAppHtml()
     +'<button class="m-btn tinted" onclick="window.open(\'https://github.com/'+escapeAttr(skinRepo())+'/releases\',\'_blank\')">'
       +escapeHtml(t('skinAll'))+' \u2197</button>';
-  // What is on disk can be newer than what this page was loaded from, and only
-  // then is a reload what the user wants.
+  // What is on disk can be newer than what this page was loaded from; the
+  // reload is offered always, and stands out when that is plainly the case,
+  // since the page cannot always tell and the only other way is an app restart.
   var stale=!!(inst&&running&&verCmp(inst,running)>0);
-  if(stale) h+='<button class="m-btn" onclick="location.reload()">'+escapeHtml(t('skinReload'))+'</button>';
+  h+='<button class="m-btn'+(stale?' primary':'')+'" onclick="reloadSkin()">'+escapeHtml(t('skinReload'))+'</button>';
   h+='</div>';
   var note=stale?t('skinStale').replace('{v}',inst).replace('{r}',running)
     :(inst&&latest&&verCmp(latest,inst)>0)?t('skinNewer').replace('{v}',latest)
@@ -10660,6 +10661,11 @@ function applyCam(){
   if(on&&!_asleep){ camStart(); camWatchSize(); camApplyView(); if(!camLive()) camWatchStore(); }
   else { camStop(); camQrHide(); camPeerStop(); camMessage(null); }
   buildCarousel(); }
+// Reloading mid-pour would drop the live graph of the shot under way.
+function skinReloadNow(){ location.reload(); }
+function reloadSkin(){
+  if(pouring()){ toast(t('reloadBusy'),'err'); return; }
+  skinReloadNow(); }
 function setCamOn(on){ prefs.cam=!!on; savePrefs(); applyCam(); renderSpContent(); }
 function setCamUrl(v){ prefs.camUrl=(v||'').trim(); clearTimeout(setCamUrl._t);
   setCamUrl._t=setTimeout(function(){ savePrefs(); if(prefs.cam) camStart(); },600); }
