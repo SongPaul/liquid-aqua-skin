@@ -1204,6 +1204,14 @@ body.night .viz-row{background:rgba(255,255,255,.06)}
 .ep-pf select{width:112px}
 .ep-pf:nth-child(2) input{width:132px}
 .ep-pf input:focus,.ep-pf select:focus{outline:none;border-color:var(--accent)}
+.ep-calf .ep-calbtn{display:flex;align-items:center;gap:6px;min-height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--ctl-edge);background:var(--field);color:var(--ink);font-family:var(--font);cursor:pointer}
+.ep-calbtn b{font-size:14px;font-weight:800}
+.ep-calbtn small{font-size:10px;font-weight:700;color:var(--accent)}
+.ep-calbtn i{font-style:normal;color:var(--ink-mute)}
+.ep-calf .stop-line{display:flex;align-items:center;gap:6px;min-height:34px}
+.ep-calf .stop-k{font-size:11px;font-weight:700;color:var(--ink-mute);margin-left:4px}
+.ep-calf .ms-btn{width:30px;height:30px;font-size:16px;border-radius:9px}
+.ep-calf .grind-val{min-width:40px;text-align:center;font-size:15px}
 .ep-advtog{margin-left:auto;min-height:34px;padding:0 11px;border-radius:9px;cursor:pointer;
   border:1px solid var(--ctl-edge);background-color:var(--ctl-face);background-image:var(--ctl-sheen);
   font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute)}
@@ -2453,6 +2461,14 @@ body.night .ep-grid .gname{color:var(--ink)}
 .ep-afc .afc-v{font-size:18px;font-weight:800;color:var(--ink)}
 .ep-afc .afc-n{font-size:12px;font-weight:600;color:var(--ink-mute);margin-top:4px;line-height:1.5}
 .ep-afc .m-btn{padding:6px 12px;font-size:12px}
+.ep-stop .stop-own{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--ink)}
+.ep-stop .stop-boxes{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.ep-stop .stop-box{display:flex;align-items:center;gap:8px}
+.ep-stop .stop-box label{font-size:12px;font-weight:700;color:var(--ink-mute)}
+.pcf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px}
+.pcf-desc{font-size:13px;line-height:1.5;color:var(--ink)}
+.pcf-head .m-btn{flex-shrink:0}
+.pcf-ver{font-size:11px;font-weight:600;color:var(--ink-mute);margin-bottom:12px}
 .overlay.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .2s}
 .overlay.primed:not(.show){visibility:visible;opacity:.01;will-change:opacity}
 .overlay.primed.show{will-change:opacity}
@@ -3513,6 +3529,7 @@ body.night .toast{background:#1a1730;border-color:rgba(255,255,255,.1)}
 <div class="overlay" id="pluginCfgOverlay" onclick="closeModal(event,'pluginCfgOverlay')">
   <div class="modal"><div class="modal-head"><div class="modal-title" id="pluginCfgTitle">Plugin</div><button class="modal-close" onclick="closeModal(null,'pluginCfgOverlay')">×</button></div>
   <div class="modal-body">
+    <div id="pluginCfgHead"></div>
     <div id="pluginCfgFields"></div>
     <div class="ai-status" id="pluginCfgStatus"></div>
     <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'pluginCfgOverlay')" data-i18n="close">Close</button><button class="m-btn primary" id="pluginCfgSave" onclick="savePluginCfg()" data-i18n="save">Save</button></div>
@@ -4137,7 +4154,7 @@ var I18N={
     wfWaterNote:'Poured at {t}\u00b0, as the hot-water options are set.',
     wfStage_espresso:'Espresso', wfStage_water:'Hot water', wfStage_steam:'Steam',
     wfSaved:'Done', wfRecent:'Recent', wfLoaded:'Loaded', wfAll:'All', wfHistEmpty:'None of these yet', wfStartWhere:'Everything above is already set on the machine. Start it from Extract in the top bar, or from the group head.',
-    rsTitle:'Shot feedback', afcTitle:'Flow calibration (auto)', afcOpen:'Open plugin', afcOwn:'Set for this profile by Auto Flow Calibration.', afcOther:'Set from its last two weighed shots when this profile is loaded.', afcDry:'Dry run: worked out but not written to the machine.', afcOff:'Automatic flow calibration is off.', afcNone:'Nothing worked out for this profile yet.', afcWhyOther:'Left as it is: {r}', afcWhy_insufficient_history:'Left as it is: needs two weighed shots of this profile.', afcWhy_shots_disagree:'Left as it is: the last two shots disagree.', afcWhy_deadband:'Left as it is: already close enough.', afcWhy_external_override:'Left as it is: it was changed elsewhere.', afcWhy_no_scale_data:'Left as it is: the shots have no scale data.', afcWhy_profile_mismatch:'Left as it is: the shots were on another version of the profile.', afcWhy_machine_busy:'Left as it is: the machine was busy.', afcWhy_no_machine:'Left as it is: no machine connected.', afcWhy_non_de1_machine:'Left as it is: not a DE1.', afcWhy_insufficient_stable_region:'Left as it is: the shots had no steady stretch to measure.', ysVolume:'Profile stops at {a} ml', ysStep:'Profile stops at {a} g', ysTime:'Profile ends near {a} g', ysPast:'Last ended at {a} g', ysClock:'Profile ends at {n} s', rsTagChannel:'Channelling', rsTagCoarse:'Grind coarse', rsTagFine:'Grind fine', rsTagTemp:'Temperature off', rsVRanOut:'The profile ended before the target weight', rsMore:'Details', rsRanOut:'The profile\u2019s time ran out at {y}g ({p}% of {w}g)', rsRanOutFix:'Give the last step about {n}s more', rsRanOutWhy:'It was pouring about {f}g/s at the end, so {n}s more reaches the target.', rsRanOutTight:'Pressure sat at its limit, so less water came through than the profile asked. Change the grind first; lengthen the last step only if it still falls short.', rsRanOutYield:'Or, if it tasted good, set the yield to {y}g', rsRanOutYieldWhy:'That is what this profile pours in its time.', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. A yield or time that is off is marked on the last-shot card, and the full reading is in the shot log.',
+    rsTitle:'Shot feedback', afcTagOwn:'auto', afcTagHeld:'held', afcTagDry:'dry run', afcTagOff:'off', stopW:'Weight', stopV:'Volume', stopCommon:'Common values', plOpenPage:'Open plugin page', stopTitle:'Stop timing', stopOwnLbl:'Use this profile’s own values', stopHint:'Used while this profile is loaded; other profiles go back to the common values in Settings. Learning from shots moves these.', stopCommonNote:'The loaded profile uses its own: {a}', afcTitle:'Flow calibration (auto)', afcOpen:'Open plugin', afcOwn:'Set for this profile by Auto Flow Calibration.', afcOther:'Set from its last two weighed shots when this profile is loaded.', afcDry:'Dry run: worked out but not written to the machine.', afcOff:'Automatic flow calibration is off.', afcNone:'Nothing worked out for this profile yet.', afcWhyOther:'Left as it is: {r}', afcWhy_insufficient_history:'Left as it is: needs two weighed shots of this profile.', afcWhy_shots_disagree:'Left as it is: the last two shots disagree.', afcWhy_deadband:'Left as it is: already close enough.', afcWhy_external_override:'Left as it is: it was changed elsewhere.', afcWhy_no_scale_data:'Left as it is: the shots have no scale data.', afcWhy_profile_mismatch:'Left as it is: the shots were on another version of the profile.', afcWhy_machine_busy:'Left as it is: the machine was busy.', afcWhy_no_machine:'Left as it is: no machine connected.', afcWhy_non_de1_machine:'Left as it is: not a DE1.', afcWhy_insufficient_stable_region:'Left as it is: the shots had no steady stretch to measure.', ysVolume:'Profile stops at {a} ml', ysStep:'Profile stops at {a} g', ysTime:'Profile ends near {a} g', ysPast:'Last ended at {a} g', ysClock:'Profile ends at {n} s', rsTagChannel:'Channelling', rsTagCoarse:'Grind coarse', rsTagFine:'Grind fine', rsTagTemp:'Temperature off', rsVRanOut:'The profile ended before the target weight', rsMore:'Details', rsRanOut:'The profile\u2019s time ran out at {y}g ({p}% of {w}g)', rsRanOutFix:'Give the last step about {n}s more', rsRanOutWhy:'It was pouring about {f}g/s at the end, so {n}s more reaches the target.', rsRanOutTight:'Pressure sat at its limit, so less water came through than the profile asked. Change the grind first; lengthen the last step only if it still falls short.', rsRanOutYield:'Or, if it tasted good, set the yield to {y}g', rsRanOutYieldWhy:'That is what this profile pours in its time.', rsSetting:'Read the shot', rsSettingDesc:'When a shot ends, its pressure, flow and weight are checked right here, with no AI and no network. A yield or time that is off is marked on the last-shot card, and the full reading is in the shot log.',
     rsModeIcon:'On', rsModeOff:'Off',
    
     rsYield:'Yield {y}g (target {w}g)', rsYieldOnly:'Yield {y}g', rsStopOther:'The shot was stopped ({r}), so this weight says nothing about the grind', rsVShort:'It came up short of the target',
@@ -4612,7 +4629,7 @@ var I18N={
     wfWaterNote:'온수 설정대로 {t}°로 내립니다.',
     wfStage_espresso:'에스프레소', wfStage_water:'온수', wfStage_steam:'스팀',
     wfSaved:'완료', wfRecent:'최근 워크플로우', wfLoaded:'불러왔습니다', wfAll:'전체', wfHistEmpty:'해당하는 기록이 없습니다', wfStartWhere:'위 내용은 이미 머신에 저장됐습니다. 상단의 추출 버튼이나 그룹헤드로 시작하세요.',
-    rsTitle:'추출 피드백', afcTitle:'유량 보정 (자동)', afcOpen:'플러그인 열기', afcOwn:'Auto Flow Calibration이 이 프로파일에 맞춘 값입니다.', afcOther:'이 프로파일을 불러오면 최근 저울 샷 두 개로 맞춥니다.', afcDry:'시험 모드: 계산만 하고 머신에는 쓰지 않습니다.', afcOff:'자동 유량 보정이 꺼져 있습니다.', afcNone:'아직 이 프로파일로 계산한 값이 없습니다.', afcWhyOther:'그대로 둠: {r}', afcWhy_insufficient_history:'그대로 둠: 이 프로파일의 저울 샷이 두 개 필요합니다.', afcWhy_shots_disagree:'그대로 둠: 최근 두 샷의 결과가 서로 다릅니다.', afcWhy_deadband:'그대로 둠: 지금 값과 차이가 작습니다.', afcWhy_external_override:'그대로 둠: 다른 곳에서 값을 바꿨습니다.', afcWhy_no_scale_data:'그대로 둠: 샷에 저울 기록이 없습니다.', afcWhy_profile_mismatch:'그대로 둠: 샷이 다른 버전의 프로파일입니다.', afcWhy_machine_busy:'그대로 둠: 머신이 사용 중이었습니다.', afcWhy_no_machine:'그대로 둠: 머신이 연결돼 있지 않습니다.', afcWhy_non_de1_machine:'그대로 둠: DE1이 아닙니다.', afcWhy_insufficient_stable_region:'그대로 둠: 샷에 쟴 만한 안정 구간이 없습니다.', ysVolume:'프로파일 {a}ml에서 멈춤', ysStep:'프로파일 {a}g에서 멈춤', ysTime:'프로파일 끝 약 {a}g', ysPast:'지난번 {a}g에서 끝남', ysClock:'프로파일 {n}초에 끝', rsTagChannel:'채널링', rsTagCoarse:'분쇄 굵음', rsTagFine:'분쇄 고움', rsTagTemp:'온도 이탈', rsVRanOut:'목표 무게 전에 프로파일이 끝났습니다', rsMore:'자세히', rsRanOut:'프로파일 시간이 끝나 {y}g에서 멈췄습니다 (목표 {w}g, {p}%)', rsRanOutFix:'마지막 단계를 약 {n}초 늘리세요', rsRanOutWhy:'끝날 때 초당 약 {f}g씩 나오고 있었으니 {n}초를 더 주면 목표에 닿습니다.', rsRanOutTight:'압력이 상한에 걸려 물이 프로파일 요구만큼 나오지 못했습니다. 먼저 분쇄를 바꿔 보고, 그래도 모자라면 마지막 단계를 늘리세요.', rsRanOutYield:'또는 맛이 좋았다면 추출량을 {y}g으로', rsRanOutYieldWhy:'이 프로파일이 정해진 시간에 내리는 양입니다.', rsSetting:'추출 후 분석', rsSettingDesc:'샷이 끝나면 압력·유량·무게 기록을 이 기기에서 바로 분석합니다(AI·인터넷을 쓰지 않음). 추출량이나 시간이 벗어나면 이전 샷 카드에 작게 표시되고, 자세한 내용은 샷 기록에서 볼 수 있습니다.',
+    rsTitle:'추출 피드백', afcTagOwn:'자동', afcTagHeld:'그대로', afcTagDry:'시험', afcTagOff:'꺼짐', stopW:'무게', stopV:'부피', stopCommon:'공통 값', plOpenPage:'플러그인 화면 열기', stopTitle:'추출 정지 배수', stopOwnLbl:'이 프로파일만의 값 사용', stopHint:'이 프로파일을 불러왔을 때만 쓰고, 다른 프로파일은 설정의 공통 값으로 돌아갑니다. 샷에서 배우는 자동 학습도 이 값을 움직입니다.', stopCommonNote:'불러온 프로파일은 자체 값 사용 중: {a}', afcTitle:'유량 보정 (자동)', afcOpen:'플러그인 열기', afcOwn:'Auto Flow Calibration이 이 프로파일에 맞춘 값입니다.', afcOther:'이 프로파일을 불러오면 최근 저울 샷 두 개로 맞춥니다.', afcDry:'시험 모드: 계산만 하고 머신에는 쓰지 않습니다.', afcOff:'자동 유량 보정이 꺼져 있습니다.', afcNone:'아직 이 프로파일로 계산한 값이 없습니다.', afcWhyOther:'그대로 둠: {r}', afcWhy_insufficient_history:'그대로 둠: 이 프로파일의 저울 샷이 두 개 필요합니다.', afcWhy_shots_disagree:'그대로 둠: 최근 두 샷의 결과가 서로 다릅니다.', afcWhy_deadband:'그대로 둠: 지금 값과 차이가 작습니다.', afcWhy_external_override:'그대로 둠: 다른 곳에서 값을 바꿨습니다.', afcWhy_no_scale_data:'그대로 둠: 샷에 저울 기록이 없습니다.', afcWhy_profile_mismatch:'그대로 둠: 샷이 다른 버전의 프로파일입니다.', afcWhy_machine_busy:'그대로 둠: 머신이 사용 중이었습니다.', afcWhy_no_machine:'그대로 둠: 머신이 연결돼 있지 않습니다.', afcWhy_non_de1_machine:'그대로 둠: DE1이 아닙니다.', afcWhy_insufficient_stable_region:'그대로 둠: 샷에 쟴 만한 안정 구간이 없습니다.', ysVolume:'프로파일 {a}ml에서 멈춤', ysStep:'프로파일 {a}g에서 멈춤', ysTime:'프로파일 끝 약 {a}g', ysPast:'지난번 {a}g에서 끝남', ysClock:'프로파일 {n}초에 끝', rsTagChannel:'채널링', rsTagCoarse:'분쇄 굵음', rsTagFine:'분쇄 고움', rsTagTemp:'온도 이탈', rsVRanOut:'목표 무게 전에 프로파일이 끝났습니다', rsMore:'자세히', rsRanOut:'프로파일 시간이 끝나 {y}g에서 멈췄습니다 (목표 {w}g, {p}%)', rsRanOutFix:'마지막 단계를 약 {n}초 늘리세요', rsRanOutWhy:'끝날 때 초당 약 {f}g씩 나오고 있었으니 {n}초를 더 주면 목표에 닿습니다.', rsRanOutTight:'압력이 상한에 걸려 물이 프로파일 요구만큼 나오지 못했습니다. 먼저 분쇄를 바꿔 보고, 그래도 모자라면 마지막 단계를 늘리세요.', rsRanOutYield:'또는 맛이 좋았다면 추출량을 {y}g으로', rsRanOutYieldWhy:'이 프로파일이 정해진 시간에 내리는 양입니다.', rsSetting:'추출 후 분석', rsSettingDesc:'샷이 끝나면 압력·유량·무게 기록을 이 기기에서 바로 분석합니다(AI·인터넷을 쓰지 않음). 추출량이나 시간이 벗어나면 이전 샷 카드에 작게 표시되고, 자세한 내용은 샷 기록에서 볼 수 있습니다.',
     rsModeIcon:'사용', rsModeOff:'사용 안 함',
    
     rsYield:'추출량 {y}g (목표 {w}g)', rsYieldOnly:'추출량 {y}g', rsStopOther:'샷이 도중에 멈춰({r}) 이번 무게로는 분쇄를 판단할 수 없습니다', rsVShort:'목표보다 적게 나왔습니다',
@@ -8546,6 +8563,9 @@ function applyPrefsObject(p){
   if(p.slHide&&typeof p.slHide==='object') prefs.slHide=p.slHide;
   if(p.brewTemp&&typeof p.brewTemp==='object') prefs.brewTemp=p.brewTemp;
   if(p.brewTempBase&&typeof p.brewTempBase==='object') prefs.brewTempBase=p.brewTempBase;
+  if(p.stopMult&&typeof p.stopMult==='object') prefs.stopMult=p.stopMult;
+  if(p.stopBase&&typeof p.stopBase==='object') prefs.stopBase=p.stopBase;
+  if(p.stopLast&&typeof p.stopLast==='object') prefs.stopLast=p.stopLast;
   if(typeof p.autoDye==='boolean') prefs.autoDye=p.autoDye;
   if(typeof p.hwAppStopOff==='boolean') prefs.hwAppStopOff=p.hwAppStopOff;
   if(typeof p.night==='boolean') prefs.night=p.night;
@@ -9689,8 +9709,10 @@ function setRefillKitFull(v){ prefs.refillKitFull=v; savePrefs(); updateWaterUI(
 // The gateway's own defaults are shown so a value can be put back.
 var FLOW_MULT_DEF={weightFlowMultiplier:1.0,volumeFlowMultiplier:0.3,hotWaterFlowMultiplier:0.3};
 function flowMultRow(key,label,step,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0), d=FLOW_MULT_DEF[key];
+  var sk=STOP_OF[key], own=sk&&stopOwn(); if(own) v=stopBaseVals()[sk];
   return '<div class="set-row"><div class="set-info"><div class="set-name">'+label+'</div>'
-    +(d!=null?'<div class="set-desc">'+escapeHtml(t('fcDefault').replace('{v}',d.toFixed(digits)))+'</div>':'')+'</div>'
+    +(d!=null?'<div class="set-desc">'+escapeHtml(t('fcDefault').replace('{v}',d.toFixed(digits)))+'</div>':'')
+    +(own?'<div class="set-desc">'+escapeHtml(t('stopCommonNote').replace('{a}',own[sk].toFixed(digits)))+'</div>':'')+'</div>'
     +'<div class="grind-stepper"><button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+(-step)+','+digits+')">−</button>'
     +'<span class="grind-val sp-num" id="fm-'+key+'" role="button" onclick="fmKeypad(this,\''+key+'\','+digits+')">'+v.toFixed(digits)+'</span><span class="fm-unit">'+escapeHtml(t('fcSec'))+'</span>'
     +'<button class="ms-btn" onclick="adjustFlowMult(\''+key+'\','+step+','+digits+')">+</button></div>'
@@ -9701,9 +9723,105 @@ function fmKeypad(el,key,digits){
     onOk:function(x){ adjustFlowMult(key,x-(gwSettings[key]!=null?gwSettings[key]:0),digits); } }); }
 function flowMultReset(key,digits){ var d=FLOW_MULT_DEF[key]; if(d==null) return;
   adjustFlowMult(key,d-(gwSettings[key]!=null?gwSettings[key]:0),digits==null?2:digits); }
-function adjustFlowMult(key,delta,digits){ var v=(gwSettings[key]!=null?gwSettings[key]:0)+delta; v=Math.max(0,parseFloat(v.toFixed(digits))); gwSettings[key]=v;
+function adjustFlowMult(key,delta,digits){
+  var sk=STOP_OF[key];
+  if(sk&&stopOwn()){ var bv=Math.max(0,parseFloat((stopBaseVals()[sk]+delta).toFixed(digits)));
+    prefs.stopBase=stopBaseVals(); prefs.stopBase[sk]=bv; savePrefs();
+    var be=document.getElementById('fm-'+key); if(be) be.textContent=bv.toFixed(digits); return; }
+  var v=(gwSettings[key]!=null?gwSettings[key]:0)+delta; v=Math.max(0,parseFloat(v.toFixed(digits))); gwSettings[key]=v;
+  if(sk&&prefs.stopLast){ prefs.stopBase=stopBaseVals(); prefs.stopBase[sk]=v; prefs.stopLast[sk]=v; savePrefs(); }
   var el=document.getElementById('fm-'+key); if(el) el.textContent=v.toFixed(digits);
   var body={}; body[key]=v; clearTimeout(adjustFlowMult._t); adjustFlowMult._t=setTimeout(function(){ api('POST','/api/v1/settings',body).catch(function(e){ spFailed(e); }); },500); }
+// ── Stop timing, per profile ───────────────────────────────────────
+// The two stop multipliers are the gateway's, one pair for every profile: a
+// shot reads them as it starts. A profile can keep its own pair, as Streamline
+// allows. They go to the gateway while that profile is loaded and the common
+// pair comes back when another is. The common pair is remembered the first
+// time a profile's own goes out, and taken up again when it was changed
+// somewhere else -- the live value then differs from the last one sent.
+var STOP_OF={weightFlowMultiplier:'w',volumeFlowMultiplier:'v'};
+function profKeyOf(p){
+  if(!p) return null;
+  if(p.id&&p.id!=='current'&&p.id!=='guide') return p.id;
+  var ti=p.profile&&p.profile.title; return ti?('t:'+ti):null; }
+function stopOwn(k){
+  k=k||profileKey();
+  var o=k&&prefs.stopMult&&prefs.stopMult[k];
+  return (o&&typeof o==='object'&&o.w!=null&&o.v!=null)?o:null; }
+function stopLiveVals(){
+  return { w:gwSettings.weightFlowMultiplier!=null?+gwSettings.weightFlowMultiplier:FLOW_MULT_DEF.weightFlowMultiplier,
+           v:gwSettings.volumeFlowMultiplier!=null?+gwSettings.volumeFlowMultiplier:FLOW_MULT_DEF.volumeFlowMultiplier }; }
+function stopBaseVals(){
+  var b=prefs.stopBase;
+  return (b&&b.w!=null&&b.v!=null)?{w:+b.w,v:+b.v}:stopLiveVals(); }
+function stopEq(a,b){ return !!a&&!!b&&Math.abs(a.w-b.w)<1e-6&&Math.abs(a.v-b.v)<1e-6; }
+function stopSync(){
+  if(state.shotRunning) return Promise.resolve();
+  var own=stopOwn();
+  if(!own&&!prefs.stopLast) return Promise.resolve();
+  return api('GET','/api/v1/settings').then(function(gs){
+    if(!gs||state.shotRunning) return;
+    var live={w:+gs.weightFlowMultiplier,v:+gs.volumeFlowMultiplier};
+    if(!isFinite(live.w)||!isFinite(live.v)) return;
+    gwSettings.weightFlowMultiplier=live.w; gwSettings.volumeFlowMultiplier=live.v;
+    if(!prefs.stopBase||(prefs.stopLast&&!stopEq(live,prefs.stopLast))) prefs.stopBase={w:live.w,v:live.v};
+    var cur=stopOwn(), want=cur?{w:+cur.w,v:+cur.v}:stopBaseVals();
+    prefs.stopLast={w:want.w,v:want.v}; savePrefs();
+    if(stopEq(live,want)) return;
+    return api('POST','/api/v1/settings',{weightFlowMultiplier:want.w,volumeFlowMultiplier:want.v}).then(function(){
+      gwSettings.weightFlowMultiplier=want.w; gwSettings.volumeFlowMultiplier=want.v; }); })
+    .catch(function(){}); }
+function stopLearnWrite(cur,next){
+  var own=stopOwn();
+  if(own){ own.w=next; }
+  else if(prefs.stopLast){ prefs.stopBase=stopBaseVals(); prefs.stopBase.w=next; }
+  if(prefs.stopLast) prefs.stopLast.w=next;
+  if(own||prefs.stopLast) savePrefs();
+  return api('POST','/api/v1/settings',{weightFlowMultiplier:next}).then(function(){
+    gwSettings.weightFlowMultiplier=next;
+    var el=document.getElementById('fm-weightFlowMultiplier'); if(el&&!own) el.textContent=next.toFixed(1);
+    syncStopRow(); }); }
+var STOP_SPEC={w:{step:0.1,dp:1,max:5,unit:''},v:{step:0.05,dp:2,max:5,unit:'s'}};
+function stopRowHtml(p){
+  var k=profKeyOf(p); if(!k) return '';
+  var own=stopOwn(k);
+  var h='<span>'+escapeHtml(t('stopTitle'))+'</span><div class="stop-line" title="'+escapeAttr(t('stopHint'))+'">'
+    +sw('stopOwnSw',!!own,'stopSetOwn(stopEditKey(),this.checked)');
+  if(own) h+=['w','v'].map(function(x){ var sp=STOP_SPEC[x];
+      return '<span class="stop-k">'+escapeHtml(t(x==='w'?'stopW':'stopV'))+'</span>'
+        +'<button type="button" class="ms-btn" onclick="stopStep(\''+x+'\','+(-sp.step)+')">\u2212</button>'
+        +'<span class="grind-val sp-num" role="button" id="stopVal-'+x+'" onclick="stopKeypad(\''+x+'\')">'+(+own[x]).toFixed(sp.dp)+'</span>'
+        +'<button type="button" class="ms-btn" onclick="stopStep(\''+x+'\','+sp.step+')">+</button>'; }).join('');
+  else h+='<span class="stop-k">'+escapeHtml(t('stopCommon'))+'</span>';
+  return h+'</div>'; }
+function syncStopRow(){
+  var el=document.getElementById('epStop'); if(!el||!editing) return;
+  el.innerHTML=stopRowHtml(editing); }
+function stopSetOwn(k,on){
+  if(!prefs.stopMult) prefs.stopMult={};
+  var first=!on?Promise.resolve(null):prefs.stopBase?Promise.resolve(stopBaseVals())
+    :api('GET','/api/v1/settings').then(function(gs){
+      if(gs){ gwSettings.weightFlowMultiplier=gs.weightFlowMultiplier; gwSettings.volumeFlowMultiplier=gs.volumeFlowMultiplier; }
+      return stopLiveVals(); },function(){ return stopLiveVals(); });
+  return first.then(function(b){
+    if(on){ if(!prefs.stopBase) prefs.stopBase={w:b.w,v:b.v}; prefs.stopMult[k]={w:b.w,v:b.v}; }
+    else delete prefs.stopMult[k];
+    savePrefs(); syncStopRow();
+    if(k===profileKey()) return stopSync(); }); }
+function stopEditKey(){ return editing?profKeyOf(editing):null; }
+function stopSet(x,v){
+  var k=stopEditKey(), own=k&&stopOwn(k); if(!own) return;
+  var sp=STOP_SPEC[x];
+  own[x]=Math.max(0,Math.min(sp.max,+(+v).toFixed(sp.dp)));
+  savePrefs();
+  var el=document.getElementById('stopVal-'+x); if(el) el.textContent=own[x].toFixed(sp.dp);
+  if(k===profileKey()){ clearTimeout(stopSet._t); stopSet._t=setTimeout(stopSync,500); } }
+function stopStep(x,d){ var k=stopEditKey(), own=k&&stopOwn(k); if(own) stopSet(x,+own[x]+d); }
+function stopKeypad(x){
+  var k=stopEditKey(), own=k&&stopOwn(k); if(!own) return;
+  var sp=STOP_SPEC[x];
+  openKeypadFor({ value:+own[x], dp:sp.dp, min:0, max:sp.max, title:t(x==='w'?'fcWeight':'fcVolume'), unit:sp.unit,
+    onOk:function(v){ if(v!=null) stopSet(x,v); } }); }
 // ── The machine's own flow calibration ─────────────────────────────
 // The DE1 measures the water it pumps and stops hot water, and a shot with no
 // scale, on that measurement. When it reads high the cup gets less than was
@@ -10296,11 +10414,11 @@ function afcLineHtml(s,title){
   else if(cal.ownsCurrentMultiplier) note=t('afcOwn');
   else if(dec&&dec.reason) note=afcWhy(dec.reason);
   else note=t('afcNone');
-  return '<div class="afc-head"><span class="afc-t">'+escapeHtml(t('afcTitle'))+'</span>'
-    +(cur?'<span class="afc-v">'+cur+'</span>':'')
-    +'<button type="button" class="m-btn" onclick="openPluginPage(AFC_ID,{name:\'Auto Flow Calibration\',onClose:afcLoad})">'
-      +escapeHtml(t('afcOpen'))+'</button></div>'
-    +'<div class="afc-n">'+escapeHtml(note)+'</div>'; }
+  var tag=!s.plugin.enabled?t('afcTagOff'):!active?'':s.plugin.dryRun?t('afcTagDry'):cal.ownsCurrentMultiplier?t('afcTagOwn'):t('afcTagHeld');
+  return '<span>'+escapeHtml(t('afcTitle'))+'</span>'
+    +'<button type="button" class="ep-calbtn" title="'+escapeAttr(note)+'" aria-label="'+escapeAttr(t('afcOpen')+': '+note)+'"'
+    +' onclick="openPluginPage(AFC_ID,{name:\'Auto Flow Calibration\',onClose:afcLoad})">'
+    +'<b>'+(cur||'\u2014')+'</b>'+(tag?'<small>'+escapeHtml(tag)+'</small>':'')+'<i>\u203a</i></button>'; }
 var AFC_WHY=['insufficient_history','shots_disagree','deadband','external_override','no_scale_data',
   'profile_mismatch','machine_busy','no_machine','non_de1_machine','insufficient_stable_region'];
 function afcWhy(r){ return AFC_WHY.indexOf(r)>=0?t('afcWhy_'+r):t('afcWhyOther').replace('{r}',r); }
@@ -10311,10 +10429,8 @@ function renderPluginList(){ var box=document.getElementById('pluginList'); if(!
     var info=document.createElement('div'); info.className='plugin-info';
     info.innerHTML='<div class="plugin-name">'+escapeHtml(p.name||p.id)+' <span class="plugin-ver">v'+escapeHtml(p.version||'')+'</span></div>'+(p.author?'<div class="plugin-author">'+escapeHtml(p.author)+'</div>':'');
     var actions=document.createElement('div'); actions.className='plugin-actions';
-    var hasCfg=pluginCfgKeys(p.settings).length>0;
     var managed=pluginsManaged();
-    if(hasCfg&&!managed){ var cfg=document.createElement('button'); cfg.className='m-btn'; cfg.textContent='⚙'; cfg.title=t('settings'); cfg.onclick=function(){ openPluginCfg(p.id); }; actions.appendChild(cfg); }
-    if(pluginHasUI(p)){ var open=document.createElement('button'); open.className='m-btn'; open.textContent=t('open'); open.onclick=function(){ openPluginPage(p.id,{name:p.name}); }; actions.appendChild(open); }
+    if(pluginCfgKeys(p.settings).length>0||pluginHasUI(p)||p.description){ var open=document.createElement('button'); open.className='m-btn'; open.textContent=t('open'); open.onclick=function(){ openPluginCfg(p.id); }; actions.appendChild(open); }
     if(managed){ var st=document.createElement('span'); st.className='gp-state'+(p.loaded?' on':''); st.textContent=t(p.loaded?'enabled':'disabled'); actions.appendChild(st); }
     else { var lbl=document.createElement('label'); lbl.className='switch'; var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!p.loaded;
     cb.onchange=function(){ togglePlugin(p.id,cb.checked,cb); }; var tr=document.createElement('span'); tr.className='track'; lbl.appendChild(cb); lbl.appendChild(tr); actions.appendChild(lbl); }
@@ -10377,12 +10493,25 @@ function togglePlugin(id,on,cb){ return api('POST','/api/v1/plugins/'+encodeURIC
     .catch(function(e){ toast(needsApp(e)?t('pluginViaApp'):t('tPluginToggleFailed'),'err'); if(cb) cb.checked=!on; }); }
 // Schema-driven plugin settings form (covers Visualizer credentials, etc.)
 var pluginCfgId=null, pluginCfgSchema=null;
+function pluginCfgHeadHtml(p){
+  var h='';
+  if(p.description||pluginHasUI(p)) h+='<div class="pcf-head">'
+    +(p.description?'<div class="pcf-desc">'+escapeHtml(p.description)+'</div>':'<span></span>')
+    +(pluginHasUI(p)?'<button type="button" class="m-btn primary" onclick="openPluginPage(pluginCfgId,{name:document.getElementById(\'pluginCfgTitle\').textContent})">'
+      +escapeHtml(t('plOpenPage'))+'</button>':'')+'</div>';
+  h+='<div class="pcf-ver">v'+escapeHtml(p.version||'')+(p.author?' \u00b7 '+escapeHtml(p.author):'')+'</div>';
+  return h; }
 function openPluginCfg(id){ var p=pluginsCache.find(function(x){return x.id===id;}); if(!p) return;
   pluginCfgId=id; pluginCfgSchema=p.settings||{};
   document.getElementById('pluginCfgTitle').textContent=p.name||id;
   document.getElementById('pluginCfgStatus').textContent='';
-  var box=document.getElementById('pluginCfgFields'); box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
+  document.getElementById('pluginCfgHead').innerHTML=pluginCfgHeadHtml(p);
+  var editable=pluginCfgKeys(pluginCfgSchema).length>0&&!pluginsManaged();
+  document.getElementById('pluginCfgSave').hidden=!editable;
+  var box=document.getElementById('pluginCfgFields');
   document.getElementById('pluginCfgOverlay').classList.add('show');
+  if(!editable){ box.innerHTML=pluginCfgKeys(pluginCfgSchema).length?'<div class="ls-empty">'+escapeHtml(t('pluginViaApp'))+'</div>':''; return; }
+  box.innerHTML='<div class="ls-empty">'+t('loading')+'</div>';
   // fetch current values (secure -> {isSet})
   api('GET','/api/v1/plugins/'+encodeURIComponent(id)+'/settings').then(function(cur){ renderPluginCfg(cur||{}); }).catch(function(){ renderPluginCfg({}); });
 }
@@ -10398,7 +10527,10 @@ function renderPluginCfg(cur){ var box=document.getElementById('pluginCfgFields'
     else if(s.secure){ input=document.createElement('input'); input.type='password'; input.placeholder=(v&&v.isSet)?'•••••• (saved)':''; }
     else { input=document.createElement('input'); input.type='text'; input.value=(v!=null&&typeof v!=='object')?v:''; }
     input.setAttribute('data-key',key); input.setAttribute('data-type',s.type||'string'); input.setAttribute('data-secure',s.secure?'1':'0');
-    wrap.appendChild(input); box.appendChild(wrap); });
+    if(s.type==='boolean'){ var swl=document.createElement('label'); swl.className='switch'; var trk=document.createElement('span'); trk.className='track';
+      swl.appendChild(input); swl.appendChild(trk); wrap.appendChild(swl); }
+    else wrap.appendChild(input);
+    box.appendChild(wrap); });
   if(!keys.length) box.innerHTML='<div class="ls-empty">'+t('noSettings')+'</div>';
 }
 function savePluginCfg(){ if(!pluginCfgId) return; var patch={};
@@ -11314,7 +11446,7 @@ function selectProfile(p,keepGuideSrc,withRecipe){
   var title=(p.profile&&p.profile.title)||p.id; curProfileObj=p;
   syncRecipe();
   if(chartBackToEspresso()) drawChart();
-  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark();
+  api('PUT','/api/v1/workflow',{profile:brewProfileForMachine(p.profile)}).then(function(){ toast('▶ '+title,'ok'); refreshCarouselMark(); stopSync();
     if(withRecipe) applyProfileRecipe(p); }).catch(function(){ toast(t('tProfileError'),'err'); }); }
 // A profile that is not in the strip has to be pinned into it first; one that is
 // only needs the marker moved, which keeps the carousel from jumping.
@@ -12603,6 +12735,8 @@ function profFieldsHtml(pr){
         return '<option value="'+k[0]+'"'+(bev===k[0]?' selected':'')+'>'+escapeHtml(t(k[1]))+'</option>'; }).join('')+'</select>')
     +fld(t('authorLabel'),'<input id="epAuthor" maxlength="40" value="'+escapeAttr(pr.author||'')+'">')
     +fld(t('stopWeight'),'<input id="epTW" type="number" min="0" max="200" step="0.1" placeholder="'+escapeAttr(t('noLimit'))+'" value="'+escapeAttr(pfNumV(pr.target_weight))+'">')
+    +'<div class="ep-pf ep-calf" id="epAfc"'+(_afc?'':' hidden')+'>'+afcLineHtml(_afc,pr.title)+'</div>'
+    +((editing&&!editing.isNew)?'<div class="ep-pf ep-calf" id="epStop">'+stopRowHtml(editing)+'</div>':'')
     +'<button type="button" class="ep-advtog'+(epAdvOpen?' on':'')+'" onclick="epAdvToggle()">'
       +escapeHtml(t('advFields'))+' '+(epAdvOpen?'\u25b4':'\u25be')+'</button>'
     +'</div>';
@@ -12665,7 +12799,6 @@ function renderEpEditor(){ _epEdLang=_lang; var wrap=document.getElementById('ep
     +'<textarea class="ep-notes" id="epNotes" rows="2" placeholder="Notes…">'+escapeHtml(pr.notes||'')+'</textarea>'
     +(editing.isNew?'':tagEditor(editing))
     +profFieldsHtml(pr)
-    +'<div class="ep-afc" id="epAfc"'+(_afc?'':' hidden')+'>'+afcLineHtml(_afc,pr.title)+'</div>'
     +aipResultHtml()
     +'</div>';
   wrap.innerHTML=meta
@@ -20357,16 +20490,11 @@ function sawLearn(sh){
     var next=sawLearnFrom(sh,+cur);
     lsSet('aurora_saw_last',sh.id);
     if(next==null) return null;
-    return api('POST','/api/v1/settings',{weightFlowMultiplier:next}).then(function(){
-      gwSettings.weightFlowMultiplier=next;
-      var el=document.getElementById('fm-weightFlowMultiplier'); if(el) el.textContent=next.toFixed(1);
+    return stopLearnWrite(+cur,next).then(function(){
       var msg=t('sawLearned').replace('{a}',(+cur).toFixed(1)).replace('{b}',next.toFixed(1))
         .replace('{y}',sawFinal(sh).toFixed(1)).replace('{w}',(+sh.workflow.context.targetYield).toFixed(1));
       toastActs(msg,[{label:t('undo'),fn:function(){
-        api('POST','/api/v1/settings',{weightFlowMultiplier:+cur}).then(function(){
-          gwSettings.weightFlowMultiplier=+cur;
-          var e2=document.getElementById('fm-weightFlowMultiplier'); if(e2) e2.textContent=(+cur).toFixed(1); })
-          .catch(function(){}); }}],10000);
+        stopLearnWrite(next,+cur).catch(function(){}); }}],10000);
       return next; }); })
     .catch(function(){ return null; }); }
 // Endings that were not the puck's doing. What landed in the cup after one of
@@ -21377,7 +21505,8 @@ function loadWorkflow(){
       if(match&&prevId===match.id&&carItems.indexOf(match)>=0) carKeepLoaded(match,before!==JSON.stringify(w.profile));
       else carShowLoaded(); }
     guideProfileChanged();
-    restoreBrewTemp(w.profile); }
+    restoreBrewTemp(w.profile);
+    if(prevId!==(curProfileObj&&curProfileObj.id)) stopSync(); }
   syncRecipe(); syncAux(); updateBeanInfo(); syncGrinder(); }).catch(function(){}).then(function(){ loadFree('workflow');
     _wfSeen=true; carFirstBuild(); });
 }

@@ -105,16 +105,25 @@ test('the plugin list opens a page over the skin, not a new window', function (T
   if (!had) document.body.appendChild(box);
   try {
     pluginsCache = [{ id: 'auto-flow-cal.reaplugin', name: 'Auto Flow Calibration', loaded: true,
+      description: 'Automatically calibrate DE1 flow', version: '1.4.0',
+      settings: { Enabled: { type: 'boolean', default: true }, Damping: { type: 'number', default: 0.5 } },
       api: [{ id: 'ui', type: 'http' }] }];
     renderPluginList();
     var btn = Array.prototype.filter.call(document.querySelectorAll('#pluginList .m-btn'),
       function (b) { return b.textContent === t('open'); })[0];
-    T.ok(!!btn, 'an Open button');
+    T.ok(!!btn, 'one Open button');
+    T.eq(document.querySelectorAll('#pluginList .m-btn').length, 1, 'no separate gear');
     btn.click();
+    T.ok(document.getElementById('pluginCfgOverlay').classList.contains('show'), 'the plugin page, with its settings');
+    T.ok(!document.getElementById('pluginCfgSave').hidden, 'settings can be saved');
+    var page = document.querySelector('#pluginCfgHead .m-btn');
+    T.ok(!!page && page.textContent === t('plOpenPage'), 'and a button for its own page');
+    page.click();
     T.eq(opened, 0, 'no new window');
     T.ok(!!document.getElementById('pluginOverlay'), 'the overlay');
   } finally {
     window.open = was.open; pluginsCache = was.cache; cleanPluginPage();
+    closeModal(null, 'pluginCfgOverlay');
     if (!had) box.remove(); else renderPluginList();
   }
 });
