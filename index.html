@@ -2509,11 +2509,12 @@ body.night .ep-grid .gname{color:var(--ink)}
 .ep-imp-t .n{font-size:14px;font-weight:800;color:var(--ink)}
 .ep-imp-t .s{font-size:11px;font-weight:600;color:var(--ink-mute)}
 .cn-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start}
-@media (max-width:900px){.cn-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .cn-cell{min-width:0;border:1px solid var(--edge);border-radius:14px;padding:9px 11px}
 .cn-cell.wide{grid-column:1/-1}
 .cn-cell[data-cell="thermo"]{grid-column:auto}
 .cn-cell[data-cell="thermo"]+.cn-cell[data-cell="doser"]{grid-column:2/-1}
+@media (max-width:900px){.cn-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cn-cell[data-cell="thermo"]+.cn-cell[data-cell="doser"]{grid-column:1/-1}}
 .cn-sec-x{margin-left:auto;display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0}
 .cn-sec-x .dz-max{padding:0}
 .cn-cell[data-cell="doser"] .cn-held{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));column-gap:18px}
