@@ -47,32 +47,33 @@ function lineFor(c, name) {
   })[0] || null;
 }
 
-test('four roles, two by two', function (T) {
+test('four roles side by side', function (T) {
   openConnModal();
   fleet();
   var grid = T.el('#connList .cn-grid');
   T.ok(!!grid, 'the cells are in a grid');
-  T.eq(T.css(grid, 'gridTemplateColumns').split(' ').length, 2, 'two columns');
+  T.eq(T.css(grid, 'gridTemplateColumns').split(' ').length, 4, 'four columns');
   T.eq(cells().length, 4, 'four cells');
 });
 
-test('each cell says what holds it, then what else there is', function (T) {
+test('an empty role says so in its head and takes no more room', function (T) {
   fleet();
-  cells().forEach(function (c, i) {
-    T.ok(!!c.querySelector('.cn-now-h'), 'cell ' + i + ' has a held heading');
-    T.ok(!!c.querySelector('.cn-list'), 'cell ' + i + ' has a list');
-  });
+  state.devices = state.devices.filter(function (d) { return d.type !== 'grinder'; });
+  renderConnModal();
+  var g = cellOf(3);
+  T.ok(!!g.querySelector('.cn-sec-h .cn-none'), 'nothing held, said in the head');
+  T.eq(g.querySelectorAll('.cn-line').length, 0, 'no rows');
+  T.ok(!g.querySelector('.cn-list'), 'and no empty list under it');
+  T.ok(!T.el('#connList .cn-now-h'), 'no repeated held heading');
 });
 
-test('only the list that grows scrolls', function (T) {
+test('only the sheet body scrolls, inside the screen', function (T) {
   fleet();
-  var c = cellOf(1);
-  T.ok(parseFloat(T.css(c.querySelector('.cn-list'), 'maxHeight')) > 0,
-    'the list is bounded');
-  T.eq(T.css(c.querySelector('.cn-list'), 'overflowY'), 'auto', 'and scrolls');
-  var held = heldOf(c)[0];
-  T.ok(!!held && !c.querySelector('.cn-list').contains(held),
-    'the held device stays above the rule');
+  var m = T.el('#connOverlay .cn-modal'), body = m.querySelector('.modal-body');
+  T.eq(T.css(body, 'overflowY'), 'auto', 'the body scrolls');
+  T.eq(T.css(cellOf(1).querySelector('.cn-list'), 'overflowY'), 'visible', 'a list inside a cell does not');
+  T.ok(m.getBoundingClientRect().height <= window.innerHeight, 'the sheet fits the screen');
+  T.ok(!!m.querySelector('.modal-head #connScanBtn'), 'Find sits in the head');
 });
 
 test('the machine cell holds the machine and offers the others', function (T) {
@@ -111,15 +112,10 @@ test('the two scale cells point at their own roles', function (T) {
     'and the dosing role from the dosing cell');
 });
 
-test('a scale busy elsewhere says so before it is offered', function (T) {
+test('a scale busy in one role is not offered for the other', function (T) {
   fleet();
-  var inDosing = lineFor(cellOf(2), 'Lunar');
-  T.ok(!!inDosing, 'the brewing scale is listed under dosing too');
-  T.ok(inDosing.querySelector('.cn-sub').textContent.length > 0,
-    'with a note about what it is doing');
-  var inBrew = lineFor(cellOf(1), 'Bench');
-  T.ok(!!inBrew && inBrew.querySelector('.cn-sub').textContent.length > 0,
-    'and the dosing scale likewise under brewing');
+  T.ok(!lineFor(cellOf(2), 'Lunar'), 'the brewing scale is not offered for dosing');
+  T.ok(!lineFor(cellOf(1), 'Bench'), 'the dosing scale is not offered for brewing');
 });
 
 test('the grinder cell is the grinder cell', function (T) {

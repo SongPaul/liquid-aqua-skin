@@ -285,27 +285,21 @@ test('use makes a module bean the recipe bean without dispensing', function (T) 
   }).then(function () { beans = was; }, function (e) { beans = was; throw e; });
 });
 
-test('extra cells stay in two columns, each a full row, on a wider sheet', function (T) {
+test('extra cells share a second row: the thermometer one column, the doser the rest', function (T) {
   openConnModal();
-  setPluginDevices([]);
-  _doserOn = false; _thermoPlugins = [];
-  renderConnModal();
-  T.ok(!T.el('#connList .cn-grid').classList.contains('c3'), 'four cells keep two columns');
-  T.ok(!T.el('#connOverlay .modal').classList.contains('more'), 'and the narrow sheet');
   dzFleet(4, 1);
   setThermoPlugins(['lebrew-temp.reaplugin']);
-  T.ok(!T.el('#connList .cn-grid').classList.contains('c3'), 'six cells still take two columns');
-  T.ok(T.el('#connOverlay .modal').classList.contains('more'), 'on a wider sheet');
-  T.ok(!!T.el('#connList .cn-cell[data-cell="doser"] .cn-held'), 'the held modules scroll in their own list');
   var grid = T.el('#connList .cn-grid').getBoundingClientRect();
   var dz = T.el('#connList .cn-cell[data-cell="doser"]').getBoundingClientRect();
   var th = T.el('#connList .cn-cell[data-cell="thermo"]').getBoundingClientRect();
   var gr = T.el('#connList .cn-cell[data-cell="grinder"]').getBoundingClientRect();
-  T.ok(Math.abs(dz.width - grid.width) < 2, 'the doser takes the whole width: ' + dz.width + ' of ' + grid.width);
-  T.ok(Math.abs(th.width - grid.width) < 2, 'the thermometer fills its row: ' + th.width);
-  T.ok(gr.width > grid.width * 0.45, 'a paired cell has half the sheet: ' + gr.width + ' of ' + grid.width);
+  T.ok(Math.abs(th.width - gr.width) < 2, 'the thermometer is one column: ' + th.width);
+  T.ok(Math.abs(dz.top - th.top) < 2, 'the doser beside it');
+  T.ok(dz.width > grid.width * 0.7, 'taking the rest: ' + dz.width + ' of ' + grid.width);
   T.ok(T.el('#connList .cn-cell[data-cell="doser"] .cn-sec-h button[onclick^="openDoser("]'), 'dispense sits in the cell head');
   setThermoPlugins([]);
+  var full = T.el('#connList .cn-cell[data-cell="doser"]').getBoundingClientRect();
+  T.ok(Math.abs(full.width - grid.width) < 2, 'without a thermometer the doser takes the row');
   closeModal(null, 'connOverlay');
 });
 

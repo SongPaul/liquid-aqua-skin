@@ -162,7 +162,7 @@ The rail across the top shows the steps: bean, profile, grind, recipe, and then 
 
 ![Devices](docs/devices.png)
 
-Tap the device button in the top bar. Each kind of device has its own cell, with what is **connected now** above and what else is **in reach** below:
+Tap the device button in the top bar. Each kind of device has its own cell, side by side, with what is connected now at the top and what else is **in reach** below it. An empty cell says so in its head and takes no more room. The brewing scale is not offered as the dosing scale, nor the other way round:
 
 | Cell | |
 |---|---|
@@ -173,7 +173,9 @@ Tap the device button in the top bar. Each kind of device has its own cell, with
 | Thermometer | appears when a thermometer plugin is on |
 | Bean doser | appears when the RedxKey doser plugin is on |
 
-**Find** looks again without connecting anything. The gateway stops looking once it has a scale, so a scale switched on later is only noticed this way.
+**Find** (next to the close button) looks again without connecting anything. The gateway stops looking once it has a scale, so a scale switched on later is only noticed this way. Devices in reach stay listed while it looks.
+
+The skin never scans by itself, as other skins do not: a scan shares the Bluetooth radio with everything already connected. A dosing scale that is away is looked for when you tap it on the recipe card. What the skin connects by itself waits its turn: the machine first, then the brewing scale, each left to settle, and only then the dosing scale.
 
 ---
 

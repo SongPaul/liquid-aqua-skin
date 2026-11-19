@@ -183,15 +183,19 @@ test('with a dosing scale a hold types the dose', function (T) {
   T.eq(typed, 'doseIn', 'the keypad'); T.eq(took, false, 'no reading taken');
 });
 
-// A dosing scale that stays away is looked for less and less often: every
-// automatic scan shares the radio with the scales and modules already held.
+// The radio is shared with every device already held, so the skin scans only
+// when asked, as the other skins do. A dosing scale that is away is looked for
+// when its reading is tapped for.
 function scanStub(run) {
-  var real = api, scans = 0;
-  api = function (method, path) {
+  var real = api, scans = 0, holds = 0;
+  api = function (method, path, body) {
     if (path.indexOf('/api/v1/devices/scan') === 0) { scans++; return Promise.resolve(state.devices); }
+    if (path === '/api/v1/devices/connect') { holds++; return Promise.resolve({}); }
+    if (path === '/api/v1/devices') return Promise.resolve(state.devices);
     return real.apply(this, arguments);
   };
-  return Promise.resolve().then(run).then(function () { api = real; return scans; },
+  var out = { scans: 0, holds: 0 };
+  return Promise.resolve().then(run).then(function () { api = real; out.scans = scans; out.holds = holds; return out; },
     function (e) { api = real; throw e; });
 }
 function awayDosing() {
@@ -199,55 +203,73 @@ function awayDosing() {
   gwSettings = Object.assign({}, gwSettings || {}, { preferredScaleId: null });
   withScales([LUNAR]);
   prefs.dosingScaleId = 'Gone';
-  _dosingAutoScanAt = 0; _dosingDiscoverAt = 0; _dosingMiss = 0;
+  state.dosingConnected = false;
 }
 
-test('an absent dosing scale is looked for less often each time it is missed', function (T) {
+test('nothing scans by itself', function (T) {
   awayDosing();
+  T.eq(typeof maybeAutoScanDosing, 'undefined', 'no automatic look for the dosing scale');
   return scanStub(function () {
-    return maybeAutoScanDosing();
+    syncDosing();
+    document.dispatchEvent(new Event('visibilitychange'));
+    return new Promise(function (r) { setTimeout(r, 50); });
   }).then(function (n) {
-    T.eq(n, 1, 'the first look goes out');
-    _dosingAutoScanAt = Date.now() - 100000;
-    return scanStub(function () { return maybeAutoScanDosing(); });
-  }).then(function (n) {
-    T.eq(n, 0, 'after one miss, ninety seconds is not long enough');
-    _dosingAutoScanAt = Date.now() - 190000;
-    return scanStub(function () { return maybeAutoScanDosing(); });
-  }).then(function (n) {
-    T.eq(n, 1, 'three minutes is');
-    _dosingMiss = 20;
-    _dosingAutoScanAt = Date.now() - 16 * 60000;
-    return scanStub(function () { return maybeAutoScanDosing(); });
-  }).then(function (n) {
-    T.eq(n, 1, 'the wait stops growing at a quarter of an hour');
-    prefs.dosingScaleId = ''; _dosingMiss = 0;
-  });
-});
-
-test('finding the dosing scale or a hand scan starts the wait over', function (T) {
-  awayDosing();
-  _dosingMiss = 4;
-  return scanStub(function () {
-    withScales([LUNAR, { id: 'Gone', name: 'Gone', type: 'scale', state: 'discovered', available: true }]);
-    _dosingAutoScanAt = 0;
-    return maybeAutoScanDosing();
-  }).then(function () {
-    T.eq(_dosingMiss, 0, 'seen again, the next absence starts from ninety seconds');
-    _dosingMiss = 4;
-    return scanStub(function () { return connScan(); });
-  }).then(function () {
-    T.eq(_dosingMiss, 0, 'a scan asked for by hand resets it too');
+    T.eq(n.scans, 0, 'no scan');
     prefs.dosingScaleId = '';
   });
 });
 
-test('no automatic scan while the page is not on screen', function (T) {
+test('a tap for an away dosing scale looks for it', function (T) {
   awayDosing();
-  Object.defineProperty(document, 'hidden', { get: function () { return true; }, configurable: true });
-  return scanStub(function () { return maybeAutoScanDosing(); }).then(function (n) {
-    delete document.hidden;
-    T.eq(n, 0, 'a hidden page leaves the radio alone');
+  return scanStub(function () { return tareDosingScale(); }).then(function (n) {
+    T.eq(n.scans, 1, 'one scan, asked for');
     prefs.dosingScaleId = '';
-  }, function (e) { delete document.hidden; throw e; });
+  });
+});
+
+// Machine first, then the brewing scale, then the rest, each left to settle:
+// a connect started while another is still coming up is the one Android drops.
+function stagedDosing(machineFor, brewFor, brewWanted) {
+  _dosingSupport = true; state.shotRunning = false; _dosingScanning = false; _dosingHoldAt = 0;
+  var spare = { id: 'Bench', name: 'Bench', type: 'scale', state: 'discovered', available: true };
+  withScales(brewFor != null ? [LUNAR, spare] : [spare]);
+  gwSettings = Object.assign({}, gwSettings || {}, { preferredScaleId: brewWanted ? 'Lunar' : null });
+  prefs.dosingScaleId = 'Bench';
+  var now = Date.now();
+  _machineUpAt = machineFor == null ? 0 : now - machineFor;
+  _brewUpAt = brewFor == null ? 0 : now - brewFor;
+  state.connected = machineFor != null;
+  state.scaleConnected = brewFor != null;
+}
+function holdsWhen(machineFor, brewFor, brewWanted) {
+  stagedDosing(machineFor, brewFor, brewWanted);
+  return scanStub(function () { dosingMaybeHold(); return new Promise(function (r) { setTimeout(r, 30); }); })
+    .then(function (n) { prefs.dosingScaleId = ''; return n.holds; });
+}
+
+test('the dosing scale waits for the machine to settle', function (T) {
+  return holdsWhen(null, null, false).then(function (h) {
+    T.eq(h, 0, 'no machine, no dosing scale');
+    return holdsWhen(3000, null, false);
+  }).then(function (h) {
+    T.eq(h, 0, 'a machine just up is left to settle');
+    return holdsWhen(15000, null, false);
+  }).then(function (h) {
+    T.eq(h, 1, 'a settled machine and no brewing scale wanted: the dosing scale joins');
+  });
+});
+
+test('then for the brewing scale, unless it never comes', function (T) {
+  return holdsWhen(15000, null, true).then(function (h) {
+    T.eq(h, 0, 'the brewing scale is wanted and not here yet');
+    return holdsWhen(15000, 1000, true);
+  }).then(function (h) {
+    T.eq(h, 0, 'it has only just joined');
+    return holdsWhen(15000, 8000, true);
+  }).then(function (h) {
+    T.eq(h, 1, 'settled: now the dosing scale');
+    return holdsWhen(90000, null, true);
+  }).then(function (h) {
+    T.eq(h, 1, 'a brewing scale that never came does not keep it waiting for ever');
+  });
 });
