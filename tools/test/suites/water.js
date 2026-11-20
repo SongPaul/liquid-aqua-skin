@@ -347,6 +347,81 @@ test('a flow spike from the scale does not end it', function (T) {
   });
 });
 
+// Chosen, off by default: the machine gets no volume and only a time limit,
+// so its own count, which runs ahead of the cup on some machines, cannot end
+// the pour (decaid #1128).
+function wNoVol(on, run) {
+  var was = prefs.hwNoVolume, dur = _waterDurSent; prefs.hwNoVolume = on;
+  function back() { prefs.hwNoVolume = was; _waterDurSent = dur; }
+  var r;
+  try { r = run(); } catch (e) { back(); throw e; }
+  if (r && r.then) return r.then(function (v) { back(); return v; }, function (e) { back(); throw e; });
+  back(); return r;
+}
+
+test('leaving the machine count out is off by default', function (T) {
+  T.eq(prefs.hwNoVolume, false, 'off');
+  return wScale(true, function () {
+    settings.waterVol = 200;
+    T.eq(waterValue('waterVol'), 250, 'the 250 room as before');
+  }, true);
+});
+
+test('chosen, the machine gets no volume and a time limit', function (T) {
+  return wSaved(function (sent) {
+    return wScale(true, function () {
+      return wNoVol(true, function () {
+        settings.waterVol = 190; settings.waterFlow = 9; _waterVolSent = 250; _waterDurSent = 25;
+        auxAdj('waterVol', 10);
+        return wWait().then(function () {
+          var p = wPuts(sent).map(function (b) { return JSON.stringify(b.hotWaterData); }).sort();
+          T.eq(p.join(' '), '{"duration":50} {"volume":0}', '200 at 4.5 g/s is 45 s, plus 5: ' + p.join(' '));
+          applyHotWaterData({ volume: 0, duration: 50 });
+          return wWait();
+        }).then(function () {
+          T.eq(settings.waterVol, 200, 'the 0 read back still shows the target');
+          T.eq(wPuts(sent).length, 2, 'and writes nothing more');
+        });
+      });
+    }, true);
+  });
+});
+
+test('it gives way without a scale or with the scale stop off', function (T) {
+  return wScale(false, function () {
+    return wNoVol(true, function () {
+      settings.waterVol = 200;
+      T.eq(waterValue('waterVol'), 200, 'no scale: the amount, so the machine still stops');
+      wScaleTo(true); prefs.hwAppStopOff = true;
+      T.eq(waterValue('waterVol'), 200, 'scale stop off: the amount');
+      var box = document.createElement('div'); box.innerHTML = hwPaneHtml();
+      T.ok(box.querySelector('#setHwNoVol').disabled, 'and the switch is locked');
+    });
+  }, true);
+});
+
+test('the time limit stays inside what the machine takes', function (T) {
+  var was = { v: settings.waterVol, f: settings.waterFlow };
+  settings.waterVol = 250; settings.waterFlow = 1;
+  T.eq(hwDurCeil(), 255, 'capped at 255 s');
+  settings.waterVol = 20; settings.waterFlow = 10;
+  T.eq(hwDurCeil(), 10, 'at least 10 s');
+  settings.waterVol = was.v; settings.waterFlow = was.f;
+});
+
+test('the log tells the machine stopped on its time limit', function (T) {
+  var r;
+  wPour(function () {
+    wNoVol(true, function () {
+      settings.waterVol = 200; settings.waterDur = 50; _waterVolSent = 0;
+      wAt(0, 0, 0); wPourBoth(100, 50000, 300, 180, 6);
+      wEnd(); r = wLastLog();
+    });
+  });
+  T.eq(r.sentVol, 0, 'no volume was sent');
+  T.eq(r.reason, 'Time', 'the clock: ' + r.reason);
+});
+
 // Each pour is logged with what the machine counted and what stopped it, so a
 // pour that ends short says whether the machine's count, its clock, the
 // gateway, the skin or a button ended it.
