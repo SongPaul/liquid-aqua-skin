@@ -163,7 +163,7 @@ test('with a scale the machine gets the target itself', function (T) {
 test('stopping in the skin is on with a scale unless turned off, and stays off after a restart', function (T) {
   return wScale(true, function () {
     settings.waterVol = 100;
-    T.eq(waterValue('waterVol'), 150, 'on by default with a scale');
+    T.eq(waterValue('waterVol'), 250, 'on by default with a scale');
     var was = prefs.hwAppStopOff;
     applyPrefsObject({ hwAppStopOff: true });
     T.eq(prefs.hwAppStopOff, true, 'turning it off is restored');
@@ -184,7 +184,7 @@ test('switching it on sends the room even before the machine volume is known', f
         setHwAppStop(true);
         return wWait();
       }).then(function () {
-        T.eq(JSON.stringify(wPuts(sent).map(function (b) { return b.hotWaterData.volume; })), '[150]', 'sent when switched');
+        T.eq(JSON.stringify(wPuts(sent).map(function (b) { return b.hotWaterData.volume; })), '[250]', 'sent when switched');
       });
     }, false);
   });
@@ -194,32 +194,30 @@ test('a room left on the machine is put back to the target, once, when the skin 
   return wScale(true, function () {
     prefs.hwAppStopOff = true;
     localStorage.setItem('aurora_water_target', '100');
-    T.eq(waterTargetFrom(150), 100, 'the old room over 100 is 100');
+    T.eq(waterTargetFrom(250), 100, 'the old 250 over 100 is 100');
     T.eq(localStorage.getItem('aurora_water_target'), null, 'and the memory is gone');
-    T.eq(waterTargetFrom(150), null, 'so a 150 chosen later stays 150');
+    T.eq(waterTargetFrom(250), null, 'so a 250 chosen later stays 250');
     localStorage.setItem('aurora_water_target', '100');
     T.eq(waterTargetFrom(120), null, 'a value another skin wrote is kept');
-    localStorage.setItem('aurora_water_target', '200');
-    T.eq(waterTargetFrom(250), 200, 'the room was capped at 250');
   });
 });
 
 // The machine counts its own pour from the pump and stops when that count
 // reaches the volume, which on some machines is well before the cup does
-// (decaid #1119). Chosen, the skin gives the machine room and stops on the
-// scale itself, as de1app does.
-test('stopping in the skin gives the machine room over the target with a scale', function (T) {
+// (decaid #1119). Chosen, the skin asks the machine for 250 ml and stops on
+// the scale itself, as de1app does.
+test('stopping in the skin asks the machine for 250 with a scale', function (T) {
   return wSaved(function (sent) {
     return wScale(true, function () {
       settings.waterVol = 90;
       auxAdj('waterVol', 10);
       return wWait().then(function () {
-        T.eq(JSON.stringify(wPuts(sent)), JSON.stringify([{ hotWaterData: { volume: 150 } }]), 'half again');
+        T.eq(JSON.stringify(wPuts(sent)), JSON.stringify([{ hotWaterData: { volume: 250 } }]), '250, whatever the target');
         T.eq(localStorage.getItem('aurora_water_target'), '100', 'the target is remembered');
-        T.eq(waterTargetFrom(150), 100, 'and read back from the room');
+        T.eq(waterTargetFrom(250), 100, 'and read back from the 250');
         T.eq(localStorage.getItem('aurora_water_target'), '100', 'kept while the skin stops');
-        settings.waterVol = 200;
-        T.eq(waterValue('waterVol'), 250, 'the room stays inside what the machine takes');
+        settings.waterVol = 20;
+        T.eq(waterValue('waterVol'), 250, 'a small target too');
       });
     }, true);
   });
@@ -238,11 +236,11 @@ test('the room follows the scale and the choice', function (T) {
       settings.waterVol = 100; _waterVolSent = 100;
       wScaleTo(true); syncWaterRoom();
       return wWait().then(function () {
-        T.eq(JSON.stringify(wPuts(sent).map(function (b) { return b.hotWaterData.volume; })), '[150]', 'scale on: room');
-        _waterVolSent = 150; prefs.hwAppStopOff = true; syncWaterRoom();
+        T.eq(JSON.stringify(wPuts(sent).map(function (b) { return b.hotWaterData.volume; })), '[250]', 'scale on: 250');
+        _waterVolSent = 250; prefs.hwAppStopOff = true; syncWaterRoom();
         return wWait();
       }).then(function () {
-        T.eq(JSON.stringify(wPuts(sent).map(function (b) { return b.hotWaterData.volume; })), '[150,100]', 'choice off: the target');
+        T.eq(JSON.stringify(wPuts(sent).map(function (b) { return b.hotWaterData.volume; })), '[250,100]', 'choice off: the target');
         _waterVolSent = 100; syncWaterRoom();
         return wWait();
       }).then(function () {
@@ -256,7 +254,7 @@ test('reading back a room the skin gave keeps the target and writes nothing', fu
   return wSaved(function (sent) {
     return wScale(true, function () {
       localStorage.setItem('aurora_water_target', '100');
-      applyHotWaterData({ volume: 150 });
+      applyHotWaterData({ volume: 250 });
       return wWait().then(function () {
         T.eq(settings.waterVol, 100, 'the target');
         T.eq(wPuts(sent).length, 0, 'nothing written back');
@@ -270,7 +268,7 @@ function wPour(run) {
     sc: state.scaleConnected, off: prefs.hwAppStopOff, vol: settings.waterVol, api: api, gw: gwSettings.hotWaterFlowMultiplier };
   var calls = [];
   api = function (m, p) { calls.push(m + ' ' + p); return Promise.resolve({}); };
-  state.scaleConnected = true; prefs.hwAppStopOff = false; settings.waterVol = 100; _waterVolSent = 150;
+  state.scaleConnected = true; prefs.hwAppStopOff = false; settings.waterVol = 100; _waterVolSent = 250;
   gwSettings.hotWaterFlowMultiplier = 0.5;
   try { run(calls); } finally {
     waterWeightTick(false);
@@ -295,12 +293,12 @@ test('the skin stops the pour when the cup will reach the target', function (T) 
   });
 });
 
-test('the skin does not stop a pour the machine was given no room for', function (T) {
+test('the skin stops on the scale even at a 250 target, and not when turned off', function (T) {
   wPour(function (calls) {
-    _waterVolSent = 100;
-    wAt(0, 0, 0); wAt(5000, 120, 4);
-    T.eq(calls.length, 0, 'the machine stops it on its own');
-    waterWeightTick(false); _waterVolSent = 150; prefs.hwAppStopOff = true;
+    settings.waterVol = 250;
+    wAt(0, 0, 0); wAt(5000, 249, 4);
+    T.eq(calls.length, 1, 'the cup reaching 250 stops it, not the pump count');
+    waterWeightTick(false); calls.length = 0; settings.waterVol = 100; prefs.hwAppStopOff = true;
     wAt(0, 0, 0); wAt(5000, 120, 4);
     T.eq(calls.length, 0, 'not chosen');
   });

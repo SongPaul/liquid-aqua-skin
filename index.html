@@ -7948,7 +7948,7 @@ function syncFlushModal(){ ['flushTemp','flushDur','flushFlow'].forEach(auxShow)
 var AUX_NUM={
   steamTemp:{min:0,max:165,dp:0}, steamDur:{min:0,max:120,dp:0}, steamFlow:{min:0,max:2.5,dp:1},
   flushTemp:{min:60,max:95,dp:0},  flushDur:{min:1,max:20,dp:0},  flushFlow:{min:1,max:10,dp:1},
-  waterTemp:{min:20,max:100,dp:0}, waterVol:{min:0,max:500,dp:0},
+  waterTemp:{min:20,max:100,dp:0}, waterVol:{min:0,max:250,dp:0},
   waterDur:{min:0,max:120,dp:0},   waterFlow:{min:1,max:10,dp:1}};
 function auxShow(key){
   var c=AUX_NUM[key], el=document.getElementById(key+'V');
@@ -7990,7 +7990,7 @@ var AUX_KINDS={
             {k:'flushFlow',step:0.5,min:1,max:10,dec:1,unit:'flowShort'}]},
   water:{ico:'💧',state:'hotWater',act:'doWaterAction',open:'openWaterModal',sync:'syncWaterModal',cols:2,
     fields:[{k:'waterTemp',step:1,min:20,max:100,dec:0,unit:'tempShort'},
-            {k:'waterVol',step:10,min:0,max:500,dec:0,unit:'mlShort'}]}
+            {k:'waterVol',step:10,min:0,max:250,dec:0,unit:'mlShort'}]}
 };
 // A field with a second step gets four buttons, so its buttons carry the
 // number they move by and its column is given the room for them.
@@ -8063,13 +8063,14 @@ var _waterPushKeys={};
 // gateway stops the pour on the scale. But the machine also stops when its own
 // pump count reaches that volume, and on some machines that count runs well
 // ahead of the cup, so it stops first (decaid #1119). So the skin does what
-// de1app does: with a scale the machine gets half again and the skin stops the
-// pour on the scale. A switch in the hot water tab turns it off. The target is remembered so the
-// room read back is shown as the target; without the choice, a room left over
-// is put back to the target once.
-var WATER_ROOM=1.5, WATER_ROOM_MAX=250, WATER_SETTLE_MS=3000, WATER_LOOK_DEF=0.3;
+// de1app does (binary.tcl): with a scale the machine is asked for 250 ml,
+// whatever the target, and the skin stops the pour on the scale. A switch in
+// the hot water tab turns it off. The target is remembered so the 250 read
+// back is shown as the target; without the choice, a 250 left over is put
+// back to the target once. The machine takes one byte, so no target goes over 250.
+var WATER_ROOM_MAX=250, WATER_SETTLE_MS=3000, WATER_LOOK_DEF=0.3;
 var _waterVolSent=null, _hww=null;
-function waterRoomFor(v){ v=+v||0; return v>0?Math.max(v,Math.min(WATER_ROOM_MAX,Math.ceil(v*WATER_ROOM))):v; }
+function waterRoomFor(v){ v=+v||0; return v>0?WATER_ROOM_MAX:v; }
 function waterRoomOn(){ return !prefs.hwAppStopOff&&!!state.scaleConnected; }
 function waterTargetFrom(v){
   var mine=+lsGet('aurora_water_target')||0;
@@ -8102,7 +8103,7 @@ function waterWeightTick(watering){
   if(m.sent||!waterRoomOn()||state.scaleWeight==null) return;
   if(now-m.t0<=WATER_SETTLE_MS){ m.base=(m.base==null)?state.scaleWeight:Math.min(m.base,state.scaleWeight); return; }
   var target=+settings.waterVol||0;
-  if(!(target>0)||_waterVolSent==null||_waterVolSent<=target) return;
+  if(!(target>0)) return;
   var look=(gwSettings&&gwSettings.hotWaterFlowMultiplier>0)?gwSettings.hotWaterFlowMultiplier:WATER_LOOK_DEF;
   var f=state.scaleFlow>0?state.scaleFlow:0;
   if(state.scaleWeight-(m.base||0)+f*look<target) return;
