@@ -318,21 +318,52 @@ test('choosing several stays choosing, and does not load', function (T) {
   epSetWide(false); shut();
 });
 
-test('a profile brings back its last dose and ratio, and the yield follows from them', function (T) {
-  var real = api, was = { i: settings.doseIn, o: settings.doseOut };
-  api = function (m, p) {
-    if (m === 'GET' && p.indexOf('/api/v1/shots') === 0)
+test('changing the profile leaves the recipe card as it is', function (T) {
+  var real = api, was = { i: settings.doseIn, o: settings.doseOut }, shots = 0, puts = [];
+  api = function (m, path, body) {
+    if (m === 'GET' && path.indexOf('/api/v1/shots') === 0) {
+      shots++;
       return Promise.resolve({ items: [{ id: 's1', timestamp: new Date().toISOString(),
-        workflow: { profile: { title: 'Ratio Test' }, context: { targetDoseWeight: 20, targetYield: 50 } },
-        annotations: { actualDoseWeight: 20.2, actualYield: 49.3 } }] });
+        workflow: { profile: { title: 'Ratio Test' }, context: { targetDoseWeight: 20, targetYield: 50 } } }] });
+    }
+    if (m === 'PUT') puts.push(body);
     return Promise.resolve({});
   };
   settings.doseIn = 18; settings.doseOut = 36;
-  return Promise.resolve(applyProfileRecipe({ profile: { title: 'Ratio Test' } })).then(function () {
+  var prev = curProfileObj;
+  selectProfile({ id: 'ratio-test', profile: { title: 'Ratio Test', steps: [] } });
+  return new Promise(function (r) { setTimeout(r, 80); }).then(function () {
     api = real;
-    T.eq(settings.doseIn, 20, 'the dose it was set to, not the scale');
-    T.eq(settings.doseOut, 50, 'the yield from its 1:2.5, not the scale');
-    T.eq(recipeRatioText(), '2.5', 'so the ratio is exactly the one it had');
-    settings.doseIn = was.i; settings.doseOut = was.o; syncRecipe();
-  }, function (e) { api = real; settings.doseIn = was.i; settings.doseOut = was.o; throw e; });
+    T.eq(shots, 0, 'no shot is looked up');
+    T.eq(settings.doseIn, 18, 'the dose stays');
+    T.eq(settings.doseOut, 36, 'the yield stays');
+    T.ok(!puts.some(function (b) { return b && b.context; }), 'no recipe is written');
+    curProfileObj = prev; settings.doseIn = was.i; settings.doseOut = was.o; syncRecipe();
+  }, function (e) { api = real; curProfileObj = prev; settings.doseIn = was.i; settings.doseOut = was.o; throw e; });
+});
+
+test('using a profile from the editor asks nothing about its last shot', function (T) {
+  var real = api, shots = 0, p = anotherProfile();
+  api = function (m, path) {
+    if (m === 'GET' && path.indexOf('/api/v1/shots') === 0) {
+      shots++;
+      return Promise.resolve({ items: [{ id: 's1', timestamp: new Date().toISOString(),
+        workflow: { profile: { title: p.profile.title }, context: { targetDoseWeight: 20, targetYield: 50 } } }] });
+    }
+    return Promise.resolve({});
+  };
+  var prev = curProfileObj;
+  openEditPageFor(p, p);
+  editing = JSON.parse(JSON.stringify(p));
+  return new Promise(function (r) { setTimeout(r, 80); }).then(function () {
+  shots = 0;
+  useEditedProfile();
+  return new Promise(function (r) { setTimeout(r, 80); }).then(function () {
+    api = real;
+    T.eq(shots, 0, 'no shot is looked up');
+    T.ok(!document.getElementById('useSetOverlay').classList.contains('show'), 'no dialog');
+    T.ok(!document.body.classList.contains('ep-edit'), 'the editor is closed');
+    curProfileObj = prev; shut();
+  });
+  }).catch(function (e) { api = real; curProfileObj = prev; throw e; });
 });

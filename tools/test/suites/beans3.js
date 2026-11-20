@@ -125,27 +125,54 @@ test('a shot remembers its grind for that bean on that grinder', function (T) {
   });
 });
 
-test('choosing a bean sets the grind it was last pulled at on this grinder', function (T) {
+function b3Acts() {
+  return Array.prototype.slice.call(document.querySelectorAll('#toast .toast-act'));
+}
+function b3GrindPuts(gw) {
+  return b3Puts(gw.sent, '/api/v1/workflow').filter(function (b) { return b.context && b.context.grinderSetting != null; });
+}
+
+test('choosing a bean leaves the grind and offers the one it was last pulled at', function (T) {
   return withB3({}, function (gw) {
     rememberGrind({ workflow: { context: { beanBatchId: 'kb-1', grinderId: 'kg-1', grinderSetting: '12.5' } } });
     b3Open('bean');
     document.querySelector('#bgList .bg-card[data-id="k-b"]').click();
     return b3Wait(60).then(function () {
-      var put = b3Puts(gw.sent, '/api/v1/workflow')[0] || {};
-      T.eq(put.context && put.context.grinderSetting, '12.5', 'the remembered grind');
+      T.eq(b3GrindPuts(gw).length, 0, 'no grind written');
+      T.eq(context.grinderSetting, '15', 'the card keeps its grind');
+      var btn = b3Acts().filter(function (b) { return b.textContent === t('grindOffer').replace('{s}', '12.5'); })[0];
+      T.ok(!!btn, 'the toast offers it');
+      btn.click();
+      return b3Wait(700);
+    }).then(function () {
+      T.eq(context.grinderSetting, '12.5', 'set when pressed');
+      T.eq((b3GrindPuts(gw)[0] || {}).context.grinderSetting, '12.5', 'and written');
     });
   });
 });
 
-test('choosing a grinder sets the grind the bean in use was last pulled at on it', function (T) {
+test('choosing a grinder leaves the grind and offers the bean in use on it', function (T) {
   return withB3({}, function (gw) {
     Object.assign(context, { coffeeName: 'Banana', coffeeRoaster: 'Beta', beanBatchId: 'kb-1' });
     rememberGrind({ workflow: { context: { beanBatchId: 'kb-1', grinderId: 'kg-2', grinderSetting: '7.2' } } });
     b3Open('grinder');
     document.querySelector('#bgList .bg-card[data-id="kg-2"]').click();
     return b3Wait(60).then(function () {
-      var put = b3Puts(gw.sent, '/api/v1/workflow')[0] || {};
-      T.eq(put.context && put.context.grinderSetting, '7.2', 'not the grinder’s own last setting');
+      T.eq(b3GrindPuts(gw).length, 0, 'no grind written');
+      T.eq(context.grinderSetting, '15', 'the card keeps its grind');
+      T.ok(b3Acts().some(function (b) { return b.textContent === t('grindOffer').replace('{s}', '7.2'); }),
+        'the bean on this grinder, not the grinder\u2019s own last setting');
+    });
+  });
+});
+
+test('nothing remembered, the grinder offers its own setting', function (T) {
+  return withB3({}, function (gw) {
+    b3Open('grinder');
+    document.querySelector('#bgList .bg-card[data-id="kg-2"]').click();
+    return b3Wait(60).then(function () {
+      T.eq(b3GrindPuts(gw).length, 0, 'no grind written');
+      T.ok(b3Acts().some(function (b) { return b.textContent === t('grindOffer').replace('{s}', '8'); }), 'offers 8');
     });
   });
 });
