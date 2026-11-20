@@ -2496,6 +2496,12 @@ body.night .ep-grid .gname{color:var(--ink)}
 .cn-modal .modal-head{padding:12px 18px 10px;gap:12px;flex:none}
 .cn-modal .modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 18px 14px}
 .cn-head-t{min-width:0}
+.hw-log-acts{display:flex;gap:8px;flex:none}
+.hw-log{margin:-4px 0 10px;border-bottom:1px solid var(--edge)}
+.hw-log-row{padding:7px 0;border-top:1px solid var(--edge)}
+.hw-log-row:first-child{border-top:0}
+.hw-log-h{font-size:12px;font-weight:600;color:var(--ink)}
+.hw-log-d{font-size:11px;font-weight:600;color:var(--ink-mute);margin-top:2px}
 .cn-head-d{font-size:11px;font-weight:600;color:var(--ink-mute);margin-top:2px}
 .cn-head-a{display:flex;align-items:center;gap:8px;flex:none}
 .ep-imp{display:flex;align-items:center;gap:14px;width:100%;margin-top:10px;
@@ -3873,7 +3879,7 @@ var I18N={
     refillStoppedLbl:'Refill stopped', refillStoppedToast:'The refill kit could not fill the tank \u2014 check the water supply',
     needsWater:'Out of water', needsWaterToast:'Out of water \u2014 the machine has stopped until the tank is refilled',
     sawAuto:'Adjust the shot stop after each shot', sawLearned:'Shot stop moved {a}s \u2192 {b}s ({y}g for {w}g)',
-    flowCal:'Stop timing', flowCalDesc:'How many seconds before the target the shot or hot water is stopped. The scale reports a little late and drops keep falling after the pump stops, so stopping a moment early lands on the target. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', stopHwW:'Stop hot water on the scale', stopHwWDesc:'The gateway stops hot water when the cup on the scale reaches the set amount. Off, the machine stops on its own estimate of the water it gave.', stopHwWNoScale:'Needs a connected scale. Without one the machine stops on its own estimate.', hwAppStop:'Stop on the scale in this skin', hwAppStopDesc:'On by default. Some machines stop hot water short of the set amount on their own count. With a scale, the machine is asked for half again and this skin stops the pour when the cup reaches the amount, as de1app does. A pour started at the group head while this screen is not running can give up to half again.', hwTab:'Hot water', hwFlow:'Flow', hwFlowDesc:'How fast the machine pours hot water. Slower takes longer; faster splashes more and overshoots a little more after the stop.', fcDefault:'Default {v}s', fcReset:'Default', fcSec:'s', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSave:'Save to the machine', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalNew:'New value', flowStopTab:'Flow & stop', careTab:'Care & info', mcalRange:'The machine takes 0.13 to 2.0',
+    flowCal:'Stop timing', flowCalDesc:'How many seconds before the target the shot or hot water is stopped. The scale reports a little late and drops keep falling after the pump stops, so stopping a moment early lands on the target. Raise it if you keep going over, lower it if you keep falling short. It does not change how the machine measures flow.', fcWeight:'Espresso (scale)', fcVolume:'Espresso without a scale (volume)', fcHotWater:'Hot water (scale)', stopHwW:'Stop hot water on the scale', stopHwWDesc:'Hot water stops when the cup on the scale reaches the set amount. The machine is asked for 250 ml and this skin stops the pour, as de1app does, so a machine that counts its water short cannot stop it early. Off, the machine is given the amount and stops on its own estimate. A pour started at the group head while this screen is not running can give up to 250 ml.', hwLog:'Hot water log', hwLogDesc:'The last pours: what reached the cup, what the machine counted, and what stopped it. Copy sends the full record, with its trace, to the clipboard.', hwLogCopy:'Copy', hwLogClear:'Clear', hwLogCopied:'Hot water log copied', hwLogCup:'cup {c} g (at the stop {s} g)', hwLogMachine:'machine counted {m} ml, limit {v} ml \u00b7 {t} s', hwLogHead:'{d} \u00b7 target {g} ml', hwLogJumps:' \u00b7 {n} sudden weight changes set aside', hwLogNoScale:'no scale', hwrSkin:'Stopped by this skin on the scale', hwrButton:'Stopped with the button in this skin', hwrVolume:'The machine stopped on its own count of the water', hwrTime:'The machine stopped on its time limit ({s} s)', hwrGateway:'The gateway stopped it on the scale', hwrTank:'The water tank ran low', hwrOther:'Stopped elsewhere: the group head, another app or the machine', stopHwWNoScale:'Needs a connected scale. Without one the machine stops on its own estimate.', hwTab:'Hot water', hwFlow:'Flow', hwFlowDesc:'How fast the machine pours hot water. Slower takes longer; faster splashes more and overshoots a little more after the stop.', fcDefault:'Default {v}s', fcReset:'Default', fcSec:'s', mcalTitle:'Machine flow calibration', mcalDesc:'The DE1 has no flow meter: it estimates flow from what its pump is doing. This value multiplies that estimate. Set it when hot water, or a shot without a scale, gives less (or more) than was set. It is written to the machine and the gateway keeps it for this machine.', mcalNow:'Current value', mcalSave:'Save to the machine', mcalConfirm:'Change the machine flow calibration from {a} to {b}?', mcalSaved:'Machine flow calibration saved', mcalNew:'New value', flowStopTab:'Flow & stop', careTab:'Care & info', mcalRange:'The machine takes 0.13 to 2.0',
     refillKit:'Refill kit', refillKitDesc:'A plumbed machine refills itself, so its tank shows full and the low-water warning stays off. The machine reports whether the kit is fitted; set it here only to overrule a wrong reading.', rkOn:'Force on', rkOff:'Force off', rkYes:'Yes', rkNo:'No', rkDetected:'Refill kit detected',
     machineInfo:'Machine Info', serial:'Serial', firmware:'Firmware', geminiDesc:'Used to auto-fill bean details from a photo of the bag. Stored on this device only.',
     installed:'Installed', available:'Available', updateFirmware:'Update firmware', fwUpToDate:'Firmware is up to date.', fwUnavailable:'Firmware info unavailable', fwConfirm:'Install firmware {v}? This takes several minutes, and the machine has to be switched off and on afterwards.', updating:'Updating…',
@@ -4346,7 +4352,7 @@ var I18N={
     refillStoppedLbl:'급수 멈춤', refillStoppedToast:'리필 키트가 탱크를 채우지 못했습니다 \u2014 급수를 확인하세요',
     needsWater:'물 부족', needsWaterToast:'물이 부족합니다 \u2014 물을 채울 때까지 머신이 멈춥니다',
     sawAuto:'샷마다 추출 정지 시간 자동 맞춤', sawLearned:'추출 정지 시간을 {a}초 \u2192 {b}초로 맞췄습니다 (목표 {w}g에 {y}g)',
-    flowCal:'정지 시간 보정', flowCalDesc:'목표에 닿기 몇 초 전에 멈출지 정합니다. 저울은 무게를 조금 늦게 알리고 펌프가 멈춘 뒤에도 방울이 떨어지므로, 이 시간만큼 미리 멈춰야 목표에 맞습니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', stopHwW:'온수 저울 정지', stopHwWDesc:'저울 위 컵이 설정한 양에 닿으면 게이트웨이가 온수를 멈춥니다. 끄면 머신이 자기 추정량으로 멈춥니다.', stopHwWNoScale:'저울이 연결돼 있어야 합니다. 없으면 머신이 자기 추정량으로 멈춥니다.', hwAppStop:'스킨이 저울로 멈추기', hwAppStopDesc:'기본으로 켜져 있습니다. 어떤 머신은 자기 추정량으로 설정보다 적게 멈춥니다. 저울이 있으면 머신에는 1.5배를 보내고, 컵이 설정한 양에 닿으면 이 스킨이 멈춥니다(de1app 방식). 이 화면이 꺼진 채 그룹헤드에서 시작하면 최대 1.5배까지 나올 수 있습니다.', hwTab:'온수', hwFlow:'유량', hwFlowDesc:'머신이 온수를 내리는 속도입니다. 느리면 오래 걸리고, 빠르면 튀거나 멈춘 뒤 조금 더 넘칩니다.', fcDefault:'기본 {v}초', fcReset:'기본값', fcSec:'초', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSave:'머신에 저장', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalNew:'새 값', flowStopTab:'유량·정지', careTab:'관리·정보', mcalRange:'0.13~2.0 사이로 넣으세요',
+    flowCal:'정지 시간 보정', flowCalDesc:'목표에 닿기 몇 초 전에 멈출지 정합니다. 저울은 무게를 조금 늦게 알리고 펌프가 멈춘 뒤에도 방울이 떨어지므로, 이 시간만큼 미리 멈춰야 목표에 맞습니다. 목표를 자꾸 넘기면 올리고, 모자라면 내리세요. 머신의 유량 측정은 바꾸지 않습니다.', fcWeight:'에스프레소 (저울)', fcVolume:'에스프레소 (저울 없을 때 부피)', fcHotWater:'온수 (저울)', stopHwW:'온수 저울 정지', stopHwWDesc:'저울 위 컵이 설정한 양에 닿으면 온수를 멈춥니다. 머신에는 250 ml를 보내고 이 스킨이 멈추므로(de1app 방식), 물량을 적게 세는 머신이라도 먼저 멈추지 않습니다. 끄면 설정한 양을 머신에 보내고 머신이 자기 추정량으로 멈춥니다. 이 화면이 꺼진 채 그룹헤드에서 시작하면 최대 250 ml까지 나올 수 있습니다.', hwLog:'온수 기록', hwLogDesc:'최근 온수마다 컵에 담긴 양, 머신이 센 물량, 무엇이 멈췄는지를 보여 줍니다. 복사를 누르면 흐름 기록까지 전체가 클립보드에 담깁니다.', hwLogCopy:'복사', hwLogClear:'지우기', hwLogCopied:'온수 기록을 복사했습니다', hwLogCup:'컵 {c} g (멈춘 순간 {s} g)', hwLogMachine:'머신 계산 {m} ml, 한도 {v} ml \u00b7 {t}초', hwLogHead:'{d} \u00b7 목표 {g} ml', hwLogJumps:' \u00b7 갑작스러운 무게 변화 {n}회 제외', hwLogNoScale:'저울 없음', hwrSkin:'스킨이 저울로 멈춤', hwrButton:'스킨의 버튼으로 멈춤', hwrVolume:'머신이 자기 물량 계산으로 멈춤', hwrTime:'머신 시간 제한({s}초)으로 멈춤', hwrGateway:'게이트웨이가 저울로 멈춤', hwrTank:'물탱크 부족으로 멈춤', hwrOther:'다른 곳에서 멈춤: 그룹헤드 버튼, 다른 앱 또는 머신', stopHwWNoScale:'저울이 연결돼 있어야 합니다. 없으면 머신이 자기 추정량으로 멈춥니다.', hwTab:'온수', hwFlow:'유량', hwFlowDesc:'머신이 온수를 내리는 속도입니다. 느리면 오래 걸리고, 빠르면 튀거나 멈춘 뒤 조금 더 넘칩니다.', fcDefault:'기본 {v}초', fcReset:'기본값', fcSec:'초', mcalTitle:'머신 유량 보정', mcalDesc:'DE1에는 유량계가 없어 펌프 동작으로 유량을 추정합니다. 이 값은 그 추정에 곱하는 보정값입니다. 온수나 저울 없는 추출이 설정한 양보다 적게(또는 많이) 나올 때 맞춥니다. 머신에 저장되고 게이트웨이가 이 머신용으로 기억합니다.', mcalNow:'현재 값', mcalSave:'머신에 저장', mcalConfirm:'머신 유량 보정을 {a}에서 {b}로 바꿀까요?', mcalSaved:'머신 유량 보정을 저장했습니다', mcalNew:'새 값', flowStopTab:'유량·정지', careTab:'관리·정보', mcalRange:'0.13~2.0 사이로 넣으세요',
     refillKit:'리필 키트', refillKitDesc:'배관 급수 머신은 스스로 물을 채우므로 탱크를 만수로 표시하고 저수위 경고를 띄우지 않습니다. 리필킷 장착 여부는 머신이 보고하며, 그 값이 틀렸을 때만 여기서 지정하세요.', rkOn:'강제 켜기', rkOff:'강제 끄기', rkYes:'있음', rkNo:'없음', rkDetected:'리필 킷 감지됨',
     machineInfo:'머신 정보', serial:'시리얼', firmware:'펌웨어', geminiDesc:'봉투 사진에서 원두 정보를 자동으로 채우는 데 사용. 이 기기에만 저장됩니다.',
     installed:'설치됨', available:'사용 가능', updateFirmware:'펌웨어 업데이트', fwUpToDate:'펌웨어가 최신입니다.', fwUnavailable:'펌웨어 정보 없음', fwConfirm:'펌웨어 {v}를 설치할까요? 몇 분 걸리며, 끝나면 머신 전원을 껐다 켜야 합니다.', updating:'업데이트 중…',
@@ -5189,7 +5195,7 @@ function bindActionLongPress(btn, tapFn, holdFn){
 // tap toggles: if machine already in that state, stop (go idle); else start.
 function doSteamAction(){ if(state.machine.state==='steam') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tSteamStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/steam').then(function(){toast(t('tSteamStarted'),'ok');}).catch(function(){toast(t('tSteamFailed'),'err');}); }
 function doFlushAction(){ if(state.machine.state==='flush') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tFlushStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/flush').then(function(){toast(t('tFlushStarted'),'ok');}).catch(function(){toast(t('tFlushFailed'),'err');}); }
-function doWaterAction(){ if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tWaterStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast(t('tWaterStarted'),'ok');}).catch(function(){toast(t('tWaterFailed'),'err');}); }
+function doWaterAction(){ if(state.machine.state==='hotWater'&&_hww) _hww.button=true; if(state.machine.state==='hotWater') api('PUT','/api/v1/machine/state/idle').then(function(){toast(t('tWaterStopped'),'ok');}).catch(function(){toast(t('stopFailed'),'err');}); else api('PUT','/api/v1/machine/state/hotWater').then(function(){toast(t('tWaterStarted'),'ok');}).catch(function(){toast(t('tWaterFailed'),'err');}); }
 
 // ── Machine state ───────────────────────────────────────────────────
 var _wasRefillStopped=false;
@@ -7782,11 +7788,41 @@ function hwSet(key,raw){
 function hwPaneHtml(){
   return hwStepRow('waterFlow','hwFlow','hwFlowDesc','ml/s')
     +stopHwRowHtml()
-    +row('hwAppStop','hwAppStopDesc',sw('setHwAppStop',!prefs.hwAppStopOff,'setHwAppStop(this.checked)'))
-    +flowMultRow('hotWaterFlowMultiplier',t('fcHotWater'),0.05,2); }
+    +flowMultRow('hotWaterFlowMultiplier',t('fcHotWater'),0.05,2)
+    +hwLogHtml(); }
+// One switch for stopping on the scale. On, the skin stops the pour and the
+// gateway's own stop is left on behind it; off, both are off and the machine
+// stops on its own count. The gateway's switch is shared with other skins, so
+// it is only written when this one is pressed.
 function stopHwRowHtml(){
-  var sc=!!state.scaleConnected, on=sc&&(gwSettings||{}).stopHotWaterAtWeight!==false;
-  return row('stopHwW',sc?'stopHwWDesc':'stopHwWNoScale',sw('setStopHw',on,'setStopHotWaterAtWeight(this.checked)',!sc)); }
+  var sc=!!state.scaleConnected, on=sc&&!prefs.hwAppStopOff;
+  return row('stopHwW',sc?'stopHwWDesc':'stopHwWNoScale',sw('setStopHw',on,'setHwScaleStop(this.checked)',!sc)); }
+function setHwScaleStop(on){ setHwAppStop(on); setStopHotWaterAtWeight(on); }
+// What each pour did, kept on this device: the cup, the machine's own count
+// and time, and the stop. A pour that ends short says here whether the
+// machine's count, its clock, the gateway, the skin or a button ended it.
+function hwLog(){ var l=lsGet('aurora_hw_log'); return Array.isArray(l)?l:[]; }
+function hwLogHtml(){
+  var list=hwLog(); if(!list.length) return '';
+  function g(v){ return v==null?'\u2014':(+v).toFixed(0); }
+  return '<div class="set-row"><div class="set-info"><div class="set-name">'+escapeHtml(t('hwLog'))+'</div>'
+    +'<div class="set-desc">'+escapeHtml(t('hwLogDesc'))+'</div></div>'
+    +'<div class="hw-log-acts"><button class="m-btn" onclick="hwLogCopy()">'+escapeHtml(t('hwLogCopy'))+'</button>'
+    +'<button class="m-btn" onclick="hwLogClear()">'+escapeHtml(t('hwLogClear'))+'</button></div></div>'
+    +'<div class="hw-log" id="hwLog">'+list.slice(0,10).map(function(r){
+      var line=(r.scale?t('hwLogCup').replace('{c}',g(r.cup)).replace('{s}',g(r.cupAtStop)):t('hwLogNoScale'))
+        +' \u00b7 '+t('hwLogMachine').replace('{m}',g(r.machineMl)).replace('{v}',r.sentVol>0?g(r.sentVol):'\u2014').replace('{t}',(+r.secs||0).toFixed(1))
+        +(r.jumps>0?t('hwLogJumps').replace('{n}',r.jumps):'');
+      return '<div class="hw-log-row"><div class="hw-log-h">'+escapeHtml(t('hwLogHead').replace('{d}',fmtShotDate({timestamp:new Date(r.at).toISOString()})).replace('{g}',g(r.target)))
+        +' \u00b7 <b>'+escapeHtml(t('hwr'+r.reason).replace('{s}',g(r.dur)))+'</b></div>'
+        +'<div class="hw-log-d">'+escapeHtml(line)+'</div></div>'; }).join('')+'</div>'; }
+function hwLogCopy(){
+  var txt=JSON.stringify(hwLog(),null,1);
+  function done(){ toast(t('hwLogCopied'),'ok'); }
+  function fallback(){ var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(_){} document.body.removeChild(ta); }
+  try{ navigator.clipboard.writeText(txt).then(done,fallback); }catch(_){ fallback(); } }
+function hwLogClear(){ try{ localStorage.removeItem('aurora_hw_log'); }catch(_){} if(spOpen()) renderSpContent(); }
 function closeModal(e,id){ if(e&&e.target!==document.getElementById(id)) return; document.getElementById(id).classList.remove('show','primed'); ovSync();
   if(id==='keypadOverlay'&&KP.field==='__cb'&&KP.cb&&KP.cb.onCancel) KP.cb.onCancel(); }
 // Whoever is working the machine from the group head is done with the screen,
@@ -8095,20 +8131,62 @@ function applyHotWaterData(hw){
     settings.waterVol=mine||hw.volume; _waterVolSent=hw.volume; syncWaterRoom(); } }
 function setHwAppStop(on){ prefs.hwAppStopOff=!on; savePrefs();
   if(_waterVolSent==null) pushAux('water','waterVol'); else syncWaterRoom(); }
+// A cup put down or lifted, or a tare landing late, moves the weight faster
+// than any pour can. Such a step is not water: the base moves with it, so the
+// cup is measured from where it was and a pour is not ended by a bump.
+var WATER_JUMP=25, WATER_FLOW_MAX=20;
 function waterWeightTick(watering){
-  if(!watering){ _hww=null; return; }
+  if(!watering){ if(_hww) hwFinish(_hww); _hww=null; return; }
   var now=state.snapTime||Date.now();
-  if(!_hww) _hww={t0:now,base:null,sent:false};
-  var m=_hww;
-  if(m.sent||!waterRoomOn()||state.scaleWeight==null) return;
-  if(now-m.t0<=WATER_SETTLE_MS){ m.base=(m.base==null)?state.scaleWeight:Math.min(m.base,state.scaleWeight); return; }
+  if(!_hww) _hww={t0:now,base:null,last:null,lastT:now,sent:false,jumps:0,poured:0,target:+settings.waterVol||0,
+    at:Date.now(),sentVol:_waterVolSent,dur:+settings.waterDur||0,flowSet:+settings.waterFlow||0,skinStop:waterRoomOn(),
+    gwStop:!!(gwSettings&&gwSettings.stopHotWaterAtWeight!==false&&state.scaleConnected),
+    machineMl:0,flowT:null,secs:0,cupAtStop:null,button:false,trace:[],traceAt:0,scale:false};
+  var m=_hww, w=state.scaleWeight;
+  hwMachineTick(m,now);
+  if(w==null) return;
+  m.scale=true;
+  if(m.last!=null&&m.base!=null){
+    var dt=Math.max(0,now-m.lastT)/1000, step=w-m.last;
+    if(Math.abs(step)>WATER_JUMP+WATER_FLOW_MAX*dt){ m.base+=step; m.jumps++; m.last=w; m.lastT=now; return; } }
+  m.last=w; m.lastT=now;
+  if(now-m.t0<=WATER_SETTLE_MS){ m.base=(m.base==null)?w:Math.min(m.base,w); return; }
+  if(m.base==null) m.base=w;
+  m.poured=w-m.base;
+  if(m.sent||!waterRoomOn()) return;
   var target=+settings.waterVol||0;
   if(!(target>0)) return;
   var look=(gwSettings&&gwSettings.hotWaterFlowMultiplier>0)?gwSettings.hotWaterFlowMultiplier:WATER_LOOK_DEF;
-  var f=state.scaleFlow>0?state.scaleFlow:0;
-  if(state.scaleWeight-(m.base||0)+f*look<target) return;
-  m.sent=true;
+  var f=state.scaleFlow>0?Math.min(state.scaleFlow,WATER_FLOW_MAX):0;
+  if(m.poured+f*look<target) return;
+  m.sent=true; m.cupAtStop=m.poured;
   api('PUT','/api/v1/machine/state/idle').catch(function(){}); }
+function hwMachineTick(m,now){
+  if(m.flowT!=null&&now>m.flowT){ var d=(now-m.flowT)/1000; if(d<2) m.machineMl+=(+state.flow||0)*d; }
+  if(m.flowT==null||now>m.flowT){ m.flowT=now; m.secs=(now-m.t0)/1000; }
+  if(now-m.traceAt>=500&&m.trace.length<400){ m.traceAt=now;
+    m.trace.push([Math.round(m.secs*10)/10,Math.round((+state.flow||0)*10)/10,m.base!=null&&state.scaleWeight!=null?Math.round((state.scaleWeight-m.base)*10)/10:null]); } }
+function hwReason(m,endState){
+  if(m.sent) return 'Skin';
+  if(m.button) return 'Button';
+  if(endState==='needsWater'||endState==='refill') return 'Tank';
+  if(m.gwStop&&m.sentVol>0&&m.scale&&m.base!=null&&m.poured>=m.sentVol*0.95) return 'Gateway';
+  if(m.sentVol>0&&m.machineMl>=m.sentVol*0.9) return 'Volume';
+  if(!(m.sentVol>0)&&m.dur>0&&m.secs>=m.dur-1) return 'Time';
+  return 'Other'; }
+function hwFinish(m){
+  if(!(m.secs>0)) return;
+  var r={id:m.at,at:m.at,target:m.target,sentVol:m.sentVol,dur:m.dur,flowSet:m.flowSet,skinStop:m.skinStop,gwStop:m.gwStop,
+    secs:Math.round(m.secs*10)/10,machineMl:Math.round(m.machineMl),scale:m.scale&&m.base!=null,
+    cupAtStop:m.cupAtStop!=null?Math.round(m.cupAtStop*10)/10:Math.round(m.poured*10)/10,
+    cup:Math.round(m.poured*10)/10,jumps:m.jumps,endState:state.machine.state,reason:hwReason(m,state.machine.state),trace:m.trace};
+  var list=hwLog(); list.unshift(r); lsSet('aurora_hw_log',list.slice(0,20));
+  if(!r.scale) return;
+  setTimeout(function(){
+    if(state.scaleWeight==null) return;
+    var l=hwLog(), x=l.filter(function(y){ return y.id===r.id; })[0]; if(!x) return;
+    x.cup=Math.round((state.scaleWeight-m.base)*10)/10; lsSet('aurora_hw_log',l);
+    if(spOpen()) renderSpContent(); },3000); }
 function pushAux(kind,key){
   if(kind==='water'){ if(WATER_FIELD[key]) _waterPushKeys[key]=1; }
   else _auxPushSet[kind]=1;

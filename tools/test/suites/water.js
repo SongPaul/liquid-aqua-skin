@@ -99,20 +99,26 @@ test('the scale stop is the gateway setting as it stands, never forced on', func
   });
 });
 
-test('the scale stop switch sits with the stop timing, and needs a scale', function (T) {
+// One switch: on, the skin stops the pour and the gateway's stop stays on
+// behind it; off, both are off and the machine stops on its own count.
+test('one scale stop switch, which needs a scale and sets both stops', function (T) {
   return wSaved(function (sent) {
-    var was = state.scaleConnected;
-    state.scaleConnected = false;
+    var was = { sc: state.scaleConnected, off: prefs.hwAppStopOff };
+    state.scaleConnected = false; prefs.hwAppStopOff = false;
     var box = document.createElement('div'); box.innerHTML = stopHwRowHtml();
     var inp = box.querySelector('#setStopHw');
     T.ok(!!inp && inp.disabled && !inp.checked, 'off and locked without a scale');
-    state.scaleConnected = true; gwSettings.stopHotWaterAtWeight = true;
+    state.scaleConnected = true; gwSettings.stopHotWaterAtWeight = false;
     box.innerHTML = stopHwRowHtml(); inp = box.querySelector('#setStopHw');
-    T.ok(!inp.disabled && inp.checked, 'on with a scale');
-    setStopHotWaterAtWeight(false);
-    state.scaleConnected = was;
+    T.ok(!inp.disabled && inp.checked, 'on with a scale, whatever the gateway had');
+    setHwScaleStop(false);
     var post = sent.filter(function (c) { return c.m === 'POST' && c.p === '/api/v1/settings'; }).pop();
-    T.ok(!!post && post.b.stopHotWaterAtWeight === false, 'switching it off is saved');
+    T.ok(!!post && post.b.stopHotWaterAtWeight === false, 'off turns the gateway stop off');
+    T.eq(prefs.hwAppStopOff, true, 'and the skin stop');
+    setHwScaleStop(true);
+    post = sent.filter(function (c) { return c.m === 'POST' && c.p === '/api/v1/settings'; }).pop();
+    T.ok(post.b.stopHotWaterAtWeight === true && prefs.hwAppStopOff === false, 'on turns both on');
+    state.scaleConnected = was.sc; prefs.hwAppStopOff = was.off;
   });
 });
 
@@ -266,7 +272,7 @@ test('reading back a room the skin gave keeps the target and writes nothing', fu
 function wPour(run) {
   var was = { st: state.machine, w: state.scaleWeight, f: state.scaleFlow, t: state.snapTime, sent: _waterVolSent,
     sc: state.scaleConnected, off: prefs.hwAppStopOff, vol: settings.waterVol, api: api, gw: gwSettings.hotWaterFlowMultiplier };
-  var calls = [];
+  var calls = [], log = localStorage.getItem('aurora_hw_log');
   api = function (m, p) { calls.push(m + ' ' + p); return Promise.resolve({}); };
   state.scaleConnected = true; prefs.hwAppStopOff = false; settings.waterVol = 100; _waterVolSent = 250;
   gwSettings.hotWaterFlowMultiplier = 0.5;
@@ -275,15 +281,20 @@ function wPour(run) {
     state.machine = was.st; state.scaleWeight = was.w; state.scaleFlow = was.f; state.snapTime = was.t; _waterVolSent = was.sent;
     state.scaleConnected = was.sc; prefs.hwAppStopOff = was.off; settings.waterVol = was.vol; api = was.api;
     gwSettings.hotWaterFlowMultiplier = was.gw;
+    if (log == null) localStorage.removeItem('aurora_hw_log'); else localStorage.setItem('aurora_hw_log', log);
   }
 }
 function wAt(ms, w, f) { state.snapTime = 1e6 + ms; state.scaleWeight = w; state.scaleFlow = f; waterWeightTick(true); }
+function wRamp(from, to, w0, w1, f) {
+  for (var ms = from; ms <= to; ms += 200) wAt(ms, w0 + (w1 - w0) * (ms - from) / (to - from), f);
+}
 
 test('the skin stops the pour when the cup will reach the target', function (T) {
   wPour(function (calls) {
     wAt(0, 300, 0); wAt(1000, 0, 0);
-    wAt(2500, 90, 4);
+    wRamp(1200, 2800, 0, 50, 4);
     T.eq(calls.length, 0, 'nothing in the first seconds');
+    wRamp(3000, 4800, 52, 96, 4);
     wAt(5000, 97, 4);
     T.eq(calls.length, 0, '97 + 4 x 0.5 is under 100');
     wAt(5200, 98, 4);
@@ -296,12 +307,125 @@ test('the skin stops the pour when the cup will reach the target', function (T) 
 test('the skin stops on the scale even at a 250 target, and not when turned off', function (T) {
   wPour(function (calls) {
     settings.waterVol = 250;
-    wAt(0, 0, 0); wAt(5000, 249, 4);
+    wAt(0, 0, 0); wRamp(200, 25000, 1, 249, 10);
     T.eq(calls.length, 1, 'the cup reaching 250 stops it, not the pump count');
     waterWeightTick(false); calls.length = 0; settings.waterVol = 100; prefs.hwAppStopOff = true;
-    wAt(0, 0, 0); wAt(5000, 120, 4);
+    wAt(0, 0, 0); wRamp(200, 12000, 1, 120, 10);
     T.eq(calls.length, 0, 'not chosen');
   });
+});
+
+// A 200 ml pour once ended at 53 g: a cup put down, lifted or a tare landing
+// late moves the weight faster than water can, and is not taken for water.
+test('a cup put down mid-pour does not end it', function (T) {
+  wPour(function (calls) {
+    settings.waterVol = 200;
+    wAt(0, 0, 0); wRamp(200, 5000, 1, 40, 8);
+    wAt(5200, 340, 8);
+    T.eq(calls.length, 0, 'a 300 g step is a cup, not water');
+    wRamp(5400, 25000, 341, 499, 8);
+    T.eq(calls.length, 1, 'the pour still ends at 200 in the cup');
+  });
+});
+
+test('a tare landing after the first seconds does not keep the pour going', function (T) {
+  wPour(function (calls) {
+    settings.waterVol = 200;
+    wAt(0, 250, 0); wRamp(200, 4000, 250, 280, 8);
+    wAt(4200, 30, 8);
+    wRamp(4400, 30000, 31, 199, 8);
+    T.eq(calls.length, 1, 'stopped on the water, from where the tare left it');
+  });
+});
+
+test('a flow spike from the scale does not end it', function (T) {
+  wPour(function (calls) {
+    settings.waterVol = 200;
+    wAt(0, 0, 0); wRamp(200, 6000, 1, 50, 8);
+    wAt(6200, 51, 500);
+    T.eq(calls.length, 0, 'the look ahead is capped');
+  });
+});
+
+// Each pour is logged with what the machine counted and what stopped it, so a
+// pour that ends short says whether the machine's count, its clock, the
+// gateway, the skin or a button ended it.
+function wMachine(ms, flow) { state.snapTime = 1e6 + ms; state.flow = flow; waterWeightTick(true); }
+function wPourBoth(from, to, ml, cup, flow) {
+  for (var ms = from; ms <= to; ms += 100) {
+    var k = (ms - from) / (to - from);
+    wMachine(ms, flow);
+    state.scaleWeight = cup * k; state.scaleFlow = flow * cup / ml; waterWeightTick(true);
+  }
+}
+function wEnd(endState) { state.machine = { state: endState || 'idle', substate: 'idle' }; waterWeightTick(false); }
+function wLastLog() { return lsGet('aurora_hw_log')[0]; }
+
+test('the log tells the skin stopped it', function (T) {
+  var r;
+  wPour(function () {
+    settings.waterVol = 200; settings.waterDur = 60;
+    wAt(0, 0, 0); wPourBoth(100, 30000, 300, 210, 10);
+    wEnd(); r = wLastLog();
+  });
+  T.eq(r.reason, 'Skin', 'stopped by the skin: ' + JSON.stringify(r).slice(0, 200));
+  T.ok(r.cupAtStop >= 195 && r.cupAtStop <= 201, 'at 200 in the cup: ' + r.cupAtStop);
+  T.eq(r.sentVol, 250, 'with 250 sent');
+});
+
+test('the log tells the machine stopped on its own count', function (T) {
+  var r;
+  wPour(function () {
+    settings.waterVol = 200; settings.waterDur = 60;
+    wAt(0, 0, 0); wPourBoth(100, 25000, 250, 149, 10);
+    wEnd(); r = wLastLog();
+  });
+  T.eq(r.reason, 'Volume', 'the machine count: ' + r.reason);
+  T.ok(Math.abs(r.machineMl - 249) < 5, 'it counted about 250 ml: ' + r.machineMl);
+  T.ok(Math.abs(r.cup - 149) < 1, 'while the cup had 149 g: ' + r.cup);
+  T.ok(r.trace.length > 10 && r.trace[5].length === 3, 'with a trace');
+});
+
+test('the log tells the gateway stopped it when the cup reached what the machine was sent', function (T) {
+  var r, was = gwSettings.stopHotWaterAtWeight;
+  wPour(function () {
+    gwSettings.stopHotWaterAtWeight = true; prefs.hwAppStopOff = true; _waterVolSent = 200;
+    settings.waterVol = 200;
+    wAt(0, 0, 0); wPourBoth(100, 22000, 198, 198, 9);
+    wEnd(); r = wLastLog();
+  });
+  gwSettings.stopHotWaterAtWeight = was;
+  T.eq(r.reason, 'Gateway', 'the gateway, though the machine count was there too');
+});
+
+test('the log tells a button in the skin stopped it, and the tank', function (T) {
+  var r1, r2;
+  wPour(function () {
+    settings.waterVol = 200;
+    state.machine = { state: 'hotWater', substate: 'pouring' };
+    wAt(0, 0, 0); wPourBoth(100, 8000, 80, 60, 10);
+    doWaterAction(); wEnd(); r1 = wLastLog();
+    state.machine = { state: 'hotWater', substate: 'pouring' };
+    wAt(0, 0, 0); wPourBoth(100, 8000, 80, 60, 10);
+    wEnd('needsWater'); r2 = wLastLog();
+  });
+  T.eq(r1.reason, 'Button', 'the button');
+  T.eq(r2.reason, 'Tank', 'the tank');
+});
+
+test('the log shows in the hot water tab, keeps twenty, and copies', function (T) {
+  var was = localStorage.getItem('aurora_hw_log');
+  var list = [];
+  for (var i = 0; i < 25; i++) list.push({ id: i, at: Date.now() - i * 60000, target: 200, sentVol: 250, dur: 60, secs: 25, machineMl: 250, scale: true, cup: 149, cupAtStop: 147, jumps: 0, reason: 'Volume', trace: [] });
+  lsSet('aurora_hw_log', list);
+  var box = document.createElement('div'); box.innerHTML = hwPaneHtml();
+  var rows = box.querySelectorAll('#hwLog .hw-log-row');
+  T.eq(rows.length, 10, 'the last ten are shown');
+  T.ok(/149/.test(rows[0].textContent) && /250/.test(rows[0].textContent), 'cup and count: ' + rows[0].textContent);
+  T.ok(rows[0].textContent.indexOf(t('hwrVolume')) >= 0, 'and the stop');
+  T.ok(!!box.querySelector('button[onclick="hwLogCopy()"]'), 'with a copy button');
+  wPour(function () { settings.waterVol = 200; wAt(0, 0, 0); wPourBoth(100, 5000, 50, 40, 10); wEnd(); T.eq(hwLog().length, 20, 'twenty kept'); });
+  if (was == null) localStorage.removeItem('aurora_hw_log'); else localStorage.setItem('aurora_hw_log', was);
 });
 
 // Streamline keeps the hot water flow on a settings page, off the card; so
@@ -314,7 +438,7 @@ test('the hot water tab holds the flow and the scale stop, not a time limit', fu
   T.eq(box.querySelector('#hwDurWarn'), null, 'and no warning about it');
   T.eq(typeof hwDurWarnHtml, 'undefined', 'nothing to warn with');
   T.ok(!!box.querySelector('#setStopHw'), 'the scale stop switch');
-  T.ok(!!box.querySelector('#setHwAppStop'), 'and stopping in the skin');
+  T.eq(box.querySelector('#setHwAppStop'), null, 'and only one');
   T.ok(!!box.querySelector('#fm-hotWaterFlowMultiplier'), 'and its stop timing');
   T.eq(document.getElementById('waterFlowV'), null, 'still nothing of it on the card');
 });
