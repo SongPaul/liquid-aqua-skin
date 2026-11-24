@@ -367,3 +367,27 @@ test('using a profile from the editor asks nothing about its last shot', functio
   });
   }).catch(function (e) { api = real; curProfileObj = prev; throw e; });
 });
+
+// A profile from a file, Visualizer or de1app keeps its numbers as text. One
+// text number stopped the editor drawing the step: the exit condition and the
+// numbers beside it went missing.
+test('a profile with numbers as text opens with its exit condition and numbers', function (T) {
+  var p = { id: 'txt-num', isDefault: false, profile: { title: 'Text Numbers', author: '', notes: '', beverage_type: 'espresso',
+    target_weight: '36', target_volume: '0', steps: [
+      { name: 'Fill', pump: 'flow', transition: 'fast', flow: '4.0', temperature: '92.0', seconds: '20', volume: '0', sensor: 'coffee',
+        exit: { type: 'pressure', condition: 'over', value: '4.0' } },
+      { name: 'Pour', pump: 'pressure', transition: 'smooth', pressure: '9.0', temperature: '92.0', seconds: '30', volume: '0', weight: '0', sensor: 'coffee',
+        exit: { type: 'flow', condition: 'over', value: '2.8' }, limiter: { value: '3.5', range: '0.6' } }] } };
+  openEditPageFor(p, p);
+  epOpenEditor(p); epStepIdx = 1; renderEpSteps();
+  var val = T.el('#epExitVal');
+  T.ok(!!val, 'the exit condition is drawn');
+  T.eq(val.parentElement.querySelector('.val').textContent, '2.8', 'with its value');
+  T.ok(T.el('#epExitType button.on[data-v="flow"]'), 'on flow');
+  var row = T.el('#epStepGrid tr.gr[data-i="1"]');
+  T.ok(/9\.0/.test(row.textContent) && /30\.0/.test(row.textContent), 'the step numbers show: ' + row.textContent);
+  T.eq(typeof editing.profile.steps[1].exit.value, 'number', 'kept as a number');
+  T.eq(editing.profile.steps[1].limiter.range, 0.6, 'the limiter too');
+  T.eq(p.profile.steps[1].exit.value, '2.8', 'the profile it came from is left alone');
+  shut();
+});
