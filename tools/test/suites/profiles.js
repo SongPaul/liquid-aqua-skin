@@ -391,3 +391,17 @@ test('a profile with numbers as text opens with its exit condition and numbers',
   T.eq(p.profile.steps[1].exit.value, '2.8', 'the profile it came from is left alone');
   shut();
 });
+
+// On an upright tablet the exit line sat beside its two toggles in a slot
+// narrower than its own slider, and its value was pushed off the panel.
+test('the exit value line takes a row of its own and keeps its value inside', function (T) {
+  var p = { id: 'exit-row', isDefault: false, profile: { title: 'Exit Row', author: '', notes: '', beverage_type: 'espresso', target_weight: 36, target_volume: 0, steps: [
+    { name: 'Fill', pump: 'flow', transition: 'fast', flow: 3, temperature: 91, seconds: 6, volume: 0, sensor: 'coffee', exit: { type: 'pressure', condition: 'over', value: 3 } }] } };
+  openEditPageFor(p, p); epOpenEditor(p); epStepIdx = 0; renderEpSteps();
+  var row = T.el('#epExitVal').parentElement, body = row.parentElement;
+  T.eq(T.css(row, 'flexBasis'), '100%', 'a row of its own');
+  T.eq(T.css(T.el('#epExitVal'), 'minWidth'), '0px', 'the slider may shrink');
+  var v = row.querySelector('.val').getBoundingClientRect(), b = T.el('#epStepEditor').getBoundingClientRect();
+  T.ok(v.right <= b.right + 1, 'the value stays inside the panel: ' + v.right + ' <= ' + b.right);
+  shut();
+});

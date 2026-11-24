@@ -1493,6 +1493,21 @@ body.night.scaled .ep-item.defp .ep-cbody,body.night.no-fx .ep-item.defp .ep-cbo
 .ep-grid .gh th{position:sticky;top:0;z-index:1;background:var(--sheet)}
 #epEditor .ep-step-editor{grid-column:2;grid-row:2/5;align-self:stretch;overflow-y:auto}
 #epEditor .ep-save-bar{grid-column:1/-1;grid-row:5;align-self:end}
+/* A tablet held upright has no room for the step beside the graph: the
+   editor took the width and the graph and the step table were squeezed to a
+   sliver. Upright, everything stacks and the page scrolls, with the save bar
+   kept at the bottom. */
+@media (max-width:900px){
+  body.ep-edit #epEditor{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:max-content;overflow-y:auto;align-content:start}
+  #epEditor .ep-meta,#epEditor .ep-visual,#epEditor .ep-steps-title,#epEditor .ep-grid-wrap,#epEditor .ep-step-editor,#epEditor .ep-save-bar{grid-column:1}
+  #epEditor .ep-visual{grid-row:2}
+  #epEditor .ep-steps-title{grid-row:3}
+  #epEditor .ep-grid-wrap{grid-row:4;min-height:auto;max-height:none;overflow:visible;overflow-x:auto;align-self:start}
+  #epEditor .ep-step-editor{grid-row:5}
+  #epEditor .ep-save-bar{grid-row:6}
+  #epEditor .ep-step-editor{overflow:visible;align-self:start}
+  #epEditor .ep-save-bar{position:sticky;bottom:-16px;z-index:3;padding:10px 0 16px;background:var(--sheet)}
+}
 .ep-placeholder{color:var(--ink-mute);font-size:15px;text-align:center;margin-top:120px}
 /* Taste is the language of the questions; the translation into pressures
    and seconds happens out of sight. */
@@ -1559,7 +1574,7 @@ body.night .aip-out{background-color:rgba(99,102,241,.16);box-shadow:inset 0 1px
 .ep-sliders{display:grid;grid-template-columns:1fr;gap:2px}
 .ep-slider-row{display:flex;align-items:center;gap:10px}
 .ep-slider-row .lbl{font-size:11px;font-weight:700;color:var(--ink-mute);width:64px;flex-shrink:0}
-.ep-slider-row input[type=range]{flex:1;-webkit-appearance:none;height:28px;background:transparent;outline:none;cursor:pointer}
+.ep-slider-row input[type=range]{flex:1;min-width:0;-webkit-appearance:none;height:28px;background:transparent;outline:none;cursor:pointer}
 .ep-slider-row input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:100px;background:rgba(139,92,246,.18)}
 .ep-slider-row input[type=range]::-moz-range-track{height:6px;border-radius:100px;background:rgba(139,92,246,.18)}
 .ep-slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;margin-top:-9px;width:24px;height:24px;border-radius:50%;background-color:var(--ctl-knob);background-image:var(--ctl-sheen);cursor:pointer;box-shadow:var(--ctl-knob-lift)}
@@ -2434,7 +2449,9 @@ body.night .ep-grid .gname{color:var(--ink)}
 .ep-exit-t{font-size:13px;font-weight:800;color:var(--ink)}
 .ep-exit-hint{font-size:11px;font-weight:600;color:var(--ink-mute);line-height:1.45;margin-top:3px}
 .ep-exit-body{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px}
-.ep-exit-body .ep-slider-row{flex:1;min-width:190px;margin:0}
+/* the line gets a row of its own: squeezed beside the two toggles, its value
+   was pushed out past the edge of the panel */
+.ep-exit-body .ep-slider-row{flex:1 1 100%;min-width:0;margin:0}
 /* the readout is the way in to typing an exact value */
 .ep-slider-row .val.tapval{cursor:pointer;border-radius:9px;padding:3px 7px;margin:-3px -7px;transition:background .15s,transform .1s}
 .ep-slider-row .val.tapval:active{transform:scale(.94);background:rgba(99,102,241,.16)}
