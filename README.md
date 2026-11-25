@@ -157,7 +157,7 @@ The yield is also sent as the profile's target weight, as other skins do.
 
 The grinder has a card of its own between the recipe and the bean card, shown whenever a grinder is in use. A grinder used by hand is its name beside its **Grind**, stepped by your grinder's own step size; tap the name for the grinders. A grinder driven by a plugin that is connected and in use has a head line with its dot, its name and what it reads (**Bookoo MT80 · reads 418**); tap the name for the grinder's own panel (the MT80) or the grinders, hold it for the grinders. Under the head, **Grind**, **RPM** and, for the MT80, **Feed** each have a minus and a plus that step by what the grinder declares; a control the grinder does not declare is not shown. A linked grinder that does not take the grind setting is dialled by hand: its **Grind** has no minus or plus, and a tap types what was dialled for the shot to record, while its speeds keep theirs. A grinder that only reports also shows what it reads, with nothing to press. Grinders are changed from the device menu, not from the card. A grinder's editor has **Grind dialled by hand**: on, the card records the grind without buttons and sends nothing to the grinder for it, even when its plugin could set it (the MT80's gap is turned on the grinder); its speeds still go to it.
 
-A grind is a number on one grinder's dial: the MT80 counts its gap in **µm**, a Niche counts steps. So the grind is remembered per bean and grinder, and picking a grinder brings back its own: the last grind used with it for this bean, else for any bean, else what its record holds, else nothing. The other grinder's number is never carried across. The MT80's unit is shown beside its grind. **Last shot's settings** offers a grind together with the grinder it was set on.
+A grind is a number on one grinder's dial: the MT80 counts its gap in **µm**, a Niche counts steps. So the grind is remembered per bean and grinder, and picking a grinder brings back its own: the last grind used with it for this bean, else for any bean, else what its record holds, else nothing. The other grinder's number is never carried across. The MT80's unit goes with its grind on the keypad, in the grinder's head line and in the shot records; the grind cells on the grinder card and the phone's recipe show the number alone, never cut short, a long one set a step smaller. **Last shot's settings** offers a grind together with the grinder it was set on.
 
 ### Coffee and last shot
 
@@ -453,15 +453,25 @@ The full-screen pages (beans, profiles, the shot log, settings) do the same whil
 <img src="docs/phone-shots.png" alt="Phone: shots" width="280">
 </p>
 
-Open the address from Settings › Phone on a phone and the skin shows its phone app. Add it to the home screen and it opens like an app. Its tabs are:
+Scan the code in Settings › Phone, or open the address beside it, and the skin shows its phone app. The address is the tablet's IP address; if that changes, scan the code again. When the gateway does not report the address, type the tablet's IP there and press **Make the QR code**. A name such as `decaid.local` can be typed under **Type the address**, but a numeric address is the one that works everywhere. Add the app to the home screen and it opens like an app.
+
+The phone looks like the tablet: the same flat colours, and night when the skin's night setting is on. Its tabs are:
 
 | | |
 |---|---|
-| **Machine** | state, temperatures, pressure, flow and tank, with wake and sleep |
-| **Shots** | the last shots, with their graph, tasting notes and upload to Visualizer. When the machine is out of reach, it reads your shots from Visualizer instead |
+| **Machine** | the machine's state as the tablet's tank panel shows it, the recipe it has (to read, not to change), the last shot, and wake or sleep |
+| **Shots** | the last shots. An open shot shows its graph, dose, yield, ratio and time, **Rate this shot**, and buttons for Visualizer and an AI reading. When the machine is out of reach, it reads your shots from Visualizer instead |
 | **Beans** | photograph a bag and add it, or update a bean's batch |
-| **Camera** | send this phone's camera to the album on the tablet |
-| **Setup** | the phone's own settings, the AI key, and a Visualizer account |
+| **Camera** | send this phone's camera, or an IP-camera app's stream, to the album on the tablet |
+| **Setup** | the address this phone opens, the phone's own settings, the AI key, and a Visualizer account |
+
+**The phone starts nothing.** It never starts a shot, steam, hot water or a flush, and it does not change the recipe. What it can do is stop: while the machine is pulling a shot, steaming, pouring hot water or flushing, a red **Stop** sits right above the tabs, and it sends the machine to idle at once, without asking first. It also appears when the machine has not answered for more than five seconds; the time at the top then turns amber and the card says it is waiting for the machine. It is not offered to a machine last seen asleep, since idle would wake it. If the stop does not go through, the phone says so and the button is ready again.
+
+**During a shot** the card shows the time, and with a scale the weight against the yield and what is left. Without a scale it says the profile ends the shot. The scale is only listened to while the Machine tab is on screen and a shot is running. **Steaming** shows the time, and with a milk thermometer the milk against the temperature it stops at.
+
+**After a shot** the tab shows the shot just pulled, with the dose, yield, ratio and time from its saved record, and **Rate this shot**. That opens the same record as the tablet's, as a sheet: dose and yield, TDS and extraction yield, the tasting, and notes. The card goes when the next thing starts or after ten minutes.
+
+On a phone that will not give this address a camera, the Camera tab puts the IP-camera app first, and the phone's own camera folds to one line that opens to what would let it.
 
 ---
 
@@ -500,7 +510,7 @@ In the browser the same keys are kept with an `aurora_` prefix.
 
 **A second scale is not found.** Turn it on, then **Find** in Devices. The gateway stops looking once it has one scale.
 
-**The phone QR opens a page that cannot reach the gateway.** The gateway is reporting an address the phone cannot see. Type the tablet's Wi-Fi address in Settings › Phone.
+**The phone QR opens a page that cannot reach the gateway.** The tablet's address may have changed, or the gateway is reporting one the phone cannot see. Scan the code again, or type the tablet's IP under **Type the address** in Settings › Phone.
 
 **The screen stutters.** Turn off *Screen effects* in Settings › General › Display. The frame meter there shows how smoothly the tablet runs.
 

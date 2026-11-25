@@ -1677,7 +1677,6 @@ body.no-fx .ai-thumb::after{animation:none;display:none}
 .bp-lab{font-size:11px;font-weight:700;color:var(--ink-mute);margin:12px 0 7px}
 .bp-strip .bp-t{width:72px;height:72px;cursor:pointer}
 #mobilePage .bp-strip{justify-content:flex-start}
-#phoneShell .bp-lab{color:rgba(255,255,255,.72)}
 .pic-ov{position:fixed;inset:0;z-index:400;background:rgba(10,8,20,.9);
   display:none;align-items:center;justify-content:center;padding:24px}
 .pic-ov.show{display:flex}
@@ -1692,7 +1691,6 @@ body.no-fx .ai-thumb::after{animation:none;display:none}
   text-align:center;display:none}
 .ai-thumb.keep .ai-thumb-k{display:block}
 .ai-pick{flex-basis:100%;font-size:11px;font-weight:600;color:var(--ink-mute);margin-top:1px}
-#phoneShell .ai-pick{color:rgba(255,255,255,.74)}
 .ai-thumb-x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;
   border:1px solid rgba(255,255,255,.5);background:rgba(18,14,28,.66);color:#fff;
   font-size:14px;font-weight:700;line-height:1;cursor:pointer;-webkit-appearance:none;
@@ -1756,66 +1754,8 @@ body.night .rip{background:radial-gradient(circle,rgba(196,181,253,.42) 0,rgba(9
 .cs-tips{font-size:12px;line-height:1.6;color:var(--ink-mute);background:var(--glass-hi);
   border:1px solid var(--glass-line);border-radius:12px;padding:10px 12px;overflow-wrap:anywhere}
 .cs-tips[hidden]{display:none}
-#phoneShell .cs-tips{color:rgba(255,255,255,.84);background:rgba(255,255,255,.13);
-  border-color:rgba(255,255,255,.28)}
 .mb-actions .m-btn{flex:1;max-width:none;min-height:52px;font-size:14px}
 .mb-analyze{width:100%;min-height:54px;font-size:15px}
-/* The phone gets the same glass the tablet does, and the same one at night --
-   the panels here were a hard white with themed text on them, which at night
-   is white on white. */
-/* The phone's document is shorter than its screen, and html carries the light
-   canvas colour, so the page paints its own ground rather than letting that
-   show through under a dark theme. */
-#phoneShell{padding:14px 14px calc(86px + env(safe-area-inset-bottom,0px));min-height:100vh;background-attachment:fixed;
-  background:radial-gradient(circle at 18% 12%,rgba(139,92,246,.30),transparent 46%),
-             radial-gradient(circle at 88% 22%,rgba(56,189,248,.26),transparent 48%),
-             radial-gradient(circle at 76% 88%,rgba(236,72,153,.22),transparent 48%),
-             linear-gradient(160deg,#e8ecff,#f5edff)}
-/* Several jobs, one page. The bar stays under the thumb rather than scrolling
-   away with the content, which is where a phone expects to find it. */
-.ph-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;
-  padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
-  background:var(--mb-card);border-top:1px solid var(--glass-line);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.ph-tab{flex:1;min-height:52px;border:0;border-radius:14px;background:transparent;
-  font-family:var(--font);font-size:11px;font-weight:700;color:var(--ink-mute);cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  -webkit-appearance:none;transition:color .15s,background-color .15s}
-.ph-tab .ic{font-size:19px;line-height:1}
-.ph-tab.on{background-color:var(--ctl-face);color:var(--accent)}
-#camSetupPage,#mobilePage,#phStatusPage,#phLogPage{max-width:520px;margin:0 auto}
-/* What the machine is doing, read from across the room. */
-.ps-state{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--r-md);
-  background:var(--mb-card);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
-.ps-dot{width:12px;height:12px;border-radius:50%;background:var(--ink-mute);flex:none;
-  box-shadow:0 0 0 4px rgba(139,136,168,.18)}
-/* Grey reads as "no idea", which is the wrong thing to say about a machine
-   that is ready. Ready is green, working is the accent and moves, warming and
-   thirsty are amber, and asleep is the one that is genuinely at rest. */
-.ps-state.ready .ps-dot{background:var(--green);box-shadow:0 0 0 4px rgba(16,185,129,.22)}
-.ps-state.run .ps-dot{background:var(--accent);box-shadow:0 0 0 4px rgba(99,102,241,.26);
-  animation:psPulse 1.8s ease-in-out infinite}
-.ps-state.warn .ps-dot{background:var(--amber);box-shadow:0 0 0 4px rgba(245,158,11,.22)}
-.ps-state.off .ps-dot{background:var(--ink-mute);box-shadow:0 0 0 4px rgba(139,136,168,.14);opacity:.75}
-@keyframes psPulse{0%,100%{box-shadow:0 0 0 3px rgba(99,102,241,.34)}
-  50%{box-shadow:0 0 0 9px rgba(99,102,241,0)}}
-.ps-name{font-size:16px;font-weight:700;color:var(--ink);flex:1;min-width:0}
-.ps-note{font-size:12px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums;white-space:nowrap}
-/* While something is running the card stops being a list of readings and
-   becomes the one number worth seeing from across the room. */
-.ps-focus{margin-top:12px;padding:26px 16px 22px;border-radius:var(--r-md);text-align:center;
-  background:var(--mb-card);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
-.ps-big{font-size:64px;font-weight:700;line-height:1;color:var(--accent);
-  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.ps-meta{font-size:13px;font-weight:700;color:var(--ink-mute);margin-top:8px}
-.ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.ps-grid.three{grid-template-columns:repeat(3,1fr)}
-.ps-grid.three .ps-v{font-size:18px}
-.ps-cell{background:var(--mb-card);border:1px solid var(--glass-line);border-radius:var(--r-md);
-  box-shadow:var(--shadow);padding:13px 14px}
-.ps-k{font-size:11px;font-weight:700;color:var(--ink-mute);}
-.ps-v{font-size:21px;font-weight:700;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums}
-.ps-v small{font-size:12px;font-weight:700;color:var(--ink-mute);margin-left:3px}
 /* The shots, as a phone would list them. */
 .pl-list{display:flex;flex-direction:column;gap:9px}
 .pl-item{background:var(--mb-card);border:1px solid var(--glass-line);border-radius:var(--r-md);
@@ -1879,15 +1819,11 @@ body.night .rip{background:radial-gradient(circle,rgba(196,181,253,.42) 0,rgba(9
 .cs-tip::before{content:"\00b7 ";opacity:.7}
 .pl-flat{cursor:default}
 .pl-end{padding:6px 0 2px;text-align:center;font-size:12px;color:var(--ink-mute)}
-#phoneShell .pl-end{color:rgba(255,255,255,.7)}
 .pl-end .m-btn{width:100%}
 .pl-facts{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin-top:11px;font-size:12px}
 .pl-fk{color:var(--ink-mute);white-space:nowrap}
 .pl-fv{font-weight:600;overflow-wrap:anywhere}
-#phoneShell .pl-fk{color:rgba(255,255,255,.66)}
-#phoneShell .pl-fv{color:#fff}
 .pl-vizmark{margin-top:10px;font-size:11px;font-weight:700;color:var(--ink-mute)}
-#phoneShell .pl-vizmark{color:rgba(255,255,255,.72)}
 .pl-acts{display:flex;gap:8px;margin-top:10px}
 .pl-acts .m-btn{flex:1;min-width:0}
 .pl-ai{margin-top:6px}
@@ -1895,11 +1831,6 @@ body.night .rip{background:radial-gradient(circle,rgba(196,181,253,.42) 0,rgba(9
 .pl-ai .ai-list{font-size:12px}
 .pl-canvas{height:150px;border-radius:12px;background:var(--field);border:1px solid var(--edge);padding:6px}
 .pl-canvas canvas{width:100%;height:100%;display:block}
-body.night #phoneShell{background-attachment:fixed;
-  background:radial-gradient(circle at 18% 12%,rgba(99,102,241,.26),transparent 46%),
-             radial-gradient(circle at 88% 22%,rgba(56,189,248,.18),transparent 48%),
-             radial-gradient(circle at 76% 88%,rgba(236,72,153,.16),transparent 48%),
-             linear-gradient(160deg,#0d0b1c,#140f26)}
 /* the camera page was a white sheet too */
 .cs-way{background:var(--mb-card)}
 .mb-card{background:var(--mb-card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
@@ -1924,203 +1855,180 @@ body.night #phoneShell{background-attachment:fixed;
 #mobilePage .ai-thumb{width:70px;height:70px;border-radius:12px}
 .mb-key{padding:16px}
 
-/* ── Liquid glass, phone only ──────────────────────────────────────────
-   The phone is held up against whatever is behind it, so it is given a
-   ground of its own rather than the tablet's paper: one iridescent sheet,
-   fixed to the viewport, with every panel a pane of glass over it. Scoped
-   to #phoneShell so the tablet keeps its own skin.
-   The ground is deep in the middle of its range on purpose -- white text
-   has to hold on every part of it, including the brightest. */
-#phoneShell{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
-#phoneShell,body.night #phoneShell{
-  background-attachment:fixed;
-  background:
-    /* the floating bar has to hold its own on whatever it happens to be over */
-    linear-gradient(to top,rgba(23,10,58,.46),transparent 24%),
-    radial-gradient(120% 82% at 8% 0%,rgba(56,189,248,.62),transparent 58%),
-    radial-gradient(105% 72% at 97% 10%,rgba(167,139,250,.62),transparent 60%),
-    radial-gradient(115% 78% at 82% 52%,rgba(232,121,249,.50),transparent 58%),
-    radial-gradient(125% 85% at 2% 72%,rgba(79,70,229,.72),transparent 60%),
-    radial-gradient(95% 62% at 55% 104%,rgba(190,24,93,.48),transparent 62%),
-    linear-gradient(152deg,#312e81,#5b21b6 30%,#701a75 60%,#1e40af);
-  /* one colour language inside the sheet: ink is light, edges are highlights */
-  --ink:#fff; --ink-soft:rgba(255,255,255,.88); --ink-mute:rgba(255,255,255,.72);
-  --glass:rgba(255,255,255,.15); --glass-hi:rgba(255,255,255,.28);
-  --glass-line:rgba(255,255,255,.40);
-  --mb-card:rgba(255,255,255,.15);
-  --sheet:rgba(255,255,255,.15);
-  --field:rgba(255,255,255,.16); --edge:rgba(255,255,255,.32);
-  --ctl-face:rgba(255,255,255,.18); --ctl-edge:rgba(255,255,255,.36);
-  --ctl-sheen:none;
-  --ctl-lift:0 0 #0000;
-  --la-surface:rgba(255,255,255,.15); --la-well:rgba(255,255,255,.14);
-  --la-line:rgba(255,255,255,.22); --la-line-2:rgba(255,255,255,.36);
-  --la-accent-soft:rgba(255,255,255,.18); --la-accent-ink:#fff; --la-accent-line:rgba(255,255,255,.5);
-  --la-focus:rgba(255,255,255,.4);
-  --la-thumb:rgba(255,255,255,.92); --la-thumb-ink:#4c1d95; --la-thumb-shadow:0 1px 2px rgba(22,12,58,.22);
-  --shadow:0 12px 34px rgba(22,12,58,.26)}
-/* Night is the same sheet held further from the light: the same hues, deeper,
-   so the setting still means something on this page. */
-body.night #phoneShell{
-  background:
-    linear-gradient(to top,rgba(10,4,28,.58),transparent 26%),
-    radial-gradient(120% 82% at 8% 0%,rgba(14,116,144,.60),transparent 58%),
-    radial-gradient(105% 72% at 97% 10%,rgba(91,33,182,.70),transparent 60%),
-    radial-gradient(115% 78% at 82% 52%,rgba(134,25,143,.55),transparent 58%),
-    radial-gradient(125% 85% at 2% 72%,rgba(49,46,129,.78),transparent 60%),
-    radial-gradient(95% 62% at 55% 104%,rgba(112,26,117,.50),transparent 62%),
-    linear-gradient(152deg,#160f38,#2e1065 32%,#3b0764 62%,#0f214d)}
-/* The ground was painted onto the shell itself, which is as tall as the page.
-   So every time the page grew -- an answer arriving, a card unfolding -- the
-   whole gradient was laid down again and every pane of glass over it re-blurred
-   what it had just re-drawn. That is the blink, and it is the whole screen
-   because every panel is one of those panes. On its own fixed layer the ground
-   is painted once, at the size of the window, and nothing that happens above it
-   reaches it again. It is also what the comment above always claimed: fixed to
-   the viewport. The shorthand underneath had been quietly undoing that. */
-/* isolate, not relative: the layer has to sit inside a stacking context of the
-   shell's own or the body's colour paints straight over it, and isolate buys
-   that without making the shell a containing block for anything positioned. */
-#phoneShell{background:none;isolation:isolate}
-#phoneShell::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:
-    linear-gradient(to top,rgba(23,10,58,.46),transparent 24%),
-    radial-gradient(120% 82% at 8% 0%,rgba(56,189,248,.62),transparent 58%),
-    radial-gradient(105% 72% at 97% 10%,rgba(167,139,250,.62),transparent 60%),
-    radial-gradient(115% 78% at 82% 52%,rgba(232,121,249,.50),transparent 58%),
-    radial-gradient(125% 85% at 2% 72%,rgba(79,70,229,.72),transparent 60%),
-    radial-gradient(95% 62% at 55% 104%,rgba(190,24,93,.48),transparent 62%),
-    linear-gradient(152deg,#312e81,#5b21b6 30%,#701a75 60%,#1e40af)}
-body.night #phoneShell{background:none}
-body.night #phoneShell::before{background:
-    linear-gradient(to top,rgba(10,4,28,.58),transparent 26%),
-    radial-gradient(120% 82% at 8% 0%,rgba(14,116,144,.60),transparent 58%),
-    radial-gradient(105% 72% at 97% 10%,rgba(91,33,182,.70),transparent 60%),
-    radial-gradient(115% 78% at 82% 52%,rgba(134,25,143,.55),transparent 58%),
-    radial-gradient(125% 85% at 2% 72%,rgba(49,46,129,.78),transparent 60%),
-    radial-gradient(95% 62% at 55% 104%,rgba(112,26,117,.50),transparent 62%),
-    linear-gradient(152deg,#160f38,#2e1065 32%,#3b0764 62%,#0f214d)}
-body.night #phoneShell .mb-card,body.night #phoneShell .pl-item,
-body.night #phoneShell .ps-state,body.night #phoneShell .cs-way,
-body.night #phoneShell .rec-box:not(:empty),body.night #phoneShell .mb-head{
-  background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.26)}
-body.night #phoneShell .ph-nav{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28)}
-#phoneShell .mb-card,#phoneShell .pl-item,#phoneShell .ps-state,#phoneShell .cs-way,
-#phoneShell .rec-box:not(:empty),#phoneShell .mb-head{
-  background:rgba(255,255,255,.15);
-  -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
-  border:1px solid rgba(255,255,255,.38);border-radius:24px;
-  box-shadow:0 12px 34px rgba(22,12,58,.26),inset 0 1px 0 rgba(255,255,255,.5)}
-/* the title was a gradient clipped into the text, which on glass reads as a
-   smudge; on this ground the title is simply the brightest thing on it */
-#phoneShell .mb-head{text-align:left;margin-bottom:2px;padding:13px 17px}
-#phoneShell .mb-title{font-size:20px;background:none;-webkit-background-clip:border-box;
-  background-clip:border-box;-webkit-text-fill-color:#fff;color:#fff;
-  text-shadow:0 2px 10px rgba(30,14,70,.4)}
-#phoneShell .mb-sub{color:rgba(255,255,255,.80);text-shadow:0 1px 6px rgba(30,14,70,.3)}
-#phoneShell .mb-sec-h,#phoneShell .pl-rate-k,#phoneShell .tc-grp,#phoneShell .tc-t{
-  color:rgba(255,255,255,.72)}
-#phoneShell .mb-sec+.mb-sec{border-top-color:rgba(255,255,255,.22)}
-/* a bar that floats clear of the edge, the way the thumb expects to find it */
-#phoneShell .ph-nav{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));
-  padding:6px;border-radius:26px;border:1px solid rgba(255,255,255,.42);border-top:1px solid rgba(255,255,255,.42);
-  background:rgba(255,255,255,.17);
-  -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
-  box-shadow:0 14px 36px rgba(20,10,54,.34),inset 0 1px 0 rgba(255,255,255,.5)}
-#phoneShell .ph-tab{color:rgba(255,255,255,.78);border-radius:20px;min-height:50px;
-  text-shadow:0 1px 4px rgba(20,8,50,.5)}
-#phoneShell .ph-tab.on{background-color:rgba(255,255,255,.26);color:#fff}
-/* fields keep a pane of their own so what is typed stays legible on the sheet */
-#phoneShell .field input,#phoneShell .field select,#phoneShell .field textarea,
-#phoneShell input,#phoneShell select,#phoneShell textarea{
-  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34);
-  border-radius:14px;color:#fff}
-#phoneShell input::placeholder,#phoneShell textarea::placeholder{color:rgba(255,255,255,.58)}
-#phoneShell .field label{color:rgba(255,255,255,.76)}
-/* the native dropdown draws on its own surface, not on the sheet */
-#phoneShell select option{color:#1e1b3a;background:#fff}
-#phoneShell .m-btn{background-color:rgba(255,255,255,.18);
-  background-image:linear-gradient(160deg,rgba(255,255,255,.26),rgba(255,255,255,0));
-  border:1px solid rgba(255,255,255,.36);border-radius:16px;color:#fff;
-  box-shadow:0 8px 20px rgba(22,12,58,.2),inset 0 1px 0 rgba(255,255,255,.45)}
-#phoneShell .m-btn.primary{background-color:rgba(255,255,255,.92);background-image:none;
-  border-color:rgba(255,255,255,.92);color:#4c1d95;
-  box-shadow:0 10px 26px rgba(22,12,58,.3)}
-#phoneShell .m-btn:disabled{opacity:.45}
-/* a card inside a card: lighter, and no second blur to muddy the first */
-#phoneShell .tc{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);
-  border-radius:18px}
-#phoneShell .tc-pip{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);
-  color:rgba(255,255,255,.82)}
-#phoneShell .tc-pip.on{background:#fff;border-color:#fff;color:#4c1d95}
-#phoneShell .tc-head .tc-sum{color:#fff}
-#phoneShell .tc-head .tc-sum.none{color:rgba(255,255,255,.66)}
-#phoneShell .tc-word{color:rgba(255,255,255,.72)}
-#phoneShell .tc-row.set .tc-word{color:#fff}
-/* the curves are drawn in their own colours, so they get a dark pane to sit on */
-#phoneShell .pl-canvas{background:rgba(18,10,46,.38);border:1px solid rgba(255,255,255,.26);
-  border-radius:16px}
-#phoneShell .pl-when,#phoneShell .pl-sub{color:rgba(255,255,255,.76)}
-#phoneShell .pl-star{color:rgba(255,255,255,.55)}
-#phoneShell .mb-shoot{border-color:rgba(255,255,255,.34)}
-#phoneShell .mb-target{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34);
-  border-radius:16px;color:#fff}
-#phoneShell .mb-save{background:linear-gradient(to top,rgba(76,29,149,.34),rgba(76,29,149,0));
-  border-top:0}
-#phoneShell .ai-thumb{border-color:rgba(255,255,255,.34)}
-#phoneShell .ls-empty,#phoneShell .rec-wait,#phoneShell .set-desc,#phoneShell .ai-status{
-  color:rgba(255,255,255,.78)}
-#phoneShell .ps-dot{box-shadow:0 0 0 4px rgba(255,255,255,.14)}
-/* A phone is carried out of range of the machine it is talking to, and every
-   page but two answered that by looking empty. This says it once, on all of
-   them, and stays until it is not true. */
-#phoneShell .ph-net{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;
-  margin:0 0 12px;padding:11px 14px;border-radius:18px;
-  background:rgba(244,63,94,.26);border:1px solid rgba(255,255,255,.42);
-  -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
-  box-shadow:0 10px 26px rgba(22,12,58,.3),inset 0 1px 0 rgba(255,255,255,.45)}
-#phoneShell .ph-net[hidden]{display:none}
-#phoneShell .ph-net-txt{flex:1;min-width:0}
-#phoneShell .ph-net-h{font-size:13px;font-weight:700;color:#fff}
-#phoneShell .ph-net-s{font-size:11px;font-weight:600;line-height:1.5;color:rgba(255,255,255,.82);
-  margin-top:2px;word-break:break-all}
-#phoneShell .ph-net .m-btn{flex:none;min-height:34px;padding:0 12px;font-size:12px}
-/* The machine tab is the tank: the page fills to the level the machine reports,
-   and the surface stays level while the phone does not. Behind everything and
-   deaf to touch -- the reading is on a card, this is only the feel of it. */
-#phStatusPage .ps-tank{position:fixed;inset:0;width:100%;height:100%;z-index:0;
-  pointer-events:none;display:block}
-#phStatusPage .mb-wrap{position:relative;z-index:1}
-#phoneShell .ps-tankcard{margin-top:12px}
-#phoneShell .ps-tank-top{display:flex;align-items:baseline;gap:10px}
-#phoneShell .ps-tank-k{flex:1;min-width:0;font-size:11px;font-weight:700;color:rgba(255,255,255,.72)}
-#phoneShell .ps-tank-v{font-size:30px;font-weight:700;line-height:1;color:#fff}
-#phoneShell .ps-tank-v small{font-size:14px;font-weight:700;margin-left:2px;opacity:.72}
-#phoneShell .ps-tank-sub{font-size:12px;font-weight:700;color:rgba(255,255,255,.76);margin-top:5px}
-#phoneShell .ps-tank-sub.low{color:#fecaca}
-#phoneShell .ps-tank-bar{height:6px;border-radius:100px;margin-top:9px;overflow:hidden;
-  background:rgba(255,255,255,.18)}
-#phoneShell .ps-tank-bar i{display:block;height:100%;border-radius:100px;background:#fff;
-  transition:width .6s ease}
-#phoneShell .ps-tilt{margin-top:11px;min-height:38px;font-size:12px}
-/* Accent is an indigo picked to stand out on paper. On this sheet it is the
-   sheet, so anything that used it to mean "this is the important line" says it
-   with brightness instead. */
-#phoneShell .ai-sug-c,#phoneShell .ai-verdict,#phoneShell .ps-big,
-#phoneShell .set-val,#phoneShell .ls-stat .v,
-#phoneShell .ai-scan-head>span:first-child{color:#fff}
-#phoneShell .ai-list{color:rgba(255,255,255,.86)}
-#phoneShell .ai-sug-w{color:rgba(255,255,255,.78)}
-#phoneShell .ai-sug{background-color:rgba(255,255,255,.14);background-image:none;
-  border:1px solid rgba(255,255,255,.3);border-radius:16px;color:#fff}
-#phoneShell .rec-btn{border-color:rgba(255,255,255,.4);color:#fff}
-#phoneShell .ai-fb-btn{background-color:rgba(255,255,255,.16);
-  border-color:rgba(255,255,255,.32);color:rgba(255,255,255,.88)}
-#phoneShell .ai-fb-btn.on{background-color:rgba(255,255,255,.26);color:#bbf7d0;border-color:#4ade80;
-  box-shadow:none}
-#phoneShell .ai-fb-btn.no.on{color:#fecaca;border-color:#f87171}
-#phoneShell .ai-fb-note{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);
-  color:#fff}
+/* ── The phone ─────────────────────────────────────────────────────────
+   The tablet's own page, made narrow: one flat page tone, cards that are the
+   surface, lines in two weights, and night when the tablet's night is on.
+   Nothing is painted behind it and nothing is glass; the only water is in the
+   status card, where the level is. */
+#phoneShell{--ph-nav-h:72px;min-height:100vh;background:var(--la-page);color:var(--ink);
+  padding:0 0 calc(var(--ph-nav-h) + 24px + env(safe-area-inset-bottom,0px))}
+/* the stop button sits over the bottom of the page, so the page makes room */
+#phoneShell.ph-has-stop{padding-bottom:calc(var(--ph-nav-h) + 92px + env(safe-area-inset-bottom,0px))}
+#phoneShell .mb-wrap{padding:0 16px;gap:12px}
+/* Each tab opens on a bar that says where it is, and stays put above the
+   scroll. The words on the right are the tab's one line of context. */
+#phoneShell .mb-head{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;
+  min-height:56px;margin:0 -16px;padding:6px 16px;text-align:left;
+  background:var(--la-surface);border-bottom:1px solid var(--la-line)}
+#phoneShell .mb-title{flex:none;font-size:20px;font-weight:700;line-height:24px;color:var(--ink);
+  background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;white-space:nowrap}
+#phoneShell .mb-head .mb-sub{margin:0 0 0 auto;min-width:0;font-size:13px;font-weight:500;line-height:16px;
+  color:var(--ink-mute);text-align:right;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#phoneShell .mb-head .mb-sub.stale{color:#b45309}
+body.night #phoneShell .mb-head .mb-sub.stale{color:#fbbf24}
+/* the camera's title is long enough on its own */
+#camSetupPage .mb-head .mb-sub{display:none}
+#phoneShell .mb-card,#phoneShell .ph-card,#phoneShell .pl-item,#phoneShell .cs-way{
+  background:var(--la-surface);border:1px solid var(--la-line);border-radius:14px;box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none}
+#phoneShell .ph-card{position:relative;overflow:hidden;padding:14px}
+#phoneShell .mb-card{padding:14px}
+#phoneShell .mb-sec-h{font-size:13px;font-weight:600;color:var(--ink-mute)}
+#phoneShell .m-btn{box-shadow:none;background-image:none}
+#phoneShell .m-btn.ph-out{background:var(--la-surface);border-color:var(--la-line-2);color:var(--la-accent-ink)}
+#phoneShell .ph-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;
+  border-radius:12px;font:600 16px/1 var(--font);cursor:pointer;-webkit-appearance:none;padding:0 14px}
+#phoneShell .ph-btn.out{border:1px solid var(--la-line-2);background:var(--la-surface);color:var(--la-accent-ink)}
+#phoneShell .ph-btn.pri{border:0;background:var(--la-primary);color:#fff}
+#phoneShell .ph-btn.ton{border:0;background:var(--la-accent-soft);color:var(--la-accent-ink)}
+#phoneShell .ph-btn:disabled{opacity:.55;cursor:default}
+/* Five jobs, one bar under the thumb: opaque, ruled off from the page, a line
+   icon over a short word. */
+.ph-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;
+  height:calc(var(--ph-nav-h,72px) + env(safe-area-inset-bottom,0px));
+  padding:6px 8px calc(10px + env(safe-area-inset-bottom,0px));
+  background:var(--la-surface);border-top:1px solid var(--la-line)}
+.ph-tab{min-width:0;border:0;border-radius:12px;background:transparent;padding:0;cursor:pointer;-webkit-appearance:none;
+  font-family:var(--font);font-size:12px;font-weight:600;line-height:1;color:var(--ink-mute);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ph-tab .ic{display:block;width:22px;height:22px}
+.ph-tab svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ph-tab .lb{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-tab.on{color:var(--la-accent-ink);background:var(--la-accent-soft)}
+#camSetupPage,#mobilePage,#phStatusPage,#phLogPage,#phSetPage{max-width:520px;margin:0 auto}
+/* What the machine is doing, as the tablet's tank panel says it: the word,
+   what it is heading for, and the readings two by two over the water. */
+#phCard{padding:14px 16px}
+#phCard .ps-tank{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+#phStatusBody{display:flex;flex-direction:column;gap:12px}
+#phStatusBody>div:empty{display:none}
+.ph-tank-in{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px}
+.ph-st{display:flex;align-items:baseline;gap:10px;min-width:0}
+.ph-word{font-size:28px;font-weight:700;line-height:32px;color:var(--ink);white-space:nowrap}
+.ph-word.ready{color:#059669} .ph-word.warm,.ph-word.warn{color:#b45309}
+.ph-word.run{color:var(--la-accent-ink)} .ph-word.off{color:var(--ink-mute)}
+body.night .ph-word.ready{color:#34d399} body.night .ph-word.warm,body.night .ph-word.warn{color:#fbbf24}
+.ph-sub{margin-left:auto;min-width:0;font-size:16px;font-weight:600;color:var(--ink-soft);
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-rds{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.ph-rd{display:flex;align-items:baseline;gap:6px;min-width:0;white-space:nowrap}
+.ph-rd b{font-size:20px;font-weight:700;line-height:24px;color:var(--ink);font-variant-numeric:tabular-nums}
+.ph-rd b small{font-size:14px;font-weight:500;color:var(--ink-mute);margin-left:2px}
+.ph-rd span{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:500;line-height:18px;color:var(--ink-soft)}
+.ph-rd b.w{color:#0284c7} body.night .ph-rd b.w{color:#7dd3fc}
+.ph-rd.low b.w,.ph-rd.low span{color:var(--la-red)}
+.ph-live{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:end}
+.ph-live .tm{font-size:40px;font-weight:700;line-height:44px;color:#ea580c;font-variant-numeric:tabular-nums}
+body.night .ph-live .tm{color:#fb923c}
+.ph-live .tl{font-size:13px;font-weight:500;line-height:16px;color:var(--ink-mute)}
+.ph-live .wt{font-size:28px;font-weight:700;line-height:32px;text-align:right;white-space:nowrap;overflow:hidden;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+.ph-live .wt small{font-size:16px;font-weight:500;color:var(--ink-mute)}
+.ph-live .ws{font-size:14px;font-weight:500;line-height:18px;text-align:right;color:var(--ink-soft);white-space:nowrap}
+.ph-live .nos{align-self:center;text-align:right;font-size:15px;font-weight:500;line-height:20px;color:var(--ink-soft)}
+.ph-warn{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;line-height:18px;color:#b45309}
+.ph-warn i{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex:none}
+body.night .ph-warn{color:#fbbf24}
+.ph-tilt{align-self:flex-start;min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--la-line-2);
+  background:var(--la-surface);font:600 13px/1 var(--font);color:var(--la-accent-ink);cursor:pointer}
+/* Card heads and the label-over-value cells the recipe card uses. */
+.ph-ct{display:flex;align-items:baseline;gap:8px;margin:0 0 10px}
+.ph-ct b{min-width:0;font-size:16px;font-weight:600;line-height:20px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-ct span{margin-left:auto;flex:none;font-size:13px;font-weight:500;line-height:18px;color:var(--ink-mute);white-space:nowrap}
+.ph-line{margin:-6px 0 10px;font-size:14px;font-weight:500;line-height:18px;color:var(--ink-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 8px}
+.ph-cell{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.ph-cell .l{font-size:13px;font-weight:500;line-height:16px;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ph-cell .v{font-size:20px;font-weight:600;line-height:24px;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ph-cell .v.sm{font-size:17px}
+.ph-cell .u,.ph-cell .v .lu{font-size:14px;font-weight:500;color:var(--ink-mute)}
+.ph-cell .v.amb{color:#b45309} body.night .ph-cell .v.amb{color:#fbbf24}
+.ph-cell .v.amb .sv{color:inherit}
+.ph-cell.dim{opacity:.4}
+.ph-card .ph-cells+.ph-btn{margin-top:12px}
+.ph-wait{font-size:15px;font-weight:500;color:var(--ink-mute)}
+/* Stop: the width of the screen, right above the tabs, where a thumb already is. */
+.ph-stop{position:fixed;left:16px;right:16px;max-width:488px;margin:0 auto;z-index:41;
+  bottom:calc(var(--ph-nav-h,72px) + 12px + env(safe-area-inset-bottom,0px));height:56px;
+  display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:14px;
+  background:#dc2626;color:#fff;font:700 18px/1 var(--font);cursor:pointer;-webkit-appearance:none;
+  box-shadow:0 6px 18px rgba(220,38,38,.28)}
+/* white on the night red has to hold as well as on the day one */
+body.night .ph-stop{background:#ef4444}
+.ph-stop svg{width:18px;height:18px;fill:#fff}
+.ph-stop:disabled{opacity:.6;box-shadow:none;cursor:default}
+.ph-stop[hidden]{display:none}
+/* The shots, as cards on the page. */
+#phoneShell .pl-item{padding:12px 14px;cursor:pointer}
+#phoneShell .pl-top{align-items:baseline;gap:8px}
+#phoneShell .pl-prof{font-size:16px;font-weight:600;line-height:20px}
+#phoneShell .pl-when{font-size:13px;font-weight:500;line-height:18px;color:var(--ink-mute)}
+#phoneShell .pl-sub{font-size:14px;font-weight:500;line-height:18px;color:var(--ink-soft);margin-top:4px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#phoneShell .pl-canvas{height:170px;padding:4px;border-radius:10px;background:var(--la-well);border:0;margin:4px 0 10px}
+#phoneShell .pl-open .ph-cells{margin-bottom:12px}
+#phoneShell .pl-open .ph-rate{margin-bottom:8px}
+#phoneShell .pl-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0}
+#phoneShell .pl-acts+.pl-acts{margin-top:8px}
+#phoneShell .pl-acts .m-btn{min-height:48px;white-space:normal;line-height:1.2}
+#phoneShell .ph-src{background:var(--la-well);border:1px solid var(--la-line)}
+#phoneShell .ph-src button{color:var(--ink-mute)}
+#phoneShell .ph-src button.on{background:var(--la-surface);color:var(--la-accent-ink);box-shadow:none}
+/* The camera, when this address cannot have one: the line that says so, and
+   what to do about it a tap away. */
+.cs-fold{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;
+  padding:0 14px;border:0;background:transparent;font:500 14px/1.3 var(--font);color:var(--ink-soft);
+  text-align:left;cursor:pointer;-webkit-appearance:none}
+.cs-fold[hidden]{display:none}
+.cs-fold-c{flex:none;font-weight:700;color:var(--la-accent-ink);transition:transform .15s}
+.cs-way.folded{padding:0;gap:0}
+#phoneShell .cs-way.folded:not(.open)>:not(.cs-fold){display:none}
+.cs-way.folded.open{padding-bottom:16px;gap:10px}
+.cs-way.folded.open>:not(.cs-fold){margin:0 16px}
+.cs-way.folded.open .cs-fold-c{transform:rotate(90deg)}
+.cs-swapped .cs-way-n{display:none}
+#phoneShell .cs-note{color:#b45309} body.night #phoneShell .cs-note{color:#fbbf24}
+/* The address this phone is on. */
+.ph-addr{margin:8px 0;padding:10px 12px;border-radius:10px;background:var(--la-well);color:var(--ink);
+  font:600 15px/20px ui-monospace,Consolas,monospace;word-break:break-all}
+#phoneShell .ph-home-ico{box-shadow:none}
+/* the column's own gap spaces the cards; the margins were from before it had one */
+#phSetPage .mb-wrap>.mb-card{margin-top:0!important}
+#phoneShell .mb-save{background:var(--la-surface);border-top:1px solid var(--la-line)}
+/* The record of a shot, on the phone a sheet from the bottom edge, as the
+   tablet's dialog is the same form in the middle of its screen. */
+body.mobile-scan #dyeOverlay{align-items:flex-end;padding:0}
+body.mobile-scan #dyeOverlay .modal{width:100%;max-width:none;max-height:92vh;border-radius:20px 20px 0 0;
+  border-bottom:0;transform:none}
+body.mobile-scan #dyeOverlay .modal::before{content:'';display:block;flex:none;width:40px;height:4px;
+  border-radius:2px;background:var(--la-line-2);margin:10px auto 0}
+body.mobile-scan #dyeOverlay .modal-head{padding:8px 16px 6px}
+body.mobile-scan #dyeOverlay .modal-body{padding:0 16px calc(18px + env(safe-area-inset-bottom,0px))}
+body.mobile-scan #dyeOverlay .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body.mobile-scan .tc-head{min-height:36px}
+
+/* Settings \u203a Phone: the code beside what to do with it. */
+.pq{display:grid;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:start}
+.pq-code{width:180px;min-height:180px;border-radius:12px;overflow:hidden;background:#fff}
+.pq-code canvas{display:block;width:180px;height:180px}
+.pq-none{display:flex;align-items:center;justify-content:center;background:var(--la-well);
+  font-size:14px;font-weight:600;color:var(--ink-mute)}
+.pq-txt{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+.pq-url{margin:4px 0 6px;word-break:break-all}
+.qr-manual{border:0;background:none;padding:8px 0;min-height:36px;font:600 14px/1 var(--font);color:var(--la-accent-ink);cursor:pointer}
+.pq-txt .field{align-self:stretch}
+@media (max-width:640px){ .pq{grid-template-columns:1fr} }
 
 /* Shot log page */
 .sl-badge{width:44px;height:44px;border-radius:9px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--amber);flex-shrink:0;font-weight:700}
@@ -3416,6 +3324,10 @@ body.night .gr-obs{color:#fbbf24}
   font-size:20px;font-weight:600;line-height:22px;letter-spacing:-.01em;color:var(--ink);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;font-variant-numeric:tabular-nums;border-radius:0}
 .app #grinderCard .th-wrap>.grind-val{display:inline;padding:0;margin:0;font-size:20px;font-weight:600;line-height:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+/* A grind can run to four digits in a cell sized for two. The number is never
+   cut: one that does not fit is set a step smaller. */
+.app #grinderCard #grindRow .dose-stack>.th-wrap,.app #grinderCard #grindRow .th-wrap>.grind-val{overflow:visible;text-overflow:clip;min-width:0}
+.app #grinderCard #grindRow .th-wrap>.grind-val.tight{font-size:17px;letter-spacing:-.02em}
 .app :is(#recipeNormal,#grinderCard,.rc-mode) .th-wrap>.th-val{display:inline;padding:0;margin:0;font-size:20px;font-weight:600;line-height:22px;color:var(--ink)}
 .app :is(#recipeNormal,#grinderCard,.rc-mode) .lu{font-size:15px;font-weight:500;color:var(--ink-mute);opacity:1;letter-spacing:0}
 /* information: caption over value, no border, no fill */
@@ -3883,7 +3795,7 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
             <div class="dose-adj"><button class="ms-btn" onclick="adjustGrind(-1)">−</button>
               <div class="dose-stack">
                 <div class="dose-lbl dose-cap"><span data-i18n="grind"></span></div>
-                <span class="th-wrap"><span class="grind-val tap" id="grindVal" onclick="openGrindKeypad()">—</span><span class="lu" id="grindUnit"></span></span>
+                <span class="th-wrap"><span class="grind-val tap" id="grindVal" onclick="openGrindKeypad()">—</span></span>
               </div>
               <button class="ms-btn" onclick="adjustGrind(1)">+</button></div>
           </div>
@@ -4285,7 +4197,7 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
 
 <!-- ── DYE (post-shot log) ─────────────────────────────────────── -->
 <div class="overlay" id="dyeOverlay" onclick="closeModal(event,'dyeOverlay')">
-  <div class="modal"><div class="modal-head"><div class="modal-title" data-i18n="logEspresso">☕ Log Your Espresso</div><button class="modal-close" onclick="closeModal(null,'dyeOverlay')">×</button></div>
+  <div class="modal"><div class="modal-head"><div class="modal-title" data-i18n="logEspresso">Log Your Espresso</div><button class="modal-close" onclick="closeModal(null,'dyeOverlay')">×</button></div>
   <div class="modal-body">
     <div class="field-row">
       <div class="field"><label data-i18n="actualDose">Actual dose (g)</label><input id="dyeDose" type="number" step="0.1"></div>
@@ -4419,16 +4331,16 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
   <button class="m-btn" onclick="phNetCheck(true)" data-i18n="phNetRetry">Try again</button>
 </div>
 <div id="phStatusPage" style="display:none">
-  <canvas class="ps-tank" id="psTank"></canvas>
   <div class="mb-wrap">
-    <div class="mb-head"><div class="mb-title"><span>☕ </span><span data-i18n="phTabStatus">Machine</span></div>
+    <div class="mb-head"><div class="mb-title"><span data-i18n="phTabStatus">Machine</span></div>
       <div class="mb-sub" id="phStatusSub"></div></div>
     <div id="phStatusBody"></div>
   </div>
+  <button type="button" class="ph-stop" id="phStopBtn" hidden onclick="phStop()"></button>
 </div>
 <div id="phLogPage" style="display:none">
   <div class="mb-wrap">
-    <div class="mb-head"><div class="mb-title"><span>◷ </span><span data-i18n="phTabLog">Shots</span></div>
+    <div class="mb-head"><div class="mb-title"><span data-i18n="phTabLog">Shots</span></div>
       <div class="mb-sub" data-i18n="phLogSub">The last shots this machine pulled.</div></div>
     <div id="phLogSrc" class="ph-src" style="display:none"></div>
     <div id="phLogBody"></div>
@@ -4436,10 +4348,12 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
 </div>
 <div id="camSetupPage" style="display:none">
   <div class="mb-wrap">
-    <div class="mb-head"><div class="mb-title"><span>📷 </span><span data-i18n="camSetupTitle">Camera for the machine</span></div>
+    <div class="mb-head"><div class="mb-title"><span data-i18n="camSetupTitle">Camera for the machine</span></div>
       <div class="mb-sub" data-i18n="camSetupDesc">Two ways, and you can use either.</div></div>
 
-    <div class="cs-way">
+    <div class="cs-ways" id="csWays">
+    <div class="cs-way" id="csWay1">
+      <button type="button" class="cs-fold" id="csFoldBtn" hidden onclick="csFoldToggle()" aria-expanded="false"><span data-i18n="csNoCamLine">This address cannot use the browser camera</span><span class="cs-fold-c" aria-hidden="true">›</span></button>
       <div class="cs-way-h"><span class="cs-way-n">1</span><span data-i18n="csLiveTitle">This phone's camera</span></div>
       <div class="mb-sub" data-i18n="csLiveDesc">The sharper picture, at the rate the camera runs, and no app to install. Chrome has to be told to trust this address once.</div>
       <div class="cs-note" id="csSecureNote" hidden></div>
@@ -4472,7 +4386,7 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
       <div class="set-desc" id="csWakeNote" hidden data-i18n="csWakeNote"></div>
     </div>
 
-    <div class="cs-way">
+    <div class="cs-way" id="csWay2">
       <div class="cs-way-h"><span class="cs-way-n">2</span><span data-i18n="csUrlTitle">An IP-camera app's address</span></div>
       <div class="mb-sub" id="csUrlDesc" data-i18n="csUrlDesc">Needs an app on the phone -- IP Webcam, DroidCam -- but no browser setting. Start the app, then type the address it shows with /video on the end.</div>
       <div class="cs-tips" id="csIosTips" hidden></div>
@@ -4481,11 +4395,12 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
       <div class="mb-actions"><button class="m-btn" id="csSaveBtn" onclick="csSave()" data-i18n="camSetupSave">Send to the machine</button></div>
       <div class="mb-sub" id="csStatus"></div>
     </div>
+    </div>
   </div>
 </div>
 <div id="mobilePage" style="display:none">
   <div class="mb-wrap">
-    <div class="mb-head"><div class="mb-title"><span>✨ </span><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" id="mbSub">Photograph the bag — AI fills the details.</div></div>
+    <div class="mb-head"><div class="mb-title"><span id="mbTitle" data-i18n="newBean">Add a Bean</span></div><div class="mb-sub" id="mbSub">Photograph the bag — AI fills the details.</div></div>
     <div class="field mb-pick"><label data-i18n="mbPickLbl">Bean</label>
       <select id="mbPick" onchange="mbPickBean(this.value)"></select></div>
     <div class="mb-shoot">
@@ -4539,8 +4454,9 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
 </div>
 <div id="phSetPage" style="display:none">
   <div class="mb-wrap">
-    <div class="mb-head"><div class="mb-title"><span>⚙ </span><span data-i18n="phTabSet">Setup</span></div>
+    <div class="mb-head"><div class="mb-title"><span data-i18n="phTabSet">Setup</span></div>
       <div class="mb-sub" data-i18n="phSetSub">Kept on this phone, not on the machine.</div></div>
+    <div class="mb-card" id="phAddrBox"></div>
     <div class="mb-key mb-card" id="mbKeyBox">
       <div class="field"><label data-i18n="aiProvider">Model</label>
         <select id="mbProvider" onchange="mbSetProvider(this.value)">
@@ -4804,7 +4720,7 @@ var I18N={
     tempBasket:'Temperature Basket', tempMix:'Temperature Mix',
     basketGoal:'Basket Temperature Goal', mixGoal:'Mix Temperature Goal',
     phTabStatus:'Machine', phTabLog:'Shots', phTabBean:'Beans', phTabCam:'Camera', phTabSet:'Setup',
-    phSetSub:'Kept on this phone, not on the machine.', phNotePh:'How it tasted',
+    phSetSub:'Kept on this phone', phNotePh:'How it tasted',
     catPhone:'Phone',
     phoneIntro:'Open this address on a phone and it shows the phone app by itself — machine, shots, beans, camera.',
     phoneCopy:'Copy the address', phoneCopied:'Address copied',
@@ -4847,10 +4763,22 @@ var I18N={
     phLogSub:'The last shots this machine pulled.', phLogEmpty:'No shots recorded yet',
     phOffline:'The machine cannot be reached from here', phStale:'Not answering \u2014 showing the last reading',
     phSinceSeen:'since the phone looked',
-    phWake:'Wake the machine', phWaking:'Waking…', phWoke:'Waking the machine',
+    phWake:'Wake', phWaking:'Waking…', phWoke:'Waking the machine',
     phSleep:'Send it to sleep', phSleeping:'Going to sleep…', phSlept:'Sent to sleep',
-    phStIdle:'Ready', phStWarming:'Coming up to temperature', phStEspresso:'Pulling a shot', phStSteam:'Steaming', phStWater:'Hot water',
-    phStFlush:'Flushing', phStSleep:'Asleep', phStNoWater:'Out of water', phStOther:'Busy',
+    phStIdle:'Ready', phStWarming:'Heating', phStEspresso:'Brewing', phStSteam:'Steam', phStWater:'Hot water',
+    phStFlush:'Flush', phStSleep:'Asleep', phStNoWater:'Out of water', phStOther:'Busy',
+    phAgo:'{m} \u00b7 {n} s ago', phStaleSub:'reading from {n} s ago', phWaiting:'Waiting for the machine to answer',
+    phStop:'Stop', phStopping:'Stopping\u2026', phStopFailed:'Could not stop the machine',
+    phRecipeNow:'Recipe now', phElapsed:'elapsed', phLeft:'{v} to go', phNoScale:'No scale \u00b7 the profile ends it',
+    phMilkStop:'Milk \u00b7 stops at {v}\u00b0', phJustShot:'Shot just pulled', phRecording:'Saving the record\u2026',
+    phRateShot:'Rate this shot', phSecs:'{n} s', phRdBasket:'Basket', phRdMix:'Mix', phPlumbedV:'Plumbed', phPlumbedL:'water line',
+    csNoCamLine:'This address cannot use the browser camera',
+    phoneQrHow:'Scan the code with the phone\u2019s camera, or open the address below.',
+    phoneQrIpHint:'If the tablet\u2019s IP address changes, the code has to be scanned again.',
+    phoneHostLink:'Type the address', phoneNoQr:'No QR code',
+    phoneNoIp:'The gateway did not say what the tablet\u2019s IP address is. Look it up in the tablet\u2019s Wi-Fi settings and type it here to make the code.',
+    phoneTabletIp:'Tablet IP', phoneMakeQr:'Make the QR code', phoneIpBad:'Type the IP address as numbers, such as 192.168.0.20',
+    phAddrTitle:'The address this phone opens', phAddrHint:'If the tablet\u2019s IP address changes, scan the code in the tablet\u2019s Settings \u203a Phone again.',
     mbShootLead:'Photograph the bag', mbShootHint:'Front and back, and whichever label carries the roast date. Up to five.',
     mbSecBean:'The coffee', mbSecOrigin:'Where it came from', mbSecNotes:'Everything else on the bag',
     scanFound:'Not on the bag, found by search: {n} \u2014 worth checking',
@@ -5067,7 +4995,7 @@ var I18N={
     epEditList:'Edit list', epEditDone:'Done', epSelected:'{n} selected',
     epSelAll:'All', epSelNone:'None',
     delProfSomeDefault:'{n} of them ship with the app and are hidden rather than deleted.',
-    profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'☕ Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
+    profileEditor:'Profile Editor', beansGrinders:'Beans & Grinders', logEspresso:'Log Your Espresso', skip:'Skip', saveLog:'Save Log', enterValue:'Enter value',
     steamOptions:'💨 Steam Options', flushOptions:'🚿 Flush Options', waterOptions:'💧 Hot Water Options', presets:'Presets',
     tapWake:'Tap anywhere to wake',
     lcOk:'OK', kpRange:'{a} – {b} {u} · now {v}',
@@ -5292,7 +5220,7 @@ var I18N={
     tempBasket:'바스켓 온도', tempMix:'믹스 온도',
     basketGoal:'바스켓 온도 목표', mixGoal:'믹스 온도 목표',
     phTabStatus:'머신', phTabLog:'샷 기록', phTabBean:'원두', phTabCam:'카메라', phTabSet:'설정',
-    phSetSub:'이 폰에만 저장되며 머신에는 남지 않습니다.', phNotePh:'맛이 어때는지',
+    phSetSub:'이 폰에만 저장', phNotePh:'맛이 어때는지',
     catPhone:'폰',
     phoneIntro:'폰에서 이 주소를 열면 폰 화면이 알아서 뜹니다 — 머신, 샷 기록, 원두, 카메라.',
     phoneCopy:'주소 복사', phoneCopied:'주소를 복사했습니다',
@@ -5335,10 +5263,22 @@ var I18N={
     phLogSub:'이 머신이 최근에 내린 샷입니다.', phLogEmpty:'아직 기록된 샷이 없습니다',
     phOffline:'여기서 머신에 닿지 않습니다', phStale:'응답이 없어 마지막 값을 보여줍니다',
     phSinceSeen:'폰이 본 순간부터',
-    phWake:'머신 깨우기', phWaking:'깨우는 중…', phWoke:'머신을 깨웁니다',
+    phWake:'깨우기', phWaking:'깨우는 중…', phWoke:'머신을 깨웁니다',
     phSleep:'절전으로', phSleeping:'절전으로 전환 중…', phSlept:'절전으로 전환했습니다',
-    phStIdle:'준비됨', phStWarming:'데우는 중', phStEspresso:'추출 중', phStSteam:'스팀 중', phStWater:'온수',
-    phStFlush:'플러시 중', phStSleep:'절전', phStNoWater:'물 부족', phStOther:'동작 중',
+    phStIdle:'준비됨', phStWarming:'예열 중', phStEspresso:'추출 중', phStSteam:'스팀', phStWater:'온수',
+    phStFlush:'플러시', phStSleep:'절전', phStNoWater:'물 부족', phStOther:'동작 중',
+    phAgo:'{m} \u00b7 {n}초 전', phStaleSub:'{n}초 전 값', phWaiting:'머신 응답을 기다리는 중',
+    phStop:'멈추기', phStopping:'멈추는 중\u2026', phStopFailed:'멈추지 못했습니다',
+    phRecipeNow:'지금 레시피', phElapsed:'경과', phLeft:'{v} 남음', phNoScale:'저울 없음 \u00b7 프로파일대로 끝남',
+    phMilkStop:'우유 \u00b7 {v}\u00b0에서 멈춤', phJustShot:'방금 내린 샷', phRecording:'기록 중\u2026',
+    phRateShot:'맛 평가 남기기', phSecs:'{n}초', phRdBasket:'바스켓', phRdMix:'믹스', phPlumbedV:'직수', phPlumbedL:'물 연결',
+    csNoCamLine:'이 주소에서는 브라우저 카메라를 쓸 수 없음',
+    phoneQrHow:'폰 카메라로 QR을 찍거나 아래 주소를 여세요.',
+    phoneQrIpHint:'태블릿의 IP가 바뀌면 QR을 다시 찍어야 합니다.',
+    phoneHostLink:'주소 직접 입력', phoneNoQr:'QR 없음',
+    phoneNoIp:'게이트웨이가 태블릿의 IP를 알려 주지 않았습니다. 태블릿 Wi-Fi 설정에서 IP를 확인해 넣으면 QR을 만듭니다.',
+    phoneTabletIp:'태블릿 IP', phoneMakeQr:'QR 만들기', phoneIpBad:'IP 주소를 숫자로 넣으세요 (예: 192.168.0.20)',
+    phAddrTitle:'이 폰에서 여는 주소', phAddrHint:'태블릿의 IP가 바뀌면 태블릿 설정 \u203a 폰의 QR을 다시 찍으세요.',
     mbShootLead:'봉투를 촬영하세요', mbShootHint:'앞뒤면과 로스팅일이 있는 라벨까지. 최대 5장.',
     mbSecBean:'원두', mbSecOrigin:'어디에서 왔는가', mbSecNotes:'봉투에 적힌 나머지',
     scanFound:'봉투에 없어 검색으로 찾은 항목: {n} \u2014 확인해 주세요',
@@ -5553,7 +5493,7 @@ var I18N={
     epEditList:'목록 편집', epEditDone:'편집 끝', epSelected:'{n}개 선택',
     epSelAll:'전체', epSelNone:'해제',
     delProfSomeDefault:'그중 {n}개는 기본 제공 프로파일이라 삭제 대신 숨김 처리됩니다.',
-    profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'☕ 에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
+    profileEditor:'프로파일 편집', beansGrinders:'원두 & 그라인더', logEspresso:'에스프레소 기록', skip:'건너뛰기', saveLog:'기록 저장', enterValue:'값 입력',
     steamOptions:'💨 스팀 옵션', flushOptions:'🚿 플러시 옵션', waterOptions:'💧 온수 옵션', presets:'프리셋',
     tapWake:'화면을 눌러 깨우기',
     lcOk:'확인', kpRange:'{a} – {b} {u} · 지금 {v}',
@@ -8886,6 +8826,7 @@ function setRecipeMode(m,byUser){
   recipeMode=m;
   // the grinder is the shot's; steam, water and flush have no use for it
   var gc=document.getElementById('grinderCard'); if(gc) gc.classList.toggle('off-mode',m!=='espresso');
+  if(m==='espresso') grindFit();
   Object.keys(RECIPE_PANES).forEach(function(k){
     var el=document.getElementById(RECIPE_PANES[k]);
     if(el) el.style.display=(k===m)?'':'none'; });
@@ -10440,7 +10381,7 @@ function pickUnit(kind,v,btn){ setUnit(kind,v);
   Array.prototype.forEach.call(seg.children,function(b){ b.setAttribute('aria-checked',String(b===btn)); }); }
 function setUnit(kind,v){ if(kind==='temp') prefs.tempUnit=v; else prefs.weightUnit=v; savePrefs();
   try{ updateMachineUI(); updateScaleUI(); syncRecipe(); loadLastShot(); }catch(_){ } }
-function setLang(v){ prefs.lang=v; savePrefs(); applyI18n(); relocalizeDynamic();
+function setLang(v){ prefs.lang=v; savePrefs(); applyI18n(); relocalizeDynamic(); grindFit();
   if(spOpen()&&spCat==='general') renderTrBox(); }
 // The language list offers more than the two that are written out. One that is
 // not asks to be made, once, and is kept afterwards.
@@ -17615,26 +17556,47 @@ function togglePhoneQR(){
 // editor, which also landed on the bean tab. It is a whole app now, so it gets
 // somewhere of its own to be found.
 function phoneAppUrl(host){ return phoneUrl(host,'phone=1'); }
+// The address the phone opens is the tablet's number. A name is accepted, but
+// only typed on purpose behind a small link: names are what break on a phone.
+var _qrManual=false;
+function phoneQrHostOk(h){ return /^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/.test(String(h||'').trim()); }
 function renderPhoneQrBox(){
   var box=document.getElementById('phoneQrBox'); if(!box) return;
-  function hostRow(note){
-    return '<div class="qr-host">'+(note?'<div class="qr-host-note">'+escapeHtml(note)+'</div>':'')
-      +'<input id="phoneQrHost" value="'+escapeAttr(prefs.qrHost||'')+'" placeholder="192.168.0.10" inputmode="url">'
-      +'<button class="m-btn" onclick="setPhoneQrHost(document.getElementById(\'phoneQrHost\').value)">'+t('apply')+'</button></div>'; }
-  resolveLanHost(function(host){
-    if(!host){ box.innerHTML='<div class="qr-ask">'+escapeHtml(t('qrNoLan'))+'</div>'+hostRow(''); return; }
+  api('GET','/api/v1/info').then(function(i){ return i; },function(){ return null; }).then(function(info){
+    var ip=((info&&info.localIp)||'').trim(); if(isLocalHost(ip)) ip='';
+    var host=(prefs.qrHost&&!isLocalHost(prefs.qrHost))?prefs.qrHost:ip;
+    if(!host&&!isLocalHost(window.location.hostname)&&phoneQrHostOk(window.location.hostname)) host=window.location.host;
+    if(!host){
+      box.innerHTML='<div class="pq"><div class="pq-code pq-none">'+escapeHtml(t('phoneNoQr'))+'</div><div class="pq-txt">'
+        +'<div class="set-desc">'+escapeHtml(t('phoneNoIp'))+'</div>'
+        +'<div class="field" style="margin:10px 0"><label for="phoneQrIp">'+escapeHtml(t('phoneTabletIp'))+'</label>'
+        +'<input id="phoneQrIp" inputmode="decimal" placeholder="192.168.0.20" autocapitalize="off" autocorrect="off"></div>'
+        +'<button type="button" class="m-btn primary" id="phoneQrMake" onclick="phoneQrMake()">'+escapeHtml(t('phoneMakeQr'))+'</button>'
+        +'</div></div>';
+      return; }
     skinStableCheck(function(){
-    var url=phoneAppUrl(host);
-    box.innerHTML='<div class="ai-qr" style="display:block"><div id="phoneQrCanvas"></div>'
-      +'<div class="ai-qr-url">'+escapeHtml(url)+'</div>'
-      +'<div class="qr-host" style="justify-content:center">'
-        +'<button class="m-btn" onclick="copyPhoneUrl(\''+escapeAttr(url)+'\')">'+escapeHtml(t('phoneCopy'))+'</button></div>'
-      +'</div>'
-      +'<div class="set-desc" style="margin-top:10px">'+escapeHtml(t('phoneHomeTip'))+'</div>'
-      +hostRow(t('phoneHostNote'));
-    var wrap=document.getElementById('phoneQrCanvas');
-    if(typeof qrcode==='undefined'){ wrap.innerHTML='<div style="font-size:12px;color:var(--red)">'+t('qrNoLib')+'</div>'; return; }
-    var cv=document.createElement('canvas'); wrap.appendChild(cv); drawQR(cv,url,220); }); }); }
+      var url=phoneAppUrl(host);
+      box.innerHTML='<div class="pq"><div class="pq-code" id="phoneQrCanvas"></div><div class="pq-txt">'
+        +'<div class="set-desc">'+escapeHtml(t('phoneQrHow'))+'</div>'
+        +'<div class="ai-qr-url pq-url">'+escapeHtml(url)+'</div>'
+        +'<button type="button" class="m-btn" onclick="copyPhoneUrl(\''+escapeAttr(url)+'\')">'+escapeHtml(t('phoneCopy'))+'</button>'
+        +'<div class="set-desc" style="margin-top:10px">'+escapeHtml(t('phoneQrIpHint'))+'</div>'
+        +'<div class="set-desc">'+escapeHtml(t('phoneHomeTip'))+'</div>'
+        +'<button type="button" class="qr-manual" onclick="phoneQrManual()">'+escapeHtml(t('phoneHostLink'))+'</button>'
+        +'<div class="qr-host" id="phoneQrHostRow"'+(_qrManual?'':' hidden')+'>'
+          +'<input id="phoneQrHost" value="'+escapeAttr(prefs.qrHost||'')+'" placeholder="192.168.0.10" inputmode="url">'
+          +'<button class="m-btn" onclick="setPhoneQrHost(document.getElementById(\'phoneQrHost\').value)">'+t('apply')+'</button></div>'
+        +'</div></div>';
+      var wrap=document.getElementById('phoneQrCanvas');
+      if(typeof qrcode==='undefined'){ wrap.innerHTML='<div style="font-size:12px;color:var(--red)">'+t('qrNoLib')+'</div>'; return; }
+      var cv=document.createElement('canvas'); wrap.appendChild(cv); drawQR(cv,url,180); }); }); }
+function phoneQrManual(){
+  _qrManual=!_qrManual;
+  var r=document.getElementById('phoneQrHostRow'); if(r) r.hidden=!_qrManual; }
+function phoneQrMake(){
+  var v=((document.getElementById('phoneQrIp')||{}).value||'').trim();
+  if(!phoneQrHostOk(v)){ toast(t('phoneIpBad'),'err'); return; }
+  setPhoneQrHost(v); }
 function setPhoneQrHost(v){
   prefs.qrHost=(v||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''); savePrefs();
   renderPhoneQrBox(); }
@@ -20988,7 +20950,7 @@ function syncGrindCol(){
   // seem to turn the burrs.
   var gr=document.getElementById('grindRow');
   if(gr) gr.classList.toggle('vonly',grinderLive()&&!g);
-  setText(document.getElementById('grindUnit'),grindUnitFor(context.grinderId));
+  grindFit();
   gbShow('gbRead',obs!=null); gbShow('gbRpmRead',rpm!=null);
   setText(document.getElementById('gbReadVal'),obs==null?'':obs);
   setText(document.getElementById('gbRpmReadVal'),rpm==null?'':String(Math.round(rpm)));
@@ -21026,7 +20988,12 @@ function updateGrindRow(){ syncGrinderGlyph(); var row=document.getElementById('
   var shown=gSetting();
   var v=(shown!=null)?shown:((context.grinderSetting!=null&&context.grinderSetting!=='')?context.grinderSetting:null);
   document.getElementById('grindVal').textContent=(v==null)?'\u2014':v;
+  grindFit();
   adoptGrindSetting(shown); adoptGrinderSpeeds(); }
+function grindFit(){
+  var el=document.getElementById('grindVal'), st=el&&el.closest('.dose-stack'); if(!st) return;
+  el.classList.remove('tight');
+  if(el.scrollWidth>st.clientWidth+1) el.classList.add('tight'); }
 // The grind can be changed somewhere this card is not: on the grinder's own
 // page, or on the grinder itself. The card showed the new number and went on
 // saving the old one with the shot, which is the worst of both. Only a
@@ -21085,27 +21052,54 @@ function setGrind(v){
           function(e){ gDrop('setting'); toast(apiErrorText(e),'err'); loadGrinderState(); }); },500); }
 function openGrindKeypad(){ if(lockedSay()) return; var gr=currentGrinder();
   if(gr&&gr.settingType==='preset'){ adjustGrind(1); return; } // preset: tapping cycles forward
-  var cur=parseFloat(context.grinderSetting); KP.field='grind'; KP.unit=''; KP.fresh=true; KP.str=isNaN(cur)?'0':String(cur);
-  document.getElementById('kpTitle').textContent=t('kpGrind'); document.getElementById('kpUnit').textContent='';
+  var cur=parseFloat(context.grinderSetting); KP.field='grind'; KP.unit=grindUnitFor(context.grinderId); KP.fresh=true; KP.str=isNaN(cur)?'0':String(cur);
+  document.getElementById('kpTitle').textContent=t('kpGrind'); document.getElementById('kpUnit').textContent=KP.unit;
   kpSetSeg(null); kpSetRange(null);
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 
 // ── DYE (post-shot log) ─────────────────────────────────────────────
+// The tablet asks about the shot it just pulled. The phone asks about one it
+// names -- the one that just ended, or one from the log -- and what that shot
+// already carries is kept: its extras hold the Visualizer id as well.
+var _dyeFor=null;
+function openDyeFor(row,after){
+  if(!row) return;
+  var an=row.annotations||{}, c=(row.workflow&&row.workflow.context)||{};
+  var st=row.measurements?shotStats(row):{};
+  var dose=an.actualDoseWeight!=null?an.actualDoseWeight:c.targetDoseWeight;
+  var yld=an.actualYield!=null?an.actualYield:(st.weight>0?st.weight:c.targetYield);
+  _dyeFor={id:row.id,row:row,after:after||null};
+  state.dyeTaste=tasteOf(row); _tcOpen=null; _tcCtx={mode:'dye',id:'dye'};
+  document.getElementById('dyeTasteWrap').innerHTML=tasteCardHtml('dye',state.dyeTaste,'dye');
+  function num(v,d){ var n=parseFloat(v); return isFinite(n)?n.toFixed(d):''; }
+  document.getElementById('dyeDose').value=num(dose,1); document.getElementById('dyeYield').value=num(yld,1);
+  document.getElementById('dyeTds').value=num(an.drinkTds,2); document.getElementById('dyeEy').value=num(an.drinkEy,1);
+  document.getElementById('dyeNotes').value=tasteNoteOf(row);
+  document.getElementById('dyeOverlay').classList.add('show'); }
 function openDyeModal(){
+  _dyeFor=null;
   state.dyeTaste=tasteOf(null); _tcOpen=null; _tcCtx={mode:'dye',id:'dye'};
   document.getElementById('dyeTasteWrap').innerHTML=tasteCardHtml('dye',state.dyeTaste,'dye');
   document.getElementById('dyeDose').value=settings.doseIn.toFixed(1); document.getElementById('dyeYield').value=(state.scaleWeight&&state.scaleWeight>1)?state.scaleWeight.toFixed(1):settings.doseOut.toFixed(1);
   document.getElementById('dyeTds').value=''; document.getElementById('dyeEy').value=''; document.getElementById('dyeNotes').value='';
   document.getElementById('dyeOverlay').classList.add('show'); }
-function saveDye(){ if(!state.lastShotId){ closeModal(null,'dyeOverlay'); return; }
+function saveDye(){ var f=_dyeFor, sid=f?f.id:state.lastShotId;
+  if(!sid){ closeModal(null,'dyeOverlay'); return; }
   var dose=parseFloat(document.getElementById('dyeDose').value)||null, yld=parseFloat(document.getElementById('dyeYield').value)||null;
   var tds=parseFloat(document.getElementById('dyeTds').value)||null; var ey=parseFloat(document.getElementById('dyeEy').value)||null;
   if(!ey&&tds&&yld&&dose) ey=parseFloat(((tds*yld)/dose).toFixed(1)); // EY% = TDS*beverage/dose
+  var src=f?f.row:{workflow:{context:context}};
   var ta=tasteAnn(state.dyeTaste||{},document.getElementById('dyeNotes').value,
-    null,shotRoastMachine({workflow:{context:context}}),shotSpeeds({workflow:{context:context}}));
+    f?shotBasket(src):null,shotRoastMachine(src),shotSpeeds(src));
   var ann={ actualDoseWeight:dose, actualYield:yld, drinkTds:tds, drinkEy:ey,
     enjoyment:ta.enjoyment, espressoNotes:ta.espressoNotes, extras:ta.extras };
-  api('PUT','/api/v1/shots/'+state.lastShotId,{annotations:ann}).then(function(){ toast(t('tShotLogged'),'ok'); closeModal(null,'dyeOverlay'); }).catch(function(){ toast(t('tLogFailed'),'err'); }); }
+  if(f){ var base=JSON.parse(JSON.stringify((f.row&&f.row.annotations)||{}));
+    var ex=base.extras||{}; for(var k in ann.extras) ex[k]=ann.extras[k];
+    for(var k2 in ann) if(k2!=='extras') base[k2]=ann[k2];
+    base.extras=ex; ann=base; }
+  api('PUT','/api/v1/shots/'+encodeURIComponent(sid),{annotations:ann}).then(function(){ toast(t('tShotLogged'),'ok'); closeModal(null,'dyeOverlay');
+    if(f){ f.row.annotations=ann; if(slFull[f.id]&&slFull[f.id]!==f.row) slFull[f.id].annotations=ann;
+      if(_dyeFor===f) _dyeFor=null; if(f.after) f.after(ann); } }).catch(function(){ toast(t('tLogFailed'),'err'); }); }
 
 // ── Shot Log history page ───────────────────────────────────────────
 var shotList=[], slSel=null, lastShotSummary=null;
@@ -21929,6 +21923,16 @@ function hexA(hex,a){
   var h=String(hex).replace('#',''); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
   var n=parseInt(h,16);
   return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
+// Start, middle and end in whole seconds -- less where a short shot would
+// round two of them to the same second and print "0s 0s 1s".
+function axisSecLabels(secs){
+  var out=[], seen={};
+  [0,0.5,1].forEach(function(f){
+    var v=Math.round(f*secs), txt=v+'s';
+    if(seen[txt]) return;
+    if(f===0.5&&(v===0||v===Math.round(secs))) return;
+    seen[txt]=1; out.push([f,txt]); });
+  return out; }
 function drawShotMeasurements(canvas,s,temps){
   var dpr=window.devicePixelRatio||1; var r=canvas.getBoundingClientRect();
   if(r.width===0){ r={width:canvas.width||300,height:canvas.height||150}; }
@@ -21990,8 +21994,11 @@ function drawShotMeasurements(canvas,s,temps){
       for(var wi=0;wi<=2;wi++) ctx.fillText(String(Math.round(WMAX-(wi/2)*WMAX)), X0+PW+4, Y0+(wi/2)*PH); } }
   // seconds along the bottom
   ctx.fillStyle=night?'#8b88a8':'#6b6890'; ctx.textAlign='center'; ctx.textBaseline='top';
-  var secs=span/1000;
-  for(var xi=0;xi<=2;xi++) ctx.fillText(((xi/2)*secs).toFixed(0)+'s', X0+(xi/2)*PW, Y0+PH+3);
+  // the ends sit inside the plot, clear of the numbers up the sides
+  axisSecLabels(span/1000).forEach(function(l){
+    ctx.textAlign=(l[0]===0)?'left':(l[0]===1)?'right':'center';
+    ctx.fillText(l[1], X0+l[0]*PW, Y0+PH+3); });
+  ctx.textAlign='center';
 
   function line(get,scale,color,dash){ var any=false, seen=false; ctx.beginPath();
     m.forEach(function(pt,i){ var v=get(pt); if(v==null) return;
@@ -23977,6 +23984,7 @@ function csSecureCheck(){
   if(!note) return;
   var ok=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   note.hidden=ok; if(btn) btn.disabled=!ok;
+  csOrder(ok);
   if(ok) return;
   // Every browser on an iPhone is WebKit underneath, and WebKit gives no camera
   // to a plain http page. Chrome there has no flag for it and Safari has no
@@ -23985,6 +23993,21 @@ function csSecureCheck(){
   note.textContent=(phPlatform()==='ios')
     ? t('csNoSecureIos')
     : (t('csNoSecure')+' '+window.location.origin); }
+// Where this browser will give no camera, the way that works goes first and the
+// one that does not is a line saying so, with the old directions behind it.
+function csOrder(ok){
+  var w1=document.getElementById('csWay1'), w2=document.getElementById('csWay2'),
+    wrap=document.getElementById('csWays'), fold=document.getElementById('csFoldBtn');
+  if(!w1||!w2) return;
+  if(ok) w1.parentNode.insertBefore(w1,w2); else w1.parentNode.insertBefore(w2,w1);
+  w1.classList.toggle('folded',!ok); w1.classList.remove('open');
+  if(wrap) wrap.classList.toggle('cs-swapped',!ok);
+  if(fold){ fold.hidden=ok; fold.setAttribute('aria-expanded','false'); } }
+function csFoldToggle(){
+  var w1=document.getElementById('csWay1'), fold=document.getElementById('csFoldBtn'); if(!w1) return;
+  var open=!w1.classList.contains('open');
+  w1.classList.toggle('open',open);
+  if(fold) fold.setAttribute('aria-expanded',open?'true':'false'); }
 // A key is not part of describing a coffee. It is how this phone is set up, it
 // is asked for once, and it belongs where the rest of that would be.
 function phVizFill(){
@@ -24114,9 +24137,12 @@ function mbShowTarget(){
 // The phone had two pages behind two QR codes, and a person holding it has one
 // phone. It is one page now: the link still says which job was asked for, and
 // the other is a tap away rather than another code to find.
-var PHONE_TABS=[['status','\u2615','phTabStatus'],['log','\u25f7','phTabLog'],
-                ['bean','\u2728','phTabBean'],['cam','\ud83d\udcf7','phTabCam'],
-                ['set','\u2699','phTabSet']];
+var PHONE_TABS=[
+  ['status','<svg viewBox="0 0 24 24"><path d="M5 4h14v6H5zM7 10v4a5 5 0 0 0 10 0v-4M9 20h6"/></svg>','phTabStatus'],
+  ['log','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>','phTabLog'],
+  ['bean','<svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="6" ry="8.5" transform="rotate(30 12 12)"/><path d="M9 6c3 3 3 9 6 12"/></svg>','phTabBean'],
+  ['cam','<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 7l2-3h4l2 3"/></svg>','phTabCam'],
+  ['set','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>','phTabSet']];
 var PHONE_PANES={status:'phStatusPage',log:'phLogPage',bean:'mobilePage',cam:'camSetupPage',set:'phSetPage'};
 var phoneTab='', _phoneReady={};
 // A phone that simply opened the gateway address used to get the 1280x800 stage
@@ -24212,10 +24238,16 @@ function phHomeCard(){
     +'<div><div class="mb-sec-h">'+escapeHtml(t('phHomeTitle'))+'</div>'
     +'<div class="set-desc">'+escapeHtml(t('phHomeWhy'))+'</div></div></div>'
     +'<div class="set-desc" style="margin-top:10px">'+escapeHtml(how)+'</div>'
-    +(_phHomeUrl?('<div class="set-desc ph-home-url">'
-      +escapeHtml(t('phHomeAddr'))+' '+escapeHtml(_phHomeUrl.replace(/\?.*$/,''))+'</div>'):'')
     +(_phInstall?('<button class="m-btn primary mb-analyze" style="margin-top:12px"'
       +' onclick="phHomeInstall()">'+escapeHtml(t('phHomeInstall'))+'</button>'):''); }
+// The address this phone is on, so it can be checked against the one the
+// tablet hands out, and the one thing that makes it go stale.
+function phAddrCard(){
+  var box=document.getElementById('phAddrBox'); if(!box) return;
+  phHomeTarget(function(url){
+    box.innerHTML='<div class="mb-sec-h">'+escapeHtml(t('phAddrTitle'))+'</div>'
+      +'<div class="ph-addr">'+escapeHtml(url)+'</div>'
+      +'<div class="set-desc">'+escapeHtml(t('phAddrHint'))+'</div>'; }); }
 function phHomeInstall(){
   if(!_phInstall) return;
   var e=_phInstall; _phInstall=null;
@@ -24252,10 +24284,11 @@ function phNetWatch(){
 // brings the tablet's settings over.
 function phoneOwnPrefs(){
   try{ var pv=localStorage.getItem('aurora_aiprov'); if(AI_PROVIDERS.indexOf(pv)>=0) prefs.aiProvider=pv; }catch(_){}
-  var stored=lsGet('aurora_prefs');
-  var night=(stored&&typeof stored.night==='boolean')?stored.night
-    :!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.body.classList.toggle('night',night); }
+  phApplyNight(); }
+// Night is the skin's setting, the tablet's: on, off, or by the clock. The
+// phone is the same skin and follows it the same way.
+function phApplyNight(){
+  document.body.classList.toggle('night',!!(prefs.nightAuto?isNightTime():prefs.night)); }
 function bootPhone(tab){
   skinStableCheck();
   phoneHomeIcon();
@@ -24268,6 +24301,7 @@ function bootPhone(tab){
   applyI18n();
   phoneGo(tab||'bean');
   phNetWatch();
+  setInterval(phApplyNight,60000);
   // The keys, the units and the language live in the gateway's store, put there
   // by the tablet. Without this the phone starts from nothing every time.
   try{
@@ -24282,7 +24316,7 @@ function renderPhoneNav(){
   nav.innerHTML=PHONE_TABS.map(function(c){
     return '<button type="button" class="ph-tab'+(phoneTab===c[0]?' on':'')+'"'
       +' aria-pressed="'+(phoneTab===c[0])+'" onclick="phoneGo(\''+c[0]+'\')">'
-      +'<span class="ic">'+c[1]+'</span>'+escapeHtml(t(c[2]))+'</button>'; }).join(''); }
+      +'<span class="ic" aria-hidden="true">'+c[1]+'</span><span class="lb">'+escapeHtml(t(c[2]))+'</span></button>'; }).join(''); }
 // A job is set up the first time it is opened and not again: the camera keeps a
 // live connection and the bean form keeps what has been typed into it.
 function phoneGo(tab){
@@ -24292,9 +24326,9 @@ function phoneGo(tab){
     var el=document.getElementById(PHONE_PANES[k]); if(el) el.style.display=(k===tab)?'block':'none'; }
   renderPhoneNav();
   // Only the page being looked at asks the machine anything.
-  if(tab==='status'){ phStatusPoll(true); psWaterOpen(); psTankStart(); }
+  if(tab==='status'){ phLoadStatic(); phStatusPoll(true); psWaterOpen(); psTankStart(); }
   else { phStatusPoll(false); psTankStop(); }
-  if(tab==='set'){ phVizFill(); phHomeCard(); renderPhSkin(); }
+  if(tab==='set'){ phVizFill(); phAddrCard(); phHomeCard(); renderPhSkin(); }
   // the description is data-i18n, so a language change puts the other one back
   if(tab==='cam') csWayTwo();
   if(!_phoneReady[tab]){ _phoneReady[tab]=true;
@@ -24310,24 +24344,40 @@ function phoneGo(tab){
 var PH_STATES={idle:'phStIdle',espresso:'phStEspresso',steam:'phStSteam',hotWater:'phStWater',
   flush:'phStFlush',sleeping:'phStSleep',needsWater:'phStNoWater'};
 var PH_RUN={espresso:1,steam:1,hotWater:1,flush:1};
+var PH_POLL={idle:2000,run:1000}, PH_STALE_MS=5000, PH_STOP_MS=8000;
 var _phSnap=null, _phTimer=null, _phRunAt=null, _phRunPartial=false, _phWasIdle=true, _phFail=false;
+var _phSeenAt=0, _phAgeT=null, _phPollGen=0, _phPrevSt='', _phHiddenNow=false;
 function phStatusPoll(on){
+  var gen=++_phPollGen;
   if(_phTimer){ clearTimeout(_phTimer); _phTimer=null; }
-  if(!on) return;
+  if(_phAgeT){ clearInterval(_phAgeT); _phAgeT=null; }
+  if(!on){ phLiveSync(); phStopSync(phInfo()); return; }
+  // The age of the reading has to go on counting while a request hangs, or a
+  // machine that has stopped answering looks like one that has nothing to say.
+  _phAgeT=setInterval(function(){ if(phoneTab==='status') renderPhoneStatus(); },1000);
   var tick=function(){
     api('GET','/api/v1/machine/state',null,6000).then(function(r){
-      _phSnap=r||null; _phFail=false; }).catch(function(){ _phFail=true; })
+      _phSnap=r||null; _phFail=false; _phSeenAt=Date.now(); }).catch(function(){ _phFail=true; })
       .then(function(){
-        if(phoneTab!=='status') return;
+        if(gen!==_phPollGen||phoneTab!=='status') return;
         renderPhoneStatus();
-        var st=phSnapState();
-        _phTimer=setTimeout(tick,PH_RUN[st]?1000:2500); }); };
+        _phTimer=setTimeout(tick,PH_RUN[phSnapState()]?PH_POLL.run:PH_POLL.idle); }); };
   tick(); }
 function phSnapState(){ var st=(_phSnap&&_phSnap.state)||{}; return String(st.state||'idle'); }
 function phStateLabel(warming){
   if(warming) return t('phStWarming');
   if(refillStopped((_phSnap&&_phSnap.state)||null)) return t('refillStoppedLbl');
   return t(PH_STATES[phSnapState()]||'phStOther'); }
+function phAgeSecs(){ return _phSeenAt?Math.max(0,Math.floor((Date.now()-_phSeenAt)/1000)):0; }
+// A reading is a reading of then. Past five seconds the phone says so rather
+// than pass an old state off as the machine's.
+function phStale(){ return _phSeenAt>0&&(Date.now()-_phSeenAt)>PH_STALE_MS; }
+function phModel(){
+  var m=String((machineInfo&&machineInfo.model)||'');
+  return (!m||/^de1/i.test(m))?'DE1':m; }
+function phAgeText(){
+  if(!_phSeenAt) return '';
+  return t('phAgo').replace('{m}',phModel()).replace('{n}',phAgeSecs()); }
 // Waking it and sending it to sleep are the same request with a different
 // destination, so they are the same call.
 var _phBusy='';
@@ -24341,90 +24391,304 @@ function phMachineTo(target){
     .then(function(){ _phBusy='';
       // ask again at once rather than waiting out the next tick
       if(phoneTab==='status') phStatusPoll(true); else renderPhoneStatus(); }); }
+// -- Stop ------------------------------------------------------------
+// The one thing the phone starts nothing with and can always do: stop. It is
+// there while something runs, and while the phone cannot tell -- a reading gone
+// stale is exactly when a hand reaches for it. Not for a machine last seen
+// asleep: idle is the request, and to a sleeping machine idle means wake.
+var _phStopping=false;
+var PH_STOP_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function phStopWanted(i){
+  if(_phStopping) return true;
+  if(i.run) return true;
+  return i.stale&&!!_phSnap&&i.st!=='sleeping'; }
+function phStopSync(i){
+  var b=document.getElementById('phStopBtn'), sh=document.getElementById('phoneShell');
+  if(!b) return;
+  var show=(phoneTab==='status')&&phStopWanted(i);
+  b.hidden=!show;
+  if(sh) sh.classList.toggle('ph-has-stop',show);
+  b.disabled=_phStopping;
+  b.setAttribute('aria-busy',_phStopping?'true':'false');
+  setHtml(b,_phStopping?escapeHtml(t('phStopping'))
+    :(PH_STOP_ICO+'<span>'+escapeHtml(t('phStop'))+'</span>')); }
+// No question first: by the time it was answered the cup would be full. A
+// second tap while the first is on its way sends nothing more.
+function phStop(){
+  if(_phStopping) return;
+  _phStopping=true; renderPhoneStatus();
+  api('PUT','/api/v1/machine/state/idle',null,PH_STOP_MS)
+    .then(function(){ _phStopping=false;
+        if(phoneTab==='status') phStatusPoll(true); else renderPhoneStatus(); },
+      function(){ _phStopping=false; toast(t('phStopFailed'),'err'); renderPhoneStatus(); }); }
 function initPhoneLog(){ phLoadLog();
   // A note written here carries the bean's roasting machine, which means this
   // tab needs the catalogue too -- it had none, so the line was always missing.
   if(!(beans||[]).length)
     api('GET','/api/v1/beans').then(function(l){ beans=l||[]; }).catch(function(){}); }
 function phNum(v,d){ var n=parseFloat(v); return isFinite(n)?n.toFixed(d==null?1:d):null; }
-function renderPhoneStatus(){
-  var box=document.getElementById('phStatusBody'); if(!box) return;
-  var sub=document.getElementById('phStatusSub');
-  if(_phFail&&!_phSnap){
-    box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>';
-    if(sub) sub.textContent=''; return; }
+function phDeg(v,d){ var n=parseFloat(v); return isFinite(n)?convTemp(n).toFixed(d==null?1:d):null; }
+// -- What the tab reads from besides the state -------------------------
+// The recipe as the machine has it, the machine's own facts, and the last shot.
+// Read when the tab is opened; none of it changes from one second to the next.
+var _phWf=null, _phLast=null;
+function phLoadStatic(){
+  api('GET','/api/v1/workflow').then(function(w){
+    if(!w) return; _phWf=w;
+    var ss=w.steamSettings||{};
+    if(ss.stopAtTemperature!=null) settings.milkStop=+ss.stopAtTemperature||0;
+    renderPhoneStatus(); },function(){});
+  api('GET','/api/v1/machine/info').then(function(i){
+    if(i){ machineInfo=i; renderPhoneStatus(); } },function(){});
+  phLoadLast(); }
+function phLoadLast(){
+  return api('GET','/api/v1/shots?limit=1').then(function(r){
+    var s=((r&&(r.items||r.shots))||[])[0]||null;
+    _phLast=s;
+    if(s) loadLastShotSecs(s.id).then(function(){ renderPhoneStatus(); });
+    renderPhoneStatus(); return s; },function(){ return null; }); }
+function phShotTime(s){ return Date.parse((s&&(s.timestamp||s.createdAt))||'')||0; }
+// -- The state, as the tablet's tank panel says it ---------------------
+function phInfo(){
   var d=_phSnap||{}, st=phSnapState(), run=!!PH_RUN[st];
   // Idle is not the same as ready: the machine sits at idle while it is still
-  // coming up to temperature, and a dot that cannot tell them apart is why
-  // this one was grey. The target it is heating towards says which it is.
+  // coming up to temperature. The target it is heating towards says which.
   var tgt=parseFloat(d.targetGroupTemperature), now=parseFloat(d.groupTemperature);
   var short=(isFinite(tgt)&&tgt>0&&isFinite(now))?(tgt-now):null;
   var warming=(!run&&st==='idle'&&short!=null&&short>2);
-  var label=phStateLabel(warming);
-  var cls=(st==='needsWater'||warming)?'warn':(st==='sleeping')?'off':(run?'run':(st==='idle'?'ready':''));
-  if(sub) sub.textContent=_phFail?t('phStale'):'';
-  // Nothing here carries a start time, so one is kept from when the phone first
-  // saw it running -- and said to be that, rather than passed off as the whole.
-  if(run){ if(!_phRunAt){ _phRunAt=Date.now(); _phRunPartial=!_phWasIdle; } }
-  else { _phRunAt=null; _phRunPartial=false; }
-  _phWasIdle=!run;
-  var secs=_phRunAt?Math.floor((Date.now()-_phRunAt)/1000):0;
-  function cell(k,v,u){ return '<div class="ps-cell"><div class="ps-k">'+escapeHtml(k)+'</div>'
-    +'<div class="ps-v">'+escapeHtml(v==null?'\u2014':String(v))+(u&&v!=null?'<small>'+escapeHtml(u)+'</small>':'')+'</div></div>'; }
-  var h='<div class="ps-state '+cls+'"><span class="ps-dot"></span>'
-    +'<span class="ps-name">'+escapeHtml(label)+'</span>'
-    +(warming?('<span class="ps-note">'+escapeHtml(now.toFixed(1)+' / '+tgt.toFixed(1)+'°C')+'</span>'):'')
-    +'</div>';
-  // Waking it is what the phone is usually reached for; sending it to sleep is
-  // the same walk saved at the other end. Neither is offered mid action -- a
-  // machine that is running is not a machine to put to bed.
-  if(st==='sleeping')
-    h+='<button class="m-btn primary mb-analyze" id="phWakeBtn" style="margin-top:12px"'
-      +(_phBusy?' disabled aria-busy="true"':'')+' onclick="phMachineTo(\'idle\')">'
-      +escapeHtml(_phBusy?t('phWaking'):('☀ '+t('phWake')))+'</button>';
-  else if(!run)
-    h+='<button class="m-btn mb-analyze" id="phSleepBtn" style="margin-top:12px"'
-      +(_phBusy?' disabled aria-busy="true"':'')+' onclick="phMachineTo(\'sleeping\')">'
-      +escapeHtml(_phBusy?t('phSleeping'):('☽ '+t('phSleep')))+'</button>';
+  var tone=(st==='needsWater'||refillStopped(d.state||null))?'warn':warming?'warm'
+    :(st==='sleeping')?'off':run?'run':(st==='idle')?'ready':'';
+  var sub='';
+  if(warming) sub=Math.round(convTemp(now))+'° → '+Math.round(convTemp(tgt))+'°';
+  else if(st==='idle'&&isFinite(tgt)&&tgt>0) sub=Math.round(convTemp(tgt))+'°';
+  else if(st==='espresso') sub=phStepName(d);
+  return {d:d,st:st,run:run,warming:warming,tone:tone,word:phStateLabel(warming),sub:sub,stale:phStale()}; }
+// The step being poured, by the name the profile gives it.
+function phStepName(d){
+  var steps=(_phWf&&_phWf.profile&&_phWf.profile.steps)||[], f=parseInt(d.profileFrame,10);
+  var nm=(isFinite(f)&&steps[f])?steps[f].name:'';
+  return String(nm||((d.state&&d.state.substate)||'')); }
+// Nothing here carries a start time, so one is kept from when the phone first
+// saw it running -- and said to be that, rather than passed off as the whole.
+// The end of a shot is noticed the same way, and is what puts the record of it
+// on the tab.
+var _phAfter=null, _phShotFrom=0, _phShotBefore=null, PH_AFTER_POLL=2000, PH_AFTER_MS=600000;
+function phRunTrack(i){
+  var st=i.st, run=i.run;
+  if(i.stale) return;
   if(run){
-    h+='<div class="ps-focus"><div class="ps-big">'+Math.floor(secs/60)+':'+('0'+(secs%60)).slice(-2)+'</div>'
-      +'<div class="ps-meta">'+escapeHtml(label)
-      +(_phRunPartial?('  \u00b7  '+escapeHtml(t('phSinceSeen'))):'')+'</div></div>';
-    // the readings that belong to the action being run, and no others
-    var cells=(st==='steam')
-      ? [[t('steam'),phNum(d.steamTemperature,0),'\u00b0C'],[t('pressure'),phNum(d.pressure),'bar'],[t('flow'),phNum(d.flow),'ml/s']]
-      : (st==='hotWater'||st==='flush')
-      ? [[t('flow'),phNum(d.flow),'ml/s'],[t('tempMix'),phNum(d.mixTemperature),'\u00b0C'],[t('pressure'),phNum(d.pressure),'bar']]
-      : [[t('pressure'),phNum(d.pressure),'bar'],[t('flow'),phNum(d.flow),'ml/s'],[t('tempBasket'),phNum(d.groupTemperature),'\u00b0C']];
-    h+='<div class="ps-grid three">'+cells.map(function(c){ return cell(c[0],c[1],c[2]); }).join('')+'</div>';
-    box.innerHTML=h; return; }
-  h+='<div class="ps-grid">'
-    +cell(t('tempBasket'),phNum(d.groupTemperature),'\u00b0C')
-    +cell(t('tempMix'),phNum(d.mixTemperature),'\u00b0C')
-    +cell(t('pressure'),phNum(d.pressure),'bar')
-    +cell(t('flow'),phNum(d.flow),'ml/s')
-    +'</div>'
-    +psTankCardHtml();
-  box.innerHTML=h; }
-// The page behind is the feel of it; this is the reading.
-function psTankCardHtml(){
-  var pct=psPct(), low=psLow();
-  var ml=(pct==null)?null:Math.round(tankMl(_psWater.current));
-  var refill=(pct==null||plumbed())?null:Math.round(tankPercent(_psWater.refill));
-  var sub=plumbed()?t('psPlumbed')
-    :(pct==null)?t('psTankWait')
-    :(ml+' ml'+(refill!=null?('  \u00b7  '+t('psRefillAt').replace('{n}',refill)):''));
-  return '<div class="mb-card ps-tankcard">'
-    +'<div class="ps-tank-top"><span class="ps-tank-k">'+escapeHtml(t('tank'))+'</span>'
-      +'<span class="ps-tank-v">'+(pct==null?'\u2014':Math.round(pct))
-      +(pct==null?'':'<small>%</small>')+'</span></div>'
-    +'<div class="ps-tank-bar"><i style="width:'+(pct==null?0:Math.round(pct))+'%"></i></div>'
-    +'<div class="ps-tank-sub'+(low?' low':'')+'">'
-      +escapeHtml(low?t('psTankLow'):sub)+'</div>'
-    +(psTiltNeedsAsk()
-      ? '<button type="button" class="m-btn ps-tilt" onclick="psTiltAsk()">'
-        +escapeHtml(t('psTiltAsk'))+'</button>' : '')
+    if(!_phRunAt){ _phRunAt=Date.now(); _phRunPartial=(_phPrevSt===''); }
+    if(_phPrevSt!==st){ _phAfter=null;
+      if(st==='espresso'){ _phShotFrom=_phRunAt; _phShotBefore=_phLast?_phLast.id:null; } } }
+  else { _phRunAt=null; _phRunPartial=false; }
+  if(_phPrevSt==='espresso'&&!run) phAfterBegin();
+  _phWasIdle=!run;
+  _phPrevSt=st; }
+function phAfterBegin(){
+  _phAfter={at:Date.now(),since:_phShotFrom||Date.now(),before:_phShotBefore,shot:null};
+  phAfterFetch(); }
+// The gateway writes the record a moment after the machine goes back to idle.
+// Until it is there the card says so; its numbers are the record's, not ours.
+function phAfterFetch(){
+  var a=_phAfter; if(!a||a.shot) return;
+  if(Date.now()-a.at>PH_AFTER_MS) return;
+  var again=function(){ if(_phAfter===a&&!a.shot) setTimeout(phAfterFetch,PH_AFTER_POLL); };
+  api('GET','/api/v1/shots?limit=1').then(function(r){
+    if(_phAfter!==a) return;
+    var s=((r&&(r.items||r.shots))||[])[0]||null;
+    if(!s||s.id===a.before||phShotTime(s)<a.since-120000){ again(); return; }
+    return api('GET','/api/v1/shots/'+encodeURIComponent(s.id)).then(function(f){
+      if(_phAfter!==a) return;
+      a.shot=f||s; _phLast=a.shot; renderPhoneStatus(); },again); },again); }
+function phRateAfter(){
+  var a=_phAfter; if(!a||!a.shot) return;
+  openDyeFor(a.shot,function(){ renderPhoneStatus(); }); }
+// -- The scale, only while a shot is being watched ---------------------
+// Weight arrives on a socket and nowhere else. It is opened while this tab is
+// on screen through a shot and shut the moment either stops being true, so a
+// phone in a pocket holds nothing open.
+var _phScale={w:null,on:null,seen:false}, _phScaleThere=false, _phScaleKnown=false, _phThermoOn=false;
+function phScaleReset(){ _phScale={w:null,on:null,seen:false}; _phScaleThere=false; }
+function phScaleFrame(m){
+  if(!m) return;
+  if(m.status){ _phScale.on=(m.status==='connected'); if(!_phScale.on) _phScale.w=null; return; }
+  if(m.weight!==undefined&&m.weight!==null){ _phScale.w=+m.weight; _phScale.on=true; _phScale.seen=true; } }
+function phScaleProbe(){
+  api('GET','/api/v1/devices').then(function(list){
+    _phScaleThere=(Array.isArray(list)?list:[]).some(function(d){
+      return d&&d.type==='scale'&&d.state==='connected'; });
+    _phScaleKnown=true; renderPhoneStatus(); },function(){}); }
+function phLiveSync(){
+  var watching=(phoneTab==='status')&&!_phHiddenNow&&!!_phSnap;
+  var wantScale=watching&&phSnapState()==='espresso';
+  if(wantScale&&!sockets.phScale){
+    phScaleReset(); phScaleProbe();
+    _wsParked.phScale=false;
+    openWs('phScale','/ws/v1/scale/snapshot',function(m){ phScaleFrame(m); if(phoneTab==='status') renderPhoneStatus(); }); }
+  else if(!wantScale&&sockets.phScale){ closeWs('phScale'); phScaleReset(); }
+  // The milk thermometer is the tablet's own source, read the tablet's way.
+  var wantThermo=watching&&phSnapState()==='steam';
+  if(wantThermo&&!_phThermoOn){ _phThermoOn=true;
+    loadThermoPlugins().then(function(){ return api('GET','/api/v1/devices'); })
+      .then(function(list){ if(!_phThermoOn) return;
+        if(Array.isArray(list)) state.devices=list; syncThermoWs(); renderPhoneStatus(); },function(){}); }
+  else if(!wantThermo&&_phThermoOn){ _phThermoOn=false; _thermoWsId=''; closeThermoWs(); state.milkTemp=null; } }
+function phHidden(on){
+  _phHiddenNow=!!on;
+  phLiveSync();
+  if(!on&&phoneTab==='status') phStatusPoll(true); }
+document.addEventListener('visibilitychange',function(){
+  if(phoneTab) phHidden(document.visibilityState==='hidden'); });
+// -- Drawing it ------------------------------------------------------
+function phCellsHtml(cells,cols){
+  return '<div class="ph-cells"'+(cols?(' style="grid-template-columns:repeat('+cols+',minmax(0,1fr))"'):'')+'>'
+    +cells.map(function(c){
+      return '<div class="ph-cell'+(c.dim?' dim':'')+'" data-k="'+escapeAttr(c.k)+'">'
+        +'<span class="l">'+escapeHtml(c.l)+'</span>'
+        +'<span class="v'+(c.cls?(' '+c.cls):'')+'">'+(c.html!=null?c.html
+          :((c.pre?'<span class="u">'+escapeHtml(c.pre)+'</span>':'')+escapeHtml(c.v==null?'—':String(c.v))
+          +(c.u&&c.v!=null?'<span class="u">'+escapeHtml(c.u)+'</span>':'')))+'</span></div>'; }).join('')
     +'</div>'; }
+function phCardHead(title,right){
+  return '<div class="ph-ct"><b>'+escapeHtml(title)+'</b>'+(right?'<span>'+escapeHtml(right)+'</span>':'')+'</div>'; }
+function phReadings(i){
+  var d=i.d;
+  function r(v,u,l){ return {v:v,u:u,l:l}; }
+  if(i.st==='espresso') return [r(phNum(d.pressure),'bar',t('pressure')),r(phNum(d.flow),'ml/s',t('flow')),r(phDeg(d.groupTemperature),'°',t('phRdBasket'))];
+  if(i.st==='steam') return [r(phDeg(d.steamTemperature,0),'°',t('steam')),r(phNum(d.pressure),'bar',t('pressure')),r(phNum(d.flow),'ml/s',t('flow'))];
+  if(i.st==='hotWater'||i.st==='flush') return [r(phNum(d.flow),'ml/s',t('flow')),r(phDeg(d.mixTemperature),'°',t('phRdMix')),r(phNum(d.pressure),'bar',t('pressure'))];
+  return [r(phDeg(d.groupTemperature),'°',t('phRdBasket')),r(phDeg(d.mixTemperature),'°',t('phRdMix')),
+    r(phNum(d.pressure),'bar',t('pressure')),r(phNum(d.flow),'ml/s',t('flow'))]; }
+// A plumbed machine's tank is the water line, and a percentage of it is a
+// number about nothing.
+function phTankCell(){
+  if(plumbed()) return '<div class="ph-rd tank"><b class="w">'+escapeHtml(t('phPlumbedV'))+'</b><span>'+escapeHtml(t('phPlumbedL'))+'</span></div>';
+  var pct=psPct(), low=psLow();
+  return '<div class="ph-rd tank'+(low?' low':'')+'"><b class="w">'+(pct==null?'—':(Math.round(pct)+'%'))+'</b>'
+    +'<span>'+escapeHtml(low?t('psTankLow'):t('tank'))+'</span></div>'; }
+function phWeightHtml(){
+  var c=(_phWf&&_phWf.context)||{}, tgt=parseFloat(c.targetYield), u=weightUnitLabel();
+  var tg=isFinite(tgt)?convWeight(tgt).toFixed(1):'—';
+  if(_phScale.w!=null){
+    var w=convWeight(_phScale.w), left=isFinite(tgt)?Math.max(0,convWeight(tgt)-w).toFixed(1):null;
+    return '<div><div class="wt">'+w.toFixed(1)+' <small>/ '+tg+' '+u+'</small></div>'
+      +(left!=null?('<div class="ws">'+escapeHtml(t('phLeft').replace('{v}',left+' '+u))+'</div>'):'')+'</div>'; }
+  if(_phScale.seen||_phScaleThere) return '<div><div class="wt">— <small>/ '+tg+' '+u+'</small></div></div>';
+  return '<div class="nos">'+escapeHtml(t('phNoScale'))+'</div>'; }
+function phMilkHtml(){
+  if(!thermoDevice()) return '';
+  var g=milkStopTarget(), m=state.milkTemp;
+  var now=(m!=null&&isFinite(m))?(Math.round(convTemp(m))+'°'):'—';
+  return '<div><div class="wt">'+now+(g>0?(' <small>/ '+Math.round(convTemp(g))+'°</small>'):'')+'</div>'
+    +(g>0?('<div class="ws">'+escapeHtml(t('phMilkStop').replace('{v}',String(Math.round(convTemp(g)))))+'</div>'):'')+'</div>'; }
+function phLiveHtml(i){
+  var secs=_phRunAt?Math.floor((Date.now()-_phRunAt)/1000):0;
+  var right=(i.st==='espresso')?phWeightHtml():(i.st==='steam')?phMilkHtml():'';
+  return '<div class="ph-live"><div><div class="tm">'+Math.floor(secs/60)+':'+('0'+(secs%60)).slice(-2)+'</div>'
+    +'<div class="tl">'+escapeHtml(t('phElapsed')+(_phRunPartial?(' · '+t('phSinceSeen')):''))+'</div></div>'
+    +right+'</div>'; }
+function phCardHtml(i){
+  var h='<div class="ph-st"><span class="ph-word '+i.tone+'">'+escapeHtml(i.word)+'</span>'
+    +'<span class="ph-sub">'+escapeHtml(i.stale?t('phStaleSub').replace('{n}',phAgeSecs()):i.sub)+'</span></div>';
+  if(i.stale) h+='<div class="ph-warn"><i></i>'+escapeHtml(t('phWaiting'))+'</div>';
+  else if(i.run) h+=phLiveHtml(i);
+  h+='<div class="ph-rds">'+phReadings(i).map(function(c){
+      return '<div class="ph-rd"><b>'+escapeHtml(c.v==null?'—':c.v)
+        +(c.v==null?'':(c.u==='°'?'°':('<small>'+escapeHtml(c.u)+'</small>')))+'</b>'
+        +'<span>'+escapeHtml(c.l)+'</span></div>'; }).join('')+phTankCell()+'</div>';
+  if(psTiltNeedsAsk()) h+='<button type="button" class="ph-tilt" onclick="psTiltAsk()">'+escapeHtml(t('psTiltAsk'))+'</button>';
+  return h; }
+// The recipe the machine has, to read: the same cells as the recipe card, and
+// nothing on it can be changed from here.
+function phRecipeCalc(w){
+  var keep={p:curProfileObj,o:settings.doseOut,s:state.scaleConnected}, out={temp:null,stop:null};
+  try{
+    curProfileObj={id:'current',profile:w.profile||null,isDefault:false};
+    var y=parseFloat(w.context&&w.context.targetYield); if(isFinite(y)) settings.doseOut=y;
+    state.scaleConnected=_phScaleThere||_phScale.seen;
+    out.temp=profileFirstTemp(w.profile);
+    out.stop=profileStop();
+  }catch(_){}
+  curProfileObj=keep.p; settings.doseOut=keep.o; state.scaleConnected=keep.s;
+  return out; }
+function phRecipeHtml(i){
+  var w=_phWf; if(!w) return '';
+  var pr=w.profile||{}, c=w.context||{}, u=weightUnitLabel();
+  var dose=parseFloat(c.targetDoseWeight), yld=parseFloat(c.targetYield), calc=phRecipeCalc(w);
+  var dim=(i.st==='espresso');
+  var cells=[
+    {k:'dose',l:t('doseG'),v:isFinite(dose)?convWeight(dose).toFixed(1):null,u:u,dim:dim},
+    {k:'ratio',l:t('ratioShort'),v:(dose>0&&yld>0)?String(parseFloat((yld/dose).toFixed(2))):null,pre:'1:',dim:dim},
+    {k:'yield',l:t('yieldG'),v:isFinite(yld)?convWeight(yld).toFixed(1):null,u:u},
+    {k:'grind',l:t('grind'),v:(c.grinderSetting!=null&&c.grinderSetting!=='')?String(c.grinderSetting):null,dim:dim},
+    {k:'temp',l:t('cellTemp'),v:calc.temp!=null?convTemp(calc.temp).toFixed(1):null,u:'°',dim:dim}];
+  if(calc.stop) cells.push({k:'stop',l:t(stopLabelKey(calc.stop)),html:stopValueHtml(calc.stop),cls:'amb sm',dim:dim});
+  var line=[c.coffeeRoaster,c.coffeeName,c.grinderModel].filter(function(x){ return x; }).join(' · ');
+  return '<section class="ph-card">'+phCardHead(pr.title||t('noProfile'),t('phRecipeNow'))
+    +(line?('<div class="ph-line">'+escapeHtml(line)+'</div>'):'')
+    +phCellsHtml(cells,3)+'</section>'; }
+function phShotCells(s){
+  var an=s.annotations||{}, c=(s.workflow&&s.workflow.context)||{}, u=weightUnitLabel();
+  var st=s.measurements?shotStats(s):{};
+  var dose=parseFloat(an.actualDoseWeight!=null?an.actualDoseWeight:c.targetDoseWeight);
+  var yld=parseFloat(an.actualYield!=null?an.actualYield:(st.weight>0?st.weight:c.targetYield));
+  var secs=st.seconds||_lsSecs[s.id]||0;
+  return [
+    {k:'dose',l:t('lastDose'),v:isFinite(dose)?convWeight(dose).toFixed(1):null,u:u,cls:'sm'},
+    {k:'yield',l:t('lastYield'),v:isFinite(yld)?convWeight(yld).toFixed(1):null,u:u,cls:'sm'},
+    {k:'ratio',l:t('ratioShort'),v:(dose>0&&yld>0)?('1:'+(yld/dose).toFixed(1)):null,cls:'sm'},
+    {k:'time',l:t('time'),v:secs>0?String(Math.round(secs)):null,u:'s',cls:'sm'}]; }
+function phClock(s){
+  var d=new Date(phShotTime(s)); if(isNaN(d)||!phShotTime(s)) return '';
+  try{ return d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}); }catch(_){ return ''; } }
+function phAfterHtml(){
+  var a=_phAfter; if(!a) return '';
+  var s=a.shot;
+  if(!s) return '<section class="ph-card">'+phCardHead(t('phJustShot'),'')
+    +'<div class="ph-wait">'+escapeHtml(t('phRecording'))+'</div></section>';
+  var secs=(s.measurements?shotSeconds(s):0)||_lsSecs[s.id]||0;
+  var right=phClock(s)+(secs>0?(' · '+t('phSecs').replace('{n}',Math.round(secs))):'');
+  return '<section class="ph-card">'+phCardHead(t('phJustShot'),right)
+    +phCellsHtml(phShotCells(s),4)
+    +'<button type="button" class="ph-btn ton" id="phRateBtn" onclick="phRateAfter()">'+escapeHtml(t('phRateShot'))+'</button></section>'; }
+function phLastHtml(){
+  var s=_phLast; if(!s) return '';
+  return '<section class="ph-card">'+phCardHead(t('lastShotT'),fmtShotWhen(s))+phCellsHtml(phShotCells(s),4)+'</section>'; }
+function phSkeleton(box){
+  if(box.querySelector('#phCard')) return;
+  box._html=null;
+  box.innerHTML='<div id="phTopAct"></div>'
+    +'<section class="ph-card ph-tank" id="phCard"><canvas class="ps-tank" id="psTank" aria-hidden="true"></canvas>'
+    +'<div class="ph-tank-in" id="phCardIn"></div></section>'
+    +'<div id="phAfter"></div><div id="phRecipe"></div><div id="phLast"></div><div id="phBotAct"></div>'; }
+function phPut(id,h){ setHtml(document.getElementById(id),h); }
+function renderPhoneStatus(){
+  var box=document.getElementById('phStatusBody'); if(!box) return;
+  var sub=document.getElementById('phStatusSub');
+  var i=phInfo();
+  phStopSync(i);
+  if(_phFail&&!_phSnap){
+    box._html=null;
+    box.innerHTML='<div class="ls-empty">'+escapeHtml(t('phOffline'))+'</div>';
+    if(sub) sub.textContent=''; return; }
+  phRunTrack(i);
+  if(_phAfter&&Date.now()-_phAfter.at>PH_AFTER_MS) _phAfter=null;
+  phLiveSync();
+  phSkeleton(box);
+  if(sub){ sub.textContent=phAgeText(); sub.classList.toggle('stale',i.stale); }
+  // Waking it is what the phone is usually reached for, so asleep it comes
+  // first. Sleep is the same walk saved at the other end, and is never offered
+  // to a machine that is running.
+  phPut('phTopAct',(i.st==='sleeping')
+    ?('<button type="button" class="ph-btn pri" id="phWakeBtn"'+(_phBusy?' disabled aria-busy="true"':'')
+      +' onclick="phMachineTo(\'idle\')">'+escapeHtml(_phBusy?t('phWaking'):t('phWake'))+'</button>'):'');
+  phPut('phCardIn',phCardHtml(i));
+  phPut('phAfter',phAfterHtml());
+  phPut('phRecipe',phRecipeHtml(i));
+  phPut('phLast',(i.run||_phAfter)?'':phLastHtml());
+  phPut('phBotAct',(!i.run&&i.st!=='sleeping'&&_phSnap)
+    ?('<button type="button" class="ph-btn out" id="phSleepBtn"'+(_phBusy?' disabled aria-busy="true"':'')
+      +' onclick="phMachineTo(\'sleeping\')">'+escapeHtml(_phBusy?t('phSleeping'):t('phSleep'))+'</button>'):''); }
 // -- The tank behind the machine tab -------------------------------
 // Water level arrives on a socket and nowhere else, so the phone opens that one
 // socket while it is on this page. Until the first message there is no level to
@@ -24659,7 +24923,14 @@ function phDrawOpen(){
       return; }
     withFullShots([row]).then(function(f){
       var c2=phCanvasFor(id);
-      if(c2&&f&&f[0]) drawShotMeasurements(c2,f[0],false); }); }); }
+      if(c2&&f&&f[0]){ drawShotMeasurements(c2,f[0],false);
+        var cells=c2.closest('.pl-open')&&c2.closest('.pl-open').querySelector('.ph-cells');
+        if(cells) cells.outerHTML=phCellsHtml(phShotCells(f[0]),4); } }); }); }
+// The tablet's record form, for a shot from the log.
+function phRateShot(id){
+  var row=phShotRow(id); if(!row) return;
+  var full=slFull[id]||row;
+  openDyeFor(full,function(ann){ row.annotations=ann; renderPhoneLog(); }); }
 function phVizPush(id){
   if(_phVizBusy) return;
   var row=phShotRow(id); if(!row) return;
@@ -24705,9 +24976,11 @@ function renderPhoneLog(){
     var a=sh.annotations||{};
     var dose=parseFloat(a.actualDoseWeight!=null?a.actualDoseWeight:c.targetDoseWeight);
     var yld=parseFloat(a.actualYield!=null?a.actualYield:c.targetYield);
-    var bits=[];
+    var bits=[], u=weightUnitLabel();
     if(c.coffeeName) bits.push(c.coffeeName);
-    if(isFinite(dose)&&isFinite(yld)&&dose>0) bits.push(dose.toFixed(1)+'g \u2192 '+yld.toFixed(1)+'g  1:'+(yld/dose).toFixed(2));
+    if(isFinite(dose)&&isFinite(yld)&&dose>0){
+      bits.push(convWeight(dose).toFixed(1)+' '+u+' \u2192 '+convWeight(yld).toFixed(1)+' '+u);
+      bits.push('1:'+(yld/dose).toFixed(2)); }
     // Nothing on a Visualizer card is hidden and nothing on it can be edited,
     // so there is nothing for a fold to save. It is open from the start.
     var open=(sh._viz||_phOpen===sh.id);
@@ -24716,35 +24989,36 @@ function renderPhoneLog(){
       +'<div class="pl-top"><span class="pl-prof">'+escapeHtml(pr.title||t('noProfile'))+'</span>'
         +(shotStars(sh)?'<span class="pl-rate">'+escapeHtml(starsText(sh,' '))+'</span>':'')
         +'<span class="pl-when">'+escapeHtml(fmtShotWhen(sh))+'</span></div>'
-      +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join('  \u00b7  '))+'</div>':'')
+      +(bits.length?'<div class="pl-sub">'+escapeHtml(bits.join(' \u00b7 '))+'</div>':'')
       +(open?('<div class="pl-open" onclick="event.stopPropagation()">'
         +'<div class="pl-canvas"><canvas class="pl-cv" data-shot="'+escapeAttr(sh.id)+'"></canvas></div>'
         +(sh._viz?(vizFactsHtml(sh._vizRaw)
-            +'<div class="pl-vizmark">'+escapeHtml(t('phVizRead'))+'</div>')
-          :tasteCardHtml(sh.id,tasteOf(sh),'ph')
-        +(sh._viz?(a.espressoNotes?('<div class="pl-sub" style="margin-top:10px">'+escapeHtml(a.espressoNotes)+'</div>'):'')
-          :('<div class="field pl-note"><label>'+escapeHtml(t('notesLabel'))+'</label>'
-          +'<textarea rows="2" placeholder="'+escapeAttr(t('phNotePh'))+'"'
-          +' oninput="phNote(\''+sh.id+'\',this.value)">'+escapeHtml(tasteNoteOf(sh))+'</textarea></div>'))
-        +(_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>'):'')
+            +'<div class="pl-vizmark">'+escapeHtml(t('phVizRead'))+'</div>'
+            +(a.espressoNotes?('<div class="pl-sub" style="margin-top:10px;white-space:normal">'+escapeHtml(a.espressoNotes)+'</div>'):''))
+          // The four numbers the shot is remembered by, and the tasting as one
+          // button: the form is the tablet's, in a sheet, not a card's length.
+          :(phCellsHtml(phShotCells(slFull[sh.id]||sh),4)
+            +'<button type="button" class="ph-btn ton ph-rate" onclick="event.stopPropagation();phRateShot(\''+sh.id+'\')">'
+            +escapeHtml(t('phRateShot'))+'</button>'))
+        +(sh._viz?'':((_phAiBusy?('<div class="rec-wait">'+escapeHtml(t('aiReading'))+'</div>'):'')
         +(_phAi?('<div class="pl-ai">'+aiResultHtml(_phAi,'ph')+'</div>'):'')
         // A reading that is on screen is a reason to ask for another one, not a
         // reason to take the button away.
         +'<div class="pl-acts">'
-          +'<button type="button" class="m-btn"'+(_phVizBusy?' disabled aria-busy="true"':'')
-            +' onclick="event.stopPropagation();phVizPush(\''+sh.id+'\')">\u2601 '
+          +'<button type="button" class="m-btn ph-out"'+(_phVizBusy?' disabled aria-busy="true"':'')
+            +' onclick="event.stopPropagation();phVizPush(\''+sh.id+'\')">'
             +escapeHtml(t(shotVizId(sh)?'vizUpdate':'vizUpload'))+'</button>'
-          +'<button type="button" class="m-btn mb-analyze"'+(_phAiBusy?' disabled aria-busy="true"':'')
-            +' onclick="event.stopPropagation();phAiRun(\''+sh.id+'\')">\u2728 '
+          +'<button type="button" class="m-btn ph-out"'+(_phAiBusy?' disabled aria-busy="true"':'')
+            +' onclick="event.stopPropagation();phAiRun(\''+sh.id+'\')">'
             +escapeHtml(t(_phAi?'aiRerun':'aiRun'))+'</button>'
-          +(_phAi&&!_phAiBusy?('<button type="button" class="m-btn primary"'
-            +' onclick="event.stopPropagation();pinAiGuide(_phAi)">\u2757 '
-            +escapeHtml(t('aiPin'))+'</button>'):'')
-        +'</div>')
+        +'</div>'
+        +(_phAi&&!_phAiBusy?('<div class="pl-acts"><button type="button" class="m-btn primary"'
+          +' onclick="event.stopPropagation();pinAiGuide(_phAi)">'
+          +escapeHtml(t('aiPin'))+'</button></div>'):'')))
         // A shot that is on Visualizer has an address there, whichever side of
         // the switch it was read from.
-        +(phVizLink(sh)?('<div class="pl-acts"><button type="button" class="m-btn"'
-          +' onclick="event.stopPropagation();phCopyViz(\''+sh.id+'\')">\ud83d\udd17 '
+        +(phVizLink(sh)?('<div class="pl-acts"><button type="button" class="m-btn ph-out"'
+          +' onclick="event.stopPropagation();phCopyViz(\''+sh.id+'\')">'
           +escapeHtml(t('vizCopyLink'))+'</button></div>'):'')
         +'</div>'):'')
       +'</div>'; }).join('')

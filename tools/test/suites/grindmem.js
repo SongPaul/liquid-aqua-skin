@@ -170,10 +170,10 @@ test('the grind carries its grinder’s unit: microns on the MT80, nothing on a 
   return gmWorld({}, function () {
     T.eq(grindUnitFor('gm-mt80'), 'µm', 'the MT80 counts its gap in microns');
     T.eq(grindUnitFor('gm-niche'), '', 'the Niche has no unit');
-    syncGrinder();
-    T.eq(T.el('#grindUnit').textContent, 'µm', 'shown beside the grind');
-    context.grinderId = 'gm-niche'; context.grinderModel = 'Niche Zero'; syncGrinder();
-    T.eq(T.el('#grindUnit').textContent, '', 'and not for the Niche');
+    // the card's grind cell is the number alone; the unit goes with it elsewhere
+    syncGrinder(); updateGrindRow();
+    T.ok(T.el('#grindRow').textContent.indexOf('µm') < 0, 'not in the card cell');
+    T.eq(T.el('#grindRow .dose-lbl').textContent.trim(), t('grind'), 'whose caption is the word alone');
   });
 });
 
