@@ -4810,7 +4810,7 @@ var I18N={
     scaleBrew:'Brewing scale',
     connTitle:'Devices', connDesc:'What is connected, and what else is within reach.',
     connNowHeld:'Connected now', connNoneHeld:'Nothing connected', connNothing:'Nothing else found',
-    connFind:'Scan again', connStUp:'connected', connStWorking:'working',
+    connFind:'Scan again', connStUp:'connected', connStWorking:'working', connStConnecting:'Connecting', connRetrying:'Searching again\u2026',
     connStSeen:'found', connStAway:'remembered, out of range',
     connViaPlugin:'plugin', connOwned:'Held by the machine',
     thermo:'Thermometer', doser:'Bean doser', dzTitle:'Dispense beans', dzBeanTab:'Bean', dzAllAsk:'Dispense {g} g from every module?', dzXTab:'XDOSING', dzPick:'Use', dzInUse:'In use', dzSlot:'Doser {n}', dzNoBean:'No bean', dzGo:'Dispense', dzDispense:'Dispense', dzAll:'Dispense all · {g} g', dzNone:'No dosing module connected', dzBusy:'Dispensing…', dzOk:'{g} g dispensed', dzFailed:'Failed — {e}', dzUncertain:'May have dispensed — check the cup', dzUncertainAsk:'{n} may already have dispensed. Dispense again?', dzMax:'Up to {n} modules can be connected at once', tDzOk:'{n}: {g} g dispensed', tDzFailed:'{n}: dispensing failed', tDzUncertain:'{n} may have dispensed — check the cup before trying again', tDzBean:'The shot will be saved with {b}', milkTempNow:'Milk now', milkStop:'Milk target', milkStopOff:'off', cellTemp:'Temp', milkStopCell:'Stop at',
@@ -5311,7 +5311,7 @@ var I18N={
     scaleBrew:'추출 저울',
     connTitle:'연결 기기', connDesc:'지금 연결된 기기와, 연결할 수 있는 기기입니다.',
     connNowHeld:'현재 연결된 기기', connNoneHeld:'연결 없음', connNothing:'다른 기기 없음',
-    connFind:'다시 찾기', connStUp:'연결됨', connStWorking:'처리 중',
+    connFind:'다시 찾기', connStUp:'연결됨', connStWorking:'처리 중', connStConnecting:'연결 중', connRetrying:'다시 찾는 중\u2026',
     connStSeen:'찾음', connStAway:'기억됨, 범위 밖',
     connViaPlugin:'플러그인', connOwned:'머신이 가진 기기',
     thermo:'온도계', doser:'원두 계량기', dzTitle:'원두 배출', dzBeanTab:'원두', dzAllAsk:'모든 모듈에서 총 {g} g을 배출할까요?', dzXTab:'XDOSING', dzPick:'선택', dzInUse:'사용 중', dzSlot:'도징 {n}', dzNoBean:'원두 없음', dzGo:'원두 배출', dzDispense:'배출', dzAll:'모두 배출 · {g} g', dzNone:'연결된 계량 모듈이 없습니다', dzBusy:'배출 중…', dzOk:'{g} g 배출함', dzFailed:'실패 — {e}', dzUncertain:'배출됐을 수 있음 — 컵을 확인하세요', dzUncertainAsk:'{n}이(가) 이미 배출했을 수 있습니다. 다시 배출할까요?', dzMax:'모듈은 한 번에 {n}개까지 연결됩니다', tDzOk:'{n}: {g} g 배출', tDzFailed:'{n}: 배출 실패', tDzUncertain:'{n}: 배출됐을 수 있습니다 — 다시 하기 전에 컵을 확인하세요', tDzBean:'샷은 {b}(으)로 저장됩니다', milkTempNow:'우유 온도', milkStop:'우유 목표', milkStopOff:'끔', cellTemp:'온도', milkStopCell:'정지',
@@ -6387,6 +6387,7 @@ function devicesFrame(m){
     // A connected machine in the device list means we're connected, regardless of phase.
     var machineConnected=false, machineName=null;
     state.devices=devicesDuringScan(m.devices||[]);
+    connLateCheck();
     if(m.devices){ m.devices.forEach(function(d){
       if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; } }); }
     var bs=brewScaleOf(m.devices||[]), scaleConnected=!!bs&&bs.state==='connected';
@@ -6878,9 +6879,9 @@ function updateConnUI(s){ var btn=document.getElementById('btnConnect');
   btn.className='conn-toggle'+(s==='ing'?' ing':'');
   setText(document.getElementById('connLbl'),t(s==='ing'?'devicesIng':'devicesLbl'));
   syncHdrState();
-  cglyph('cgMachine',state.connected?'up':'',
+  cglyph('cgMachine',state.connected?'up':connIngOf('machine')?'ing':'',
     t('machine')+(state.machineName?(' \u2014 '+state.machineName):''));
-  cglyph('cgScale',state.scaleConnected?'up':'',
+  cglyph('cgScale',state.scaleConnected?'up':brewScaleConnecting()?'ing':'',
     t('scale')+(state.scaleName?(' \u2014 '+state.scaleName):''));
   syncConnDosing(); syncConnGrinder(); syncConnExtras(); syncDevNames(); bindGrindSrc();
   // The sheet is a view of the same list the glyphs read, so a device that
@@ -6893,8 +6894,8 @@ function syncConnExtras(){
   if(!th||!dz) return;
   var thOn=thermoOn(), dzOn=_doserOn;
   th.hidden=!thOn; dz.hidden=!dzOn;
-  if(thOn){ var d=thermoDevice();
-    cglyph('cgThermo',d?'up':'',t('thermo')+(d&&d.name?(' — '+d.name):'')); }
+  if(thOn){ var d=thermoDevice(), ing=!d&&thermoDevices().some(function(x){ return x.state==='connecting'; });
+    cglyph('cgThermo',d?'up':ing?'ing':'',t('thermo')+(d&&d.name?(' — '+d.name):'')); }
   if(dzOn){ var n=doserUp().length;
     cglyph('cgDoser',n?'up':'',t('doser')+' — '+n); }
   var g=th.parentElement; if(g) g.classList.toggle('c3',thOn||dzOn); }
@@ -7803,8 +7804,10 @@ function connStagesSettled(){
   if(_brewUpAt) return now-_brewUpAt>=SCALE_SETTLE;
   return now-_machineUpAt>=MACHINE_SETTLE+BREW_GIVE_UP; }
 function dosingWaitingForBrew(){ return !connStagesSettled(); }
+// Asked for by hand, it gets the one retry; the watch loop that asks again by
+// itself does not search, or it would search every few seconds.
 function holdDosingScale(id,announce){
-  return api('PUT','/api/v1/devices/connect',{deviceId:id,connectionRole:'auxiliary'})
+  return connectDevice(id,{deviceId:id,connectionRole:'auxiliary'},45000,{retry:!!announce,late:!!announce})
     .then(function(){ return confirmDosingHold(id,announce); })
     .catch(function(e){ if(announce) toast(t('dosingHoldFailed')+' '+apiErrorText(e),'err'); }); }
 // A gateway old enough to ignore connectionRole answers the same 200 and makes
@@ -8378,8 +8381,9 @@ function syncMilkTemp(){
   // what was set is kept for when it comes back
   var sb=document.getElementById('milkStopBlock'); if(sb) sb.style.display=d?'':'none';
   var dev=document.getElementById('devThermo');
-  if(dev) dev.textContent=d?(d.name||''):t('thermoNone');
-  var dot=document.getElementById('thermoDot'); if(dot) dot.className='rd-dot'+(d?' up':'');
+  var thIng=!d&&thermoDevices().some(function(x){ return x.state==='connecting'; });
+  if(dev) dev.textContent=d?(d.name||''):t(thIng?'connStConnecting':'thermoNone');
+  var dot=document.getElementById('thermoDot'); if(dot) dot.className='rd-dot'+(d?' up':thIng?' ing':'');
   syncSteamRow();
   var now=document.getElementById('milkTempV');
   if(now){ now.textContent=d&&state.milkTemp!=null?state.milkTemp.toFixed(1):'—';
@@ -8393,6 +8397,62 @@ function syncMilkTemp(){
   if(lm){ lm.textContent=(on&&d&&state.milkTemp!=null)
       ?('🥛 '+milkTempText()+(milkStopTarget()>0?' → '+milkStopText()+'°':'')):'';
     lm.classList.toggle('hit',hit); } }
+// -- Connecting ------------------------------------------------------
+// The gateway connects only what is in its current list, drops a device whose
+// connect failed, and Android does not try a second time. So a 404 or a 503 is
+// met with one fresh search: a device that comes back is asked for once more,
+// or waited for if the gateway has already started on it by itself. Never more
+// than once, and never twice at the same time for the same device.
+var CONN_RETRY={404:1,503:1}, CONN_POLL_MS=1000, CONN_LATE_MS=120000;
+var _connRetry={}, _connInFlight={}, _connLate={};
+function connDevState(list,id){
+  var d=(list||[]).filter(function(x){ return x&&x.id===id; })[0];
+  return d?d.state:null; }
+function connectDevice(id,body,ms,opts){
+  opts=opts||{};
+  if(_connInFlight[id]) return _connInFlight[id];
+  var p=api('PUT','/api/v1/devices/connect',body,ms).then(function(){ return true; },function(e){
+    if(opts.retry===false||!e||!CONN_RETRY[e.status]) throw e;
+    return connRetry(id,body,ms,e); });
+  var done=p.then(function(v){ delete _connInFlight[id]; delete _connLate[id]; return v; },
+    function(e){ delete _connInFlight[id]; if(opts.late!==false) _connLate[id]=Date.now(); throw e; });
+  _connInFlight[id]=done;
+  return done; }
+function connRetry(id,body,ms,first){
+  _connRetry[id]=true; toast(t('connRetrying'));
+  if(connOpen()) renderConnModal();
+  scanBegin();
+  return api('GET','/api/v1/devices/scan?connect=false',null,60000).then(function(list){
+      scanEnd();
+      if(Array.isArray(list)) state.devices=list;
+      var st=connDevState(list,id);
+      if(!st) throw first;
+      if(st==='connected') return true;
+      if(st==='connecting') return connWaitState(id,ms).then(function(ok){ if(!ok) throw first; return true; });
+      return api('PUT','/api/v1/devices/connect',body,ms).then(function(){ return true; }); },
+    function(){ scanEnd(); throw first; })
+    .then(function(v){ delete _connRetry[id]; return v; },function(e){ delete _connRetry[id]; throw e; }); }
+// Watched on the list: connected is in, gone or let go is a failure.
+function connWaitState(id,ms){
+  var until=Date.now()+ms;
+  return new Promise(function(res){
+    (function poll(){
+      api('GET','/api/v1/devices').then(function(list){
+        if(Array.isArray(list)) state.devices=list;
+        var st=connDevState(list,id);
+        if(st==='connected') return res(true);
+        if(!st||st==='disconnected'||Date.now()>until) return res(false);
+        setTimeout(poll,CONN_POLL_MS); },
+        function(){ if(Date.now()>until) return res(false); setTimeout(poll,CONN_POLL_MS); }); })(); }); }
+// When the skin stops waiting the gateway goes on connecting. A device that
+// turns up connected after that is said to have joined after all.
+function connLateCheck(){
+  var now=Date.now();
+  Object.keys(_connLate).forEach(function(id){
+    if(now-_connLate[id]>CONN_LATE_MS){ delete _connLate[id]; return; }
+    if(connDevState(state.devices,id)==='connected'){ delete _connLate[id]; toast(t('connJoined'),'ok'); } }); }
+function connIngOf(type){
+  return (state.devices||[]).some(function(d){ return d.type===type&&d.state==='connecting'; }); }
 var _connBusy='';
 function connTypeOf(d){
   return (d.type==='machine'||d.type==='scale'||d.type==='grinder')?d.type:'other'; }
@@ -8400,7 +8460,9 @@ function connDevices(type){
   return (state.devices||[]).filter(function(d){ return connTypeOf(d)===type; }); }
 function connState(d){
   if(d.state==='connected') return t('connStUp');
-  if(d.state==='connecting'||d.state==='disconnecting') return t('connStWorking');
+  if(_connRetry[d.id]) return t('connRetrying');
+  if(d.state==='connecting') return t('connStConnecting');
+  if(d.state==='disconnecting') return t('connStWorking');
   // Remembered and out of range is not the same as switched on and waiting,
   // and only one of the two is worth walking over to the counter for.
   return d.available===false?t('connStAway'):t('connStSeen'); }
@@ -8697,7 +8759,8 @@ function connPoolBlock(kind){
   var busy=connLocked(), pool=connCellPool(kind);
   if(!pool.length) return '';
   return '<div class="cn-list">'+pool.map(function(d){
-    var a=connBtn(t('connJoin'),connJoinCall(kind,d.id),busy||d.available===false||(kind==='doser'&&doserFull()));
+    var a=connBtn(t('connJoin'),connJoinCall(kind,d.id),busy||d.available===false||(kind==='doser'&&doserFull())
+      ||d.state==='connecting'||!!_connRetry[d.id]);
     if(d.state!=='connected'&&d.available===false)
       a+=connBtn(t('connForget'),"connForget('"+escapeArg(d.id)+"')",busy);
     return connLine(d,[connElsewhere(kind,d),connState(d),connVia(d)].filter(Boolean).join(' \u00b7 '),
@@ -8733,7 +8796,7 @@ function connOpen(){ var o=document.getElementById('connOverlay');
 function refreshConnDevices(){
   return api('GET','/api/v1/devices').then(function(list){
     if(Array.isArray(list)) state.devices=devicesDuringScan(list);
-  }).catch(function(){}).then(function(){ syncThermoWs(); syncDoser();
+  }).catch(function(){}).then(function(){ connLateCheck(); syncThermoWs(); syncDoser();
     updateConnUI(); renderConnModal(); syncDosing(); renderDosingRow(); }); }
 // A scan on the gateway starts by dropping every device that is not connected
 // and adds each back as it is heard again, so the sheet emptied and refilled
@@ -8792,7 +8855,7 @@ function connSet(type,id,on){
   var pref=CONN_PREF[type];
   _connBusy=id; renderConnModal();
   var p;
-  if(on) p=api('PUT','/api/v1/devices/connect',{deviceId:id},30000)
+  if(on) p=connectDevice(id,{deviceId:id},45000)
     .then(function(){ if(!pref) return null;
       if(gwSettings) gwSettings[pref]=id;
       var o={}; o[pref]=id;
@@ -10943,7 +11006,7 @@ function brewScaleTo(id,prev,pre){
       return api('POST','/api/v1/settings',{preferredScaleId:id||null}).catch(function(){}); })
     .then(function(){
       if(!id) return null;
-      return api('PUT','/api/v1/devices/connect',{deviceId:id,connectionRole:'primary'},20000); })
+      return connectDevice(id,{deviceId:id,connectionRole:'primary'},40000); })
     .then(function(){ toast(t(id?'scaleBrewSet':'scaleBrewCleared'),'ok'); },
       function(e){ toast(t('scaleBrewFailed')+' '+apiErrorText(e),'err'); })
     .then(function(){ loadDevicesForDosing(); }); }

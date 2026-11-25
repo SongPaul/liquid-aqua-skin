@@ -196,6 +196,8 @@ Tap the device button in the top bar. Each kind of device has its own cell, side
 
 **Find** (next to the close button) looks again without connecting anything. The gateway stops looking once it has a scale, so a scale switched on later is only noticed this way. Devices in reach stay listed while it looks.
 
+**Connecting** a device is given time: up to 45 s for a thermometer, a grinder or the dosing scale, 40 s for the brewing scale. A device the gateway is connecting, whether you asked or it reconnects by itself, reads **Connecting** in the sheet and on the device button. If the gateway answers that the device is no longer listed or that Bluetooth timed out, the skin searches once more (**Searching again…**) and, if the device turns up, asks for it one more time, or waits for it if the gateway is already connecting it. It does this once; a device that does not come back is reported as before. If the skin stops waiting but the device connects a little later, the sheet shows it connected and says so.
+
 The skin never scans by itself, as other skins do not: a scan shares the Bluetooth radio with everything already connected. A dosing scale that is away is looked for when you tap it on the recipe card. What the skin connects by itself waits its turn: the machine first, then the brewing scale, each left to settle, and only then the dosing scale.
 
 ---
