@@ -112,8 +112,9 @@ test('the shot log can show only the shots that were liked', function (T) {
   }, function (e) { api = real; document.getElementById('shotLogPage').classList.remove('show'); throw e; });
 });
 
-// Decaid 0.9.3 admits a tokenless skin update check from the same device while
-// automatic update checks are on. Anywhere else the app is still the way.
+// Decaid 0.9.3 admits a tokenless skin update check unless the user has turned
+// on protection; neither the device nor automatic checks matter any more (see
+// gw093.js). Before 0.9.3 the app is still the way.
 function withSkinCheck(version, auto, reply, run) {
   var realApi = api, realV = _gwVersion, realS = gwSettings, sent = [];
   _gwVersion = version; gwSettings = Object.assign({}, gwSettings, { automaticUpdateCheck: auto }); _skinCheckRefused = false;
@@ -126,9 +127,9 @@ function withSkinCheck(version, auto, reply, run) {
 
 test('the skin offers its own update check only where the gateway admits it', function (T) {
   return withSkinCheck('0.9.3-beta.1', true, null, function () {
-    T.eq(canSkinCheck(), true, '0.9.3 beta, same device, automatic updates on');
+    T.eq(canSkinCheck(), true, '0.9.3 beta');
     gwSettings.automaticUpdateCheck = false;
-    T.eq(canSkinCheck(), false, 'not with automatic updates off');
+    T.eq(canSkinCheck(), true, 'automatic updates off makes no difference on 0.9.3');
     gwSettings.automaticUpdateCheck = true; _gwVersion = '0.9.2';
     T.eq(canSkinCheck(), false, 'not on 0.9.2');
   });

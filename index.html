@@ -4703,7 +4703,7 @@ var I18N={
     vizGraph:'Visualizer shot',
     catSkin:'Skin', skinHistory:'Update history', 
     pluginViaApp:'Plugins are installed, switched and set up in the Decaid app, under Plugins on its dashboard.', skinViaApp:'Skin updates are installed from the Decaid app: Web Interface on its dashboard, then the menu at the top right, then Check for updates.', skinOpenApp:'Open the Decaid app', autoUpdViaApp:'Automatic updates are turned on in the Decaid app’s settings.', skinUpToDate:'This skin is up to date.',
-    skinCheck:'Check for updates', skinChecking:'Checking\u2026', skinUpdated:'Updated \u2014 reload to use it', skinThrottled:'Checked a moment ago. Try again in half a minute.', skinCheckFailed:'Update check failed',
+    skinCheck:'Check for updates', skinChecking:'Checking\u2026', skinUpdated:'Updated \u2014 reload to use it', skinThrottled:'Decaid is busy checking. Try again shortly.', originRefused:'Decaid does not take changes from this page\u2019s address.', originName:'This page is open by the name {h}, and Decaid takes changes only from a page opened by its number, so saves here will fail.', originOpenAt:'Open {u} instead.', originOpenIp:'Open it by the tablet\u2019s IP address instead, as the Decaid app shows it.', appLocalApproval:'Approve the install on the tablet itself.', skinCheckFailed:'Update check failed',
     skinNewer:'v{v} is available.', skinNewsFail:'Could not load the update history.',
     skinInstalledTag:'running', skinAll:'All releases',
     skinStale:'v{v} is installed but this page is still running v{r}. Reload to use it.', skinReload:'Reload', reloadBusy:'Wait until the machine has finished, then reload.',
@@ -5187,7 +5187,7 @@ var I18N={
     vizGraph:'Visualizer 샷',
     catSkin:'스킨', skinHistory:'업데이트 내역', 
     pluginViaApp:'플러그인 설치, 켜기·끄기, 설정은 Decaid 앱 대시보드의 Plugins에서 할 수 있습니다.', skinViaApp:'스킨 업데이트는 Decaid 앱에서 설치합니다. 대시보드의 Web Interface 화면 오른쪽 위 메뉴에서 Check for updates를 누르세요.', skinOpenApp:'Decaid 앱 열기', autoUpdViaApp:'자동 업데이트는 Decaid 앱의 설정에서 켤 수 있습니다.', skinUpToDate:'스킨이 최신입니다.',
-    skinCheck:'업데이트 확인', skinChecking:'확인 중\u2026', skinUpdated:'업데이트했습니다 \u2014 새로고침하면 적용됩니다', skinThrottled:'방금 확인했습니다. 30초 뒤에 다시 해 보세요.', skinCheckFailed:'업데이트 확인 실패',
+    skinCheck:'업데이트 확인', skinChecking:'확인 중\u2026', skinUpdated:'업데이트했습니다 \u2014 새로고침하면 적용됩니다', skinThrottled:'Decaid가 확인하는 중입니다. 잠시 뒤에 다시 해 보세요.', originRefused:'이 페이지 주소에서 하는 변경은 Decaid가 받지 않습니다.', originName:'이 페이지는 {h}라는 이름 주소로 열려 있습니다. Decaid는 숫자 주소로 연 페이지에서만 변경을 받으므로 여기서 저장하면 실패합니다.', originOpenAt:'{u}로 여세요.', originOpenIp:'Decaid 앱에 나오는 태블릿의 IP 주소로 여세요.', appLocalApproval:'설치는 태블릿에서 직접 승인해야 합니다.', skinCheckFailed:'업데이트 확인 실패',
     skinNewer:'v{v}를 사용할 수 있습니다.', skinNewsFail:'업데이트 내역을 불러오지 못했습니다.',
     skinInstalledTag:'사용 중', skinAll:'전체 릴리스',
     skinStale:'v{v}가 설치되었지만 이 화면은 아직 v{r}입니다. 새로고침하면 적용됩니다.', skinReload:'새로고침', reloadBusy:'머신 동작이 끝난 뒤 새로고침하세요.',
@@ -5992,10 +5992,7 @@ function initWebSockets(){
   openWs('shotState','/ws/v1/machine/shotState',shotStateFrame,{optional:true});
   openWs('display','/ws/v1/display',function(d){ if(d&&d.brightness!==undefined) displayState=d; });
   openWs('update','/ws/v1/update',function(m){
-    if(m&&m.error){
-      if(m.url&&appUpdate) appUpdate.releaseUrl=m.url;
-      appUpdateError(String(m.error));
-      return; }
+    if(m&&m.error){ appUpdateRejected(m); return; }
     onAppUpdate(m); });
   api('GET','/api/v1/display').then(function(d){ if(d) displayState=d; }).catch(function(){});
   probeDosingSupport();
@@ -10873,7 +10870,7 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<ol class="gp-steps" id="gpSteps">'+gpStepsHtml()+'</ol>';
     h+='<div id="gpList" class="plugin-list">'+grinderPluginGuideHtml()+'</div>';
   }
-  box.innerHTML=h;
+  box.innerHTML=originNoticeHtml()+h;
   if(spCat==='plugins') loadPlugins();
   if(spCat==='updates'){ loadFirmware(); renderAppUpdate(); renderSkinBox(); loadGatewayVersion().then(skinBoxRefresh); }
   if(spCat==='machine') loadMachineCal();
@@ -10914,10 +10911,14 @@ function dosingStatusRow(){
 // Two jobs, two columns. Which scale does which is the whole question, and a
 // picker apiece says it better than one picker and a rule to remember: the
 // scale taken by the other side is visibly spoken for rather than missing.
+// The preference may name a family (usb-hds:any) rather than a scale; that is
+// no device to list, pick or let go of.
+function scaleFamilyId(id){ return /:any$/.test(String(id||'')); }
 function brewScaleId(){
   var held=scaleDevices().filter(function(d){ return d.connectionRole==='primary'; })[0];
   if(held) return held.id;
-  return (gwSettings&&gwSettings.preferredScaleId)||''; }
+  var pref=(gwSettings&&gwSettings.preferredScaleId)||'';
+  return scaleFamilyId(pref)?'':pref; }
 function scaleColHead(side){
   return '<div class="sc-col-h">'+escapeHtml(t(side==='brew'?'scaleBrew':'dosingScale'))+'</div>'; }
 function scaleColDesc(side){
@@ -10968,7 +10969,7 @@ function setBrewScale(id){
   brewScaleTo(id,prev,Promise.resolve()); }
 function brewScaleTo(id,prev,pre){
   var done=pre.then(function(){
-    return prev?api('PUT','/api/v1/devices/disconnect',{deviceId:prev}).catch(function(){}):null; });
+    return (prev&&!scaleFamilyId(prev))?api('PUT','/api/v1/devices/disconnect',{deviceId:prev}).catch(function(){}):null; });
   done.then(function(){
       return api('POST','/api/v1/settings',{preferredScaleId:id||null}).catch(function(){}); })
     .then(function(){
@@ -11543,6 +11544,9 @@ function appSend(cmd){ var ws=sockets.update;
 // check somebody pressed is a different thing and still answers out loud.
 var _appAskedCheck=false;
 function appCheck(){ _appAskedCheck=true; appSend('check'); }
+function appUpdateRejected(m){
+  if(m.url&&appUpdate) appUpdate.releaseUrl=m.url;
+  appUpdateError(m.reason==='local_approval_required'?t('appLocalApproval'):String(m.error)); }
 function appUpdateError(msg){
   if(!appUpdate) appUpdate={phase:'error'};
   appUpdate.phase='error'; appUpdate.error=msg;
@@ -11633,14 +11637,12 @@ function loadSkinNews(force){
       lsSet('aurora_skinnews',{repo:repo,at:Date.now(),list:skinNews}); })
     .catch(function(){ _skinNewsState=(skinNews&&skinNews.length)?'':'err'; })
     .then(function(){ skinBoxRefresh(); }); }
-// Decaid installs skin updates only for a caller holding a management token,
-// which a skin can neither mint nor safely keep, so the update is the app's to
-// do and this page says where.
+// From 0.9.3 Decaid installs skin updates for any caller unless the user has
+// asked for a management token, which a skin can neither mint nor safely keep.
+// So the button is offered, and a token refusal hands the job to the app.
 var _skinCheckRefused=false, _skinChecking=false, SKIN_CHECK_FROM='0.9.3';
 function versionCoreAtLeast(v,want){ var m=/^(\d+)\.(\d+)\.(\d+)/.exec(String(v||'')); return !!m&&versionAtLeast(m[0],want); }
-function canSkinCheck(){
-  return !_skinCheckRefused&&isLocalHost(window.location.hostname)
-    &&!!gwSettings&&gwSettings.automaticUpdateCheck!==false&&versionCoreAtLeast(_gwVersion,SKIN_CHECK_FROM); }
+function canSkinCheck(){ return !_skinCheckRefused&&versionCoreAtLeast(_gwVersion,SKIN_CHECK_FROM); }
 function skinCheckUpdate(){
   if(_skinChecking) return Promise.resolve(null);
   _skinChecking=true; skinBoxRefresh();
@@ -11650,7 +11652,8 @@ function skinCheckUpdate(){
       toast(msg,mine.status==='failed'?'err':'ok'); return msg; },
     function(e){
       var msg;
-      if(needsApp(e)){ _skinCheckRefused=true; msg=t('skinViaApp'); }
+      if(originRefused(e)) msg=t('originRefused')+' '+originHowText();
+      else if(needsApp(e)){ _skinCheckRefused=true; msg=t('skinViaApp'); }
       else msg=(e&&e.status===429)?t('skinThrottled'):t('skinCheckFailed');
       toast(msg,'err'); return msg; })
     .then(function(msg){ _skinChecking=false; loadSkinInfo(); loadSkinNews(true); skinBoxRefresh(); return msg; }); }
@@ -11896,19 +11899,51 @@ function gpStepsHtml(){ return [pluginsManaged()?'gpStep1App':'gpStep1','gpStep2
 function syncPluginsIntro(){
   var a=document.getElementById('pluginsIntro'), b=document.getElementById('gpSteps');
   if(a) a.innerHTML=pluginsIntroHtml(); if(b) b.innerHTML=gpStepsHtml(); }
-// Installing, switching and configuring plugins need a management token the
-// skin does not have; a refusal for that says where it can be done instead.
-function needsApp(e){ var no=!!e&&(e.status===401||e.status===403); if(no) _mgmtRefused=true; return no; }
-var _gwVersion=null, _mgmtRefused=false, MGMT_GATED_FROM='0.9.2';
+// With protection on, installing, switching and configuring plugins need a
+// management token the skin does not have; a refusal for that says where it
+// can be done instead. A refusal of this page's address is not that: the app
+// would be no better than opening the page by its number, so it says that.
+// The 403 carries no CORS header, so a browser usually never reads it and the
+// call fails with no status at all; from a page opened by name that is the
+// same refusal.
+function originRefused(e,h){
+  if(!e) return false;
+  if(e.status===403) return /not allowed from this browser origin/i.test(String(e.detail||e.message||''));
+  if(h===undefined) h=location.hostname;
+  return !e.status&&e.name!=='AbortError'&&!hostIsNumeric(h); }
+function needsApp(e){ if(originRefused(e)) return false;
+  var no=!!e&&(e.status===401||e.status===403); if(no) _mgmtRefused=true; return no; }
+function originHowText(){
+  var port=location.port?(':'+location.port):'';
+  return _gwLocalIp?t('originOpenAt').replace('{u}','http://'+_gwLocalIp+port):t('originOpenIp'); }
+function mgmtRefusalText(e,fallback){
+  if(originRefused(e)) return t('originRefused')+' '+originHowText();
+  return needsApp(e)?t('pluginViaApp'):fallback; }
+// Decaid takes settings and extension changes only from a page opened by its
+// number; opened by a name, every save here would fail without a word.
+function hostIsNumeric(h){ h=String(h||'');
+  return isLocalHost(h)||/^\d{1,3}(\.\d{1,3}){3}$/.test(h)||h.indexOf(':')>=0; }
+function originNoticeHtml(h){
+  if(h===undefined) h=location.hostname;
+  if(hostIsNumeric(h)) return '';
+  return '<div class="set-warn origin-warn">'+escapeHtml(t('originName').replace('{h}',h)+' '+originHowText())+'</div>'; }
+var _gwVersion=null, _gwLocalIp='', _mgmtRefused=false, MGMT_GATED_FROM='0.9.2', MGMT_OPEN_FROM='0.9.3';
 function versionAtLeast(v,want){
   var m=/^(\d+)\.(\d+)\.(\d+)(-.+)?/.exec(String(v||'')), w=/^(\d+)\.(\d+)\.(\d+)/.exec(want);
   if(!m||!w) return false;
   for(var i=1;i<=3;i++){ var a=+m[i], b=+w[i]; if(a!==b) return a>b; }
   return !m[4]; }
-function pluginsManaged(){ return _mgmtRefused||versionAtLeast(_gwVersion,MGMT_GATED_FROM); }
+// Only 0.9.2 and the first 0.9.3 beta kept management behind a token whatever
+// the user chose; from 0.9.3 it is open unless the user asks for one, and the
+// first 401 says they did.
+function mgmtOpenByDefault(v){
+  var b=/^0\.9\.3-beta\.(\d+)/.exec(String(v||''));
+  return b?(+b[1]>=2):versionAtLeast(v,MGMT_OPEN_FROM); }
+function pluginsManaged(){
+  return _mgmtRefused||(versionAtLeast(_gwVersion,MGMT_GATED_FROM)&&!mgmtOpenByDefault(_gwVersion)); }
 function loadGatewayVersion(){
   if(_gwVersion!=null) return Promise.resolve(_gwVersion);
-  return api('GET','/api/v1/info').then(function(i){ _gwVersion=(i&&i.version)||''; return _gwVersion; },function(){ return ''; }); }
+  return api('GET','/api/v1/info').then(function(i){ _gwVersion=(i&&i.version)||''; _gwLocalIp=(i&&i.localIp)||''; return _gwVersion; },function(){ return ''; }); }
 function pluginsViaAppHtml(){
   return '<div class="set-desc" style="margin-bottom:12px">'+escapeHtml(t('pluginViaApp'))
     +(canExitToDashboard()?' <button class="m-btn tinted" onclick="exitToDashboard()">'+escapeHtml(t('skinOpenApp'))+'</button>':'')+'</div>'; }
@@ -11920,13 +11955,13 @@ function installGrinderPlugin(id){
     .then(function(r){ return (r&&r.loaded===false)
       ?api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/enable'):null; })
     .then(function(){ toast(t('gpInstalled').replace('{p}',g.name),'ok'); },
-      function(e){ toast(needsApp(e)?t('pluginViaApp'):(t('gpInstallFail').replace('{p}',g.name)+(e&&e.message?': '+e.message:'')),'err'); })
+      function(e){ toast(mgmtRefusalText(e,t('gpInstallFail').replace('{p}',g.name)+(e&&e.message?': '+e.message:'')),'err'); })
     .then(function(){ delete _gpBusy[id];
       return api('GET','/api/v1/plugins').then(function(list){ pluginsCache=Array.isArray(list)?list:pluginsCache; setPluginDevices(pluginsCache); },function(){}); })
     .then(function(){ renderPluginList(); renderGrinderPluginGuide(); return ensurePluginGrinders(); }); }
 function togglePlugin(id,on,cb){ return api('POST','/api/v1/plugins/'+encodeURIComponent(id)+'/'+(on?'enable':'disable'))
     .then(function(){ toast((on?t('enabled'):t('disabled'))+': '+id,'ok'); var p=pluginsCache.find(function(x){return x.id===id;}); if(p) p.loaded=on; })
-    .catch(function(e){ toast(needsApp(e)?t('pluginViaApp'):t('tPluginToggleFailed'),'err'); if(cb) cb.checked=!on; }); }
+    .catch(function(e){ toast(mgmtRefusalText(e,t('tPluginToggleFailed')),'err'); if(cb) cb.checked=!on; }); }
 // Schema-driven plugin settings form (covers Visualizer credentials, etc.)
 var pluginCfgId=null, pluginCfgSchema=null;
 function pluginCfgHeadHtml(p){
@@ -11978,7 +12013,7 @@ function savePluginCfg(){ if(!pluginCfgId) return; var patch={};
   var st=document.getElementById('pluginCfgStatus'); st.textContent='Saving…'; document.getElementById('pluginCfgSave').disabled=true;
   return api('POST','/api/v1/plugins/'+encodeURIComponent(pluginCfgId)+'/settings',patch)
     .then(function(){ toast(t('tPluginSaved'),'ok'); closeModal(null,'pluginCfgOverlay'); loadPlugins(); })
-    .catch(function(e){ st.textContent=needsApp(e)?t('pluginViaApp'):('Failed: '+e.message); })
+    .catch(function(e){ st.textContent=mgmtRefusalText(e,'Failed: '+e.message); })
     .then(function(){ document.getElementById('pluginCfgSave').disabled=false; }); }
 function toggleAutoDye(v){ prefs.autoDye=!!v; savePrefs(); }
 function toggleNight(v){ prefs.night=!!v; savePrefs(); applyNight(); }
@@ -13144,7 +13179,7 @@ function setProfileHidden(id,hidden){
     .catch(function(e){ toast(t('mbSaveFailed')+' '+apiErrorText(e),'err'); }); }
 function profileKind(pr){ var b=(pr&&pr.beverage_type)||'espresso';
   if(b==='espresso') return 'espresso';
-  if(b==='cleaning'||b==='manual') return 'other';
+  if(b==='cleaning'||b==='manual'||b==='calibrate') return 'other';
   return 'brew'; }
 // Which profiles have actually been pulled, newest first. Titles are the only
 // link a shot keeps back to its profile.

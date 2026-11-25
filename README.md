@@ -56,13 +56,13 @@ curl -X POST http://<gateway>:8080/api/v1/webui/skins/install/github-release \
 
 Leave out `tag` to take the latest release.
 
-**Update.** Updates are installed from the Decaid app, not from the skin. Current Decaid needs a management token for skin updates, plugin changes and turning on automatic updates, and a skin cannot create one. In the app:
+**Update.** From Decaid 0.9.3 the skin can update itself: Settings › Updates › Skin › **Check for updates**. Decaid 0.9.2, and 0.9.3 with **Require authorization for extension management** turned on in its Security settings, needs a management token for skin updates and plugin changes, and a skin cannot create one; then the update is done in the app:
 
 1. Open **Web Interface** on the dashboard.
 2. Open the menu at the top right.
 3. Tap **Check for updates**.
 
-Settings › Updates › Skin lists the release history and says when a newer version is out. From Decaid 0.9.3, on the tablet itself and with automatic updates turned on in the app, the same page also offers **Check for updates**. The same page always has **Reload**, which puts a newly installed version on screen without restarting the app; it stands out when the page can tell it is behind, and waits while the machine is running.
+Settings › Updates › Skin lists the release history and says when a newer version is out. From Decaid 0.9.3 the same page also offers **Check for updates**, until the gateway refuses it for want of a token. The same page always has **Reload**, which puts a newly installed version on screen without restarting the app; it stands out when the page can tell it is behind, and waits while the machine is running.
 
 **For development.** Serve the folder and open it in a browser. The skin finds the gateway on its own:
 
@@ -418,7 +418,7 @@ Settings is a list of categories, each with its own tabs. On an upright tablet o
 | **Phone** | the address and QR code for the [phone app](#phone) |
 | **Updates** | **Firmware** (update, or upload a file), **App update** for Decaid, **Skin** release history |
 | **AI** | the provider (Gemini, Claude or OpenAI) and its key, with a key check. **What the reader remembers** |
-| **Plugins** | installed plugins, and grinder plugins with their GitHub addresses. From Decaid 0.9.2, plugins are installed, switched and configured in the Decaid app, and this page says so instead of offering switches that would be refused |
+| **Plugins** | installed plugins, and grinder plugins with their GitHub addresses. On Decaid 0.9.2, or once the gateway refuses a change for want of a token, plugins are installed, switched and configured in the Decaid app, and this page says so instead of offering switches that would be refused |
 
 ![Machine settings](docs/settings-machine.png)
 
@@ -488,7 +488,9 @@ In the browser the same keys are kept with an `aurora_` prefix.
 
 ## Troubleshooting
 
-**There is no update button.** On Decaid 0.9.2 skin updates are installed from the Decaid app: Web Interface on the dashboard, then the menu at the top right, then Check for updates. From 0.9.3 the button comes back on the tablet when automatic updates are on.
+**There is no update button.** On Decaid 0.9.2, or with extension management protection turned on, skin updates are installed from the Decaid app: Web Interface on the dashboard, then the menu at the top right, then Check for updates. From 0.9.3 the button is there unless the gateway has refused it.
+
+**Saves fail and Settings warns about the address.** Decaid 0.9.3 takes settings and extension changes only from a page opened by a number (`localhost`, `127.0.0.1` or the tablet's IP address), not by a name such as `decaid.local`. Open the skin by the address the warning gives.
 
 **The tank is red and the water is not hot.** The tank is at or below the refill level. On a plumbed machine, set *Refill kit* in Settings › Machine › Tank.
 
