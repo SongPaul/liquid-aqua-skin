@@ -126,7 +126,6 @@ test('taken, the bar comes back when the reading moves or the dose is changed', 
 function cellDose() { return T.el('#cellDose'); }
 function notOffered(T, why, tint) {
   T.ok(!dcShown(chip()), why + ': no bar');
-  T.eq(cellDose().classList.contains('dc-range'), tint === 'range', why + ': range tint ' + (tint === 'range'));
   T.eq(cellDose().classList.contains('dc-wait'), tint === 'wait', why + ': wait tint ' + (tint === 'wait'));
   T.eq(settings.doseIn, 18, why + ': the dose stays');
 }
@@ -136,17 +135,20 @@ test('an empty scale offers nothing and tints nothing', function (T) {
     T.ok(!cellDose().title, 'nothing to say');
   });
 });
-test('a reading a dose cannot be tints the dose amber and says the range', function (T) {
-  dcScales({ dosing: true, dosingW: 62, brew: true }, function () {
-    notOffered(T, '62 g', 'range');
-    var v = T.el('#doseInVal').parentElement;
-    T.ok(T.css(v, 'color') === 'rgb(180, 83, 9)' || T.css(cellDose(), 'borderTopColor') === 'rgb(180, 83, 9)',
-      'amber: ' + T.css(v, 'color'));
-    var why = cellDose().getAttribute('aria-label') || '';
-    T.ok(why.indexOf('62.0') >= 0 && why.indexOf('5') >= 0 && why.indexOf('30') >= 0, 'the reading and the range: ' + why);
-    T.eq(cellDose().title, why, 'shown on hover too');
+test('there is no dose range: a heavy reading is offered, and only the hard bounds hold', function (T) {
+  dcScales({ dosing: true, dosingW: 42, brew: true }, function () {
+    T.ok(dcShown(chip()), '42 g is offered');
+    T.ok(!cellDose().classList.contains('dc-range'), 'nothing tinted for it');
+    chip().click();
+    T.eq(settings.doseIn, 42, 'and taken');
   });
-  dcScales({ dosing: true, dosingW: 3, brew: true }, function () { notOffered(T, '3 g', 'range'); });
+  dcScales({ dosing: true, dosingW: 3, brew: true }, function () {
+    T.ok(dcShown(chip()), '3 g is offered too');
+  });
+  dcScales({ dosing: true, dosingW: 75, brew: true }, function () {
+    chip().click();
+    T.eq(settings.doseIn, 60, 'past the hard ceiling, held to 60 g');
+  });
 });
 test('a reading still moving tints the dose as waiting, with the amber dot', function (T) {
   dcScales({ dosing: true, dosingW: 17.6, brew: true }, function () {
@@ -217,7 +219,7 @@ test('the card is a row shorter when there is nothing to take', function (T) {
 });
 
 // ── The keypad follows the same rule ──────────────────────────────────
-test('the dose keypad offers the reading only when it can be taken; out of range tints the range line', function (T) {
+test('the dose keypad offers the reading only when it can be taken', function (T) {
   dcScales({ dosing: true, dosingW: 18.3, brew: true }, function () {
     openKeypad('doseIn');
     var b = T.el('#kpTake');
@@ -227,12 +229,11 @@ test('the dose keypad offers the reading only when it can be taken; out of range
     T.eq(KP.str, '18.3', 'fills the number');
     closeModal(null, 'keypadOverlay');
   });
-  [[{ dosing: true, dosingW: 0.4, brew: true }, 'empty'], [{ dosing: true, dosingW: 62, brew: true }, 'range'],
+  [[{ dosing: true, dosingW: 0.4, brew: true }, 'empty'],
    [{ dosing: 'off', brew: true, brewW: 18.3 }, 'off']].forEach(function (c) {
     dcScales(c[0], function () {
       openKeypad('doseIn');
       T.ok(!dcShown(T.el('#kpTake')), c[1] + ': no button');
-      T.eq(T.el('#kpRange').classList.contains('warn'), c[1] === 'range', c[1] + ': the range line tinted only out of range');
       closeModal(null, 'keypadOverlay');
     });
   });
@@ -243,50 +244,47 @@ test('the dose keypad offers the reading only when it can be taken; out of range
   });
 });
 
-// ── The dose range is the user's ──────────────────────────────────────
-function withRange(a, b, run) {
-  var was = { a: prefs.doseMin, b: prefs.doseMax };
-  prefs.doseMin = a; prefs.doseMax = b;
-  try { return run(); } finally { prefs.doseMin = was.a; prefs.doseMax = was.b; }
-}
-test('the dose range is set once and used by the buttons, the keypad and the scale', function (T) {
-  T.eq(doseRange().join('-'), (prefs.doseMin == null ? '5-30' : doseRange().join('-')), 'five to thirty by default');
-  withRange(8, 22, function () {
-    T.eq(KP_CFG.doseIn.min, 8, 'the keypad’s floor');
-    T.eq(KP_CFG.doseIn.max, 22, 'and ceiling');
-    var was = settings.doseIn;
-    settings.doseIn = 21.95; adjust('doseIn', 0.1);
-    T.eq(settings.doseIn, 22, 'the plus stops at the top');
-    setDoseIn(3);
-    T.eq(settings.doseIn, 8, 'a dose under it is held to the bottom');
-    dcScales({ dosing: true, dosingW: 24, brew: true }, function () {
-      T.ok(!dcShown(chip()), '24 g is outside 8-22 now');
-      T.ok((cellDose().getAttribute('aria-label') || '').indexOf('8') >= 0, 'and the range said is this one');
-    });
-    T.eq(t('chipRange').indexOf('{a}') >= 0 || doseWhyText('chipRange').indexOf('8') >= 0, true, 'the message carries it');
-    T.ok(doseWhyText('chipRange').indexOf('22') >= 0, 'both ends: ' + doseWhyText('chipRange'));
-    settings.doseIn = was;
-  });
-  withRange(30, 5, function () { T.eq(doseRange().join('-'), '5-30', 'a backwards range falls back'); });
-  withRange(0.2, 90, function () { T.eq(doseRange().join('-'), '5-30', 'so does one out of bounds'); });
+// ── No dose range ─────────────────────────────────────────────────────
+// The dose has only hard bounds, 1 to 60 g. A range the user once set is
+// stored and ignored.
+test('the dose keeps only its hard bounds, whatever range was stored', function (T) {
+  var was = { a: prefs.doseMin, b: prefs.doseMax, d: settings.doseIn };
+  prefs.doseMin = 8; prefs.doseMax = 22;
+  try {
+    T.eq(typeof window.doseRange, 'undefined', 'no range to read');
+    setDoseIn(3); T.eq(settings.doseIn, 3, 'under an old stored floor');
+    setDoseIn(40); T.eq(settings.doseIn, 40, 'over an old stored ceiling');
+    setDoseIn(0.2); T.eq(settings.doseIn, 1, 'held to 1 g');
+    setDoseIn(90); T.eq(settings.doseIn, 60, 'held to 60 g');
+    adjust('doseIn', 0.1); T.eq(settings.doseIn, 60, 'the plus stops at 60');
+    T.eq(KP_CFG.doseIn.min, 1, 'the keypad\u2019s floor');
+    T.eq(KP_CFG.doseIn.max, 60, 'and ceiling');
+  } finally { prefs.doseMin = was.a; prefs.doseMax = was.b; settings.doseIn = was.d; syncRecipe(); }
 });
-test('Settings has the dose range, and keeps it', function (T) {
-  var was = { a: prefs.doseMin, b: prefs.doseMax };
+test('Settings has no dose range', function (T) {
   openSettingsPage(); spSelect('scale');
-  var lo = T.el('#setDoseMin'), hi = T.el('#setDoseMax');
-  T.ok(!!lo && !!hi, 'two fields');
-  T.eq(lo.getAttribute('step'), '0.5', 'in half grams');
-  T.ok(T.el('#spContent').textContent.indexOf(t('doseRange')) >= 0, 'named');
-  setDoseRange(7, 24);
-  T.eq(prefs.doseMin, 7, 'kept'); T.eq(prefs.doseMax, 24, 'both');
-  T.eq((lsGet('aurora_prefs') || {}).doseMax, 24, 'and stored');
-  setDoseRange(25, 10);
-  T.eq(prefs.doseMin, 7, 'a backwards range is refused');
-  T.eq(T.el('#toast').textContent, t('doseRangeBad'), 'with a word');
-  setDoseRange(0, 10);
-  T.eq(prefs.doseMin, 7, 'and one out of bounds');
-  prefs.doseMin = was.a; prefs.doseMax = was.b; savePrefs();
+  T.ok(!T.el('#setDoseMin') && !T.el('#setDoseMax'), 'no fields');
+  T.ok(!I18N.ko.doseRange && !I18N.en.doseRange && !I18N.ko.chipRange && !I18N.ko.cellRangeAria, 'and no words for one');
   closeSettingsPage();
+});
+// Amber means one thing: the number is still moving.
+test('amber only while the reading moves', function (T) {
+  dcScales({ dosing: true, dosingW: 18.3, brew: true }, function () {
+    var dot = cellDose().querySelector('.dc-dot');
+    T.ok(!dcShown(dot), 'settled: no dot');
+    T.ok(T.css(T.el('#doseInVal'), 'color') !== dcAmber(), 'settled: the number is not amber');
+    _doseRd.dosing = null;
+    var now = Date.now();
+    noteDoseReading('dosing', 16.9, now - 400); noteDoseReading('dosing', 17.6, now);
+    syncDoseTake(); syncDoseChip();
+    T.ok(dcShown(dot), 'moving: the amber dot');
+    openKeypad('doseIn');
+    var kb = T.el('#kpTake');
+    T.ok(dcShown(kb) && kb.getAttribute('aria-disabled') === 'true', 'the keypad shows the reading, not yet to take');
+    T.ok(dcShown(kb.querySelector('.dc-dot')), 'with the same dot');
+    T.ok(T.el('#kpRange').hidden, 'and no range line on the dose keypad');
+    closeModal(null, 'keypadOverlay');
+  });
 });
 
 // ── The weight block on the stage ─────────────────────────────────────
@@ -343,7 +341,7 @@ test('a connected scale is tared from the weight', function (T) {
   });
 });
 
-var DC_KEYS = ['doseChipAria', 'chipStale', 'chipRange', 'chipDosingOff', 'chipEmpty', 'chipUnstable',
+var DC_KEYS = ['doseChipAria', 'chipStale', 'chipDosingOff', 'chipEmpty', 'chipUnstable',
   'doseTaken', 'noWeightStop', 'feedShort', 'stopEndLbl', 'stopHaltLbl'];
 test('every chip and weight word is there in Korean and in English', function (T) {
   DC_KEYS.forEach(function (k) {

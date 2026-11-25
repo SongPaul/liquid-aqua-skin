@@ -118,10 +118,12 @@ test('no question goes through the browser’s confirm', function (T) {
 });
 
 test('a no changes nothing, a yes goes ahead', function (T) {
-  var realSend = appSend, realAsk = laConfirm, sent = [], was = appUpdate;
+  var realSend = appSend, realAsk = laConfirm, sent = [], was = appUpdate, realOn = onAppUpdate;
   appSend = function (c) { sent.push(c); return true; };
+  // the live gateway's update socket would otherwise replace this state mid case
+  onAppUpdate = function () {};
   appUpdate = { phase: 'available', installable: true, latestVersion: '9.9.9' };
-  function back() { appSend = realSend; laConfirm = realAsk; appUpdate = was; }
+  function back() { appSend = realSend; laConfirm = realAsk; appUpdate = was; onAppUpdate = realOn; }
   laConfirm = function () { return Promise.resolve(false); };
   return Promise.resolve(appInstall()).then(rfWait).then(function () {
     T.eq(sent.length, 0, 'declined: nothing sent');
@@ -227,13 +229,17 @@ test('on a narrow screen the keys sit under the number', function (T) {
 
 test('the keypad says what it accepts and what it holds now', function (T) {
   return rfInLang('ko', function () {
-    var was = settings.doseIn; settings.doseIn = 18.5;
-    openKeypad('doseIn');
+    var was = settings.doseIn, wy = settings.doseOut; settings.doseIn = 18.5; settings.doseOut = 37;
+    openKeypad('doseOut');
     var r = T.el('#kpRange');
     T.ok(!r.hidden, 'the range is shown');
-    T.eq(r.textContent, I18N.ko.kpRange.replace('{a}', '5').replace('{b}', '30').replace('{u}', 'g').replace('{v}', '18.5'),
-      'from 5 to 30 g, now 18.5');
+    T.eq(r.textContent, I18N.ko.kpRange.replace('{a}', '18.5').replace('{b}', String(YIELD_MAX)).replace('{u}', 'g').replace('{v}', '37'),
+      'from the dose to the ceiling, now 37');
     closeModal(null, 'keypadOverlay');
+    openKeypad('doseIn');
+    T.ok(T.el('#kpRange').hidden, 'the dose has no range to show');
+    closeModal(null, 'keypadOverlay');
+    settings.doseOut = wy;
     openKeypadFor({ title: 'x', unit: 's', min: 0, max: 10, dp: 1, value: 2, onOk: function () {} });
     T.ok(T.el('#kpRange').textContent.indexOf('10') >= 0, 'a callback keypad shows its range too');
     closeModal(null, 'keypadOverlay');

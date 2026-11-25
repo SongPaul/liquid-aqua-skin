@@ -75,6 +75,10 @@ function withDosingScale(weight) {
   prefs.dosingScaleId = 'Bench';
   state.dosingConnected = true;
   state.dosingWeight = weight;
+  // a reading that has held still for a second, as the take asks
+  var now = Date.now();
+  _doseRd.dosing = null;
+  if (weight != null) { noteDoseReading('dosing', weight, now - 1500); noteDoseReading('dosing', weight, now - 700); noteDoseReading('dosing', weight, now); }
   renderMilkRow();
 }
 

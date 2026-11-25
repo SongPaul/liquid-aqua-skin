@@ -19,7 +19,18 @@ function wPuts(sent) {
   return sent.filter(function (c) { return c.m === 'PUT' && c.p === '/api/v1/workflow' && c.b && c.b.hotWaterData; })
     .map(function (c) { return c.b; });
 }
-function wWait() { return new Promise(function (r) { setTimeout(r, 700); }); }
+// The skin gathers taps for 450 ms and then writes. A fixed wait lost that race
+// on a loaded run and the write landed in the next case, so the case waits for
+// the pending write itself to go out, then a turn for its promise.
+function wWait() {
+  var until = Date.now() + 5000;
+  return new Promise(function (r) {
+    (function poll() {
+      if (_auxPushT === null || Date.now() > until) return setTimeout(r, 20);
+      setTimeout(poll, 25);
+    })();
+  });
+}
 
 test('a volume change sends only the volume', function (T) {
   return wSaved(function (sent) {

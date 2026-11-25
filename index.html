@@ -2030,6 +2030,15 @@ body.mobile-scan .tc-head{min-height:36px}
 .pq-txt .field{align-self:stretch}
 @media (max-width:640px){ .pq{grid-template-columns:1fr} }
 
+/* The milk cell offering the scale's reading: no steps until something is
+   taken, the number dimmed, a cue beside the caption, amber only while moving. */
+.app .recipe #milkBlock.mk-offer .ms-btn{display:none}
+.app .recipe #milkBlock.mk-offer .dose-adj{grid-template-columns:minmax(0,1fr);grid-template-areas:"s"}
+.app .recipe #milkBlock .mk-cue{display:none;margin-left:6px;font-size:13px;font-weight:500;color:var(--ink-mute)}
+.app .recipe #milkBlock.mk-offer .mk-cue{display:inline}
+.app .recipe #milkBlock.mk-offer .dose-num{color:var(--ink-mute)}
+.app .recipe #milkBlock.mk-moving .dose-lbl .dc-dot{display:inline-block;margin-left:5px;vertical-align:middle}
+
 /* Shot log page */
 .sl-badge{width:44px;height:44px;border-radius:9px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--amber);flex-shrink:0;font-weight:700}
 .sl-detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
@@ -3358,18 +3367,12 @@ body.night #recipeNormal .rc-stop .dose-stop.short .sv{color:#fbbf24}
 /* A reading that cannot be taken is said on the dose itself: out of range in
    amber, still settling with the amber dot. Nothing is added under it. */
 #cellDose.dc-wait .dose-lbl .dc-dot{display:inline-block;margin-left:5px;vertical-align:middle}
-.app #recipeNormal #cellDose.dc-range .dose-num,.app #recipeNormal #cellDose.dc-range .lu{color:#b45309}
-.app #recipeNormal #cellDose.dc-range .ms-btn{border-color:rgba(180,83,9,.55)}
-body.night .app #recipeNormal #cellDose.dc-range .dose-num,body.night .app #recipeNormal #cellDose.dc-range .lu{color:#fbbf24}
-body.night .app #recipeNormal #cellDose.dc-range .ms-btn{border-color:rgba(251,191,36,.55)}
 .app #recipeNormal #cellDose.dc-wait .dose-num{color:var(--ink-mute)}
 .app :is(#recipeNormal) .dose-stack>.dose-num.long{font-size:18px;letter-spacing:-.03em;gap:1px}
 .dose-range-set{display:flex;align-items:center;gap:8px;flex:none}
 .dose-range-set .set-num{width:84px;height:44px;padding:0 10px;border-radius:var(--r-ctl);border:1px solid var(--la-line-2);
   background:var(--la-surface);color:var(--ink);font-family:var(--font);font-size:17px;font-weight:600;text-align:center}
 .dose-range-set .dr-sep,.dose-range-set .dr-u{font-size:15px;font-weight:500;color:var(--ink-mute)}
-#kpRange.warn{color:#b45309}
-body.night #kpRange.warn{color:#fbbf24}
 .ws-wob[hidden]{display:none}
 .rc-take.done{background:none;box-shadow:inset 0 0 0 1px var(--la-line-2);color:var(--ink-mute)}
 .rc-take.done svg{display:none}
@@ -3740,7 +3743,7 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
             </div>
             <div class="dose-block" id="milkBlock" style="display:none">
               <div class="dose-adj"><button class="ms-btn" onclick="adjustMilk(-10)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkLbl"></span></div><div class="dose-num tap" id="milkNum" onclick="openMilkKeypad()"><span id="milkVal">—</span><span class="lu">g</span></div></div>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkLbl"></span><span class="mk-cue" id="milkCue"></span><i class="dc-dot" aria-hidden="true"></i></div><div class="dose-num tap" id="milkNum" onclick="openMilkKeypad()"><span id="milkVal">—</span><span class="lu">g</span></div></div>
                 <button class="ms-btn" onclick="adjustMilk(10)">+</button></div>
             </div>
             <div class="dose-block" id="milkStopBlock" style="display:none">
@@ -4529,7 +4532,7 @@ var I18N={
     presetDelConfirm:'Delete the preset \u201c{n}\u201d?', presetNameAsk:'Preset name?',
     presetApplied:'Preset \u201c{n}\u201d applied', presetSaveCur:'Save the current numbers as a preset',
     rcBackShot:'Shot',
-    milkLbl:'Milk', milkHint:'weighed on the dosing scale',
+    milkLbl:'Milk', milkHint:'weighed on the dosing scale', milkTapCue:'Tap to take',
     milkLog:'Record on the last shot', milkLogShort:'\u2192 Shot',
     milkConfirm:'Record {v}g of milk on the shot pulled at {w}?',
     milkNoteKey:'Milk', milkNote:'Milk {v}g',
@@ -4538,7 +4541,7 @@ var I18N={
     grSrcLiveHint:'Sets the connected grinder — hold for the grinder list',
     grPanelHint:'Tap for the grinder’s settings — hold for the grinder list',
     grSrcWatchHint:'This grinder only reports — the number is kept here; hold for the grinder list',
-    grReads:'The grinder reads {v}', grReadLbl:'Reads', doseChipAria:'Put {s}’s {v} in the dose', takeBar:'{s} {v} into the dose', takeMeasuring:'{s} {v} settling', takeDone:'{v} in the dose', tempProfLbl:'Profile', kpProfTemp:'Profile’s {v}', grDevVal:'reads {v}', grManualDial:'Grind dialled by hand', grManualHint:'The card records the grind you dial and sends nothing to the grinder for it. Speeds still go to the grinder.', chipStale:'The scale has gone quiet · check it', chipRange:'Outside the dose range ({a}–{b} g)', cellRangeAria:'{s} {v}, outside the dose range {a}–{b} g', doseRange:'Dose range', doseRangeDesc:'The dose’s plus and minus, its keypad and the scale reading stay within it.', doseRangeBad:'The lowest dose has to be under the highest, between 1 and 60 g', chipDosingOff:'The dosing scale is not connected', chipEmpty:'Put the beans on the scale', chipUnstable:'It can go in once the weight settles', doseTaken:'Dose {v} set', noWeightStop:'Will not stop on weight', stopEndLbl:'Profile ends', stopHaltLbl:'Profile stops', stopAbout:'about',
+    grReads:'The grinder reads {v}', grReadLbl:'Reads', doseChipAria:'Put {s}’s {v} in the dose', takeBar:'{s} {v} into the dose', takeMeasuring:'{s} {v} settling', takeDone:'{v} in the dose', tempProfLbl:'Profile', kpProfTemp:'Profile’s {v}', grDevVal:'reads {v}', grManualDial:'Grind dialled by hand', grManualHint:'The card records the grind you dial and sends nothing to the grinder for it. Speeds still go to the grinder.', chipStale:'The scale has gone quiet · check it', chipDosingOff:'The dosing scale is not connected', chipEmpty:'Put the beans on the scale', chipUnstable:'It can go in once the weight settles', doseTaken:'Dose {v} set', noWeightStop:'Will not stop on weight', stopEndLbl:'Profile ends', stopHaltLbl:'Profile stops', stopAbout:'about',
     grAutoReg:'Added the “{n}” grinder from its plugin',
     grLinked:'Linked', grInUse:'In use', undo:'Undo', usOffer:'Last shot\u2019s settings', grindOffer:'Last grind {s}', bagFreeze:'Freeze', bagThaw:'Thaw', bagFrozen:'Marked frozen', bagThawed:'Marked thawed', rest_frozen:'Frozen', stReady:'Ready', stHeating:'Heating', stBrewing:'Brewing', stSteam:'Steam', stWater:'Hot water', stFlush:'Flush', stRefill:'Low water', stSleep:'Asleep', stNoMachine:'No machine', stBusy:'Busy', stError:'Error', refillSub:'Fill the tank', lockShot:'While a shot runs only the yield can change', lockBanner:'Brewing \u00b7 only the yield can change', rdNoScale:'No scale', rdConnect:'Connect', rdTakeScale:'Use scale {v}', kpTakeScale:'Use scale reading {v}', rdScanning:'Looking for the dosing scale\u2026', beanPick:'Pick a bean', beanChange:'Change bean', noBeanDesc:'Pick a bean and its roast date and rest show here, and are saved with each shot.', stopAtG:'Stops at {v}', stopByProfile:'Set by the profile', stopNoScale:'Ends with the profile', stopThisShot:'Applies to this shot', lastShotT:'Last shot', devicesLbl:'Devices', devicesIng:'Connecting', grStLinked:'linked', grStRead:'read only', grStHand:'by hand', grObs:'grinder {v}', nowVal:'now {v}', roastShort:'Roasted', feedShort:'Feed', ratioShort:'Ratio', favLabel:'Favourite', bgfAll:'All', bgfReady:'Ready', bgfFrozen:'Frozen', bgfOut:'Used up \u00b7 put away', bgSortLbl:'Order', bgsSmart:'Suggested', bgsRoast:'Roast date', bgsName:'Name', bgSelect:'Select', bgSelDone:'Done', bgSelN:'{n} selected', bgArchive:'Put away', bgUnarchive:'Bring back', bgDelete:'Delete', bgArchived:'{n} put away', bgRestored:'{n} brought back', confirmDeleteBeans:'Delete {n} beans?', bgMultiHint:'Tap beans to pick them, then choose what to do', beanPicked:'Using {n}', grinderPicked:'Using {n}', bgCardHint:'Tap to use \u00b7 hold or the pencil to edit', rest_resting:'Resting', rest_ready:'Ready', rest_fading:'Fading', rest_past:'Past peak', bagLeftShort:'about {l}g left', bagsN:'{n} bags', bagUsedUp:'Used up', bagRestore:'Back in use', bagMarkedOut:'Marked used up', bagBackIn:'Back in use', saveBeanFirst:'Save the bean first', saveGrinderFirst:'Save the grinder first', confirmDeleteGrinder:'Delete this grinder?', noBeans:'No beans yet', noGrinders:'No grinders yet', grLinkTitle:'Plugin grinder',
     grLinkWhat:'Name and dial follow the plugin; the recipe card sets it while in use. Burrs and notes are yours.',
@@ -4826,6 +4829,7 @@ var I18N={
     dosingFind:'Look for scales', dosingScanning:'Looking\u2026',
     dosingFindDesc:'The gateway stops looking once it has a scale, so one switched on later is not noticed. This looks again without connecting anything.',
     dosingScanFound:'{n} more scale(s) found', dosingScanNone:'Nothing new turned up',
+    connScanFound:'Found {list}', connScanItem:'{k} \u00d7{n}', connScanNone:'No new devices found', connDevice:'Device',
     dosingScanFailed:'The search failed:',
     dosingScale:'Dosing scale', dosingScaleDesc:'A second scale to weigh the dose on. It is held open for this skin only, is never used to weigh a shot, and is let go when the app closes.',
     connTapHint:'What is connected — tap to change', dosingPicked:'Using \u201c{n}\u201d as the dosing scale', dosingNone:'None', dosingHeldShort:'connected', dosingAway:'Chosen scale (out of range)',
@@ -5024,7 +5028,7 @@ var I18N={
     presetDelConfirm:'프리셋 “{n}” 을 지울까요?', presetNameAsk:'프리셋 이름?',
     presetApplied:'프리셋 “{n}” 을 적용했습니다', presetSaveCur:'지금 값을 프리셋으로 저장',
     rcBackShot:'샷',
-    milkLbl:'우유', milkHint:'도징 저울로 재서',
+    milkLbl:'우유', milkHint:'도징 저울로 재서', milkTapCue:'탭해서 넣기',
     milkLog:'마지막 샷에 기록', milkLogShort:'샷에 →',
     milkConfirm:'{w} 에 내린 샷에 우유 {v}g 을 기록할까요?',
     milkNoteKey:'우유', milkNote:'우유 {v}g',
@@ -5033,7 +5037,7 @@ var I18N={
     grSrcLiveHint:'연결된 그라인더를 설정합니다 — 길게 누르면 그라인더 목록',
     grPanelHint:'누르면 그라인더 설정 — 길게 누르면 그라인더 목록',
     grSrcWatchHint:'이 그라인더는 읽기만 됩니다 — 숫자는 여기에 기록됩니다, 길게 누르면 그라인더 목록',
-    grReads:'그라인더 표시값 {v}', grReadLbl:'표시값', doseChipAria:'{s} 값 {v}을 도징에 넣기', takeBar:'{s} {v} 도징에 넣기', takeMeasuring:'{s} {v} 측정 중', takeDone:'{v} 도징에 넣음', tempProfLbl:'프로파일', kpProfTemp:'프로파일 값 {v}', grDevVal:'기기 {v}', grManualDial:'분쇄도는 손으로 맞춤', grManualHint:'카드는 손으로 맞춘 분쇄도를 기록만 하고 그라인더에 보내지 않습니다. 속도는 그대로 그라인더에 보냅니다.', chipStale:'저울 값이 멈춰 있어요 · 저울을 확인해 주세요', chipRange:'도징 범위({a}–{b} g) 밖이에요', cellRangeAria:'{s} {v}, 도징 범위 {a}–{b} g 밖', doseRange:'도징 범위', doseRangeDesc:'도징의 −, +, 키패드, 저울 값 넣기가 이 범위 안에서만 움직입니다.', doseRangeBad:'가장 적은 도징이 가장 많은 도징보다 작아야 하고, 1~60 g 사이여야 해요', chipDosingOff:'도징 저울 연결이 끊겼어요', chipEmpty:'저울에 원두를 올려 주세요', chipUnstable:'무게가 멈추면 넣을 수 있어요', doseTaken:'도징 {v} 넣음', noWeightStop:'무게로 멈추지 않음', stopEndLbl:'프로파일 끝', stopHaltLbl:'프로파일 멈춤', stopAbout:'약',
+    grReads:'그라인더 표시값 {v}', grReadLbl:'표시값', doseChipAria:'{s} 값 {v}을 도징에 넣기', takeBar:'{s} {v} 도징에 넣기', takeMeasuring:'{s} {v} 측정 중', takeDone:'{v} 도징에 넣음', tempProfLbl:'프로파일', kpProfTemp:'프로파일 값 {v}', grDevVal:'기기 {v}', grManualDial:'분쇄도는 손으로 맞춤', grManualHint:'카드는 손으로 맞춘 분쇄도를 기록만 하고 그라인더에 보내지 않습니다. 속도는 그대로 그라인더에 보냅니다.', chipStale:'저울 값이 멈춰 있어요 · 저울을 확인해 주세요', chipDosingOff:'도징 저울 연결이 끊겼어요', chipEmpty:'저울에 원두를 올려 주세요', chipUnstable:'무게가 멈추면 넣을 수 있어요', doseTaken:'도징 {v} 넣음', noWeightStop:'무게로 멈추지 않음', stopEndLbl:'프로파일 끝', stopHaltLbl:'프로파일 멈춤', stopAbout:'약',
     grAutoReg:'“{n}” 플러그인 그라인더를 목록에 추가했습니다',
     grLinked:'연동', grInUse:'사용 중', undo:'되돌리기', usOffer:'지난 샷 설정', grindOffer:'지난 분쇄 {s}', bagFreeze:'냉동', bagThaw:'해동', bagFrozen:'냉동으로 표시했습니다', bagThawed:'해동으로 표시했습니다', rest_frozen:'냉동', stReady:'준비됨', stHeating:'예열 중', stBrewing:'추출 중', stSteam:'스팀', stWater:'온수', stFlush:'플러시', stRefill:'물 부족', stSleep:'절전', stNoMachine:'머신 없음', stBusy:'작업 중', stError:'오류', refillSub:'물탱크를 채우세요', lockShot:'추출 중에는 추출량만 바꿀 수 있습니다', lockBanner:'추출 중 \u00b7 추출량만 바꿀 수 있음', rdNoScale:'저울 없음', rdConnect:'연결', rdTakeScale:'저울 값 넣기 {v}', kpTakeScale:'저울 값 넣기 {v}', rdScanning:'도징 저울 찾는 중\u2026', beanPick:'원두 고르기', beanChange:'원두 바꾸기', noBeanDesc:'원두를 고르면 로스팅 날짜와 숙성 상태가 여기 보이고, 샷에 함께 저장됩니다.', stopAtG:'{v}에서 정지', stopByProfile:'프로파일 기준', stopNoScale:'프로파일대로 끝남', stopThisShot:'이번 샷에 적용', lastShotT:'지난 샷', devicesLbl:'기기', devicesIng:'연결 중', grStLinked:'연동', grStRead:'읽기만', grStHand:'손으로', grObs:'기기에는 {v}', nowVal:'지금 {v}', roastShort:'로스팅', feedShort:'이송', ratioShort:'비율', favLabel:'즐겨찾기', bgfAll:'전체', bgfReady:'적기', bgfFrozen:'냉동', bgfOut:'다 씀 \u00b7 보관', bgSortLbl:'정렬', bgsSmart:'추천순', bgsRoast:'로스팅일', bgsName:'이름', bgSelect:'선택', bgSelDone:'완료', bgSelN:'{n}개 선택', bgArchive:'보관', bgUnarchive:'꺼내기', bgDelete:'삭제', bgArchived:'{n}개를 보관했습니다', bgRestored:'{n}개를 꺼냈습니다', confirmDeleteBeans:'원두 {n}개를 삭제할까요?', bgMultiHint:'원두를 탭해 고른 뒤 할 일을 누르세요', beanPicked:'사용: {n}', grinderPicked:'사용: {n}', bgCardHint:'탭하면 사용 \u00b7 길게 누르거나 연필을 누르면 편집', rest_resting:'숙성 중', rest_ready:'적기', rest_fading:'지나는 중', rest_past:'지남', bagLeftShort:'남은 약 {l}g', bagsN:'봉투 {n}', bagUsedUp:'다 씀', bagRestore:'다시 사용', bagMarkedOut:'다 쓴 봉투로 표시했습니다', bagBackIn:'다시 쓰는 봉투로 돌렸습니다', saveBeanFirst:'원두를 먼저 저장하세요', saveGrinderFirst:'그라인더를 먼저 저장하세요', confirmDeleteGrinder:'이 그라인더를 삭제할까요?', noBeans:'아직 원두가 없습니다', noGrinders:'아직 그라인더가 없습니다', grLinkTitle:'플러그인 그라인더',
     grLinkWhat:'이름과 눈금은 플러그인을 따르고, 사용 중에는 레시피 카드에서 설정합니다. 버와 메모는 직접 입력하세요.',
@@ -5326,6 +5330,7 @@ var I18N={
     dosingFind:'저울 찾기', dosingScanning:'찾는 중…',
     dosingFindDesc:'게이트웨이는 저울을 하나 잡으면 더 찾지 않습니다. 나중에 켜는 저울은 그래서 보이지 않습니다. 여기서 다시 찾습니다 — 어느 것도 연결하지 않습니다.',
     dosingScanFound:'저울 {n}대를 찾았습니다', dosingScanNone:'새로 찾은 저울이 없습니다',
+    connScanFound:'{list}를 찾았습니다', connScanItem:'{k} {n}대', connScanNone:'새로 찾은 기기가 없습니다', connDevice:'기기',
     dosingScanFailed:'찾기에 실패했습니다:',
     dosingScale:'도징 저울', dosingScaleDesc:'도징 무게를 재는 두 번째 저울입니다. 이 스킨을 위해서만 잡아 두며, 추출 계량에는 쓰이지 않고 앱을 닫으면 놓습니다.',
     connTapHint:'연결 상태 — 누르면 변경', dosingPicked:'“{n}” 을 도징 저울로 잡았습니다', dosingNone:'없음', dosingHeldShort:'연결됨', dosingAway:'선택한 저울 (범위 밖)',
@@ -7522,7 +7527,7 @@ function toggleShot(){ if(state.machine.state==='espresso') api('PUT','/api/v1/m
 function scaleHasReading(){ return !!state.scaleConnected&&state.scaleWeight!==null; }
 // The reading under the dose is offered as the dose only when it is one: a
 // scale that has read within the last ten seconds, held still for a second,
-// with something on it, and inside what a dose can be. Otherwise the chip is
+// with something on it. Otherwise the chip is
 // drawn dim and a press says what is wrong, and the dose is left alone. A
 // dosing scale that is set is the only source -- the brewing scale under the
 // cup does not stand in for it when it drops out.
@@ -7556,7 +7561,6 @@ function doseChipState(){
   if(!live) o.why=(src==='dosing')?'chipDosingOff':'chipStale';
   else if(!r||Date.now()-r.at>DOSE_STALE_MS) o.why='chipStale';
   else if(w<DOSE_EMPTY) o.why='chipEmpty';
-  else if(w<KP_CFG.doseIn.min||w>KP_CFG.doseIn.max) o.why='chipRange';
   else if(!doseReadingStill(r)) o.why='chipUnstable';
   else { o.live=true;
     var tk=_doseTaken;
@@ -7572,17 +7576,12 @@ function doseBarText(o){
   if(o.live) return t('takeBar').replace('{s}',sn).replace('{v}',v);
   if(o.why==='chipUnstable') return t('takeMeasuring').replace('{s}',sn).replace('{v}',v);
   return doseWhyText(o.why); }
-function doseWhyText(why){
-  if(why!=='chipRange') return t(why);
-  var r=doseRange();
-  return t('chipRange').replace('{a}',fmtG(r[0])).replace('{b}',fmtG(r[1])); }
-// What the dose cell says when there is a reading that cannot be taken: out
-// of range in amber, still settling as a wait. The rest says nothing.
+function doseWhyText(why){ return t(why); }
+// What the dose cell says when there is a reading that cannot be taken yet:
+// still settling, as a wait -- the one amber state. The rest says nothing.
 function doseCellWhy(o){
   if(!o.show) return '';
-  var v=doseChipText(o), sn=doseSrcName(o.src), r=doseRange();
-  if(o.why==='chipRange') return t('cellRangeAria').replace('{s}',sn).replace('{v}',v)
-    .replace('{a}',fmtG(r[0])).replace('{b}',fmtG(r[1]));
+  var v=doseChipText(o), sn=doseSrcName(o.src);
   if(o.why==='chipUnstable') return t('takeMeasuring').replace('{s}',sn).replace('{v}',v);
   return ''; }
 function syncDoseChip(){
@@ -7594,7 +7593,6 @@ function syncDoseChip(){
   b.hidden=!(o.show&&o.live&&!o.done);
   var cell=document.getElementById('cellDose'), why=doseCellWhy(o);
   if(cell){
-    cell.classList.toggle('dc-range',!!why&&o.why==='chipRange');
     cell.classList.toggle('dc-wait',!!why&&o.why==='chipUnstable');
     if(why){ cell.title=why; cell.setAttribute('aria-label',why); }
     else { cell.removeAttribute('title'); cell.removeAttribute('aria-label'); } }
@@ -7624,7 +7622,7 @@ function syncWeightWobble(){
   var d=document.getElementById('wsWob'); if(!d) return;
   var r=_doseRd.brew;
   d.hidden=!(state.scaleConnected&&r&&!shotLocked()&&Date.now()-r.at<=DOSE_STALE_MS&&!doseReadingStill(r)); }
-setInterval(function(){ if(!_asleep){ syncDoseChip(); syncWeightWobble(); } },1000);
+setInterval(function(){ if(!_asleep){ syncDoseChip(); syncWeightWobble(); if(recipeMode==='steam') renderMilkRow(); } },1000);
 function syncDoseTake(){
   wfSyncScale(); syncDevRow();
   var tarable=dosingHasReading(), live=doseSourceWeight()!==null;
@@ -7886,15 +7884,33 @@ function adjustMilk(d){ setMilk((milkG||0)+d); }
 function openMilkKeypad(){
   openKeypadFor({ value:(milkG||0), dp:0, unit:'g', title:t('milkLbl'),
     min:0, max:2000, onOk:function(v){ setMilk(v); } }); }
+// The milk is taken the way a dose is: a reading that is fresh, has something
+// on it and has held still. One that is still moving says so and is left.
+function milkReadingWhy(){
+  if(!dosingHasReading()) return 'chipDosingOff';
+  var r=_doseRd.dosing;
+  if(!r||Date.now()-r.at>DOSE_STALE_MS) return 'chipStale';
+  if(state.dosingWeight<DOSE_EMPTY) return 'chipEmpty';
+  if(!doseReadingStill(r)) return 'chipUnstable';
+  return ''; }
 function milkFromScale(){
   if(!dosingHasReading()){ toast(t('doseNoScale'),'err'); return; }
+  var why=milkReadingWhy();
+  if(why){ toast(t(why)); return; }
   setMilk(state.dosingWeight); }
 function renderMilkRow(){
   wfSyncScale();
   var v=document.getElementById('milkVal'); if(!v) return;
-  v.textContent=(milkG==null)?'\u2014':String(milkG);
-  if(v.nextElementSibling) v.nextElementSibling.hidden=(milkG==null);
   var live=dosingHasReading();
+  // Until milk is taken the cell shows what the scale reads, dimmed, with a
+  // cue; amber only while that number moves. Taken, it is the milk.
+  var offer=(milkG==null)&&live, moving=offer&&milkReadingWhy()==='chipUnstable';
+  var shown=(milkG!=null)?milkG:(live?milkRound(state.dosingWeight):null);
+  v.textContent=(shown==null)?'\u2014':String(shown);
+  if(v.nextElementSibling) v.nextElementSibling.hidden=(shown==null);
+  var mb=document.getElementById('milkBlock');
+  if(mb){ mb.classList.toggle('mk-offer',offer); mb.classList.toggle('mk-moving',moving); }
+  setText(document.getElementById('milkCue'),offer?t('milkTapCue'):'');
   var dz=dosingDevice();
   // Milk is weighed on the dosing scale, named on the pane's device row like
   // the dose's; a dosing scale nobody set up is not named.
@@ -7918,6 +7934,9 @@ function syncSteamRow(){
   var live=dosingHasReading(), mb=document.getElementById('milkBlock'), lb=document.getElementById('milkLogBtn');
   if(mb) mb.style.display=live?'':'none';
   if(lb) lb.hidden=!live;
+  // the milk row can arrive after the pane was measured; its cap follows it
+  var sp=document.getElementById('recipeSteam');
+  if(sp&&_recipeH&&sp.style.display!=='none') capRecipePane(sp);
   var row=document.getElementById('steamDevRow'); if(!row) return;
   var th=document.getElementById('milkTempBlock'), dm=document.getElementById('devMilk');
   row.hidden=(!th||th.style.display==='none')&&(!dm||dm.hidden); }
@@ -8735,15 +8754,31 @@ function devicesDuringScan(list){
 function connScan(){
   if(connLocked()) return;
   _dosingScanning=true; scanBegin(); renderConnModal(); syncConnDosing();
-  var before=(state.devices||[]).length;
+  var before=(state.devices||[]).slice();
   return api('GET','/api/v1/devices/scan?connect=false',null,60000)
     .then(function(list){ if(Array.isArray(list)) state.devices=list;
-      var found=(state.devices||[]).length;
-      toast(found>before?t('dosingScanFound').replace('{n}',found-before)
-                        :t('dosingScanNone'),'ok'); },
+      toast(connScanSays(before,state.devices||[]),'ok'); },
       function(e){ toast(t('dosingScanFailed')+' '+apiErrorText(e),'err'); })
     .then(function(){ _dosingScanning=false; _dosingHoldAt=0; scanEnd();
       syncConnDosing(); return refreshConnDevices(); }); }
+// The sheet looks for every kind of device, so it reports devices, by kind.
+// New means an id that was not listed before: a list can lose one device and
+// gain another in the same scan and be no longer for it.
+function connKindOf(d){
+  if(d.type==='machine') return 'machine';
+  if(d.type==='scale') return 'scale';
+  if(d.type==='grinder') return 'grinder';
+  if(isThermo(d)) return 'thermo';
+  if(isDoser(d)) return 'doser';
+  return 'connDevice'; }
+var CONN_KINDS=['machine','scale','grinder','thermo','doser','connDevice'];
+function connScanSays(before,after){
+  var had={}; (before||[]).forEach(function(d){ if(d) had[d.id]=1; });
+  var n={};
+  (after||[]).forEach(function(d){ if(d&&!had[d.id]){ var k=connKindOf(d); n[k]=(n[k]||0)+1; } });
+  var parts=CONN_KINDS.filter(function(k){ return n[k]; }).map(function(k){
+    return t('connScanItem').replace('{k}',t(k)).replace('{n}',n[k]); });
+  return parts.length?t('connScanFound').replace('{list}',parts.join(', ')):t('connScanNone'); }
 function connPick(side,id){
   if(connLocked()) return;
   pickScale(side,id);
@@ -9495,21 +9530,9 @@ function syncStopCell(){
   cell.hidden=!c;
   setText(lbl,c?t(stopLabelKey(c)):'');
   cell.classList.toggle('short',!!c&&ys.classList.contains('short')); }
-// The dose range is the user's: 5 to 30 g unless set otherwise in Settings,
-// and the one range the buttons, the keypad and the scale reading keep to.
-var DOSE_RANGE_DEF=[5,30], DOSE_RANGE_LIM=[1,60];
-function doseRangeOk(a,b){
-  return isFinite(a)&&isFinite(b)&&a>=DOSE_RANGE_LIM[0]&&b<=DOSE_RANGE_LIM[1]&&a<b; }
-function doseRange(){
-  var a=parseFloat(prefs.doseMin), b=parseFloat(prefs.doseMax);
-  if(isNaN(a)) a=DOSE_RANGE_DEF[0]; if(isNaN(b)) b=DOSE_RANGE_DEF[1];
-  return doseRangeOk(a,b)?[a,b]:DOSE_RANGE_DEF.slice(); }
-function setDoseRange(a,b){
-  a=parseFloat(a); b=parseFloat(b);
-  if(!doseRangeOk(a,b)){ toast(t('doseRangeBad'),'err'); if(spOpen()&&spCat==='scale') renderSpContent(); return false; }
-  prefs.doseMin=a; prefs.doseMax=b; savePrefs();
-  setDoseIn(settings.doseIn); syncRecipe(); syncDoseTake();
-  return true; }
+// The dose has no range of its own, only bounds no dose gets near, so a typo
+// cannot send something absurd. A range stored by an older version is ignored.
+var DOSE_MIN=1, DOSE_MAX=60;
 function fmtG(v){ return String(parseFloat((+v).toFixed(1))); }
 // The yield has no range of its own: some recipes run to 1:5, and 30 g at
 // 1:5 is 150 g. It is held only to at least the dose and to 200 g, past
@@ -9519,8 +9542,8 @@ function clampYield(v){
   var lo=Math.max(1,+settings.doseIn||1);
   return Math.max(lo,Math.min(YIELD_MAX,parseFloat((+v).toFixed(1)))); }
 function setDoseIn(v){
-  var r=recipeRatio()||null, dr=doseRange();
-  settings.doseIn=Math.max(dr[0],Math.min(dr[1],parseFloat((+v).toFixed(1))));
+  var r=recipeRatio()||null;
+  settings.doseIn=Math.max(DOSE_MIN,Math.min(DOSE_MAX,parseFloat((+v).toFixed(1))));
   if(r){ settings.doseOut=clampYield(settings.doseIn*r); } }
 function adjust(key,delta){
   if(key!=='doseOut'&&lockedSay()) return;
@@ -10243,7 +10266,7 @@ function applyBurrLookup(o,r,tally){
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
-var KP_CFG={ doseIn:{title:'kpDose',unit:'g',get min(){ return doseRange()[0]; },get max(){ return doseRange()[1]; }}, doseOut:{title:'kpYield',unit:'g',get min(){ return Math.max(1,+settings.doseIn||1); },max:YIELD_MAX}, ratio:{title:'kpRatio',unit:'',min:1,max:RATIO_MAX}, brewTemp:{title:'kpTemp',unit:'',min:TH_ABS_MIN,max:TH_ABS_MAX} };
+var KP_CFG={ doseIn:{title:'kpDose',unit:'g',min:DOSE_MIN,max:DOSE_MAX}, doseOut:{title:'kpYield',unit:'g',get min(){ return Math.max(1,+settings.doseIn||1); },max:YIELD_MAX}, ratio:{title:'kpRatio',unit:'',min:1,max:RATIO_MAX}, brewTemp:{title:'kpTemp',unit:'',min:TH_ABS_MIN,max:TH_ABS_MAX} };
 function openKeypad(field){ var c=KP_CFG[field]; if(!c) return;
   if(field!=='doseOut'&&lockedSay()) return;
   if(field==='brewTemp'&&brewTempC()==null){ toast(t('noProfile'),'err'); return; }
@@ -10254,7 +10277,8 @@ function openKeypad(field){ var c=KP_CFG[field]; if(!c) return;
   document.getElementById('kpTitle').textContent=t(c.title); document.getElementById('kpUnit').textContent=KP.unit;
   kpSetSeg(null);
   var lo=c.min, hi=c.max; if(field==='brewTemp'){ lo=convTemp(lo); hi=convTemp(hi); }
-  kpSetRange(lo,hi,field==='ratio'?2:1);
+  // the dose has bounds, not a range worth reading out
+  if(field==='doseIn') kpSetRange(null); else kpSetRange(lo,hi,field==='ratio'?2:1);
   kpRender(); document.getElementById('keypadOverlay').classList.add('show'); }
 // What the keypad accepts and what it holds now, under the number: a value
 // outside the range is clamped on Set, and saying so beforehand is kinder.
@@ -10271,9 +10295,8 @@ function kpRender(){ document.getElementById('kpValue').textContent=KP.str.lengt
 function kpSyncTake(){
   var b=document.getElementById('kpTake'); if(!b) return;
   var o=(KP.field==='doseIn')?doseChipState():{show:false};
-  b.hidden=!(o.show&&o.live&&!o.done);
-  var rg=document.getElementById('kpRange');
-  if(rg) rg.classList.toggle('warn',!!o.show&&o.why==='chipRange');
+  // a reading still settling is shown, not yet to take, with the amber dot
+  b.hidden=!(o.show&&!o.done&&(o.live||o.why==='chipUnstable'));
   if(!o.show) return;
   if(o.live) b.removeAttribute('aria-disabled'); else b.setAttribute('aria-disabled','true');
   b.classList.toggle('done',o.done);
@@ -10285,7 +10308,7 @@ function kpTakeScale(){
   if(!o.live){ toast(doseWhyText(o.why)); return; }
   var w=o.w;
   KP.str=String(parseFloat(w.toFixed(1))); KP.fresh=true;
-  kpRender(); kpSetRange(KP_CFG.doseIn.min,KP_CFG.doseIn.max,1); }
+  kpRender(); }
 
 function kpPress(k){
   // first key press after opening replaces the pre-filled value
@@ -10771,14 +10794,6 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div class="sp-cat-title">'+t('catScale')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('scaleDesc')+'</div>';
     h+=row('blockNoScale','blockNoScaleDesc',sw('setBlockNoScale',!!gwSettings.blockOnNoScale,'setBlockOnNoScale(this.checked)'));
-    var dr=doseRange();
-    h+=row('doseRange','doseRangeDesc','<div class="dose-range-set">'
-      +'<input id="setDoseMin" class="set-num" type="number" inputmode="decimal" min="1" max="60" step="0.5" value="'+dr[0]+'"'
-      +' onchange="setDoseRange(this.value,document.getElementById(\'setDoseMax\').value)">'
-      +'<span class="dr-sep">\u2013</span>'
-      +'<input id="setDoseMax" class="set-num" type="number" inputmode="decimal" min="1" max="60" step="0.5" value="'+dr[1]+'"'
-      +' onchange="setDoseRange(document.getElementById(\'setDoseMin\').value,this.value)">'
-      +'<span class="dr-u">g</span></div>');
     var spm=gwSettings.scalePowerMode||'disabled';
     h+=row('scalePower','scalePowerDesc','<select class="set-select" onchange="setScalePowerMode(this.value)">'
       +opt('disabled',t('spmNothing'),spm)+opt('displayOff',t('spmDisplayOff'),spm)+opt('disconnect',t('spmDisconnect'),spm)+'</select>');
