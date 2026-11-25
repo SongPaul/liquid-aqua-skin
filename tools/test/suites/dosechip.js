@@ -86,74 +86,82 @@ test('mid shot, no chip', function (T) {
 });
 
 // ── Taking it ─────────────────────────────────────────────────────────
-test('a steady reading is taken as the dose, and can be put back', function (T) {
+// The bar is there only when the reading can be taken. Taken, it goes: the
+// dose is the reading, and the toast's undo is the way back.
+test('a steady reading is taken as the dose, the bar goes, and undo brings both back', function (T) {
   dcScales({ dosing: true, dosingW: 18.3, brew: true, brewW: 0 }, function () {
-    T.ok(!chip().hasAttribute('aria-disabled'), 'live');
+    T.ok(dcShown(chip()), 'offered');
     var yWas = settings.doseOut;
     chip().click();
     T.eq(settings.doseIn, 18.3, 'the dose is the reading');
     T.ok(dcToast().indexOf(t('doseTaken').split('{v}')[0].trim()) >= 0, 'said: ' + dcToast());
-    T.ok(chip().classList.contains('done'), 'marked taken');
-    T.ok(T.el('#doseChipV').textContent.indexOf(t('takeDone').split('{v}')[1].trim()) >= 0, 'and says so: ' + T.el('#doseChipV').textContent);
-    T.ok(T.css(chip(), 'borderTopWidth') !== '0px' || T.css(chip(), 'boxShadow') !== 'none', 'outlined');
-    T.ok(T.css(chip(), 'backgroundColor') === 'rgba(0, 0, 0, 0)' || T.css(chip(), 'backgroundImage') === 'none',
-      'without its fill');
+    T.ok(!dcShown(chip()), 'the bar goes once the dose is the reading');
     var undo = T.el('#toast .toast-act');
     T.ok(!!undo, 'an undo');
     undo.click();
     T.eq(settings.doseIn, 18, 'the dose back');
     T.eq(settings.doseOut, yWas, 'and the yield');
-    T.ok(!chip().classList.contains('done'), 'and the chip offers it again');
+    T.ok(dcShown(chip()), 'and the bar offers it again');
   });
 });
 
-test('taken, it offers again when the reading moves or the dose is changed', function (T) {
+test('taken, the bar comes back when the reading moves or the dose is changed', function (T) {
   dcScales({ dosing: true, dosingW: 18.3, brew: true }, function () {
     chip().click();
-    T.ok(chip().classList.contains('done'), 'taken');
+    T.ok(!dcShown(chip()), 'taken');
     dcSteady('dosing', 18.4); state.dosingWeight = 18.4; syncDoseTake();
-    T.ok(chip().classList.contains('done'), 'a tenth is still the same dose');
+    T.ok(!dcShown(chip()), 'a tenth is still the same dose');
     dcSteady('dosing', 18.9); state.dosingWeight = 18.9; syncDoseTake();
-    T.ok(!chip().classList.contains('done'), 'more than 0.2 g is a new reading');
+    T.ok(dcShown(chip()), 'more than 0.2 g is a new reading');
     chip().click();
-    T.ok(chip().classList.contains('done'), 'taken again');
+    T.ok(!dcShown(chip()), 'taken again');
     adjust('doseIn', 0.1);
-    T.ok(!chip().classList.contains('done'), 'a dose changed by hand lets it go');
+    T.ok(dcShown(chip()), 'a dose changed by hand brings it back');
   });
 });
 
-// ── Not taking it, and saying why ─────────────────────────────────────
-function dimmed(T, why, key) {
-  T.ok(dcShown(chip()), why + ': shown');
-  T.eq(chip().getAttribute('aria-disabled'), 'true', why + ': dimmed');
-  T.ok(!chip().disabled, why + ': still pressable');
-  T.ok(parseFloat(T.css(T.el('#doseChipV'), 'opacity')) < 0.6, why + ': drawn dim');
-  dcClearToast();
-  chip().click();
+// ── Not taking it ─────────────────────────────────────────────────────
+// No bar: the dose cell says it by colour, and its title says why, so the
+// card is a row shorter whenever there is nothing to take.
+function cellDose() { return T.el('#cellDose'); }
+function notOffered(T, why, tint) {
+  T.ok(!dcShown(chip()), why + ': no bar');
+  T.eq(cellDose().classList.contains('dc-range'), tint === 'range', why + ': range tint ' + (tint === 'range'));
+  T.eq(cellDose().classList.contains('dc-wait'), tint === 'wait', why + ': wait tint ' + (tint === 'wait'));
   T.eq(settings.doseIn, 18, why + ': the dose stays');
-  T.eq(dcToast(), t(key), why + ': and says why');
-  if (key !== 'chipUnstable') T.eq(T.el('#doseChipV').textContent, t(key), why + ': the bar says it before the press');
-  else T.ok(T.el('#doseChipV').textContent.indexOf(t('takeMeasuring').split('{v}')[1].trim()) >= 0, why + ': the bar says it is still weighing');
 }
-test('an empty scale is not a dose', function (T) {
-  dcScales({ dosing: true, dosingW: 0.4, brew: true }, function () { dimmed(T, '0.4 g', 'chipEmpty'); });
+test('an empty scale offers nothing and tints nothing', function (T) {
+  dcScales({ dosing: true, dosingW: 0.4, brew: true }, function () {
+    notOffered(T, '0.4 g', '');
+    T.ok(!cellDose().title, 'nothing to say');
+  });
 });
-test('a reading a dose cannot be is not taken', function (T) {
-  dcScales({ dosing: true, dosingW: 62, brew: true }, function () { dimmed(T, '62 g', 'chipRange'); });
-  dcScales({ dosing: true, dosingW: 3, brew: true }, function () { dimmed(T, '3 g', 'chipRange'); });
+test('a reading a dose cannot be tints the dose amber and says the range', function (T) {
+  dcScales({ dosing: true, dosingW: 62, brew: true }, function () {
+    notOffered(T, '62 g', 'range');
+    var v = T.el('#doseInVal').parentElement;
+    T.ok(T.css(v, 'color') === 'rgb(180, 83, 9)' || T.css(cellDose(), 'borderTopColor') === 'rgb(180, 83, 9)',
+      'amber: ' + T.css(v, 'color'));
+    var why = cellDose().getAttribute('aria-label') || '';
+    T.ok(why.indexOf('62.0') >= 0 && why.indexOf('5') >= 0 && why.indexOf('30') >= 0, 'the reading and the range: ' + why);
+    T.eq(cellDose().title, why, 'shown on hover too');
+  });
+  dcScales({ dosing: true, dosingW: 3, brew: true }, function () { notOffered(T, '3 g', 'range'); });
 });
-test('a reading still moving is not taken', function (T) {
+test('a reading still moving tints the dose as waiting, with the amber dot', function (T) {
   dcScales({ dosing: true, dosingW: 17.6, brew: true }, function () {
     _doseRd.dosing = null;
     var now = Date.now();
     noteDoseReading('dosing', 16.9, now - 400);
     noteDoseReading('dosing', 17.6, now);
     syncDoseTake();
-    dimmed(T, 'moving', 'chipUnstable');
+    notOffered(T, 'moving', 'wait');
+    var dot = cellDose().querySelector('.dc-dot');
+    T.ok(dcShown(dot), 'an amber dot on the dose');
+    T.eq(Math.round(T.box(dot).width), 7, '7px');
+    T.ok((cellDose().getAttribute('aria-label') || '').indexOf('17.6') >= 0, 'and it says so');
   });
 });
-// The designer's amber dot says the weight is still moving, on the chip and
-// over the weight on the stage.
 function dcAmber(night) {
   var p = document.createElement('i');
   p.style.color = 'var(--amber)';
@@ -162,26 +170,6 @@ function dcAmber(night) {
   p.remove();
   return c;
 }
-test('a moving reading carries an amber dot, by day and by night', function (T) {
-  dcScales({ dosing: true, dosingW: 17.6, brew: true }, function () {
-    T.ok(!dcShown(T.el('#doseChip .dc-dot')), 'no dot while still');
-    _doseRd.dosing = null;
-    var now = Date.now();
-    noteDoseReading('dosing', 16.9, now - 400);
-    noteDoseReading('dosing', 17.6, now);
-    syncDoseTake();
-    var dot = T.el('#doseChip .dc-dot');
-    T.ok(dcShown(dot), 'a dot');
-    T.eq(Math.round(T.box(dot).width), 7, '7px');
-    T.eq(T.css(dot, 'backgroundColor'), dcAmber(), 'amber');
-    T.ok(T.box(dot).right <= T.box(T.el('#doseChipV')).left + 1, 'before the value');
-    T.eq(T.css(dot, 'opacity'), '1', 'not dimmed with the chip');
-    T.ok(parseFloat(T.css(T.el('#doseChipV'), 'opacity')) < 0.6, 'the value is');
-    document.body.classList.add('night');
-    T.eq(T.css(dot, 'backgroundColor'), dcAmber(), 'amber at night too');
-    document.body.classList.remove('night');
-  });
-});
 test('the weight on the stage carries the dot while it moves, not mid shot', function (T) {
   dcScales({ brew: true, brewW: 12 }, function () {
     var dot = T.el('#wsWob');
@@ -199,54 +187,52 @@ test('the weight on the stage carries the dot while it moves, not mid shot', fun
   });
 });
 
-test('a reading gone quiet is not taken', function (T) {
+test('a reading gone quiet offers nothing', function (T) {
   dcScales({ dosing: true, dosingW: 18.3, brew: true }, function () {
     _doseRd.dosing = null;
     noteDoseReading('dosing', 18.3, Date.now() - 12000);
     syncDoseTake();
-    dimmed(T, 'stale', 'chipStale');
+    notOffered(T, 'stale', '');
   });
 });
 test('a dosing scale that is set and gone is not stood in for by the brewing scale', function (T) {
   dcScales({ dosing: 'off', brew: true, brewW: 18.3 }, function () {
-    dimmed(T, 'dosing scale off', 'chipDosingOff');
-    T.ok(T.el('#doseChipV').textContent.indexOf('18.3') < 0, 'the brewing scale’s 18.3 is not offered');
+    notOffered(T, 'dosing scale off', '');
   });
 });
 test('with no dosing scale set, the brewing scale offers its reading', function (T) {
   dcScales({ brew: true, brewW: 18.1 }, function () {
     T.ok(dcShown(chip()), 'shown');
-    T.ok(!chip().hasAttribute('aria-disabled'), 'live');
     T.ok(chip().getAttribute('aria-label').indexOf('Decent Scale') >= 0 ||
       chip().getAttribute('aria-label').indexOf(t('scaleBrew')) >= 0, 'said to be the brewing scale’s');
     chip().click();
     T.eq(settings.doseIn, 18.1, 'taken');
   });
 });
+test('the card is a row shorter when there is nothing to take', function (T) {
+  var h1, h0;
+  dcScales({ dosing: true, dosingW: 18.3, brew: true }, function () { h1 = T.h(T.el('.recipe')); });
+  dcScales({ dosing: true, dosingW: 0.4, brew: true }, function () { h0 = T.h(T.el('.recipe')); });
+  T.near(h1 - h0, 42, 2, 'the bar’s row: ' + h1 + ' / ' + h0);
+});
 
-// ── The keypad follows the same rules ─────────────────────────────────
-// The keypad's take button says what the bar says, in every state.
-test('the dose keypad’s take button words it as the bar does, state by state', function (T) {
-  var cases = [
-    [{ dosing: true, dosingW: 18.3, brew: true }, 'live'],
-    [{ dosing: true, dosingW: 0.4, brew: true }, 'empty'],
-    [{ dosing: true, dosingW: 62, brew: true }, 'range'],
-    [{ dosing: 'off', brew: true, brewW: 18.3 }, 'off'],
-    [{ dosing: true, dosingW: 17.6, brew: true }, 'moving']];
-  cases.forEach(function (c) {
+// ── The keypad follows the same rule ──────────────────────────────────
+test('the dose keypad offers the reading only when it can be taken; out of range tints the range line', function (T) {
+  dcScales({ dosing: true, dosingW: 18.3, brew: true }, function () {
+    openKeypad('doseIn');
+    var b = T.el('#kpTake');
+    T.ok(dcShown(b), 'offered');
+    T.eq(T.el('#kpTakeTxt').textContent, T.el('#doseChipV').textContent, 'in the bar’s words');
+    b.click();
+    T.eq(KP.str, '18.3', 'fills the number');
+    closeModal(null, 'keypadOverlay');
+  });
+  [[{ dosing: true, dosingW: 0.4, brew: true }, 'empty'], [{ dosing: true, dosingW: 62, brew: true }, 'range'],
+   [{ dosing: 'off', brew: true, brewW: 18.3 }, 'off']].forEach(function (c) {
     dcScales(c[0], function () {
-      if (c[1] === 'moving') {
-        _doseRd.dosing = null;
-        var now = Date.now();
-        noteDoseReading('dosing', 16.9, now - 400); noteDoseReading('dosing', 17.6, now);
-        syncDoseTake();
-      }
       openKeypad('doseIn');
-      var b = T.el('#kpTake');
-      T.ok(dcShown(b), c[1] + ': shown');
-      T.eq(T.el('#kpTakeTxt').textContent, T.el('#doseChipV').textContent, c[1] + ': the bar’s words');
-      T.eq(b.classList.contains('moving'), c[1] === 'moving', c[1] + ': the moving dot as the bar has it');
-      T.eq(b.hasAttribute('aria-disabled'), c[1] !== 'live', c[1] + ': dimmed unless it can be taken');
+      T.ok(!dcShown(T.el('#kpTake')), c[1] + ': no button');
+      T.eq(T.el('#kpRange').classList.contains('warn'), c[1] === 'range', c[1] + ': the range line tinted only out of range');
       closeModal(null, 'keypadOverlay');
     });
   });
@@ -257,27 +243,50 @@ test('the dose keypad’s take button words it as the bar does, state by state',
   });
 });
 
-test('the dose keypad offers the reading on the same terms', function (T) {
-  dcScales({ dosing: true, dosingW: 0.4, brew: true }, function () {
-    openKeypad('doseIn');
-    var b = T.el('#kpTake');
-    T.ok(dcShown(b), 'the button is there');
-    T.eq(b.getAttribute('aria-disabled'), 'true', 'dimmed for an empty scale');
-    var was = KP.str;
-    dcClearToast();
-    b.click();
-    T.eq(KP.str, was, 'the number is left alone');
-    T.eq(dcToast(), t('chipEmpty'), 'and the keypad says why');
-    closeModal(null, 'keypadOverlay');
+// ── The dose range is the user's ──────────────────────────────────────
+function withRange(a, b, run) {
+  var was = { a: prefs.doseMin, b: prefs.doseMax };
+  prefs.doseMin = a; prefs.doseMax = b;
+  try { return run(); } finally { prefs.doseMin = was.a; prefs.doseMax = was.b; }
+}
+test('the dose range is set once and used by the buttons, the keypad and the scale', function (T) {
+  T.eq(doseRange().join('-'), (prefs.doseMin == null ? '5-30' : doseRange().join('-')), 'five to thirty by default');
+  withRange(8, 22, function () {
+    T.eq(KP_CFG.doseIn.min, 8, 'the keypad’s floor');
+    T.eq(KP_CFG.doseIn.max, 22, 'and ceiling');
+    var was = settings.doseIn;
+    settings.doseIn = 21.95; adjust('doseIn', 0.1);
+    T.eq(settings.doseIn, 22, 'the plus stops at the top');
+    setDoseIn(3);
+    T.eq(settings.doseIn, 8, 'a dose under it is held to the bottom');
+    dcScales({ dosing: true, dosingW: 24, brew: true }, function () {
+      T.ok(!dcShown(chip()), '24 g is outside 8-22 now');
+      T.ok((cellDose().getAttribute('aria-label') || '').indexOf('8') >= 0, 'and the range said is this one');
+    });
+    T.eq(t('chipRange').indexOf('{a}') >= 0 || doseWhyText('chipRange').indexOf('8') >= 0, true, 'the message carries it');
+    T.ok(doseWhyText('chipRange').indexOf('22') >= 0, 'both ends: ' + doseWhyText('chipRange'));
+    settings.doseIn = was;
   });
-  dcScales({ dosing: true, dosingW: 18.3, brew: true }, function () {
-    openKeypad('doseIn');
-    var b = T.el('#kpTake');
-    T.ok(!b.hasAttribute('aria-disabled'), 'live for a steady reading');
-    b.click();
-    T.eq(KP.str, '18.3', 'fills the number');
-    closeModal(null, 'keypadOverlay');
-  });
+  withRange(30, 5, function () { T.eq(doseRange().join('-'), '5-30', 'a backwards range falls back'); });
+  withRange(0.2, 90, function () { T.eq(doseRange().join('-'), '5-30', 'so does one out of bounds'); });
+});
+test('Settings has the dose range, and keeps it', function (T) {
+  var was = { a: prefs.doseMin, b: prefs.doseMax };
+  openSettingsPage(); spSelect('scale');
+  var lo = T.el('#setDoseMin'), hi = T.el('#setDoseMax');
+  T.ok(!!lo && !!hi, 'two fields');
+  T.eq(lo.getAttribute('step'), '0.5', 'in half grams');
+  T.ok(T.el('#spContent').textContent.indexOf(t('doseRange')) >= 0, 'named');
+  setDoseRange(7, 24);
+  T.eq(prefs.doseMin, 7, 'kept'); T.eq(prefs.doseMax, 24, 'both');
+  T.eq((lsGet('aurora_prefs') || {}).doseMax, 24, 'and stored');
+  setDoseRange(25, 10);
+  T.eq(prefs.doseMin, 7, 'a backwards range is refused');
+  T.eq(T.el('#toast').textContent, t('doseRangeBad'), 'with a word');
+  setDoseRange(0, 10);
+  T.eq(prefs.doseMin, 7, 'and one out of bounds');
+  prefs.doseMin = was.a; prefs.doseMax = was.b; savePrefs();
+  closeSettingsPage();
 });
 
 // ── The weight block on the stage ─────────────────────────────────────

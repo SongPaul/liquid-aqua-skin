@@ -71,17 +71,16 @@ test('the dose shows the dosing scale’s reading under the target, as a chip', 
   T.ok(T.el('#doseInVal').textContent.indexOf('17.8') < 0, 'the target is still its own number');
 });
 
-test('a zero is a reading, not nothing', function (T) {
+test('a zero is a reading, but not one to take: no bar', function (T) {
   dosingOnly(0);
-  T.eq(T.el('#doseChipV').textContent, t('chipEmpty'), 'an empty scale asks for the beans, not 0.0');
-  T.eq(T.el('#doseChip').getAttribute('aria-disabled'), 'true', 'and is not offered as a dose');
+  T.ok(T.el('#doseChip').offsetParent === null, 'nothing is offered for an empty scale');
+  T.ok(!T.el('#cellDose').classList.contains('dc-range'), 'and the dose is not tinted');
 });
 
-test('a dosing scale with no reading yet keeps its chip, as a dash', function (T) {
+test('a dosing scale with no reading yet offers nothing', function (T) {
   dosingOnly();
-  T.eq(T.el('#doseChipV').textContent, t('chipDosingOff'), 'it says the dosing scale is not reading');
-  T.eq(T.el('#doseChip').getAttribute('aria-disabled'), 'true', 'not offered');
-  T.ok(T.oh(T.el('#doseChip')) > 0, 'the chip still takes its room');
+  T.ok(T.el('#doseChip').offsetParent === null, 'no bar');
+  T.ok(!T.el('#cellDose').classList.contains('dc-wait'), 'no tint');
 });
 
 test('without a dosing scale the brewing scale’s reading is the chip’s', function (T) {

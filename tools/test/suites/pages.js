@@ -229,17 +229,28 @@ test('a shot opens on its numbers: dose, yield, ratio, time, temperature', funct
 });
 
 // The note under the last shot grew to 15px, and took the profile name's room.
-test('the last shot keeps its profile name beside a long note', function (T) {
-  var prof = T.el('#lsProfile'), flag = T.el('#lsFlag');
-  var was = { p: prof.innerHTML, f: flag.textContent, h: flag.hidden };
-  prof.textContent = '코히쟁 버전 Synesso 92.0°C';
-  flag.textContent = '추출이 빨랐습니다 · 채널링이 의심됩니다';
-  flag.hidden = false;
-  var fits = prof.scrollWidth <= prof.clientWidth + 1;
-  var w = prof.clientWidth, fw = flag.offsetWidth, need = prof.scrollWidth,
-    kids = Array.prototype.map.call(prof.parentNode.children, function (k) { return k.className + ':' + k.offsetWidth; }).join(' ');
-  prof.innerHTML = was.p; flag.textContent = was.f; flag.hidden = was.h;
-  T.ok(fits, 'the name is whole, ' + w + '/' + need + 'px beside a ' + fw + 'px note; ' + kids);
+// What a day of shots produces: a long name, a note from the shot reading and
+// today's count. The links stay on the title line; the count steps aside
+// while a note is shown. The note is one short word and stays whole; the
+// name gives way with an ellipsis, keeping its start.
+test('a long name, a note and today’s count keep the links on the title line', function (T) {
+  var prof = T.el('#lsProfile'), flag = T.el('#lsFlag'), today = T.el('#lsToday');
+  var was = { p: prof.innerHTML, f: flag.textContent, h: flag.hidden, t: today.textContent };
+  prof.innerHTML = '<span class="ls-t">' + t('lastShotT') + '</span> · 코히쟁 버전 Synesso 92.0°C';
+  today.textContent = t('lsToday').replace('{n}', 12);
+  try {
+    ['rsTagTemp', 'rsTagChannel', 'rsTagCoarse', 'rsTagFine'].forEach(function (k) {
+      flag.textContent = t(k); flag.hidden = false;
+      var acts = T.box(T.el('.ls-head .ls-acts')), name = T.box(prof);
+      T.ok(acts.top < name.bottom, k + ': the links share the name’s line');
+      T.ok(today.offsetParent === null, k + ': the count steps aside');
+      T.ok(flag.scrollWidth <= flag.clientWidth + 1, k + ': the note is whole');
+      T.ok(prof.clientWidth >= 100, k + ': the name keeps its start (' + prof.clientWidth + 'px)');
+    });
+    flag.hidden = true;
+    T.ok(today.offsetParent !== null, 'without a note the count is back');
+    T.ok(T.box(T.el('.ls-head .ls-acts')).top < T.box(prof).bottom, 'and the links still share the line');
+  } finally { prof.innerHTML = was.p; flag.textContent = was.f; flag.hidden = was.h; today.textContent = was.t; }
 });
 
 // ── Beans and grinders ────────────────────────────────────────────────

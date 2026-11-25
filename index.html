@@ -3443,6 +3443,21 @@ body.night #recipeNormal .rc-stop .dose-stop.short .sv{color:#fbbf24}
 .dc-dot{display:none;flex:none;width:7px;height:7px;border-radius:50%;background:var(--amber)}
 .rc-take.moving .dc-dot{display:inline-block}
 .ws-wob{display:inline-block;align-self:center;margin-right:2px}
+/* A reading that cannot be taken is said on the dose itself: out of range in
+   amber, still settling with the amber dot. Nothing is added under it. */
+#cellDose.dc-wait .dose-lbl .dc-dot{display:inline-block;margin-left:5px;vertical-align:middle}
+.app #recipeNormal #cellDose.dc-range .dose-num,.app #recipeNormal #cellDose.dc-range .lu{color:#b45309}
+.app #recipeNormal #cellDose.dc-range .ms-btn{border-color:rgba(180,83,9,.55)}
+body.night .app #recipeNormal #cellDose.dc-range .dose-num,body.night .app #recipeNormal #cellDose.dc-range .lu{color:#fbbf24}
+body.night .app #recipeNormal #cellDose.dc-range .ms-btn{border-color:rgba(251,191,36,.55)}
+.app #recipeNormal #cellDose.dc-wait .dose-num{color:var(--ink-mute)}
+.app :is(#recipeNormal) .dose-stack>.dose-num.long{font-size:18px;letter-spacing:-.03em;gap:1px}
+.dose-range-set{display:flex;align-items:center;gap:8px;flex:none}
+.dose-range-set .set-num{width:84px;height:44px;padding:0 10px;border-radius:var(--r-ctl);border:1px solid var(--la-line-2);
+  background:var(--la-surface);color:var(--ink);font-family:var(--font);font-size:17px;font-weight:600;text-align:center}
+.dose-range-set .dr-sep,.dose-range-set .dr-u{font-size:15px;font-weight:500;color:var(--ink-mute)}
+#kpRange.warn{color:#b45309}
+body.night #kpRange.warn{color:#fbbf24}
 .ws-wob[hidden]{display:none}
 .rc-take.done{background:none;box-shadow:inset 0 0 0 1px var(--la-line-2);color:var(--ink-mute)}
 .rc-take.done svg{display:none}
@@ -3544,6 +3559,14 @@ body.night .bean-rest.resting,body.night .bean-rest.fading{color:#fcd34d}
    second line rather than leave the card. */
 .app .ls-head{margin-bottom:6px;font-size:15px;flex-wrap:wrap;row-gap:0}
 .app .ls-head .ls-profile{flex:1 1 0;min-width:7em}
+/* One line holds the name, a note and the links. The note is one short word
+   from the shot reading ("온도 이탈", "채널링"), and a word cut in half says
+   nothing, so it stays whole; the name gives way with an ellipsis -- it
+   starts with what tells the profile apart, and the whole of it is in the
+   shot log. Today's count is the least of them and steps aside while a note
+   is shown. */
+.app .ls-head .ls-flag{flex:none;max-width:none}
+.app .ls-head .ls-flag:not([hidden])~.ls-today{display:none}
 .app .ls-head .ls-acts{margin-left:auto}
 .app .ls-profile{font-size:15px;font-weight:600}
 .ls-profile .ls-t{color:var(--ink)}
@@ -3739,7 +3762,7 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
           <div class="dose-block lk" id="cellDose">
             <div class="dose-adj"><button class="ms-btn" onclick="adjust('doseIn',-0.1)">−</button>
               <div class="dose-stack" id="doseStack">
-                <div class="dose-lbl dose-cap"><span data-i18n="doseG">Dose</span></div>
+                <div class="dose-lbl dose-cap"><span data-i18n="doseG">Dose</span><i class="dc-dot" aria-hidden="true"></i></div>
                 <div class="dose-num tap" id="doseIn"><span id="doseInVal">18.0</span><span class="lu" id="doseInUnit">g</span></div>
               </div>
               <button class="ms-btn" onclick="adjust('doseIn',0.1)">+</button></div>
@@ -4594,7 +4617,7 @@ var I18N={
     grSrcLiveHint:'Sets the connected grinder — hold for the grinder list',
     grPanelHint:'Tap for the grinder’s settings — hold for the grinder list',
     grSrcWatchHint:'This grinder only reports — the number is kept here; hold for the grinder list',
-    grReads:'The grinder reads {v}', grReadLbl:'Reads', doseChipAria:'Put {s}’s {v} in the dose', takeBar:'{s} {v} into the dose', takeMeasuring:'{s} {v} settling', takeDone:'{v} in the dose', tempProfLbl:'Profile', kpProfTemp:'Profile’s {v}', grDevVal:'reads {v}', grManualDial:'Grind dialled by hand', grManualHint:'The card records the grind you dial and sends nothing to the grinder for it. Speeds still go to the grinder.', chipStale:'The scale has gone quiet · check it', chipRange:'That is outside a dose', chipDosingOff:'The dosing scale is not connected', chipEmpty:'Put the beans on the scale', chipUnstable:'It can go in once the weight settles', doseTaken:'Dose {v} set', noWeightStop:'Will not stop on weight', stopEndLbl:'Profile ends', stopHaltLbl:'Profile stops', stopAbout:'about',
+    grReads:'The grinder reads {v}', grReadLbl:'Reads', doseChipAria:'Put {s}’s {v} in the dose', takeBar:'{s} {v} into the dose', takeMeasuring:'{s} {v} settling', takeDone:'{v} in the dose', tempProfLbl:'Profile', kpProfTemp:'Profile’s {v}', grDevVal:'reads {v}', grManualDial:'Grind dialled by hand', grManualHint:'The card records the grind you dial and sends nothing to the grinder for it. Speeds still go to the grinder.', chipStale:'The scale has gone quiet · check it', chipRange:'Outside the dose range ({a}–{b} g)', cellRangeAria:'{s} {v}, outside the dose range {a}–{b} g', doseRange:'Dose range', doseRangeDesc:'The dose’s plus and minus, its keypad and the scale reading stay within it.', doseRangeBad:'The lowest dose has to be under the highest, between 1 and 60 g', chipDosingOff:'The dosing scale is not connected', chipEmpty:'Put the beans on the scale', chipUnstable:'It can go in once the weight settles', doseTaken:'Dose {v} set', noWeightStop:'Will not stop on weight', stopEndLbl:'Profile ends', stopHaltLbl:'Profile stops', stopAbout:'about',
     grAutoReg:'Added the “{n}” grinder from its plugin',
     grLinked:'Linked', grInUse:'In use', undo:'Undo', usOffer:'Last shot\u2019s settings', grindOffer:'Last grind {s}', bagFreeze:'Freeze', bagThaw:'Thaw', bagFrozen:'Marked frozen', bagThawed:'Marked thawed', rest_frozen:'Frozen', stReady:'Ready', stHeating:'Heating', stBrewing:'Brewing', stSteam:'Steam', stWater:'Hot water', stFlush:'Flush', stRefill:'Low water', stSleep:'Asleep', stNoMachine:'No machine', stBusy:'Busy', stError:'Error', refillSub:'Fill the tank', lockShot:'While a shot runs only the yield can change', lockBanner:'Brewing \u00b7 only the yield can change', rdNoScale:'No scale', rdConnect:'Connect', rdTakeScale:'Use scale {v}', kpTakeScale:'Use scale reading {v}', rdScanning:'Looking for the dosing scale\u2026', beanPick:'Pick a bean', beanChange:'Change bean', noBeanDesc:'Pick a bean and its roast date and rest show here, and are saved with each shot.', stopAtG:'Stops at {v}', stopByProfile:'Set by the profile', stopNoScale:'Ends with the profile', stopThisShot:'Applies to this shot', lastShotT:'Last shot', devicesLbl:'Devices', devicesIng:'Connecting', grStLinked:'linked', grStRead:'read only', grStHand:'by hand', grObs:'grinder {v}', nowVal:'now {v}', roastShort:'Roasted', feedShort:'Feed', ratioShort:'Ratio', favLabel:'Favourite', bgfAll:'All', bgfReady:'Ready', bgfFrozen:'Frozen', bgfOut:'Used up \u00b7 put away', bgSortLbl:'Order', bgsSmart:'Suggested', bgsRoast:'Roast date', bgsName:'Name', bgSelect:'Select', bgSelDone:'Done', bgSelN:'{n} selected', bgArchive:'Put away', bgUnarchive:'Bring back', bgDelete:'Delete', bgArchived:'{n} put away', bgRestored:'{n} brought back', confirmDeleteBeans:'Delete {n} beans?', bgMultiHint:'Tap beans to pick them, then choose what to do', beanPicked:'Using {n}', grinderPicked:'Using {n}', bgCardHint:'Tap to use \u00b7 hold or the pencil to edit', rest_resting:'Resting', rest_ready:'Ready', rest_fading:'Fading', rest_past:'Past peak', bagLeftShort:'about {l}g left', bagsN:'{n} bags', bagUsedUp:'Used up', bagRestore:'Back in use', bagMarkedOut:'Marked used up', bagBackIn:'Back in use', saveBeanFirst:'Save the bean first', saveGrinderFirst:'Save the grinder first', confirmDeleteGrinder:'Delete this grinder?', noBeans:'No beans yet', noGrinders:'No grinders yet', grLinkTitle:'Plugin grinder',
     grLinkWhat:'Name and dial follow the plugin; the recipe card sets it while in use. Burrs and notes are yours.',
@@ -5077,7 +5100,7 @@ var I18N={
     grSrcLiveHint:'연결된 그라인더를 설정합니다 — 길게 누르면 그라인더 목록',
     grPanelHint:'누르면 그라인더 설정 — 길게 누르면 그라인더 목록',
     grSrcWatchHint:'이 그라인더는 읽기만 됩니다 — 숫자는 여기에 기록됩니다, 길게 누르면 그라인더 목록',
-    grReads:'그라인더 표시값 {v}', grReadLbl:'표시값', doseChipAria:'{s} 값 {v}을 도징에 넣기', takeBar:'{s} {v} 도징에 넣기', takeMeasuring:'{s} {v} 측정 중', takeDone:'{v} 도징에 넣음', tempProfLbl:'프로파일', kpProfTemp:'프로파일 값 {v}', grDevVal:'기기 {v}', grManualDial:'분쇄도는 손으로 맞춤', grManualHint:'카드는 손으로 맞춘 분쇄도를 기록만 하고 그라인더에 보내지 않습니다. 속도는 그대로 그라인더에 보냅니다.', chipStale:'저울 값이 멈춰 있어요 · 저울을 확인해 주세요', chipRange:'도징 범위를 벗어났어요', chipDosingOff:'도징 저울 연결이 끊겼어요', chipEmpty:'저울에 원두를 올려 주세요', chipUnstable:'무게가 멈추면 넣을 수 있어요', doseTaken:'도징 {v} 넣음', noWeightStop:'무게로 멈추지 않음', stopEndLbl:'프로파일 끝', stopHaltLbl:'프로파일 멈춤', stopAbout:'약',
+    grReads:'그라인더 표시값 {v}', grReadLbl:'표시값', doseChipAria:'{s} 값 {v}을 도징에 넣기', takeBar:'{s} {v} 도징에 넣기', takeMeasuring:'{s} {v} 측정 중', takeDone:'{v} 도징에 넣음', tempProfLbl:'프로파일', kpProfTemp:'프로파일 값 {v}', grDevVal:'기기 {v}', grManualDial:'분쇄도는 손으로 맞춤', grManualHint:'카드는 손으로 맞춘 분쇄도를 기록만 하고 그라인더에 보내지 않습니다. 속도는 그대로 그라인더에 보냅니다.', chipStale:'저울 값이 멈춰 있어요 · 저울을 확인해 주세요', chipRange:'도징 범위({a}–{b} g) 밖이에요', cellRangeAria:'{s} {v}, 도징 범위 {a}–{b} g 밖', doseRange:'도징 범위', doseRangeDesc:'도징의 −, +, 키패드, 저울 값 넣기가 이 범위 안에서만 움직입니다.', doseRangeBad:'가장 적은 도징이 가장 많은 도징보다 작아야 하고, 1~60 g 사이여야 해요', chipDosingOff:'도징 저울 연결이 끊겼어요', chipEmpty:'저울에 원두를 올려 주세요', chipUnstable:'무게가 멈추면 넣을 수 있어요', doseTaken:'도징 {v} 넣음', noWeightStop:'무게로 멈추지 않음', stopEndLbl:'프로파일 끝', stopHaltLbl:'프로파일 멈춤', stopAbout:'약',
     grAutoReg:'“{n}” 플러그인 그라인더를 목록에 추가했습니다',
     grLinked:'연동', grInUse:'사용 중', undo:'되돌리기', usOffer:'지난 샷 설정', grindOffer:'지난 분쇄 {s}', bagFreeze:'냉동', bagThaw:'해동', bagFrozen:'냉동으로 표시했습니다', bagThawed:'해동으로 표시했습니다', rest_frozen:'냉동', stReady:'준비됨', stHeating:'예열 중', stBrewing:'추출 중', stSteam:'스팀', stWater:'온수', stFlush:'플러시', stRefill:'물 부족', stSleep:'절전', stNoMachine:'머신 없음', stBusy:'작업 중', stError:'오류', refillSub:'물탱크를 채우세요', lockShot:'추출 중에는 추출량만 바꿀 수 있습니다', lockBanner:'추출 중 \u00b7 추출량만 바꿀 수 있음', rdNoScale:'저울 없음', rdConnect:'연결', rdTakeScale:'저울 값 넣기 {v}', kpTakeScale:'저울 값 넣기 {v}', rdScanning:'도징 저울 찾는 중\u2026', beanPick:'원두 고르기', beanChange:'원두 바꾸기', noBeanDesc:'원두를 고르면 로스팅 날짜와 숙성 상태가 여기 보이고, 샷에 함께 저장됩니다.', stopAtG:'{v}에서 정지', stopByProfile:'프로파일 기준', stopNoScale:'프로파일대로 끝남', stopThisShot:'이번 샷에 적용', lastShotT:'지난 샷', devicesLbl:'기기', devicesIng:'연결 중', grStLinked:'연동', grStRead:'읽기만', grStHand:'손으로', grObs:'기기에는 {v}', nowVal:'지금 {v}', roastShort:'로스팅', feedShort:'이송', ratioShort:'비율', favLabel:'즐겨찾기', bgfAll:'전체', bgfReady:'적기', bgfFrozen:'냉동', bgfOut:'다 씀 \u00b7 보관', bgSortLbl:'정렬', bgsSmart:'추천순', bgsRoast:'로스팅일', bgsName:'이름', bgSelect:'선택', bgSelDone:'완료', bgSelN:'{n}개 선택', bgArchive:'보관', bgUnarchive:'꺼내기', bgDelete:'삭제', bgArchived:'{n}개를 보관했습니다', bgRestored:'{n}개를 꺼냈습니다', confirmDeleteBeans:'원두 {n}개를 삭제할까요?', bgMultiHint:'원두를 탭해 고른 뒤 할 일을 누르세요', beanPicked:'사용: {n}', grinderPicked:'사용: {n}', bgCardHint:'탭하면 사용 \u00b7 길게 누르거나 연필을 누르면 편집', rest_resting:'숙성 중', rest_ready:'적기', rest_fading:'지나는 중', rest_past:'지남', bagLeftShort:'남은 약 {l}g', bagsN:'봉투 {n}', bagUsedUp:'다 씀', bagRestore:'다시 사용', bagMarkedOut:'다 쓴 봉투로 표시했습니다', bagBackIn:'다시 쓰는 봉투로 돌렸습니다', saveBeanFirst:'원두를 먼저 저장하세요', saveGrinderFirst:'그라인더를 먼저 저장하세요', confirmDeleteGrinder:'이 그라인더를 삭제할까요?', noBeans:'아직 원두가 없습니다', noGrinders:'아직 그라인더가 없습니다', grLinkTitle:'플러그인 그라인더',
     grLinkWhat:'이름과 눈금은 플러그인을 따르고, 사용 중에는 레시피 카드에서 설정합니다. 버와 메모는 직접 입력하세요.',
@@ -7593,12 +7616,33 @@ function doseBarText(o){
   if(o.done) return t('takeDone').replace('{v}',v);
   if(o.live) return t('takeBar').replace('{s}',sn).replace('{v}',v);
   if(o.why==='chipUnstable') return t('takeMeasuring').replace('{s}',sn).replace('{v}',v);
-  return t(o.why); }
+  return doseWhyText(o.why); }
+function doseWhyText(why){
+  if(why!=='chipRange') return t(why);
+  var r=doseRange();
+  return t('chipRange').replace('{a}',fmtG(r[0])).replace('{b}',fmtG(r[1])); }
+// What the dose cell says when there is a reading that cannot be taken: out
+// of range in amber, still settling as a wait. The rest says nothing.
+function doseCellWhy(o){
+  if(!o.show) return '';
+  var v=doseChipText(o), sn=doseSrcName(o.src), r=doseRange();
+  if(o.why==='chipRange') return t('cellRangeAria').replace('{s}',sn).replace('{v}',v)
+    .replace('{a}',fmtG(r[0])).replace('{b}',fmtG(r[1]));
+  if(o.why==='chipUnstable') return t('takeMeasuring').replace('{s}',sn).replace('{v}',v);
+  return ''; }
 function syncDoseChip(){
   var b=document.getElementById('doseChip');
   if(!b) return;
   var o=doseChipState();
-  b.hidden=!o.show;
+  // The bar is there only when there is something to take; taken, the dose
+  // is the reading and the toast's undo is the way back.
+  b.hidden=!(o.show&&o.live&&!o.done);
+  var cell=document.getElementById('cellDose'), why=doseCellWhy(o);
+  if(cell){
+    cell.classList.toggle('dc-range',!!why&&o.why==='chipRange');
+    cell.classList.toggle('dc-wait',!!why&&o.why==='chipUnstable');
+    if(why){ cell.title=why; cell.setAttribute('aria-label',why); }
+    else { cell.removeAttribute('title'); cell.removeAttribute('aria-label'); } }
   if(!o.show) return;
   if(o.live) b.removeAttribute('aria-disabled'); else b.setAttribute('aria-disabled','true');
   b.classList.toggle('done',o.done);
@@ -7609,7 +7653,7 @@ function doseChipTap(){
   if(lockedSay()) return;
   var o=doseChipState();
   if(!o.show) return;
-  if(!o.live){ toast(t(o.why)); return; }
+  if(!o.live){ toast(doseWhyText(o.why)); return; }
   if(o.done) return;
   var was={doseIn:settings.doseIn, doseOut:settings.doseOut};
   setDoseIn(o.w); syncRecipe(); pushRecipe();
@@ -9486,20 +9530,42 @@ function syncStopCell(){
   cell.hidden=!c;
   setText(lbl,c?t(stopLabelKey(c)):'');
   cell.classList.toggle('short',!!c&&ys.classList.contains('short')); }
+// The dose range is the user's: 5 to 30 g unless set otherwise in Settings,
+// and the one range the buttons, the keypad and the scale reading keep to.
+var DOSE_RANGE_DEF=[5,30], DOSE_RANGE_LIM=[1,60];
+function doseRangeOk(a,b){
+  return isFinite(a)&&isFinite(b)&&a>=DOSE_RANGE_LIM[0]&&b<=DOSE_RANGE_LIM[1]&&a<b; }
+function doseRange(){
+  var a=parseFloat(prefs.doseMin), b=parseFloat(prefs.doseMax);
+  if(isNaN(a)) a=DOSE_RANGE_DEF[0]; if(isNaN(b)) b=DOSE_RANGE_DEF[1];
+  return doseRangeOk(a,b)?[a,b]:DOSE_RANGE_DEF.slice(); }
+function setDoseRange(a,b){
+  a=parseFloat(a); b=parseFloat(b);
+  if(!doseRangeOk(a,b)){ toast(t('doseRangeBad'),'err'); if(spOpen()&&spCat==='scale') renderSpContent(); return false; }
+  prefs.doseMin=a; prefs.doseMax=b; savePrefs();
+  setDoseIn(settings.doseIn); syncRecipe(); syncDoseTake();
+  return true; }
+function fmtG(v){ return String(parseFloat((+v).toFixed(1))); }
+// The yield has no range of its own: some recipes run to 1:5, and 30 g at
+// 1:5 is 150 g. It is held only to at least the dose and to 200 g, past
+// anything a recipe asks for, so a typo cannot send something absurd.
+var YIELD_MAX=200, RATIO_MAX=5;
+function clampYield(v){
+  var lo=Math.max(1,+settings.doseIn||1);
+  return Math.max(lo,Math.min(YIELD_MAX,parseFloat((+v).toFixed(1)))); }
 function setDoseIn(v){
-  var r=recipeRatio()||null;
-  settings.doseIn=Math.max(5,Math.min(30,parseFloat((+v).toFixed(1))));
-  if(r){ settings.doseOut=Math.max(10,Math.min(80,
-    parseFloat((settings.doseIn*r).toFixed(1)))); } }
+  var r=recipeRatio()||null, dr=doseRange();
+  settings.doseIn=Math.max(dr[0],Math.min(dr[1],parseFloat((+v).toFixed(1))));
+  if(r){ settings.doseOut=clampYield(settings.doseIn*r); } }
 function adjust(key,delta){
   if(key!=='doseOut'&&lockedSay()) return;
   if(key==='doseIn'){ setDoseIn(settings.doseIn+delta); syncRecipe(); pushRecipe(); return; }
-  settings[key]=parseFloat((settings[key]+delta).toFixed(1)); var c={doseIn:[5,30],doseOut:[10,80]}[key]; if(c) settings[key]=Math.max(c[0],Math.min(c[1],settings[key])); syncRecipe(); pushRecipe(); }
+  settings[key]=parseFloat((settings[key]+delta).toFixed(1)); if(key==='doseOut') settings.doseOut=clampYield(settings.doseOut); syncRecipe(); pushRecipe(); }
 // Adjust the ratio directly -> recompute yield from current dose.
 // Stepping the ratio lands on a ratio worth stepping to: a yield set by hand
 // leaves 2.01, and one press of + should give 2.1, not 2.11.
-function adjustRatio(delta){ if(lockedSay()) return; var r=recipeRatio()||2; r=Math.max(1,Math.min(4,parseFloat((r+delta).toFixed(1))));
-  settings.doseOut=parseFloat((settings.doseIn*r).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); syncRecipe(); pushRecipe(); }
+function adjustRatio(delta){ if(lockedSay()) return; var r=recipeRatio()||2; r=Math.max(1,Math.min(RATIO_MAX,parseFloat((r+delta).toFixed(1))));
+  settings.doseOut=clampYield(settings.doseIn*r); syncRecipe(); pushRecipe(); }
 // A DE1 profile has no single brew temperature: every step carries its own.
 // The card shows the first step's, and a change shifts them all by the same
 // amount, so a profile that ramps its temperature keeps its ramp. What is
@@ -9756,6 +9822,7 @@ function pushRecipe(){ clearTimeout(adjust._t); laneEdited(recipeLane);
   adjust._t=setTimeout(function(){ laneSend(recipeLane); },600); }
 function syncRecipe(){
   document.getElementById('doseInVal').textContent=settings.doseIn.toFixed(1); document.getElementById('doseOutVal').textContent=settings.doseOut.toFixed(1);
+  var dO=document.getElementById('doseOut'); if(dO) dO.classList.toggle('long',settings.doseOut>=100);
   ['doseInUnit','doseOutUnit'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent='g'; });
   syncDoseChip();
   syncThermo();
@@ -10211,7 +10278,7 @@ function applyBurrLookup(o,r,tally){
 
 // ── Numeric keypad (recipe editing) ─────────────────────────────────
 var KP={ field:null, str:'', unit:'g', fresh:true };
-var KP_CFG={ doseIn:{title:'kpDose',unit:'g',min:5,max:30}, doseOut:{title:'kpYield',unit:'g',min:10,max:80}, ratio:{title:'kpRatio',unit:'',min:1,max:4}, brewTemp:{title:'kpTemp',unit:'',min:TH_ABS_MIN,max:TH_ABS_MAX} };
+var KP_CFG={ doseIn:{title:'kpDose',unit:'g',get min(){ return doseRange()[0]; },get max(){ return doseRange()[1]; }}, doseOut:{title:'kpYield',unit:'g',get min(){ return Math.max(1,+settings.doseIn||1); },max:YIELD_MAX}, ratio:{title:'kpRatio',unit:'',min:1,max:RATIO_MAX}, brewTemp:{title:'kpTemp',unit:'',min:TH_ABS_MIN,max:TH_ABS_MAX} };
 function openKeypad(field){ var c=KP_CFG[field]; if(!c) return;
   if(field!=='doseOut'&&lockedSay()) return;
   if(field==='brewTemp'&&brewTempC()==null){ toast(t('noProfile'),'err'); return; }
@@ -10239,7 +10306,9 @@ function kpRender(){ document.getElementById('kpValue').textContent=KP.str.lengt
 function kpSyncTake(){
   var b=document.getElementById('kpTake'); if(!b) return;
   var o=(KP.field==='doseIn')?doseChipState():{show:false};
-  b.hidden=!o.show;
+  b.hidden=!(o.show&&o.live&&!o.done);
+  var rg=document.getElementById('kpRange');
+  if(rg) rg.classList.toggle('warn',!!o.show&&o.why==='chipRange');
   if(!o.show) return;
   if(o.live) b.removeAttribute('aria-disabled'); else b.setAttribute('aria-disabled','true');
   b.classList.toggle('done',o.done);
@@ -10248,7 +10317,7 @@ function kpSyncTake(){
 function kpTakeScale(){
   if(KP.field!=='doseIn') return;
   var o=doseChipState(); if(!o.show) return;
-  if(!o.live){ toast(t(o.why)); return; }
+  if(!o.live){ toast(doseWhyText(o.why)); return; }
   var w=o.w;
   KP.str=String(parseFloat(w.toFixed(1))); KP.fresh=true;
   kpRender(); kpSetRange(KP_CFG.doseIn.min,KP_CFG.doseIn.max,1); }
@@ -10277,7 +10346,8 @@ function kpConfirm(){ var v=parseFloat(KP.str);
   if(KP.field==='brewTemp'){ setBrewTempC(unconvTemp(v)); closeModal(null,'keypadOverlay'); return; }
   var c=KP_CFG[KP.field];
   v=Math.max(c.min,Math.min(c.max,v));
-  if(KP.field==='ratio'){ settings.doseOut=parseFloat((settings.doseIn*v).toFixed(1)); settings.doseOut=Math.max(10,Math.min(80,settings.doseOut)); }
+  if(KP.field==='ratio'){ settings.doseOut=clampYield(settings.doseIn*v); }
+  else if(KP.field==='doseOut'){ settings.doseOut=clampYield(v); }
   else if(KP.field==='doseIn'){ setDoseIn(v); }
   else { settings[KP.field]=parseFloat(v.toFixed(1)); }
   syncRecipe(); pushRecipe(); closeModal(null,'keypadOverlay'); }
@@ -10736,6 +10806,14 @@ function renderSpContent(){ var box=document.getElementById('spContent'); if(!bo
     h+='<div class="sp-cat-title">'+t('catScale')+'</div>';
     h+='<div class="set-desc" style="margin-bottom:12px">'+t('scaleDesc')+'</div>';
     h+=row('blockNoScale','blockNoScaleDesc',sw('setBlockNoScale',!!gwSettings.blockOnNoScale,'setBlockOnNoScale(this.checked)'));
+    var dr=doseRange();
+    h+=row('doseRange','doseRangeDesc','<div class="dose-range-set">'
+      +'<input id="setDoseMin" class="set-num" type="number" inputmode="decimal" min="1" max="60" step="0.5" value="'+dr[0]+'"'
+      +' onchange="setDoseRange(this.value,document.getElementById(\'setDoseMax\').value)">'
+      +'<span class="dr-sep">\u2013</span>'
+      +'<input id="setDoseMax" class="set-num" type="number" inputmode="decimal" min="1" max="60" step="0.5" value="'+dr[1]+'"'
+      +' onchange="setDoseRange(document.getElementById(\'setDoseMin\').value,this.value)">'
+      +'<span class="dr-u">g</span></div>');
     var spm=gwSettings.scalePowerMode||'disabled';
     h+=row('scalePower','scalePowerDesc','<select class="set-select" onchange="setScalePowerMode(this.value)">'
       +opt('disabled',t('spmNothing'),spm)+opt('displayOff',t('spmDisplayOff'),spm)+opt('disconnect',t('spmDisconnect'),spm)+'</select>');
@@ -22371,7 +22449,7 @@ function aiFbListHtml(){
     +escapeHtml(t('aiMemoryClear'))+'</button></div>'; }
 function renderAiFbBox(){ var box=document.getElementById('aiFbBox'); if(box) box.innerHTML=aiFbListHtml(); }
 var AI_FIELDS={grind:1,dose:1,yield:1,ratio:1,temp:1};
-var AI_LIM={dose:[5,30],yield:[10,80],ratio:[1,4],temp:[TH_ABS_MIN,TH_ABS_MAX]};
+var AI_LIM={dose:[5,30],yield:[1,200],ratio:[1,5],temp:[TH_ABS_MIN,TH_ABS_MAX]};
 // Whatever the model put in "apply" is a claim, not an instruction: it is kept
 // only if it names one of the five fields and a value the card could hold.
 function aiApplyOf(x){
@@ -22498,9 +22576,9 @@ function aiApplyOne(a){
     if(brewTempC()==null){ toast(t('aiApplyNoProfile'),'err'); return false; }
     setBrewTempC(+a.to); return true; }
   if(a.field==='dose'){ setDoseIn(+a.to); }
-  else if(a.field==='yield'){ settings.doseOut=Math.max(10,Math.min(80,parseFloat((+a.to).toFixed(1)))); }
+  else if(a.field==='yield'){ settings.doseOut=clampYield(+a.to); }
   else if(a.field==='ratio'){
-    settings.doseOut=Math.max(10,Math.min(80,parseFloat((settings.doseIn*(+a.to)).toFixed(1)))); }
+    settings.doseOut=clampYield(settings.doseIn*(+a.to)); }
   else return false;
   syncRecipe(); pushRecipe(); return true; }
 function applyAiSug(i){
@@ -23468,10 +23546,9 @@ function wfKp(field){
   openKeypadFor({ value:cur, dp:(field==='ratio'?2:1), min:c.min, max:c.max,
     title:t(field==='ratio'?'kpRatio':field==='doseIn'?'kpDose':'kpYield'),
     onOk:function(v){
-      if(field==='ratio'){ settings.doseOut=Math.max(10,Math.min(80,
-        parseFloat((settings.doseIn*v).toFixed(1)))); }
+      if(field==='ratio'){ settings.doseOut=clampYield(settings.doseIn*v); }
       else if(field==='doseIn') setDoseIn(v);
-      else settings.doseOut=Math.max(10,Math.min(80,parseFloat(v.toFixed(1))));
+      else settings.doseOut=clampYield(v);
       syncRecipe(); pushRecipe(); renderWf(); } }); }
 function wfWaterHtml(){
   return '<div class="wf-rows">'

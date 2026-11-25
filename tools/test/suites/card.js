@@ -287,19 +287,21 @@ test('mid shot the grinder card is locked and dimmed', function (T) {
   noGrinder();
 });
 
-// The yield is held to 10-80 g, so 80.0 is the longest yield the card shows;
-// a grinder can count to 999 and spin at 1500.
+// A recipe runs to 1:5, so 30 g makes 150.0, the longest yield the card
+// shows; a grinder can count to 999 and spin at 1500.
 test('the longest ordinary value still fits', function (T) {
   linkedRpmGrinder(999);
-  T.el('#doseOutVal').textContent = '80.0';
-  T.el('#doseInVal').textContent = '30.0';
+  var was = { i: settings.doseIn, o: settings.doseOut };
+  settings.doseIn = 30; settings.doseOut = 150; syncRecipe();
+  T.eq(T.el('#doseOutVal').textContent, '150.0', 'the longest yield');
   T.el('#ratioTag').textContent = '2.67';
-  [['#grindVal', '999'], ['#rpmVal', '1500'], ['#doseIn', '30.0'], ['#doseOut', '80.0'], ['#brewTempVal', 'temp'],
+  [['#grindVal', '999'], ['#rpmVal', '1500'], ['#doseIn', '30.0'], ['#doseOut', '150.0'], ['#brewTempVal', 'temp'],
    ['.rv', 'ratio']].forEach(function (pair) {
     var e = T.el(pair[0]);
     T.ok(!T.clipped(e), pair[1] + ' fits in ' + pair[0] + ' (wants ' + e.scrollWidth + ', has ' + e.clientWidth + ')');
   });
   noGrinder();
+  settings.doseIn = was.i; settings.doseOut = was.o;
   syncRecipe(); syncGrinder();
 });
 
@@ -487,5 +489,45 @@ test('no shots, no header count, and the title still says what the card is', fun
     T.eq(T.el('#lsToday').textContent, '', 'empty');
     T.ok(!!T.el('#lsStats .ls-empty'), 'and the empty message');
     T.eq(T.el('#lsProfile').textContent, t('lastShotT'), 'the title');
+  });
+});
+
+// ── The yield has no range of its own ─────────────────────────────────
+// Some recipes run to 1:5: 30 g makes 150 g. The yield is held only to at
+// least the dose and to 200 g, which a typo would have to go past.
+function withRecipe(dose, out, run) {
+  var was = { i: settings.doseIn, o: settings.doseOut, api: api };
+  api = function () { return Promise.resolve({}); };
+  settings.doseIn = dose; settings.doseOut = out; syncRecipe();
+  try { run(); } finally { settings.doseIn = was.i; settings.doseOut = was.o; api = was.api; syncRecipe(); }
+}
+test('a yield past 80 g is kept, from the buttons, the ratio and the keypads', function (T) {
+  withRecipe(20, 79.5, function () {
+    adjust('doseOut', 0.5); adjust('doseOut', 0.5);
+    T.eq(settings.doseOut, 80.5, 'the plus goes past 80');
+  });
+  withRecipe(20, 98, function () {
+    adjustRatio(0.1);
+    T.eq(settings.doseOut, 100, '1:4.9 to 1:5.0 is 100 g');
+    adjustRatio(0.1);
+    T.eq(settings.doseOut, 100, 'and 1:5 is as far as the ratio goes');
+  });
+  withRecipe(30, 60, function () {
+    openKeypad('ratio'); KP.str = '5'; KP.fresh = false; kpConfirm();
+    T.eq(settings.doseOut, 150, 'the ratio keypad takes 1:5 at 30 g');
+    openKeypad('doseOut'); KP.str = '180'; KP.fresh = false; kpConfirm();
+    T.eq(settings.doseOut, 180, 'the yield keypad takes 180');
+    openKeypad('doseOut'); KP.str = '900'; KP.fresh = false; kpConfirm();
+    T.eq(settings.doseOut, 200, 'a typo stops at 200');
+    openKeypad('doseOut'); KP.str = '12'; KP.fresh = false; kpConfirm();
+    T.eq(settings.doseOut, 30, 'and the yield is never under the dose');
+  });
+  T.eq(KP_CFG.ratio.max, 5, 'the ratio keypad reaches 1:5');
+});
+test('the card shows 1:5 whole', function (T) {
+  withRecipe(20, 100, function () {
+    T.eq(T.el('#doseOutVal').textContent, '100.0', 'the yield');
+    T.eq(T.el('#ratioTag').textContent.indexOf('5'), 0, 'the ratio: ' + T.el('#ratioTag').textContent);
+    ['#doseOut', '.rv'].forEach(function (s) { T.ok(!T.clipped(T.el(s)), s + ' fits'); });
   });
 });
