@@ -5904,30 +5904,7 @@ function initWebSockets(){
         chart.wflow.push(m.weightFlow!=null?m.weightFlow:deriveWeightFlow(m.weight,wts));
         if(chart.weight.length>chart.max){ chart.weight.shift(); chart.wflow.shift(); chart.wt.shift(); } } } });
   openWs('water','/ws/v1/machine/waterLevels',function(m){ state.water.current=m.currentLevel||0; state.water.refill=m.refillLevel||0; updateWaterUI(); });
-  openWs('devices','/ws/v1/devices',function(m){
-    var phase=m.connectionStatus&&m.connectionStatus.phase;
-    var scanning=(phase==='scanning'||phase==='connectingMachine'||phase==='connectingScale');
-    // A connected machine in the device list means we're connected, regardless of phase.
-    var machineConnected=false, scaleConnected=false, machineName=null, scaleName=null;
-    state.devices=devicesDuringScan(m.devices||[]);
-    if(m.devices){ m.devices.forEach(function(d){
-      if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; }
-      // A scale held as auxiliary is somebody else's; it is not the scale the shot is weighed on.
-      if(d.type==='scale'&&d.connectionRole!=='auxiliary'){ if(!scaleName||d.state==='connected') scaleName=d.name; if(d.state==='connected') scaleConnected=true; }
-    }); }
-    state.machineName=machineName; state.scaleName=scaleName;
-    var wasConnected=state.connected, wasScale=state.scaleConnected;
-    noteConnStages(machineConnected,scaleConnected);
-    state.connected=machineConnected||(phase==='ready');
-    state.scaleConnected=scaleConnected;
-    if(scaleConnected!==wasScale) syncWaterRoom();
-    syncThermoWs();
-    updateConnUI(state.connected?'on':(scanning?'ing':'off'));
-    var err=m.connectionStatus&&m.connectionStatus.error; if(err&&err.suggestion) toast(err.suggestion,'err');
-    if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); loadThermoPlugins(); }
-    applyChargingState(m.charging);
-    syncDosing();
-    updateShotBtn(); });
+  openWs('devices','/ws/v1/devices',devicesFrame);
   openWs('grinder','/ws/v1/grinder/snapshot',grinderFrame);
   openWs('shotState','/ws/v1/machine/shotState',shotStateFrame,{optional:true});
   openWs('display','/ws/v1/display',function(d){ if(d&&d.brightness!==undefined) displayState=d; });
@@ -6399,10 +6376,46 @@ function weightFit(txt){
 // set up and gone shows a dash rather than its last reading, and a tap opens
 // the devices instead of taring nothing; mid shot it says the shot will not
 // stop on weight. With no scale at all the block says so and offers Connect.
+function devicesFrame(m){
+    var phase=m.connectionStatus&&m.connectionStatus.phase;
+    var scanning=(phase==='scanning'||phase==='connectingMachine'||phase==='connectingScale');
+    // A connected machine in the device list means we're connected, regardless of phase.
+    var machineConnected=false, machineName=null;
+    state.devices=devicesDuringScan(m.devices||[]);
+    if(m.devices){ m.devices.forEach(function(d){
+      if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; } }); }
+    var bs=brewScaleOf(m.devices||[]), scaleConnected=!!bs&&bs.state==='connected';
+    state.machineName=machineName; state.scaleName=bs?(bs.name||bs.id):null;
+    var wasConnected=state.connected, wasScale=state.scaleConnected;
+    noteConnStages(machineConnected,scaleConnected);
+    state.connected=machineConnected||(phase==='ready');
+    state.scaleConnected=scaleConnected;
+    if(scaleConnected!==wasScale) syncWaterRoom();
+    syncThermoWs();
+    updateConnUI(state.connected?'on':(scanning?'ing':'off'));
+    var err=m.connectionStatus&&m.connectionStatus.error; if(err&&err.suggestion) toast(err.suggestion,'err');
+    if(state.connected&&!wasConnected){ loadMachineInfo(); loadWorkflow(); loadThermoPlugins(); }
+    applyChargingState(m.charging);
+    syncDosing();
+    updateShotBtn(); }
+// The scale a shot is weighed on, out of a device list: the one the gateway
+// holds as primary, else the one chosen for it. Never a scale held as
+// auxiliary or set up here as the dosing scale -- a dosing scale is connected
+// for a moment before the gateway tags it, and some gateways tag nothing. With
+// no role and no choice, a scale that is left may well be the brewing one.
+function brewScaleOf(list){
+  var all=(list||[]).filter(function(d){ return d&&d.type==='scale'; });
+  var aux=all.filter(function(d){ return d.connectionRole==='auxiliary'; })[0];
+  var dz=prefs.dosingScaleId||(aux?aux.id:'');
+  var sc=all.filter(function(d){ return d.connectionRole!=='auxiliary'&&d.id!==dz; });
+  var held=sc.filter(function(d){ return d.connectionRole==='primary'; })[0]; if(held) return held;
+  var pref=(gwSettings&&gwSettings.preferredScaleId)||'';
+  var chosen=(pref&&!scaleFamilyId(pref))?sc.filter(function(d){ return d.id===pref; })[0]:null;
+  if(chosen) return chosen;
+  return sc.filter(function(d){ return d.state==='connected'; })[0]||sc[0]||null; }
 function brewScaleName(){
   if(state.scaleName) return state.scaleName;
-  var d=(state.devices||[]).filter(function(x){ return x.type==='scale'&&x.connectionRole!=='auxiliary'
-    &&x.id!==dosingId()&&(x.connectionRole==='primary'||x.id===brewScaleId()); })[0];
+  var d=brewScaleOf(state.devices);
   return d?(d.name||d.id):''; }
 function syncWeightBlock(){
   var nm=document.getElementById('wsName'), tx=document.getElementById('wsNameT'),
@@ -23769,9 +23782,10 @@ function loadMachineSettings(){ api('GET','/api/v1/machine/settings').then(funct
 function loadDevices(){ api('GET','/api/v1/devices').then(function(list){
   console.log('[Aurora] loadDevices response:', list);
   if(!Array.isArray(list)){ toast(t('tDevicesBadResponse'),'err'); return; }
-  var machineConnected=false, scaleConnected=false, machineName=null, scaleName=null;
-  list.forEach(function(d){ if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; } if(d.type==='scale'){ if(!scaleName||d.state==='connected') scaleName=d.name; if(d.state==='connected') scaleConnected=true; } });
-  state.machineName=machineName; state.scaleName=scaleName;
+  var machineConnected=false, machineName=null;
+  list.forEach(function(d){ if(d.type==='machine'){ if(!machineName||d.state==='connected') machineName=d.name; if(d.state==='connected') machineConnected=true; } });
+  var bs=brewScaleOf(list), scaleConnected=!!bs&&bs.state==='connected';
+  state.machineName=machineName; state.scaleName=bs?(bs.name||bs.id):null;
   state.connected=machineConnected; state.scaleConnected=scaleConnected;
   noteConnStages(machineConnected,scaleConnected);
   syncWaterRoom();
