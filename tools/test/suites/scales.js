@@ -62,36 +62,36 @@ function dosingOnly(w) {
   if (w !== undefined) dosingFrame({ weight: w });
 }
 
-test('the dose shows the dosing scale\u2019s reading under the target', function (T) {
+test('the dose shows the dosing scale’s reading under the target, as a chip', function (T) {
   dosingOnly(17.84);
-  var now = T.el('#doseNow');
-  T.eq(now.textContent, '17.8g', 'the reading, to a tenth, and nothing else');
-  T.ok(T.el('#doseStack').classList.contains('dose-three'), 'the dose takes its third line');
-  T.ok(now.classList.contains('on'), 'marked live');
-  T.ok(T.el('#doseInVal').textContent !== now.textContent, 'the target is still its own number');
+  var chip = T.el('#doseChip');
+  T.ok(chip.offsetParent !== null, 'the chip is there');
+  T.ok(T.el('#doseChipV').textContent.indexOf('17.8') >= 0, 'the reading, to a tenth');
+  T.ok(!chip.hasAttribute('aria-disabled'), 'offered');
+  T.ok(T.el('#doseInVal').textContent.indexOf('17.8') < 0, 'the target is still its own number');
 });
 
 test('a zero is a reading, not nothing', function (T) {
   dosingOnly(0);
-  T.ok(T.el('#doseNow').textContent.indexOf('0.0') >= 0, 'an empty scale reads 0.0');
-  T.ok(T.el('#doseNow').classList.contains('on'), 'and is live');
+  T.eq(T.el('#doseChipV').textContent, t('chipEmpty'), 'an empty scale asks for the beans, not 0.0');
+  T.eq(T.el('#doseChip').getAttribute('aria-disabled'), 'true', 'and is not offered as a dose');
 });
 
-test('a dosing scale with no reading yet keeps its line, as a dash', function (T) {
+test('a dosing scale with no reading yet keeps its chip, as a dash', function (T) {
   dosingOnly();
-  T.eq(T.el('#doseNow').textContent, '\u2014', 'a dash');
-  T.eq(T.el('#doseNow').classList.contains('on'), false, 'not live');
-  T.ok(T.oh(T.el('#doseNow')) > 0, 'the line still takes its room');
+  T.eq(T.el('#doseChipV').textContent, t('chipDosingOff'), 'it says the dosing scale is not reading');
+  T.eq(T.el('#doseChip').getAttribute('aria-disabled'), 'true', 'not offered');
+  T.ok(T.oh(T.el('#doseChip')) > 0, 'the chip still takes its room');
 });
 
-test('without a dosing scale the dose is two lines, the brewing scale shown elsewhere', function (T) {
+test('without a dosing scale the brewing scale’s reading is the chip’s', function (T) {
   withScales([LUNAR]);
   prefs.dosingScaleId = '';
   state.dosingConnected = false; state.dosingWeight = null;
-  state.scaleConnected = true; state.scaleWeight = 12.3;
+  state.scaleConnected = true; state.scaleWeight = 12.3; state.scaleName = 'Lunar';
+  _doseRd.brew = null; noteDoseReading('brew', 12.3);
   syncDoseTake();
-  T.eq(T.el('#doseStack').classList.contains('dose-three'), false, 'no third line');
-  T.eq(T.oh(T.el('#doseNow')), 0, 'the reading takes no room');
+  T.ok(T.el('#doseChipV').textContent.indexOf('12.3') >= 0, 'the brewing scale’s reading');
   state.scaleConnected = false; state.scaleWeight = null;
   syncDoseTake();
 });
@@ -108,9 +108,8 @@ test('a tap takes the dosing scale\u2019s reading with no brewing scale about', 
 
 test('the dosing scale\u2019s name comes up with its first reading', function (T) {
   dosingOnly();
-  T.el('#devDose').textContent = '';
-  dosingFrame({ weight: 1 });
-  T.ok(T.el('#devDose').textContent.indexOf('Bench') >= 0, 'named without waiting for a device refresh');
+  dosingFrame({ weight: 18.1 });
+  T.ok(T.el('#doseChipV').textContent.indexOf('Bench') >= 0, 'named on the bar without waiting for a device refresh');
   state.dosingConnected = false; state.dosingWeight = null; syncDoseTake();
 });
 
@@ -124,8 +123,7 @@ test('a scale the gateway already holds as the dosing scale is read without bein
   T.eq(dosingDevice() && dosingDevice().id, 'Bench', 'and is the dosing device');
   dosingFrame({ status: 'connected' });
   dosingFrame({ weight: 18.2 });
-  T.eq(T.el('#doseNow').textContent, '18.2g', 'its reading shows on the dose');
-  T.ok(T.el('#doseStack').classList.contains('dose-three'), 'on its own line');
+  T.ok(T.el('#doseChipV').textContent.indexOf('18.2') >= 0, 'its reading shows on the dose chip');
 });
 
 test('a choice made here still wins over another held scale', function (T) {

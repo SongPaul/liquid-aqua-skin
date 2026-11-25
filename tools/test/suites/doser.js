@@ -6,14 +6,14 @@ var DZ_PLUGIN = 'redxkey.reaplugin';
 function dzId(n) { return 'plugin:' + DZ_PLUGIN + ':module:aa:bb:cc:dd:ee:0' + n; }
 
 function dzStub(reply, run) {
-  var real = api, realConfirm = window.confirm, got = [];
+  var real = api, realConfirm = laConfirm, got = [];
   api = function (method, path, body) {
     got.push({ method: method, path: path, body: body });
     return Promise.resolve(typeof reply === 'function' ? reply(method, path, body) : reply);
   };
   return Promise.resolve().then(run).then(function (v) {
-    api = real; window.confirm = realConfirm; return got;
-  }, function (e) { api = real; window.confirm = realConfirm; throw e; });
+    api = real; laConfirm = realConfirm; return got;
+  }, function (e) { api = real; laConfirm = realConfirm; throw e; });
 }
 
 function dzFleet(connected, spare) {
@@ -119,7 +119,7 @@ test('dispense all sends each module with grams, and skips the empty ones', func
   dzFleet(3);
   setDoserGrams(dzId(1), 9); setDoserGrams(dzId(2), 0); setDoserGrams(dzId(3), 7.5);
   return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
-    window.confirm = function () { return true; };
+    laConfirm = function () { return Promise.resolve(true); };
     return doserDispenseAll();
   }).then(function (got) {
     T.eq(got.map(function (c) { return decodeURIComponent(c.path.split('/')[4]) + '=' + c.body.params.grams; }).join(' '),
@@ -136,7 +136,7 @@ test('an uncertain dispense is not repeated without asking', function (T) {
   }).then(function () {
     T.eq(_doserStatus[dzId(1)].kind, 'uncertain', 'marked uncertain');
     return dzStub({}, function () {
-      window.confirm = function () { return false; };
+      laConfirm = function () { return Promise.resolve(false); };
       return doserDispense(dzId(1));
     });
   }).then(function (got) {
@@ -221,6 +221,92 @@ test('without modules the bean card comes back', function (T) {
   T.ok(T.el('#dzTabs').hidden, 'tabs gone');
   T.ok(T.el('#dzPanel').hidden, 'panel gone');
   T.ok(!T.el('#beanInfo').classList.contains('dz-mod'), 'the bean is back');
+});
+
+// The two tabs are the skin's segmented control: a well with the open one
+// lifted out of it, set at the stage's smallest size or above.
+test('the bean card tabs are the shared segmented control', function (T) {
+  dzFleet(2);
+  function segBox() { return T.box(T.el("#dzTabs .ep-pump-toggle")); }
+  var seg = T.el("#dzTabs .ep-pump-toggle");
+  T.ok(!!seg, 'a segmented control');
+  T.eq(T.all('#dzTabs .ep-pump-toggle .dz-tab').length, 2, 'holding both tabs');
+  var on = T.el('#dzTabs .dz-tab.on'), off = T.el('#dzTabs .dz-tab:not(.on)');
+  T.ok(T.css(on, 'backgroundColor') !== T.css(off, 'backgroundColor'), 'the open one is lifted out');
+  T.all('#dzTabs .dz-tab').forEach(function (b, i) {
+    T.ok(parseFloat(T.css(b, 'fontSize')) >= 15, 'tab ' + i + ' at ' + T.css(b, 'fontSize'));
+  });
+  pickDzTab('x');
+  T.ok(T.el('#dzTabs .dz-xtab').classList.contains('on'), 'XDOSING open');
+  T.near(T.box(T.el('#doserAllBtn')).top + T.box(T.el('#doserAllBtn')).height / 2,
+    segBox().top + segBox().height / 2, 2, 'dispense all level with the tabs');
+  pickDzTab('');
+});
+
+function dzView() {
+  var c = T.box(T.el('#beanInfo')), l = T.box(T.el('.lastshot-card'));
+  return { top: c.top, bottom: Math.min(c.bottom, l.top) };
+}
+function dzWhole(T, sel, v, what) {
+  T.all(sel).forEach(function (e, i) {
+    if (!e.offsetParent) return;
+    var b = T.box(e);
+    T.ok(b.top >= v.top - 1 && b.bottom <= v.bottom + 1, what + ' ' + sel + '[' + i + '] at '
+      + Math.round(b.top) + '-' + Math.round(b.bottom) + ', the card shows ' + Math.round(v.top) + '-' + Math.round(v.bottom));
+  });
+}
+
+// The column is as tall as the screen; two tabs over the bean must not push
+// the rest badge, the origin or the change button under the last shot.
+test('with two modules the bean tab shows the bean whole', function (T) {
+  dzFleet(2);
+  var bean = { id: 'dz-bean', name: '파나마 에스메랄다 게이샤', roaster: '모모스커피', country: 'Colombia',
+    region: 'Huila', processing: 'Anaerobic' };
+  var was = { cb: currentBean, bf: bagFor, n: context.coffeeName, r: context.coffeeRoaster };
+  currentBean = function () { return bean; };
+  bagFor = function () { return { id: 'dz-bag', roastDate: new Date(Date.now() - 9 * 86400000).toISOString(), roastLevel: 'Light' }; };
+  context.coffeeName = bean.name; context.coffeeRoaster = bean.roaster;
+  try {
+    updateBeanInfo();
+    var v = dzView();
+    ['#beanName', '#beanRest', '#beanSub .bean-orig', '#beanInfo .bean-edit'].forEach(function (s) {
+      T.ok(!!T.el(s) && T.el(s).offsetParent !== null, s + ' shows');
+    });
+    dzWhole(T, '#dzTabs button, #beanName, #beanRest, #beanSub .bean-orig, #beanInfo .bean-edit', v, 'bean tab');
+    dzWhole(T, '#beanChips .bean-fact .k, #beanChips .bean-fact .v', v, 'bean tab fact');
+    var bi = T.el('#beanInfo');
+    T.ok(bi.scrollHeight <= bi.clientHeight + 1, 'nothing hangs out (needs ' + bi.scrollHeight + ', has ' + bi.clientHeight + ')');
+  } finally {
+    currentBean = was.cb; bagFor = was.bf; context.coffeeName = was.n; context.coffeeRoaster = was.r;
+    updateBeanInfo();
+  }
+});
+
+test('XDOSING keeps its tabs and dispense all in view, and every module reachable', function (T) {
+  [2, 4].forEach(function (n) {
+    dzFleet(n);
+    pickDzTab('x');
+    var v = dzView();
+    dzWhole(T, '#dzTabs button, #doserAllBtn', v, n + ' modules');
+    T.ok(!T.el('#doserAllBtn').disabled || doserTotal() === 0, n + ': dispense all can be pressed');
+    var p = T.el('#dzPanel');
+    T.ok(T.box(p).bottom <= v.bottom + 1, n + ': the list ends inside the card');
+    var rows = T.all('#dzPanel .dz-row');
+    T.eq(rows.length, n, n + ': every module is listed');
+    rows.forEach(function (r, i) {
+      p.scrollTop = r.offsetTop - p.offsetTop;
+      var b = T.box(r), q = T.box(p);
+      T.ok(b.top >= q.top - 1 && b.bottom <= q.bottom + 1, n + ': module ' + (i + 1) + ' can be scrolled into view');
+    });
+    p.scrollTop = 0;
+    var q = T.box(p), seen = rows.filter(function (r) {
+      var b = T.box(r); return b.top >= q.top - 1 && b.bottom <= q.bottom + 1; }).length;
+    T.ok(seen >= 2, n + ': at least two modules show without scrolling, saw ' + seen);
+    var bi = T.el('#beanInfo');
+    T.eq(bi.scrollTop, 0, n + ': the card itself does not scroll the tabs away');
+    T.ok(bi.scrollHeight <= bi.clientHeight + 1, n + ': the list scrolls, not the card');
+  });
+  pickDzTab('');
 });
 
 function dzBeans(run) {
@@ -381,7 +467,7 @@ test('a failed dispense leaves the bean alone, and dispense all takes the bigges
       .then(function (got) {
         T.eq(dzWf(got).length, 0, 'no bean from a failed dispense');
         return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
-          window.confirm = function () { return true; };
+          laConfirm = function () { return Promise.resolve(true); };
           return doserDispenseAll();
         });
       }).then(function (got) {
@@ -397,7 +483,7 @@ test('dispense all asks first, naming what each module will pour', function (T) 
   setDoserGrams(dzId(1), 9); setDoserGrams(dzId(2), 7.5);
   var asked = '';
   return dzStub({ status: 'ok', result: { result: 'ok' } }, function () {
-    window.confirm = function (m) { asked = m; return false; };
+    laConfirm = function (o) { asked = o.title + ' ' + (o.body || ''); return Promise.resolve(false); };
     return doserDispenseAll();
   }).then(function (got) {
     T.eq(got.length, 0, 'declined, nothing sent');
@@ -410,7 +496,7 @@ test('the header button carries the thermometer and the doser when they are in u
   setPluginDevices([]); _thermoPlugins = []; state.devices = [];
   updateConnUI('on');
   T.ok(T.el('#cgThermo').hidden && T.el('#cgDoser').hidden, 'neither without its plugin');
-  T.eq(T.css(T.el('#btnConnect .conn-grid'), 'gridTemplateColumns').split(' ').length, 2, 'two columns for four');
+  T.eq(T.all('#btnConnect .cglyph').filter(function (g) { return g.offsetParent; }).length, 4, 'four on the row');
   dzFleet(2);
   setThermoPlugins(['lebrew-temp.reaplugin']);
   state.devices = state.devices.concat([{ id: 'plugin:lebrew-temp.reaplugin:lebrew:aa', name: 'LEBREW TEMP',
@@ -420,7 +506,8 @@ test('the header button carries the thermometer and the doser when they are in u
   T.ok(T.el('#cgThermo').classList.contains('up'), 'the thermometer is connected');
   T.ok(T.el('#cgDoser').classList.contains('up'), 'modules are connected');
   T.ok(T.el('#cgDoser').title.indexOf('2') >= 0, 'the title counts them: ' + T.el('#cgDoser').title);
-  T.eq(T.css(T.el('#btnConnect .conn-grid'), 'gridTemplateColumns').split(' ').length, 3, 'three columns for six');
+  T.eq(T.all('#btnConnect .cglyph').filter(function (g) { return g.offsetParent; }).length, 6, 'six on the row');
+  T.near(T.top(T.el('#cgThermo')), T.top(T.el('#cgMachine')), 1, 'in one line');
   setThermoPlugins([]); setPluginDevices([]); state.devices = [];
   updateConnUI('on');
 });

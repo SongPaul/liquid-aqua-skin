@@ -20,7 +20,7 @@ function b3Ago(n) { return new Date(Date.now() - n * 86400000).toISOString(); }
 function withB3(opts, run) {
   var was = { beans: beans, all: beansAll, list: beanBatchList, latest: beanBatches, grinders: grinders,
     ctx: JSON.parse(JSON.stringify(context)), sel: bgSel, tab: bgTab, main: _bgFromMain, filt: bgFilter, sort: bgSort,
-    multi: bgMulti, api: api, load: loadBeansGrinders, confirm: window.confirm,
+    multi: bgMulti, api: api, load: loadBeansGrinders, confirm: laConfirm,
     fav: localStorage.getItem('aurora_beanfav'), mem: localStorage.getItem('aurora_grindmem') };
   beansAll = [{ id: 'k-a', roaster: 'Alpha', name: 'Apple' },
               { id: 'k-b', roaster: 'Beta', name: 'Banana' },
@@ -39,7 +39,7 @@ function withB3(opts, run) {
   localStorage.removeItem('aurora_beanfav'); localStorage.removeItem('aurora_grindmem');
   bgFilter = 'all'; bgSort = 'smart'; bgMulti = false; _bgFromMain = false;
   loadBeansGrinders = function () { return Promise.resolve(); };
-  window.confirm = function () { return true; };
+  laConfirm = function () { return Promise.resolve(true); };
   var gw = b3Api(opts); api = gw;
   _bagUse = {};
   function back() {
@@ -47,7 +47,7 @@ function withB3(opts, run) {
     Object.keys(context).forEach(function (k) { delete context[k]; });
     Object.assign(context, was.ctx);
     bgSel = was.sel; bgTab = was.tab; _bgFromMain = was.main; bgFilter = was.filt; bgSort = was.sort; bgMulti = was.multi;
-    api = was.api; loadBeansGrinders = was.load; window.confirm = was.confirm;
+    api = was.api; loadBeansGrinders = was.load; laConfirm = was.confirm;
     ['aurora_beanfav', 'aurora_grindmem'].forEach(function (k, i) {
       var v = i ? was.mem : was.fav; if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); });
     document.getElementById('useSetOverlay').classList.remove('show');
@@ -151,28 +151,31 @@ test('choosing a bean leaves the grind and offers the one it was last pulled at'
   });
 });
 
-test('choosing a grinder leaves the grind and offers the bean in use on it', function (T) {
+// A grind is a number on one grinder's dial, so a grinder picked brings back
+// its own -- for the bean in use first -- rather than keeping the last
+// grinder's number on the card. Undo takes both back.
+test('choosing a grinder brings back its grind for the bean in use', function (T) {
   return withB3({}, function (gw) {
     Object.assign(context, { coffeeName: 'Banana', coffeeRoaster: 'Beta', beanBatchId: 'kb-1' });
     rememberGrind({ workflow: { context: { beanBatchId: 'kb-1', grinderId: 'kg-2', grinderSetting: '7.2' } } });
     b3Open('grinder');
     document.querySelector('#bgList .bg-card[data-id="kg-2"]').click();
     return b3Wait(60).then(function () {
-      T.eq(b3GrindPuts(gw).length, 0, 'no grind written');
-      T.eq(context.grinderSetting, '15', 'the card keeps its grind');
-      T.ok(b3Acts().some(function (b) { return b.textContent === t('grindOffer').replace('{s}', '7.2'); }),
-        'the bean on this grinder, not the grinder\u2019s own last setting');
+      var puts = b3GrindPuts(gw);
+      T.eq(puts.length, 1, 'written once, with the grinder');
+      T.eq(puts[0] && puts[0].context.grinderId, 'kg-2', 'the grinder');
+      T.eq(context.grinderSetting, '7.2', 'and this bean\u2019s grind on it, not the card\u2019s 15');
+      T.ok(b3Acts().some(function (b) { return b.textContent === t('undo'); }), 'with an undo');
     });
   });
 });
 
-test('nothing remembered, the grinder offers its own setting', function (T) {
+test('nothing remembered, the grinder brings its own setting', function (T) {
   return withB3({}, function (gw) {
     b3Open('grinder');
     document.querySelector('#bgList .bg-card[data-id="kg-2"]').click();
     return b3Wait(60).then(function () {
-      T.eq(b3GrindPuts(gw).length, 0, 'no grind written');
-      T.ok(b3Acts().some(function (b) { return b.textContent === t('grindOffer').replace('{s}', '8'); }), 'offers 8');
+      T.eq(context.grinderSetting, '8', 'the grinder\u2019s own 8');
     });
   });
 });

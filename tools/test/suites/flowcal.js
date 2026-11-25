@@ -11,10 +11,10 @@ function fcApi(value) {
   return fake;
 }
 function fcWith(fake, run) {
-  var real = { api: api, confirm: window.confirm };
-  api = fake; window.confirm = function () { return true; };
-  return Promise.resolve().then(function () { return run(fake); }).then(function (v) { api = real.api; window.confirm = real.confirm; return v; },
-    function (e) { api = real.api; window.confirm = real.confirm; throw e; });
+  var real = { api: api, confirm: laConfirm };
+  api = fake; laConfirm = function () { return Promise.resolve(true); };
+  return Promise.resolve().then(function () { return run(fake); }).then(function (v) { api = real.api; laConfirm = real.confirm; return v; },
+    function (e) { api = real.api; laConfirm = real.confirm; throw e; });
 }
 function fcWait() { return new Promise(function (r) { setTimeout(r, 40); }); }
 function fcPosts(sent, path) {

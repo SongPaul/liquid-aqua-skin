@@ -12,7 +12,8 @@ test('a refill kit that gave up is named as such, not as an empty tank', functio
   machineTo('idle', 'ready');
   machineTo('needsWater', 'refillStopped');
   T.eq(lastToastText().indexOf(t('refillStoppedToast')) >= 0, true, 'the toast names the refill kit');
-  T.eq(T.el('#tankLbl').textContent, t('refillStoppedLbl'), 'the tank label too');
+  T.eq(T.el('#hsSub').textContent, t('refillStoppedLbl'), 'the state line too');
+  T.eq(T.el('#tankLbl').textContent, t('tank'), 'and the tank keeps its own name');
   machineTo('idle', 'ready');
 });
 
@@ -20,7 +21,8 @@ test('an empty tank keeps the out-of-water words', function (T) {
   machineTo('idle', 'ready');
   machineTo('needsWater', 'idle');
   T.eq(lastToastText().indexOf(t('needsWaterToast')) >= 0, true, 'out of water');
-  T.eq(T.el('#tankLbl').textContent, t('needsWater'), 'tank label');
+  T.eq(T.el('#hsName').textContent, t('stRefill'), 'the state line says it');
+  T.eq(T.el('#tankLbl').textContent, t('tank'), 'the tank keeps its name');
   machineTo('needsWater', 'refillStopped');
   T.eq(lastToastText().indexOf(t('refillStoppedToast')) >= 0, true, 'a later give-up is announced even with the state unchanged');
   machineTo('idle', 'ready');

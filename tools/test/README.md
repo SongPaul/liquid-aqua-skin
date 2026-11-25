@@ -68,7 +68,8 @@ style.
 
 | Suite | Covers |
 |---|---|
-| `card` | the recipe card: caption on the number between the buttons, the two groups behind a rule, rows lining up across groups, device names shown whole |
+| `card` | the recipe card: one device row over three settings by two, caption and number on a line with the buttons under them, rows level, the stop condition in its own cell, the last shot's readings |
+| `mainscreen` | the header's machine state, the device icons, the recipe locked mid shot but for the yield, the scale reading offered as a button on the card and in the dose keypad, unset scales not named, the bean card's rest badge and pick button, 15px type on the stage |
 | `devices` | the connection sheet: four roles two by two, what holds each, which call each button makes, nothing actionable mid-shot |
 | `thermo` | a plugin thermometer: its cell in the sheet, the milk reading and target on the steam card, the stop at the target |
 | `doser` | RedxKey dosing modules: their cell in the sheet, the four-module limit, grams per module, dispense one or all, an uncertain dispense asked about before it is repeated, the bean card's XDOSING tab with every module, a bean per module that becomes the recipe's bean when it pours or is used |

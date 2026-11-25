@@ -116,7 +116,12 @@ def run_suite(name, port, budget=20000):
     m = re.search(r'<pre id="__test">BEGIN\n(.*?)\n(GREEN|RED)\nFINISH</pre>', dom, re.S)
     if not m:
         return name, None, 'suite produced no result (page failed to boot?)'
-    return name, m.group(2) == 'GREEN', m.group(1)
+    body = m.group(1)
+    # A suite that registered nothing -- a syntax error stops every test()
+    # call -- reports 0/0 and green. It ran nothing, so it does not pass.
+    if re.search(r'^0/0 passed', body, re.M):
+        return name, False, body + '\nno tests ran (syntax error in the suite?)'
+    return name, m.group(2) == 'GREEN', body
 
 
 def main(argv):

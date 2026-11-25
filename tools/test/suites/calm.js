@@ -8,9 +8,10 @@ function calmRun(flag, run) {
   try { return run(); } finally { keys.forEach(function (k) { state[k] = old[k]; }); }
 }
 
-test('bubbles rise only while water runs', function (T) {
+test('bubbles rise only while a shot runs', function (T) {
   calmRun(null, function () { T.eq(tankBubblesShown(), 0, 'none at rest'); });
-  calmRun('steamRunning', function () { T.ok(tankBubblesShown() > 0, 'some while steaming'); });
+  calmRun('steamRunning', function () { T.eq(tankBubblesShown(), 0, 'none for steam: it has its wisps'); });
+  calmRun('shotRunning', function () { T.ok(tankBubblesShown() > 0, 'some while a shot runs'); });
 });
 
 test('the loaded cover is drawn once, not kept moving', function (T) {

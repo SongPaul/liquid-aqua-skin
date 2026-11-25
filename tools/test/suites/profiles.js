@@ -405,3 +405,549 @@ test('the exit value line takes a row of its own and keeps its value inside', fu
   T.ok(v.right <= b.right + 1, 'the value stays inside the panel: ' + v.right + ' <= ' + b.right);
   shut();
 });
+
+// ---- The editor's own state ---------------------------------------------
+// Profiles made here carry ids starting "lat:" so they can be told apart from
+// the gateway's and taken out again.
+function mkProf(id, n, extra) {
+  var steps = [];
+  for (var i = 0; i < (n || 1); i++) steps.push({ name: 'S' + i, pump: 'pressure', transition: 'fast',
+    pressure: 6 + i, temperature: 90, seconds: 5, volume: 0, sensor: 'water' });
+  var p = { id: id, isDefault: false, visibility: 'visible', metadata: {}, profile: { title: 'LA Test ' + id,
+    author: '', notes: '', beverage_type: 'espresso', target_weight: 36, target_volume: 0,
+    tank_temperature: 0, target_volume_count_start: 0, steps: steps } };
+  if (extra) extra(p);
+  return p;
+}
+function openP(p) { openEditPageFor(p, p); }
+function later(ms) { return new Promise(function (r) { setTimeout(r, ms || 200); }); }
+function dropFakes() {
+  allProfiles = allProfiles.filter(function (p) { return String(p.id).indexOf('lat:') !== 0; });
+  editing = null; _epLeaveFn = null; closeModal(null, 'epDirtyOverlay');
+}
+function toastText() { return T.el('#toast').textContent; }
+
+// The gateway's side of a save, played here: every write is recorded and
+// answered the way the gateway answers it, and the profile list is read from
+// what the case holds, so a reload after a save does not lose its profiles.
+var _fakeN = 0;
+function fakeGw(over) {
+  var seen = [], prev = window.fetch;
+  function reply(v) {
+    return Promise.resolve(new Response(JSON.stringify(v == null ? {} : v),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }));
+  }
+  window.fetch = function (input, init) {
+    var m = ((init && init.method) || 'GET').toUpperCase();
+    var u = String(input).replace(/^https?:\/\/[^/]+/, '');
+    if (m === 'GET' && u.indexOf('/api/v1/profiles?') === 0) return reply(allProfiles);
+    var one = /^\/api\/v1\/profiles\/([^/?]+)$/.exec(u);
+    if (m === 'GET' && one) {
+      seen.push({ m: m, u: u, b: null });
+      var g = over && over(m, u, null);
+      if (g !== undefined) return reply(g);
+      return reply(allProfiles.filter(function (x) { return x.id === decodeURIComponent(one[1]); })[0] || {});
+    }
+    if (m === 'GET') return prev.apply(window, arguments);
+    var b = init && init.body ? JSON.parse(init.body) : null;
+    seen.push({ m: m, u: u, b: b });
+    var r = over && over(m, u, b);
+    if (r !== undefined) return (r && r.then) ? r.then(reply) : reply(r);
+    if (m === 'POST' && u === '/api/v1/profiles')
+      return reply({ id: 'lat:v' + (++_fakeN), visibility: 'visible', isDefault: false,
+        parentId: b.parentId || null, profile: b.profile, metadata: b.metadata || {} });
+    var pm = /^\/api\/v1\/profiles\/([^/]+)$/.exec(u);
+    if (m === 'PUT' && pm) {
+      var id = decodeURIComponent(pm[1]);
+      var k = allProfiles.filter(function (x) { return x.id === id; })[0] || {};
+      return reply({ id: id, visibility: k.visibility || 'visible', isDefault: !!k.isDefault,
+        profile: b.profile || k.profile, metadata: ('metadata' in b) ? b.metadata : (k.metadata || {}) });
+    }
+    return reply({});
+  };
+  return {
+    seen: seen,
+    done: function () { window.fetch = prev; },
+    sent: function (m, re) { return seen.filter(function (s) { return s.m === m && re.test(s.u); }); }
+  };
+}
+
+test('a number tapped in the table and then cancelled leaves the selected step alone', function (T) {
+  var p = mkProf('lat:a', 3); openP(p); stepSel(0);
+  T.el('#epStepGrid tr.gr[data-i="2"] td[data-k] .gv').onclick();
+  closeModal(null, 'keypadOverlay');
+  T.eq(epStepIdx, 0, 'still on the first step');
+  T.el('#epPump button[data-v="flow"]').onclick();
+  T.eq(editing.profile.steps[0].pump, 'flow', 'the panel changes the step it shows');
+  T.eq(editing.profile.steps[2].pump, 'pressure', 'and not the one tapped');
+  dropFakes(); shut();
+});
+
+test('deleting a step above the selected one keeps the same step selected', function (T) {
+  var p = mkProf('lat:b', 4); openP(p); stepSel(2);
+  delStepAt(0);
+  T.eq(editing.profile.steps[epStepIdx].name, 'S2', 'the step that was selected');
+  dropFakes(); shut();
+});
+
+test('another profile opens on its first step, without the last draft note', function (T) {
+  var p = mkProf('lat:e1', 5); openP(p); stepSel(3);
+  aipResult = { why: 'leftover', time: '', adjust: [] };
+  openP(mkProf('lat:e2', 5));
+  T.eq(epStepIdx, 0, 'the first step');
+  T.eq(!!T.el('#epEditor .aip-out'), false, 'no AI note from before');
+  aipResult = { why: 'leftover', time: '', adjust: [] };
+  newProfile();
+  T.eq(aipResult, null, 'a new profile starts clean too');
+  dropFakes(); shut();
+});
+
+test('sweeping the exit value redraws the exit column, and the value cannot be 0', function (T) {
+  var p = mkProf('lat:f', 1, function (q) { q.profile.steps[0].exit = { type: 'flow', condition: 'over', value: 2 }; });
+  openP(p); stepSel(0);
+  var s = T.el('#epExitVal');
+  T.eq(s.min, '0.1', 'the slider stops at 0.1');
+  s.value = '5'; s.oninput.call(s);
+  T.ok(/5/.test(T.el('#epStepGrid tr.gr[data-i="0"] td.xc').textContent), 'the column shows 5');
+  s.parentElement.querySelector('.val').onclick();
+  T.eq(KP.cb && KP.cb.min, 0.1, 'and so does the keypad');
+  closeModal(null, 'keypadOverlay');
+  dropFakes(); shut();
+});
+
+test('a text-number profile opened and left alone has no changes', function (T) {
+  var p = mkProf('lat:g', 1, function (q) { q.profile.steps[0].pressure = '9.0'; q.profile.target_weight = '36'; });
+  allProfiles.push(p); openP(p);
+  T.eq(epDirty(), false, 'nothing changed');
+  T.eq(T.el('#epDirtyMark').hidden, true, 'and nothing says so');
+  dropFakes(); shut();
+});
+
+test('a profile id with a quote does not break the buttons that carry it', function (T) {
+  var p = mkProf("lat:h'x", 1); allProfiles.push(p); openP(p);
+  var attrs = T.all('#epEditor [onclick*="lat:h"],#epEditor [onkeydown*="lat:h"],#epEditor [onchange*="lat:h"]')
+    .map(function (e) { return e.getAttribute('onclick') || e.getAttribute('onkeydown') || e.getAttribute('onchange'); });
+  T.ok(attrs.length >= 3, 'the tag, colour and roast buttons carry the id: ' + attrs.length);
+  attrs.forEach(function (a) { T.ok(a.indexOf("h\\'x") >= 0, 'escaped: ' + a); });
+  dropFakes(); shut();
+});
+
+test('the notes placeholder and an unnamed step are in the page language', function (T) {
+  var was = prefs.lang; setLang('ko');
+  var p = mkProf('lat:i', 1, function (q) { q.profile.steps[0].name = ''; }); openP(p); stepSel(0);
+  T.eq(T.el('#epNotes').getAttribute('placeholder'), t('notesLabel') + '…', 'notes');
+  T.ok(T.el('#epStepEditor .who').textContent.indexOf('Step') < 0, 'step: ' + T.el('#epStepEditor .who').textContent);
+  setLang(was); dropFakes(); shut();
+});
+
+test('the limiter value opens the keypad like every other value', function (T) {
+  var p = mkProf('lat:j', 1); openP(p); stepSel(0);
+  // no limiter is an add chip now; it asks for the value on the keypad
+  T.el('#epStepEditor [data-add="limv"]').onclick();
+  T.eq(T.el('#keypadOverlay').classList.contains('show'), true, 'the keypad is up');
+  KP.str = '3.5'; kpConfirm();
+  T.eq(editing.profile.steps[0].limiter && editing.profile.steps[0].limiter.value, 3.5, 'the limiter is set');
+  dropFakes(); shut();
+});
+
+test('a temperature of 0 reads the same in the table, the slider and the keypad', function (T) {
+  var p = mkProf('lat:l', 1, function (q) { q.profile.steps[0].temperature = 0; }); openP(p); stepSel(0);
+  var row = T.el('#epStepEditor input[data-k="temperature"]').parentElement;
+  T.eq(row.querySelector('.val').textContent, '0.0', 'slider');
+  T.eq(T.el('#epStepGrid tr.gr[data-i="0"] td[data-k="temperature"]').textContent.indexOf('0.0'), 0, 'table');
+  row.querySelector('.val').onclick();
+  T.eq(KP.str, '0', 'keypad');
+  closeModal(null, 'keypadOverlay');
+  dropFakes(); shut();
+});
+
+test('counting volume from a step sends where that step is in the profile', function (T) {
+  var p = mkProf('lat:vol', 4); openP(p); epAdvOpen = true; renderEpEditor();
+  var opts = T.all('#epTVS option');
+  T.eq(opts[0].value + ' ' + opts[0].textContent, '0 ' + t('volCountNone'), 'the start is the first step');
+  var third = opts.filter(function (o) { return /^3\./.test(o.textContent); })[0];
+  T.eq(third && third.value, '2', 'step 3 is frame 2');
+  editing.profile.target_volume_count_start = 2;
+  delStepAt(0);
+  T.eq(editing.profile.target_volume_count_start, 1, 'the mark moves with its step');
+  T.eq(editing.profile.steps[1].name, 'S2', 'which is still S2');
+  delStepAt(1);
+  T.eq(editing.profile.target_volume_count_start, 0, 'its step gone, it falls back to the one before');
+  epAdvOpen = false; dropFakes(); shut();
+});
+
+test('a profile holds twenty steps at most', function (T) {
+  var p = mkProf('lat:cap', 20); openP(p);
+  T.eq(T.el('#epEditor .ep-step-add').disabled, true, 'adding is off');
+  // duplicating lives in the step's menu now, not on every row
+  T.eq(T.el('#epStepMenu [data-dup="0"]').disabled, true, 'so is duplicating');
+  addStep(); stepDup(0);
+  T.eq(editing.profile.steps.length, 20, 'still twenty');
+  delStepAt(19);
+  T.eq(T.el('#epEditor .ep-step-add').disabled, false, 'one fewer and adding is back');
+  dropFakes(); shut();
+});
+
+test('a temperature or time typed in lands on what the machine can hold', function (T) {
+  var p = mkProf('lat:rnd', 2); openP(p); stepSel(0);
+  T.el('#epStepGrid tr.gr[data-i="0"] td[data-k="temperature"] .gv').onclick();
+  KP.str = '92.3'; kpConfirm();
+  T.eq(editing.profile.steps[0].temperature, 92.5, 'half a degree');
+  T.el('#epStepGrid tr.gr[data-i="0"] td[data-k="seconds"] .gv').onclick();
+  KP.str = '20.4'; kpConfirm();
+  T.eq(editing.profile.steps[0].seconds, 20, 'whole seconds from 12.75 s');
+  T.el('#epStepGrid tr.gr[data-i="1"] td[data-k="seconds"] .gv').onclick();
+  KP.str = '4.37'; kpConfirm();
+  T.eq(editing.profile.steps[1].seconds, 4.4, 'tenths below it');
+  dropFakes(); shut();
+});
+
+test('a save rounds what came in from elsewhere, and shows it', function (T) {
+  var p = mkProf('lat:rnd2', 1, function (q) { q.profile.steps[0].temperature = 92.3; q.profile.steps[0].seconds = 20.4; });
+  allProfiles.push(p);
+  var gw = fakeGw();
+  openP(p); editing.profile.steps[0].pressure = 8; saveProfilePage();
+  return later().then(function () {
+    gw.done();
+    var post = gw.sent('POST', /^\/api\/v1\/profiles$/)[0];
+    T.ok(!!post, 'saved');
+    T.eq(post && post.b.profile.steps[0].temperature, 92.5, 'temperature sent');
+    T.eq(post && post.b.profile.steps[0].seconds, 20, 'seconds sent');
+    T.ok(/^92\.5/.test(T.el('#epStepGrid tr.gr[data-i="0"] td[data-k="temperature"]').textContent), 'and shown');
+    dropFakes(); shut();
+  }, function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+// ---- Saving --------------------------------------------------------------
+test('a changed step is saved as a new version and the old one is put away', function (T) {
+  var p = mkProf('lat:old', 2, function (q) { q.metadata = { tags: ['mine'], color: 'mint' }; });
+  allProfiles.push(p);
+  var gw = fakeGw(), firstId;
+  openP(p); editing.profile.steps[0].pressure = 7; saveProfilePage();
+  return later().then(function () {
+    var post = gw.sent('POST', /^\/api\/v1\/profiles$/)[0];
+    T.ok(!!post, 'a new record');
+    T.eq(post && post.b.parentId, 'lat:old', 'whose parent is the old one');
+    T.eq(JSON.stringify(post && post.b.metadata), JSON.stringify({ tags: ['mine'], color: 'mint' }), 'with its metadata');
+    var hide = gw.sent('PUT', /\/visibility$/)[0];
+    T.eq(hide && hide.u, '/api/v1/profiles/lat%3Aold/visibility', 'the old one is addressed encoded');
+    T.eq(hide && hide.b.visibility, 'hidden', 'and hidden, not deleted');
+    T.eq(gw.sent('PUT', /^\/api\/v1\/profiles\/[^/]+$/).length, 0, 'nothing overwritten');
+    firstId = editing.id;
+    T.ok(firstId && firstId !== 'lat:old', 'the editor is on the new version: ' + firstId);
+    T.eq(epDirty(), false, 'with nothing left to save');
+    editing.profile.steps[0].pressure = 8; saveProfilePage();
+    return later();
+  }).then(function () {
+    gw.done();
+    var posts = gw.sent('POST', /^\/api\/v1\/profiles$/);
+    T.eq(posts.length, 2, 'a second save is another version');
+    T.eq(posts[1] && posts[1].b.parentId, firstId, 'of the one just saved');
+    var hides = gw.sent('PUT', /\/visibility$/);
+    T.eq(hides[1] && hides[1].u, '/api/v1/profiles/' + encodeURIComponent(firstId) + '/visibility', 'which is put away in turn');
+    dropFakes(); shut();
+  }).catch(function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+test('a new version takes over everything kept against the old one', function (T) {
+  var p = mkProf('lat:keys', 2); allProfiles.push(p);
+  var was = { fav: JSON.stringify(favIds), bt: prefs.brewTemp, bb: prefs.brewTempBase, sm: prefs.stopMult,
+              wf: lsGet('aurora_wfhist'), cur: curProfileObj };
+  favIds[p.id] = true;
+  prefs.brewTemp = Object.assign({}, prefs.brewTemp); prefs.brewTemp[p.id] = 93;
+  prefs.brewTempBase = Object.assign({}, prefs.brewTempBase); prefs.brewTempBase[p.id] = [90, 90];
+  prefs.stopMult = Object.assign({}, prefs.stopMult); prefs.stopMult[p.id] = { w: 1.1, v: 0.3 };
+  lsSet('aurora_wfhist', [{ kind: 'espresso', profile: { id: p.id, title: p.profile.title } }]);
+  curProfileObj = p;
+  var gw = fakeGw();
+  function restore() {
+    gw.done(); favIds = JSON.parse(was.fav); saveFavs();
+    prefs.brewTemp = was.bt; prefs.brewTempBase = was.bb; prefs.stopMult = was.sm; savePrefs();
+    lsSet('aurora_wfhist', was.wf); curProfileObj = was.cur; dropFakes(); shut();
+  }
+  openP(p); editing.profile.steps[1].pressure = 9; saveProfilePage();
+  return later().then(function () {
+    var nid = editing.id;
+    T.ok(nid !== p.id, 'a new id');
+    T.eq(!!favIds[nid] && !favIds[p.id], true, 'the star');
+    T.eq(prefs.brewTemp[nid], 93, 'the card temperature');
+    T.eq(prefs.brewTemp[p.id], undefined, 'gone from the old id');
+    T.eq(JSON.stringify(prefs.brewTempBase[nid]), '[90,90]', 'the shape it came back to');
+    T.eq(prefs.stopMult[nid] && prefs.stopMult[nid].w, 1.1, 'its own stop multipliers');
+    T.eq(lsGet('aurora_wfhist')[0].profile.id, nid, 'the workflow history');
+    T.eq(curProfileObj && curProfileObj.id, nid, 'what is loaded');
+    var wf = gw.sent('PUT', /^\/api\/v1\/workflow$/)[0];
+    T.ok(!!wf, 'and the machine is given the new version');
+    T.eq(wf && wf.b.profile.steps[1].pressure, 9, 'as saved');
+    T.eq(wf && wf.b.profile.steps.map(function (s) { return s.temperature; }).join(), '93,93', 'at the card temperature');
+    // a changed temperature changes the shape the card moves, not the card
+    var before = gw.sent('PUT', /^\/api\/v1\/workflow$/).length;
+    editing.profile.steps[0].temperature = 85; saveProfilePage();
+    return later().then(function () {
+      var nid2 = editing.id;
+      T.eq(prefs.brewTemp[nid2], 93, 'a temperature edit keeps the card one');
+      T.eq(JSON.stringify(prefs.brewTempBase[nid2]), '[85,90]', 'measured from the steps as saved');
+      var wf2 = gw.sent('PUT', /^\/api\/v1\/workflow$/)[before];
+      T.eq(wf2 && wf2.b.profile.steps.map(function (s) { return s.temperature; }).join(), '93,98',
+        'the machine gets the new shape at the card temperature');
+      restore();
+    });
+  }).catch(function (e) { restore(); throw e; });
+});
+
+test('a save during a shot reaches the machine when the shot ends', function (T) {
+  var p = mkProf('lat:shot', 1); allProfiles.push(p);
+  var was = curProfileObj, real = brewLocked;
+  curProfileObj = p; brewLocked = function () { return true; };
+  var gw = fakeGw();
+  function restore() { brewLocked = real; gw.done(); curProfileObj = was; dropFakes(); shut(); }
+  openP(p); editing.profile.steps[0].pressure = 7; saveProfilePage();
+  return later().then(function () {
+    T.eq(gw.sent('PUT', /^\/api\/v1\/workflow$/).length, 0, 'nothing sent mid shot');
+    T.eq(toastText(), t('epWfAfterShot'), 'and the user is told');
+    brewLocked = real;
+    epFlushPendingWf();
+    return later();
+  }).then(function () {
+    T.eq(gw.sent('PUT', /^\/api\/v1\/workflow$/).length, 1, 'sent once the shot is over');
+    T.eq(curProfileObj && curProfileObj.id, editing.id, 'and loaded');
+    restore();
+  }).catch(function (e) { restore(); throw e; });
+});
+
+test('a new name alone keeps the id, the numbers as they were, and the metadata', function (T) {
+  var p = mkProf('lat:title', 1, function (q) { q.profile.steps[0].pressure = '9.0'; q.metadata = { tags: ['x'] }; });
+  allProfiles.push(p);
+  var gw = fakeGw();
+  openP(p); editing.profile.title = 'LA Test renamed'; editing.profile.notes = 'n'; saveProfilePage();
+  return later().then(function () {
+    gw.done();
+    var put = gw.sent('PUT', /^\/api\/v1\/profiles\/[^/]+$/)[0];
+    T.eq(put && put.u, '/api/v1/profiles/lat%3Atitle', 'the same record');
+    T.eq(put && ('metadata' in put.b), false, 'metadata left to the gateway');
+    T.eq(put && put.b.profile.steps[0].pressure, '9.0', 'the steps exactly as stored');
+    T.eq(put && put.b.profile.title, 'LA Test renamed', 'with the new name');
+    T.eq(gw.sent('POST', /^\/api\/v1\/profiles$/).length, 0, 'no new version');
+    T.eq(editing.id, 'lat:title', 'same id');
+    dropFakes(); shut();
+  }, function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+// The loaded profile's record in the list holds what the machine was sent:
+// steps moved by the card's temperature and the card's yield. A new name sent
+// on top of that would rewrite the steps and cost the profile its id.
+test('a new name for the loaded profile keeps the steps the gateway has', function (T) {
+  var p = mkProf('lat:ldtx', 2); allProfiles.push(p);
+  var server = JSON.parse(JSON.stringify(p));
+  p.profile.steps[0].temperature = 97; p.profile.steps[1].temperature = 97; p.profile.target_weight = 44;
+  var gw = fakeGw(function (m, u) { if (m === 'GET' && u === '/api/v1/profiles/lat%3Aldtx') return server; });
+  openP(p); editing.profile.title = 'LA Test loaded renamed'; saveProfilePage();
+  return later().then(function () {
+    gw.done();
+    var put = gw.sent('PUT', /^\/api\/v1\/profiles\/[^/]+$/)[0];
+    T.ok(!!put, 'saved in place');
+    T.eq(JSON.stringify(put && put.b.profile.steps.map(function (s) { return s.temperature; })),
+      JSON.stringify(server.profile.steps.map(function (s) { return s.temperature; })), 'the stored temperatures, not the card ones');
+    T.eq(put && put.b.profile.target_weight, server.profile.target_weight, 'nor the card yield');
+    T.eq(put && put.b.profile.title, 'LA Test loaded renamed', 'with the new name');
+    T.eq(gw.sent('POST', /^\/api\/v1\/profiles$/).length, 0, 'no new version');
+    dropFakes(); shut();
+  }, function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+test('a tag added in the editor is in the metadata a save sends', function (T) {
+  var p = mkProf('lat:m', 1); allProfiles.push(p);
+  var gw = fakeGw();
+  openP(p); addProfileTag('lat:m', 'la-test-tag');
+  return later().then(function () {
+    T.ok(((editing.metadata || {}).tags || []).indexOf('la-test-tag') >= 0, 'the editor knows the tag');
+    editing.profile.steps[0].pressure = 7; saveProfilePage();
+    return later();
+  }).then(function () {
+    gw.done();
+    var post = gw.sent('POST', /^\/api\/v1\/profiles$/)[0];
+    T.ok(post && (post.b.metadata.tags || []).indexOf('la-test-tag') >= 0, 'sent: ' + JSON.stringify(post && post.b.metadata));
+    dropFakes(); shut();
+  }).catch(function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+test('content that already exists brings that profile back instead of a copy', function (T) {
+  var older = mkProf('lat:older', 1, function (q) { q.visibility = 'hidden'; q.profile.steps[0].pressure = 7; });
+  var p = mkProf('lat:cur', 1); allProfiles.push(older, p);
+  var gw = fakeGw(function (m, u) {
+    if (m === 'POST' && u === '/api/v1/profiles') return JSON.parse(JSON.stringify(older));
+  });
+  openP(p); editing.profile.steps[0].pressure = 7; saveProfilePage();
+  return later().then(function () {
+    gw.done();
+    var vis = gw.sent('PUT', /\/visibility$/).map(function (s) { return s.u + '=' + s.b.visibility; });
+    T.ok(vis.indexOf('/api/v1/profiles/lat%3Aolder/visibility=visible') >= 0, 'the earlier one is shown again: ' + vis);
+    T.ok(vis.indexOf('/api/v1/profiles/lat%3Acur/visibility=hidden') >= 0, 'this one is put away');
+    T.eq(editing.id, 'lat:older', 'the editor is on it');
+    T.eq(toastText(), t('epMatchedOld'), 'and says so');
+    dropFakes(); shut();
+  }, function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+test('a changed default is saved once, as a named copy that remembers it', function (T) {
+  var d = mkProf('lat:def', 2, function (q) { q.isDefault = true;
+    q.metadata = { tags: ['tagDark'], color: 'mint', source: 'bundled', filename: 'x.json' }; });
+  var clash = mkProf('lat:clash', 1, function (q) { q.profile.title = d.profile.title + ' (2)'; });
+  allProfiles.push(d, clash);
+  var gw = fakeGw();
+  openP(d); editing.profile.steps[0].pressure = 8;
+  saveProfilePage(); saveProfilePage();
+  return later().then(function () {
+    if (editing) saveProfilePage();
+    return later();
+  }).then(function () {
+    gw.done();
+    var posts = gw.sent('POST', /^\/api\/v1\/profiles$/);
+    T.eq(posts.length, 1, 'one copy for three presses');
+    var b = posts[0] && posts[0].b;
+    T.eq(b && b.parentId, 'lat:def', 'its parent is the default');
+    T.eq(b && b.profile.title, d.profile.title + ' (3)', 'named past the copy already there');
+    T.ok(b && b.metadata.tags.indexOf('tagDark') >= 0 && b.metadata.tags.indexOf('edited') >= 0, 'its tags and edited');
+    T.eq(b && b.metadata.color, 'mint', 'its colour');
+    T.eq(b && (b.metadata.source || b.metadata.filename || null), null, 'but not the bundled file it is not');
+    T.eq(editing.isDefault, false, 'what is open is the copy');
+    T.ok(/^lat:v/.test(editing.id), 'under its own id');
+    T.eq(gw.sent('PUT', /\/visibility$/).length, 0, 'the default is left where it was');
+    dropFakes(); shut();
+  }).catch(function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+test('a copy of the loaded default is loaded in its place', function (T) {
+  var d = mkProf('lat:defl', 1, function (q) { q.isDefault = true; }); allProfiles.push(d);
+  var was = curProfileObj; curProfileObj = d;
+  var gw = fakeGw();
+  function restore() { gw.done(); curProfileObj = was; dropFakes(); shut(); }
+  openP(d); editing.profile.steps[0].pressure = 8; saveProfilePage();
+  return later().then(function () {
+    var wf = gw.sent('PUT', /^\/api\/v1\/workflow$/)[0];
+    T.ok(!!wf, 'the machine is given the copy');
+    T.eq(wf && wf.b.profile.steps[0].pressure, 8, 'as edited');
+    T.eq(curProfileObj && curProfileObj.id, editing.id, 'and the copy is what is loaded');
+    T.ok(curProfileObj.id !== 'lat:defl', 'not the default');
+    restore();
+  }).catch(function (e) { restore(); throw e; });
+});
+
+test('a copy of a default that is not loaded leaves the machine alone', function (T) {
+  var d = mkProf('lat:defn2', 1, function (q) { q.isDefault = true; }); allProfiles.push(d);
+  var other = mkProf('lat:other', 1); allProfiles.push(other);
+  var was = curProfileObj; curProfileObj = other;
+  var gw = fakeGw();
+  function restore() { gw.done(); curProfileObj = was; dropFakes(); shut(); }
+  openP(d); editing.profile.steps[0].pressure = 8; saveProfilePage();
+  return later().then(function () {
+    T.eq(gw.sent('PUT', /^\/api\/v1\/workflow$/).length, 0, 'nothing sent');
+    T.eq(curProfileObj && curProfileObj.id, 'lat:other', 'what was loaded stays');
+    restore();
+  }).catch(function (e) { restore(); throw e; });
+});
+
+test('a default with only a new name is not saved, and says why', function (T) {
+  var d = mkProf('lat:defn', 1, function (q) { q.isDefault = true; }); allProfiles.push(d);
+  var gw = fakeGw();
+  openP(d); editing.profile.title = 'Something else'; saveProfilePage();
+  return later().then(function () {
+    gw.done();
+    T.eq(gw.seen.filter(function (s) { return /profiles/.test(s.u); }).length, 0, 'nothing written');
+    T.eq(toastText(), t('epDefaultName'), 'the reason is given');
+    T.eq(editing.isDefault, true, 'still the default');
+    dropFakes(); shut();
+  }, function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+test('save is held while one is on its way', function (T) {
+  var release;
+  var gw = fakeGw(function (m, u, b) {
+    if (m === 'POST' && u === '/api/v1/profiles') return new Promise(function (r) {
+      release = function () { r({ id: 'lat:slow', visibility: 'visible', profile: b.profile, metadata: {} }); }; });
+  });
+  openEditPage(); newProfile();
+  saveProfilePage();
+  T.eq(T.el('#epSaveBtn').disabled, true, 'the button is off');
+  saveProfilePage();
+  T.eq(gw.sent('POST', /^\/api\/v1\/profiles$/).length, 1, 'one request');
+  return later(50).then(function () {
+    release();
+    return later();
+  }).then(function () {
+    gw.done();
+    T.eq(T.el('#epSaveBtn').disabled, false, 'and back on afterwards');
+    T.eq(editing && editing.id, 'lat:slow', 'on the new profile');
+    dropFakes(); shut();
+  }).catch(function (e) { gw.done(); dropFakes(); throw e; });
+});
+
+test('leaving an edited profile asks first, and an untouched one does not', function (T) {
+  var p = mkProf('lat:dirty', 2); allProfiles.push(p); openP(p);
+  T.el('.ep-head .ep-back').click();
+  T.eq(T.el('#epDirtyOverlay').classList.contains('show'), false, 'untouched: no question');
+  T.eq(document.body.classList.contains('ep-list'), true, 'straight back to the list');
+  openP(p);
+  var s = T.el('#epStepEditor input[data-k="pressure"]');
+  s.value = '8'; s.dispatchEvent(new Event('input', { bubbles: true }));
+  return later(50).then(function () {
+    T.eq(T.el('#epDirtyMark').hidden, false, 'a change is marked');
+    T.el('#epEditor .ep-save-bar button').click();
+    T.eq(T.el('#epDirtyOverlay').classList.contains('show'), true, 'cancel asks');
+    epKeepEditing();
+    T.eq(document.body.classList.contains('ep-edit'), true, 'keep editing stays');
+    T.eq(editing.profile.steps[0].pressure, 8, 'with the change');
+    T.all('#editPage .ep-head-btns .ep-close').pop().click();
+    T.eq(T.el('#epDirtyOverlay').classList.contains('show'), true, 'closing asks');
+    epDiscardGo();
+    T.eq(T.el('#editPage').classList.contains('show'), false, 'discard closes');
+    T.eq(editing, null, 'and drops the edit');
+    dropFakes(); shut();
+  });
+});
+
+test('the editor opens on the profile’s own temperatures, not the card’s', function (T) {
+  var p = mkProf('lat:own', 2); allProfiles.push(p);
+  // the loaded record is the copy the card moved
+  p.profile.steps[0].temperature = 92; p.profile.steps[1].temperature = 88;
+  var was = { bt: prefs.brewTemp, bb: prefs.brewTempBase, cur: curProfileObj };
+  prefs.brewTemp = Object.assign({}, prefs.brewTemp); prefs.brewTemp[p.id] = 92;
+  prefs.brewTempBase = Object.assign({}, prefs.brewTempBase); prefs.brewTempBase[p.id] = [94, 90];
+  function restore() { prefs.brewTemp = was.bt; prefs.brewTempBase = was.bb; savePrefs(); curProfileObj = was.cur; dropFakes(); shut(); }
+  try {
+    openP(p);
+    T.eq(editing.profile.steps.map(function (s) { return s.temperature; }).join(), '94,90', 'the profile as saved');
+    T.eq(epDirty(), false, 'with nothing to save');
+  } finally { restore(); }
+});
+
+test('using an edited profile keeps the temperatures typed into it', function (T) {
+  var p = mkProf('lat:use', 2); allProfiles.push(p);
+  var was = { bt: prefs.brewTemp, bb: prefs.brewTempBase, cur: curProfileObj };
+  prefs.brewTemp = Object.assign({}, prefs.brewTemp); prefs.brewTemp[p.id] = 80;
+  prefs.brewTempBase = Object.assign({}, prefs.brewTempBase); prefs.brewTempBase[p.id] = [90, 90];
+  var gw = fakeGw();
+  function restore() {
+    gw.done(); prefs.brewTemp = was.bt; prefs.brewTempBase = was.bb; savePrefs();
+    curProfileObj = was.cur; dropFakes(); shut();
+  }
+  openP(p); editing.profile.steps[1].temperature = 95;
+  useEditedProfile();
+  return later().then(function () {
+    var wf = gw.sent('PUT', /^\/api\/v1\/workflow$/)[0];
+    T.ok(!!wf, 'the workflow was written');
+    T.eq(wf && wf.b.profile.steps.map(function (s) { return s.temperature; }).join(), '80,85',
+      'the steps as edited, moved to the card temperature');
+    T.eq(prefs.brewTemp[p.id], 80, 'and the card keeps its number');
+    restore();
+  }).catch(function (e) { restore(); throw e; });
+});
+
+test('a workflow profile is matched to the version on show, not one put away', function (T) {
+  var old = mkProf('lat:wm1', 1, function (q) { q.visibility = 'hidden'; q.profile.title = 'LA Same'; });
+  var cur = mkProf('lat:wm2', 1, function (q) { q.profile.title = 'LA Same'; });
+  allProfiles.unshift(old); allProfiles.push(cur);
+  T.eq(profByTitle('LA Same', null).id, 'lat:wm2', 'the visible one');
+  T.eq(profByTitle('LA Same', 'lat:wm1').id, 'lat:wm1', 'unless that one is what is loaded');
+  dropFakes();
+});

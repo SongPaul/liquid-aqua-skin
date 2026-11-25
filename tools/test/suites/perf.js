@@ -133,8 +133,10 @@ test('the main screen cards are not blurred', function (T) {
     Array.prototype.forEach.call(document.querySelectorAll('.app .glass'), function (el) {
       T.eq(getComputedStyle(el).backdropFilter, 'none', 'no blur on ' + el.className);
     });
+    // The full pages are flat faces on one tone since the refresh: nothing
+    // behind a page shows through to frost, so they carry no blur either.
     var page = document.querySelector('#settingsPage .glass');
-    if (page) T.ok(getComputedStyle(page).backdropFilter !== 'none', 'the other pages keep theirs');
+    if (page) T.eq(getComputedStyle(page).backdropFilter, 'none', 'the pages are flat faces');
   } finally { quiet.forEach(function (c) { body.classList.toggle(c, was[c]); }); }
 });
 

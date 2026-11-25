@@ -32,22 +32,23 @@ test('the shot pane is measured in the pixels the cap is written in', function (
   });
 });
 
+// Three to a row, as on the shot card, so a pane is as short as it can be.
 Object.keys(PANES).forEach(function (mode) {
-  test(mode + ' pane: settings sit two by two', function (T) {
+  test(mode + ' pane: settings sit three to a row', function (T) {
     return show(mode).then(function () {
       var grid = T.el('#' + PANES[mode] + ' .rc-grid');
-      T.eq(T.css(grid, 'gridTemplateColumns').split(' ').length, 2, 'two columns');
-      var blocks = T.all('#' + PANES[mode] + ' .rc-grid > .dose-block');
-      T.ok(blocks.length >= (mode === 'water' ? 2 : 3), 'its settings, got ' + blocks.length);
+      T.eq(T.css(grid, 'gridTemplateColumns').split(' ').length, 3, 'three columns');
+      var blocks = T.all('#' + PANES[mode] + ' .rc-grid > .dose-block').filter(function (b) { return b.offsetParent; });
+      T.ok(blocks.length >= 2, 'its settings, got ' + blocks.length);
       // Filling column first put the fourth control alone at the top of the
       // second column and left the rest of it blank.
       T.ok(T.box(blocks[1]).left > T.box(blocks[0]).left,
         'the second setting is beside the first, not under it');
       T.near(T.top(blocks[0]), T.top(blocks[1]), 2, 'and level with it');
-      if (blocks.length > 2) {
-        T.near(T.box(blocks[2]).left, T.box(blocks[0]).left, 2,
-          'the third starts a new row');
-        T.ok(T.top(blocks[2]) > T.top(blocks[0]), 'below the first');
+      if (blocks.length > 3) {
+        T.near(T.box(blocks[3]).left, T.box(blocks[0]).left, 2,
+          'the fourth starts a new row');
+        T.ok(T.top(blocks[3]) > T.top(blocks[0]), 'below the first');
       }
     });
   });
@@ -81,8 +82,8 @@ test('milk takes the same form as the dose', function (T) {
   return show('steam').then(function () {
     withDosingScale(128.4);
     var head = T.el('#devMilk');
-    T.ok(!!head, 'the milk block names its scale');
-    T.ok(head.classList.contains('rg-dev'), 'with the same header as the dose');
+    T.ok(!!head, 'the pane names the milk scale');
+    T.ok(head.closest('.rc-devrow') !== null, 'on a device row, as the shot card names the dose’s');
     T.ok(head.textContent.indexOf('Bench Scale') >= 0, 'the scale is named');
     T.eq(head.getAttribute('onclick'), 'tareDosingScale()', 'pressing it zeroes');
     T.eq(head.disabled, false, 'and it is live while the scale reports');
@@ -111,22 +112,28 @@ test('milk with no scale says so instead of offering a reading', function (T) {
     state.dosingWeight = null;
     renderMilkRow();
     T.eq(T.el('#devMilk').disabled, true, 'nothing to zero');
-    T.ok(T.el('#devMilk').classList.contains('rg-idle'), 'and only its role to name, dimmed');
+    T.ok(T.el('#devMilk').classList.contains('rg-idle'), 'and the set-up scale is dimmed');
+    var was = prefs.dosingScaleId, devs = state.devices;
+    state.devices = (state.devices || []).filter(function (d) { return d.connectionRole !== 'auxiliary'; });
+    prefs.dosingScaleId = '';
+    renderMilkRow();
+    T.ok(T.el('#devMilk').offsetParent === null, 'a dosing scale nobody set up is not named');
+    prefs.dosingScaleId = was; state.devices = devs; renderMilkRow();
   });
 });
 
-test('naming a scale does not shunt the setting beside it', function (T) {
+// The scale is named on the pane's own device row, so naming it moves no
+// setting: the milk number sits where it sat without one.
+test('naming a scale does not shunt the settings', function (T) {
   return show('steam').then(function () {
+    var was = { id: prefs.dosingScaleId, devs: state.devices, c: state.dosingConnected, w: state.dosingWeight };
     withDosingScale(128.4);
-    var blocks = T.all('#recipeSteam .rc-grid > .dose-block');
-    var milk = T.el('#devMilk').closest('.dose-block');
-    var mate = blocks.filter(function (b) {
-      return b !== milk && Math.abs(T.box(b).bottom - T.box(milk).bottom) < 40;
-    })[0];
-    T.ok(!!mate, 'the milk block has a neighbour on its row');
-    T.near(T.box(T.el('#milkNum')).bottom,
-      T.box(mate.querySelector('.dose-num,.rv')).bottom, 2,
-      'the two numbers sit on the same line');
+    var named = T.top(T.el('#milkNum')), grid = T.top(T.el('#recipeSteam .rc-grid'));
+    state.dosingConnected = false; state.dosingWeight = null; renderMilkRow();
+    T.near(T.top(T.el('#milkNum')) - T.top(T.el('#recipeSteam .rc-grid')), named - grid, 1,
+      'the milk number does not move inside the grid');
+    prefs.dosingScaleId = was.id; state.devices = was.devs; state.dosingConnected = was.c; state.dosingWeight = was.w;
+    renderMilkRow();
   });
 });
 

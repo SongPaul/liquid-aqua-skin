@@ -412,7 +412,7 @@ test('the feed speed is on the card while the MT80 is in use', function (T) {
   }).then(function () {
     T.eq(T.el('#feedGrp').hidden, false, 'the row is shown');
     T.eq(T.el('#feedVal').textContent, '42', 'with what the grinder said');
-    T.eq(T.el('#feedGrp').closest('#secGrind') !== null, true, 'in the grinder column');
+    T.ok(T.el('#feedGrp').closest('#grinderCard') !== null, 'on the grinder card');
   });
 });
 
@@ -427,12 +427,18 @@ test('no feed speed for any other grinder, or a manual one in use', function (T)
   T.eq(_feedPoll, null, 'and nothing keeps asking for it');
 });
 
-test('the feed row lines up with the yield row beside it', function (T) {
+// The feed is a second speed, so it is read where the first one is: in the
+// grinder column under the RPM, with its own minus and plus, a tap away from
+// its keypad.
+test('the feed speed sits beside the RPM on the grinder card', function (T) {
   state.devices = (state.devices || []).filter(function (d) { return d.connectionRole !== 'auxiliary'; });
   prefs.dosingScaleId = ''; syncDoseTake();
   asMt80Device();
-  T.near(T.top(T.el('#feedRow')), T.top(T.el('#doseOut').closest('.dose-block')), 1,
-    'third row of numbers on one line');
+  var feed = T.box(T.el('#feedVal')), rpm = T.box(T.el('#rpmVal'));
+  T.near(Math.round(feed.top + feed.height / 2), Math.round(rpm.top + rpm.height / 2), 3, 'level with the RPM');
+  T.ok(feed.left >= rpm.right, 'after it');
+  T.eq(T.el('#feedGrp').querySelectorAll('.ms-btn').length, 2, 'with a minus and a plus');
+  T.eq(T.el('#feedRow').getAttribute('onclick'), 'openFeedKeypad()', 'a tap types it');
 });
 
 test('feed speed holds to 10-65 and steps by one', function (T) {
@@ -1221,3 +1227,4 @@ test('a workflow that changes the grinder redraws the card for it', function (T)
     return new Promise(function (r) { setTimeout(r, 50); }).then(function () { api = real; });
   });
 });
+

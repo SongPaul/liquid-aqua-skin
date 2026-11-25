@@ -18,7 +18,7 @@ function daysAgo(n) { return new Date(Date.now() - n * 86400000).toISOString().s
 function withBeans(run) {
   var was = { beans: beans, list: beanBatchList, latest: beanBatches, grinders: grinders,
     ctx: JSON.parse(JSON.stringify(context)), sel: bgSel, bid: bgBatchId, nb: bgNewBatch, tab: bgTab,
-    api: api, offer: offerLastShotSettings, confirm: window.confirm, close: closeBeanPage, load: loadBeansGrinders };
+    api: api, offer: offerLastShotSettings, confirm: laConfirm, close: closeBeanPage, load: loadBeansGrinders };
   beans = [{ id: 'bn-a', roaster: 'R1', name: 'Same' }, { id: 'bn-b', roaster: 'R2', name: 'Same' }];
   beanBatchList = {
     'bn-a': [{ id: 'bt-new', beanId: 'bn-a', roastDate: daysAgo(3) }, { id: 'bt-old', beanId: 'bn-a', roastDate: daysAgo(20) }],
@@ -29,14 +29,14 @@ function withBeans(run) {
   offerLastShotSettings = function () {};
   closeBeanPage = function () {};
   loadBeansGrinders = function () { return Promise.resolve(); };
-  window.confirm = function () { return true; };
+  laConfirm = function () { return Promise.resolve(true); };
   var gw = beanApi(); api = gw;
   function back() {
     beans = was.beans; beanBatchList = was.list; beanBatches = was.latest; grinders = was.grinders;
     Object.keys(context).forEach(function (k) { delete context[k]; });
     Object.assign(context, was.ctx);
     bgSel = was.sel; bgBatchId = was.bid; bgNewBatch = was.nb; bgTab = was.tab;
-    api = was.api; offerLastShotSettings = was.offer; window.confirm = was.confirm;
+    api = was.api; offerLastShotSettings = was.offer; laConfirm = was.confirm;
     closeBeanPage = was.close; loadBeansGrinders = was.load;
     updateBeanInfo();
   }
@@ -139,7 +139,9 @@ test('the lists speak the language and carry no emoji', function (T) {
     bgSel = null;
     bgTab = 'bean'; renderBgList();
     T.ok(!emoji.test(T.el('#bgList').innerHTML), 'no emoji among the beans');
-    T.ok(T.el('#bgList').textContent.indexOf(t('addBean').replace(/^\+\s*/, '')) >= 0, 'the add button is translated');
+    // adding rides in the page header now, beside the beans/grinders segment
+    T.ok(T.el('#bgAddBtn').textContent.indexOf(t('addBean').replace(/^\+\s*/, '')) >= 0, 'the add button is translated');
+    T.ok(!emoji.test(T.el('#beanPage .ep-head').innerHTML.replace(/✕/g, '')), 'nor does the header');
     bgTab = 'grinder'; renderBgList();
     T.ok(!emoji.test(T.el('#bgList').innerHTML), 'or the grinders');
     T.ok(!emoji.test(bgGuideHtml()), 'or the guide');

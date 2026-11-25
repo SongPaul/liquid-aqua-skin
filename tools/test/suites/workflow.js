@@ -221,3 +221,48 @@ test('with the list in before the workflow, the first covers still open on the l
     return new Promise(function (r) { setTimeout(r, 300); });
   });
 });
+
+// ── The drink picker fills its page ───────────────────────────────────
+// Three drinks were three small cards in a corner of an empty page. They are
+// three large cards, side by side where there is room and stacked where
+// there is not, in the middle of the space below the head.
+function wfFrame(w, h) {
+  return new Promise(function (res) {
+    var f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;left:0;top:0;border:0;z-index:99999;visibility:hidden;width:' + w + 'px;height:' + h + 'px';
+    var css = Array.prototype.map.call(document.querySelectorAll('style'), function (s) { return s.textContent; }).join('\n');
+    f.onload = function () { res(f); };
+    f.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>' + css + '</style></head><body>'
+      + document.getElementById('wfPage').outerHTML + '</body></html>';
+    document.body.appendChild(f);
+  });
+}
+[[962, 601], [1280, 800], [601, 962]].forEach(function (sz) {
+  test('the drink picker’s cards fill the page at ' + sz[0] + 'x' + sz[1], function (T) {
+    var was = lsGet('aurora_wfhist');
+    lsSet('aurora_wfhist', []);
+    openWorkflow();
+    return wfFrame(sz[0], sz[1]).then(function (f) {
+      var d = f.contentDocument, body = d.querySelector('#wfBody').getBoundingClientRect();
+      var cards = Array.prototype.slice.call(d.querySelectorAll('#wfBody .wf-kind'));
+      T.eq(cards.length, 3, 'three drinks');
+      var boxes = cards.map(function (c) { return c.getBoundingClientRect(); });
+      var side = Math.abs(boxes[0].top - boxes[1].top) < 2;
+      boxes.forEach(function (b, i) {
+        T.ok(b.height >= (side ? 180 : 110), 'card ' + i + ' is tall: ' + Math.round(b.height));
+        T.ok(b.width >= (side ? body.width * 0.28 : body.width * 0.9), 'card ' + i + ' is wide: ' + Math.round(b.width));
+      });
+      if (sz[0] >= 900) T.ok(side, 'side by side on a landscape screen');
+      var top = Math.min.apply(null, boxes.map(function (b) { return b.top; }));
+      var bot = Math.max.apply(null, boxes.map(function (b) { return b.bottom; }));
+      T.ok(Math.abs((top - body.top) - (body.bottom - bot)) <= 24, 'in the middle of the page: '
+        + Math.round(top - body.top) + ' above, ' + Math.round(body.bottom - bot) + ' below');
+      var n = cards[0].querySelector('.n'), big = cards[0].querySelector('.big'), s = cards[0].querySelector('.s');
+      T.ok(parseFloat(getComputedStyle(n).fontSize) >= 20, 'a large title');
+      T.ok(parseFloat(getComputedStyle(big).fontSize) >= 40, 'a large icon');
+      T.ok(parseFloat(getComputedStyle(s).fontSize) >= 15, 'a readable description');
+      T.ok(d.documentElement.scrollWidth <= sz[0], 'no sideways page');
+      f.remove(); closeWorkflow(); lsSet('aurora_wfhist', was || []);
+    });
+  });
+});

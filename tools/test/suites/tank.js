@@ -74,13 +74,13 @@ test('pouring quickens the water with the flow', function (T) {
   }); });
 });
 
-test('bubbles rise while water runs and not at rest', function (T) {
+test('bubbles rise while a shot runs and not at rest', function (T) {
   tkFx(true, function () {
     tkRun(null, 0, function () {
       tankWake();
       T.eq(document.querySelectorAll('#tankBubs .tw-b.on').length, 0, 'none at rest');
     });
-    tkRun('steamRunning', 2, function () {
+    tkRun('shotRunning', 2, function () {
       tankWake();
       var n = document.querySelectorAll('#tankBubs .tw-b.on').length;
       T.ok(n > 0 && n === tankBubblesShown(), 'as many as the heat gives: ' + n);
