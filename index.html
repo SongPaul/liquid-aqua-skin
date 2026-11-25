@@ -3396,28 +3396,28 @@ body.night .gr-obs{color:#fbbf24}
 #recipeNormal .rc-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:8px;align-items:center}
 #recipeNormal .rc-row+.rc-row,#recipeNormal .rc-take+.rc-row{margin-top:6px}
 #recipeNormal .rc-row>[hidden]{display:none}
-:is(#recipeNormal,#grinderCard) .dose-block{min-width:0}
-:is(#recipeNormal,#grinderCard) .dose-adj{display:grid;grid-template-columns:36px minmax(0,1fr) 36px;grid-template-areas:"m s p";
+:is(#recipeNormal,#grinderCard,.rc-mode) .dose-block{min-width:0}
+:is(#recipeNormal,#grinderCard,.rc-mode) .dose-adj{display:grid;grid-template-columns:36px minmax(0,1fr) 36px;grid-template-areas:"m s p";
   gap:1px;align-items:stretch}
-:is(#recipeNormal,#grinderCard) .dose-adj>.ms-btn:first-child{grid-area:m}
-:is(#recipeNormal,#grinderCard) .dose-adj>.dose-stack{grid-area:s}
-:is(#recipeNormal,#grinderCard) .dose-adj>.ms-btn:last-child{grid-area:p}
-.app :is(#recipeNormal,#grinderCard) .ms-btn{width:auto;min-width:0;padding:0;height:44px;min-height:44px;border-radius:var(--r-ctl);
+:is(#recipeNormal,#grinderCard,.rc-mode) .dose-adj>.ms-btn:first-child{grid-area:m}
+:is(#recipeNormal,#grinderCard,.rc-mode) .dose-adj>.dose-stack{grid-area:s}
+:is(#recipeNormal,#grinderCard,.rc-mode) .dose-adj>.ms-btn:last-child{grid-area:p}
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .ms-btn{width:auto;min-width:0;padding:0;height:44px;min-height:44px;border-radius:var(--r-ctl);
   border:1px solid var(--la-line-2);background:var(--la-surface);color:var(--ink);font-size:20px;font-weight:500;box-shadow:none}
-.app :is(#recipeNormal,#grinderCard) .ms-btn:active{background:var(--la-well)}
-.app :is(#recipeNormal,#grinderCard) .dose-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .ms-btn:active{background:var(--la-well)}
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .dose-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;
   min-width:0;height:44px;row-gap:0;width:auto}
-.app :is(#recipeNormal,#grinderCard) .dose-stack>.dose-lbl,.app :is(#recipeNormal,#grinderCard) .rc-info>.dose-lbl{display:block;max-width:100%;margin:0;
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .dose-stack>.dose-lbl,.app :is(#recipeNormal,#grinderCard,.rc-mode) .rc-info>.dose-lbl{display:block;max-width:100%;margin:0;
   font-size:15px;font-weight:500;line-height:17px;color:var(--ink-mute);text-align:center;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;text-transform:none;min-height:0;width:auto}
-.app :is(#recipeNormal,#grinderCard) .dose-stack>.dose-num,.app :is(#recipeNormal,#grinderCard) .dose-stack>.rv,
-.app :is(#recipeNormal,#grinderCard) .dose-stack>.grind-val,.app :is(#recipeNormal,#grinderCard) .dose-stack>.th-wrap{display:inline-flex;
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .dose-stack>.dose-num,.app :is(#recipeNormal,#grinderCard,.rc-mode) .dose-stack>.rv,
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .dose-stack>.grind-val,.app :is(#recipeNormal,#grinderCard,.rc-mode) .dose-stack>.th-wrap{display:inline-flex;
   align-items:baseline;justify-content:center;gap:2px;max-width:100%;width:auto;margin:0;padding:0;min-height:0;
   font-size:20px;font-weight:600;line-height:22px;letter-spacing:-.01em;color:var(--ink);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;font-variant-numeric:tabular-nums;border-radius:0}
 .app #grinderCard .th-wrap>.grind-val{display:inline;padding:0;margin:0;font-size:20px;font-weight:600;line-height:22px;color:var(--ink);font-variant-numeric:tabular-nums}
-.app :is(#recipeNormal,#grinderCard) .th-wrap>.th-val{display:inline;padding:0;margin:0;font-size:20px;font-weight:600;line-height:22px;color:var(--ink)}
-.app :is(#recipeNormal,#grinderCard) .lu{font-size:15px;font-weight:500;color:var(--ink-mute);opacity:1;letter-spacing:0}
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .th-wrap>.th-val{display:inline;padding:0;margin:0;font-size:20px;font-weight:600;line-height:22px;color:var(--ink)}
+.app :is(#recipeNormal,#grinderCard,.rc-mode) .lu{font-size:15px;font-weight:500;color:var(--ink-mute);opacity:1;letter-spacing:0}
 /* information: caption over value, no border, no fill */
 #recipeNormal .rc-info{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;height:44px;
   border:0;background:none}
@@ -3494,7 +3494,12 @@ body.night #kpRange.warn{color:#fbbf24}
 .app .recipe .rc-milklog{min-height:36px;height:36px;font-size:15px;font-weight:600}
 .app .recipe .rc-mode-head{gap:8px;min-height:36px}
 .app .recipe .rc-mode{gap:8px}
-.app .recipe .rc-mode .rc-devrow{margin:0;height:36px}
+/* The mode panes wear the shot card's cells, three to a row on its grid;
+   the steam pane's thermometer and scale are one slim line over them. */
+.app .recipe .rc-mode .rc-devrow{margin:0;height:32px}
+.app .recipe .rc-mode .rc-devrow .rd-chip{height:28px}
+.app .recipe .rc-mode .rg-main.rc-grid{column-gap:8px;row-gap:6px;align-items:center}
+.grinder-card.off-mode{display:none}
 .app .recipe .rc-devrow .rd-chip.rg-dev{display:inline-flex;width:auto;min-height:0;margin:0;font-size:15px;font-weight:600;
   line-height:1;color:var(--ink);opacity:1;text-decoration:none}
 .app .recipe .rc-devrow .rd-chip.rg-dev.rg-idle{opacity:.7}
@@ -3789,7 +3794,7 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
           <div class="dose-block lk" id="tempBlock">
             <div class="dose-adj"><button class="ms-btn" onclick="adjustTemp(-0.5)">−</button>
               <div class="dose-stack">
-                <div class="dose-lbl dose-cap"><span data-i18n="oTemp">Temp</span></div>
+                <div class="dose-lbl dose-cap"><span data-i18n="cellTemp">Temp</span></div>
                 <div class="th-wrap"><div class="th-val tap" id="brewTempVal" onclick="openKeypad('brewTemp')">—</div><span class="lu" id="brewTempUnit">°</span></div>
               </div>
               <button class="ms-btn" onclick="adjustTemp(0.5)">+</button></div>
@@ -3808,12 +3813,12 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('steamTemp',-1)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="oTargetTemp"></span></div><div class="dose-num tap" onclick="auxKeypad('steamTemp')"><span id="steamTempV">0</span><span class="lu">°</span></div></div>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="cellTemp"></span></div><div class="dose-num tap" onclick="auxKeypad('steamTemp')"><span id="steamTempV">0</span><span class="lu">°</span></div></div>
                 <button class="ms-btn" onclick="auxAdj('steamTemp',1)">+</button></div>
             </div>
             <div class="dose-block">
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('steamDur',-5)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="oDuration"></span></div><div class="dose-num tap" onclick="auxKeypad('steamDur')"><span id="steamDurV">0</span><span class="lu">s</span></div></div>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="time"></span></div><div class="dose-num tap" onclick="auxKeypad('steamDur')"><span id="steamDurV">0</span><span class="lu">s</span></div></div>
                 <button class="ms-btn" onclick="auxAdj('steamDur',5)">+</button></div>
             </div>
             <div class="dose-block">
@@ -3821,14 +3826,14 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
                 <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="flow"></span></div><div class="dose-num tap" onclick="auxKeypad('steamFlow')"><span id="steamFlowV">0</span></div></div>
                 <button class="ms-btn" onclick="auxAdj('steamFlow',0.1)">+</button></div>
             </div>
-            <div class="dose-block">
+            <div class="dose-block" id="milkBlock" style="display:none">
               <div class="dose-adj"><button class="ms-btn" onclick="adjustMilk(-10)">−</button>
                 <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkLbl"></span></div><div class="dose-num tap" id="milkNum" onclick="openMilkKeypad()"><span id="milkVal">—</span><span class="lu">g</span></div></div>
                 <button class="ms-btn" onclick="adjustMilk(10)">+</button></div>
             </div>
             <div class="dose-block" id="milkStopBlock" style="display:none">
               <div class="dose-adj"><button class="ms-btn" onclick="milkStopAdj(-1)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkStop"></span></div><div class="dose-num tap" onclick="milkStopKeypad()"><span id="milkStopV">—</span><span class="lu">°</span></div></div>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="milkStopCell"></span></div><div class="dose-num tap" onclick="milkStopKeypad()"><span id="milkStopV">—</span><span class="lu">°</span></div></div>
                 <button class="ms-btn" onclick="milkStopAdj(1)">+</button></div>
             </div>
           </div>
@@ -3838,12 +3843,12 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('flushTemp',-1)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span></div><div class="dose-num tap" onclick="auxKeypad('flushTemp')"><span id="flushTempV">0</span><span class="lu">°</span></div></div>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="cellTemp"></span></div><div class="dose-num tap" onclick="auxKeypad('flushTemp')"><span id="flushTempV">0</span><span class="lu">°</span></div></div>
                 <button class="ms-btn" onclick="auxAdj('flushTemp',1)">+</button></div>
             </div>
             <div class="dose-block">
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('flushDur',-1)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="oDuration"></span></div><div class="dose-num tap" onclick="auxKeypad('flushDur')"><span id="flushDurV">0</span><span class="lu">s</span></div></div>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="time"></span></div><div class="dose-num tap" onclick="auxKeypad('flushDur')"><span id="flushDurV">0</span><span class="lu">s</span></div></div>
                 <button class="ms-btn" onclick="auxAdj('flushDur',1)">+</button></div>
             </div>
             <div class="dose-block">
@@ -3858,7 +3863,7 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
           <div class="rg-main rc-grid">
             <div class="dose-block">
               <div class="dose-adj"><button class="ms-btn" onclick="auxAdj('waterTemp',-1)">−</button>
-                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="oTemp"></span></div><div class="dose-num tap" onclick="auxKeypad('waterTemp')"><span id="waterTempV">0</span><span class="lu">°</span></div></div>
+                <div class="dose-stack"><div class="dose-lbl dose-cap"><span data-i18n="cellTemp"></span></div><div class="dose-num tap" onclick="auxKeypad('waterTemp')"><span id="waterTempV">0</span><span class="lu">°</span></div></div>
                 <button class="ms-btn" onclick="auxAdj('waterTemp',1)">+</button></div>
             </div>
             <div class="dose-block">
@@ -4877,7 +4882,7 @@ var I18N={
     connFind:'Scan again', connStUp:'connected', connStWorking:'working',
     connStSeen:'found', connStAway:'remembered, out of range',
     connViaPlugin:'plugin', connOwned:'Held by the machine',
-    thermo:'Thermometer', doser:'Bean doser', dzTitle:'Dispense beans', dzBeanTab:'Bean', dzAllAsk:'Dispense {g} g from every module?', dzXTab:'XDOSING', dzPick:'Use', dzInUse:'In use', dzSlot:'Doser {n}', dzNoBean:'No bean', dzGo:'Dispense', dzDispense:'Dispense', dzAll:'Dispense all · {g} g', dzNone:'No dosing module connected', dzBusy:'Dispensing…', dzOk:'{g} g dispensed', dzFailed:'Failed — {e}', dzUncertain:'May have dispensed — check the cup', dzUncertainAsk:'{n} may already have dispensed. Dispense again?', dzMax:'Up to {n} modules can be connected at once', tDzOk:'{n}: {g} g dispensed', tDzFailed:'{n}: dispensing failed', tDzUncertain:'{n} may have dispensed — check the cup before trying again', tDzBean:'The shot will be saved with {b}', milkTempNow:'Milk now', milkStop:'Milk target', milkStopOff:'off',
+    thermo:'Thermometer', doser:'Bean doser', dzTitle:'Dispense beans', dzBeanTab:'Bean', dzAllAsk:'Dispense {g} g from every module?', dzXTab:'XDOSING', dzPick:'Use', dzInUse:'In use', dzSlot:'Doser {n}', dzNoBean:'No bean', dzGo:'Dispense', dzDispense:'Dispense', dzAll:'Dispense all · {g} g', dzNone:'No dosing module connected', dzBusy:'Dispensing…', dzOk:'{g} g dispensed', dzFailed:'Failed — {e}', dzUncertain:'May have dispensed — check the cup', dzUncertainAsk:'{n} may already have dispensed. Dispense again?', dzMax:'Up to {n} modules can be connected at once', tDzOk:'{n}: {g} g dispensed', tDzFailed:'{n}: dispensing failed', tDzUncertain:'{n} may have dispensed — check the cup before trying again', tDzBean:'The shot will be saved with {b}', milkTempNow:'Milk now', milkStop:'Milk target', milkStopOff:'off', cellTemp:'Temp', milkStopCell:'Stop at',
     thermoNone:'no thermometer', tMilkReached:'Milk reached {v}° — steam stopped',
     connJoin:'Connect', connDrop:'Disconnect', connForget:'Forget',
     cnRecord:'list: {g}', cnUse:'Use', cnNotUsed:'not in use, {g} is', cnNoGrinder:'no grinder',
@@ -5365,7 +5370,7 @@ var I18N={
     connFind:'다시 찾기', connStUp:'연결됨', connStWorking:'처리 중',
     connStSeen:'찾음', connStAway:'기억됨, 범위 밖',
     connViaPlugin:'플러그인', connOwned:'머신이 가진 기기',
-    thermo:'온도계', doser:'원두 계량기', dzTitle:'원두 배출', dzBeanTab:'원두', dzAllAsk:'모든 모듈에서 총 {g} g을 배출할까요?', dzXTab:'XDOSING', dzPick:'선택', dzInUse:'사용 중', dzSlot:'도징 {n}', dzNoBean:'원두 없음', dzGo:'원두 배출', dzDispense:'배출', dzAll:'모두 배출 · {g} g', dzNone:'연결된 계량 모듈이 없습니다', dzBusy:'배출 중…', dzOk:'{g} g 배출함', dzFailed:'실패 — {e}', dzUncertain:'배출됐을 수 있음 — 컵을 확인하세요', dzUncertainAsk:'{n}이(가) 이미 배출했을 수 있습니다. 다시 배출할까요?', dzMax:'모듈은 한 번에 {n}개까지 연결됩니다', tDzOk:'{n}: {g} g 배출', tDzFailed:'{n}: 배출 실패', tDzUncertain:'{n}: 배출됐을 수 있습니다 — 다시 하기 전에 컵을 확인하세요', tDzBean:'샷은 {b}(으)로 저장됩니다', milkTempNow:'우유 온도', milkStop:'우유 목표', milkStopOff:'끔',
+    thermo:'온도계', doser:'원두 계량기', dzTitle:'원두 배출', dzBeanTab:'원두', dzAllAsk:'모든 모듈에서 총 {g} g을 배출할까요?', dzXTab:'XDOSING', dzPick:'선택', dzInUse:'사용 중', dzSlot:'도징 {n}', dzNoBean:'원두 없음', dzGo:'원두 배출', dzDispense:'배출', dzAll:'모두 배출 · {g} g', dzNone:'연결된 계량 모듈이 없습니다', dzBusy:'배출 중…', dzOk:'{g} g 배출함', dzFailed:'실패 — {e}', dzUncertain:'배출됐을 수 있음 — 컵을 확인하세요', dzUncertainAsk:'{n}이(가) 이미 배출했을 수 있습니다. 다시 배출할까요?', dzMax:'모듈은 한 번에 {n}개까지 연결됩니다', tDzOk:'{n}: {g} g 배출', tDzFailed:'{n}: 배출 실패', tDzUncertain:'{n}: 배출됐을 수 있습니다 — 다시 하기 전에 컵을 확인하세요', tDzBean:'샷은 {b}(으)로 저장됩니다', milkTempNow:'우유 온도', milkStop:'우유 목표', milkStopOff:'끔', cellTemp:'온도', milkStopCell:'정지',
     thermoNone:'온도계 없음', tMilkReached:'우유 {v}° 도달 — 스팀을 멈췄습니다',
     connJoin:'연결', connDrop:'해제', connForget:'잊기',
     cnRecord:'목록: {g}', cnUse:'사용', cnNotUsed:'사용 안 함 · 지금 {g} 사용 중', cnNoGrinder:'그라인더 없음',
@@ -7958,6 +7963,11 @@ function renderMilkRow(){
 // The same bargain the dose makes: the scale is the usual source, so it gets
 // the shorter gesture and the keyboard gets the longer one.
 function syncSteamRow(){
+  // milk is weighed on the dosing scale, so its cell and the button that
+  // files it stand only while that scale reads; the grams taken are kept
+  var live=dosingHasReading(), mb=document.getElementById('milkBlock'), lb=document.getElementById('milkLogBtn');
+  if(mb) mb.style.display=live?'':'none';
+  if(lb) lb.hidden=!live;
   var row=document.getElementById('steamDevRow'); if(!row) return;
   var th=document.getElementById('milkTempBlock'), dm=document.getElementById('devMilk');
   row.hidden=(!th||th.style.display==='none')&&(!dm||dm.hidden); }
@@ -8394,8 +8404,10 @@ function milkStopKeypad(){
     title:t('milkStop'), unit:'°', onOk:function(v){ setMilkStop(v); } }); }
 function syncMilkTemp(){
   var on=thermoOn(), d=thermoDevice(), hit=milkReached();
-  ['milkTempBlock','milkStopBlock'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.style.display=on?'':'none'; });
+  var th=document.getElementById('milkTempBlock'); if(th) th.style.display=on?'':'none';
+  // the stop is the thermometer's, so it stands only while one is connected;
+  // what was set is kept for when it comes back
+  var sb=document.getElementById('milkStopBlock'); if(sb) sb.style.display=d?'':'none';
   var dev=document.getElementById('devThermo');
   if(dev) dev.textContent=d?(d.name||''):t('thermoNone');
   var dot=document.getElementById('thermoDot'); if(dot) dot.className='rd-dot'+(d?' up':'');
@@ -8875,6 +8887,8 @@ function setRecipeMode(m,byUser){
   if(byUser&&m!==recipeMode&&lockedSay()) return;
   if(m!=='espresso') lockRecipeHeight();
   recipeMode=m;
+  // the grinder is the shot's; steam, water and flush have no use for it
+  var gc=document.getElementById('grinderCard'); if(gc) gc.classList.toggle('off-mode',m!=='espresso');
   Object.keys(RECIPE_PANES).forEach(function(k){
     var el=document.getElementById(RECIPE_PANES[k]);
     if(el) el.style.display=(k===m)?'':'none'; });
@@ -9828,7 +9842,7 @@ function syncRecipe(){
   syncThermo();
   var ratio=(settings.doseIn>0?(settings.doseOut/settings.doseIn):0);
   document.getElementById('ratioTag').textContent=ratio?recipeRatioText():'—';
-  syncShotSum(); syncAiPin(); syncProfileStop();
+  syncShotSum(); syncAiPin(); syncProfileStop(); syncSteamRow();
   var md=document.getElementById('monDose');
   if(md){ md.textContent=settings.doseIn.toFixed(1);
     document.getElementById('monYield').textContent=settings.doseOut.toFixed(1);

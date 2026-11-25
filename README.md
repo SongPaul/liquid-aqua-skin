@@ -206,6 +206,8 @@ Tap an action in the top bar to run it, or hold it for its options. Each has up 
 
 **While the action runs**, the recipe card turns into live controls for that action's numbers. Changes take effect as you tap, and the skin batches your taps into one write.
 
+The steam, flush and hot water cards are laid out like the shot card: the presets on top, then each number in the same cell as the dose, with − and + on either side, three to a row (steam: temperature, time, flow, then a second row with the milk and its stop. Each follows its own device: the milk's weight, and **→ Shot** with it, only while the dosing scale reads, and the stop only while a milk thermometer is connected. With neither, steam is one row; with one, the second row holds just that cell. They come and go as the devices connect and drop, and the milk weighed and the stop set are kept; flush: temperature, time, flow; hot water: temperature and volume). Steam's thermometer and scale sit on one slim line above them. The grinder card is the shot's, so it steps aside for steam, flush and hot water and comes back for espresso; the bean card stays.
+
 | | |
 |---|---|
 | Steam | temperature, seconds, flow |
@@ -223,7 +225,7 @@ Some machines stop hot water on their own pump count well before the cup reaches
 With a thermometer plugin turned on, such as [LEBREW TEMP](https://github.com/SongPaul/lebrew-temp-plugin), the steam card gains two blocks:
 
 - **Milk now**: the thermometer's reading, green once it reaches the target.
-- **Milk target**: the temperature steaming stops at, from 30 to 90 °C, or *off*. It is saved as the workflow's `steamSettings.stopAtTemperature`, and the gateway stops the steam there. The skin does not send a stop of its own, because a second stop would count as the second tap of the two-tap steam purge and purge straight away.
+- **Milk target** (**Stop at** in its cell): the temperature steaming stops at, from 30 to 90 °C, or *off*. It is saved as the workflow's `steamSettings.stopAtTemperature`, and the gateway stops the steam there. The skin does not send a stop of its own, because a second stop would count as the second tap of the two-tap steam purge and purge straight away.
 
 While steaming, the temperature graph draws the milk in orange with its live reading, and the milk target as a dashed line. Tap **Milk °** in the legend to hide or show it.
 
