@@ -2500,6 +2500,12 @@ body.night .ep-grid .gname{color:var(--ink)}
   text-align:left;-webkit-appearance:none;transition:all .2s}
 .ep-imp:hover{border-color:var(--accent)}
 .ep-imp-i{font-size:22px;line-height:1;flex:none}
+.ps-code{display:flex;justify-content:center;gap:10px;margin:0 0 12px}
+.ps-slot{width:56px;height:66px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-ctl);background:var(--la-well);border:1px solid var(--la-line);font-size:34px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.ps-slot.next{border-color:var(--accent)}
+.ps-use{display:flex;align-items:center;gap:10px;margin:14px 0 4px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+.ps-use input{width:20px;height:20px;accent-color:var(--accent)}
+#psStatus{min-height:2.6em;margin-top:6px}
 .ep-imp-t{display:flex;flex-direction:column;gap:2px;min-width:0}
 .ep-imp-t .n{font-size:14px;font-weight:700;color:var(--ink)}
 .ep-imp-t .s{font-size:11px;font-weight:600;color:var(--ink-mute)}
@@ -4099,6 +4105,10 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
       <span class="ep-imp-i">☁</span>
       <span class="ep-imp-t"><span class="n" data-i18n="fromViz">Visualizer</span>
         <span class="s" data-i18n="fromVizDesc"></span></span></button>
+    <button class="ep-imp" onclick="epImportPick('pourstep')">
+      <span class="ep-imp-i">🔢</span>
+      <span class="ep-imp-t"><span class="n" data-i18n="fromPourstep">Pourstep</span>
+        <span class="s" data-i18n="fromPourstepDesc"></span></span></button>
     <button class="ep-imp" onclick="epImportPick('file')">
       <span class="ep-imp-i">📁</span>
       <span class="ep-imp-t"><span class="n" data-i18n="fromFile">From a file</span>
@@ -4299,6 +4309,24 @@ body.night .app .ls-stat.lo .v,body.night .app .ls-stat.hi .v,body.night .ls-sta
     <div id="tunePickList" class="tp-list"></div>
     <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'tunePickOverlay')" data-i18n="close">Close</button>
       <button class="m-btn primary" id="tunePickGo" onclick="tunePickGo()" data-i18n="tuneRun">Tune</button></div>
+  </div></div>
+</div>
+
+<!-- ── Pourstep code ─────────────────────────────────── -->
+<div class="overlay" id="psOverlay" onclick="closeModal(event,'psOverlay')">
+  <div class="modal keypad-modal"><div class="modal-head"><div class="modal-title" data-i18n="psTitle">Get from Pourstep</div><button class="modal-close" onclick="closeModal(null,'psOverlay')">×</button></div>
+  <div class="modal-body">
+    <div class="set-desc" data-i18n="psHint" style="margin-bottom:12px"></div>
+    <div class="ps-code" id="psCode" aria-live="polite"></div>
+    <div class="kp-grid">
+      <button class="kp-key" onclick="psPress('7')">7</button><button class="kp-key" onclick="psPress('8')">8</button><button class="kp-key" onclick="psPress('9')">9</button>
+      <button class="kp-key" onclick="psPress('4')">4</button><button class="kp-key" onclick="psPress('5')">5</button><button class="kp-key" onclick="psPress('6')">6</button>
+      <button class="kp-key" onclick="psPress('1')">1</button><button class="kp-key" onclick="psPress('2')">2</button><button class="kp-key" onclick="psPress('3')">3</button>
+      <button class="kp-key" onclick="psPress('clear')">C</button><button class="kp-key" onclick="psPress('0')">0</button><button class="kp-key kp-del" onclick="psPress('del')">⌫</button>
+    </div>
+    <label class="ps-use"><input type="checkbox" id="psUse"><span data-i18n="psUse">Use it now</span></label>
+    <div class="set-desc" id="psStatus" role="status"></div>
+    <div class="modal-actions"><button class="m-btn" onclick="closeModal(null,'psOverlay')" data-i18n="close">Close</button><button class="m-btn primary" id="psGo" onclick="psGo()" data-i18n="psGo">Get recipe</button></div>
   </div></div>
 </div>
 
@@ -4576,6 +4604,15 @@ var I18N={
     epImportDesc:'Where is it coming from?',
     fromVizDesc:'A shot someone shared, by its code or by browsing',
     fromFileDesc:'A .tcl or .json file, one or a folder of them',
+    fromPourstep:'Pourstep', fromPourstepDesc:'An espresso recipe, by the 4-digit code the Pourstep app shows',
+    psTitle:'Get from Pourstep', psHint:'On Pourstep, open an espresso recipe and tap “Decaid code”. Type the 4 digits here.',
+    psUse:'Use it now', psGo:'Get recipe', psWorking:'Getting…', psAdded:'Added: {n}',
+    psNotFound:'That code is wrong or has expired. Codes last 24 hours — get a new one on Pourstep.',
+    psBadCode:'Type the 4-digit code.', psRateLimited:'Too many tries. Wait a moment and try again.',
+    psUnreachable:'Could not reach Pourstep. Check the internet connection and try again.',
+    psSaveFailed:'Decaid could not save the profile',
+    psNoPlugin:'The Pourstep plugin is not installed or is turned off. Add it on the Plugins page.',
+    psFailed:'Could not get the recipe',
     piBtn:'Import', piTitle:'Import profiles',
     piHint:'Reads .tcl and .json files. A whole folder can be picked at once.',
     piPickFiles:'Choose files', piPickFolder:'Choose a folder',
@@ -5072,6 +5109,15 @@ var I18N={
     epImportDesc:'어디에서 가져올까요?',
     fromVizDesc:'공유된 샷을 코드로 받거나 목록에서 찾기',
     fromFileDesc:'.tcl 또는 .json 파일, 한 개 또는 폴더 통째로',
+    fromPourstep:'Pourstep', fromPourstepDesc:'Pourstep 앱에 나온 숫자 4자리로 에스프레소 레시피 받기',
+    psTitle:'Pourstep에서 받기', psHint:'Pourstep에서 에스프레소 레시피를 열고 ‘Decaid 코드’를 누르세요. 나온 숫자 4자리를 입력합니다.',
+    psUse:'받은 뒤 바로 사용', psGo:'레시피 받기', psWorking:'받는 중…', psAdded:'추가했어요: {n}',
+    psNotFound:'코드가 맞지 않거나 만료됐어요. 코드는 24시간 동안 쓸 수 있어요. Pourstep에서 새로 받으세요.',
+    psBadCode:'숫자 4자리를 입력하세요.', psRateLimited:'시도가 너무 많아요. 잠시 뒤 다시 해 보세요.',
+    psUnreachable:'Pourstep에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 보세요.',
+    psSaveFailed:'Decaid가 프로파일을 저장하지 못했어요',
+    psNoPlugin:'Pourstep 플러그인이 없거나 꺼져 있어요. 플러그인 화면에서 추가하세요.',
+    psFailed:'레시피를 받지 못했어요',
     piBtn:'가져오기', piTitle:'프로파일 가져오기',
     piHint:'.tcl 과 .json 파일을 읽습니다. 폴더를 통째로 고를 수도 있습니다.',
     piPickFiles:'파일 선택', piPickFolder:'폴더 선택',
@@ -7496,11 +7542,13 @@ function api(method,path,body,timeoutMs){ var o={method:method,headers:{}};
     // only the status threw that away, and "HTTP 400" is not something anyone
     // can act on.
     if(!r.ok) return r.text().then(function(txt){
-        var why='';
-        try{ var j=JSON.parse(txt); why=(j&&(j.error||j.message))||''; }
+        var why='', j=null;
+        try{ j=JSON.parse(txt); why=(j&&(j.error||j.message))||''; }
         catch(_){ why=String(txt||'').trim().slice(0,160); }
         var err=new Error('HTTP '+r.status+(why?(' · '+why):''));
-        err.status=r.status; err.detail=why; throw err; },
+        err.status=r.status; err.detail=why;
+        if(j&&typeof j.code==='string') err.code=j.code;
+        throw err; },
       function(){ var err=new Error('HTTP '+r.status); err.status=r.status; throw err; });
     // 202 Accepted comes back with no body for several writes; nothing to read
     // is a success, not a broken reply.
@@ -13492,7 +13540,54 @@ function openEpImport(){
   document.getElementById('epImpOverlay').classList.add('show'); }
 function epImportPick(which){
   closeModal(null,'epImpOverlay');
-  if(which==='viz') openVizImport(); else openProfileImport(); }
+  if(which==='viz') openVizImport();
+  else if(which==='pourstep') openPourstepImport();
+  else openProfileImport(); }
+// A Pourstep recipe comes by the 4 digits the Pourstep app shows for 24 hours;
+// the Pourstep plugin turns them into a library profile. The plugin is never
+// asked to load it: putting a profile in use goes through selectProfile, which
+// respects a running shot and adjusts the profile for this machine.
+var PS_PLUGIN='pourstep.reaplugin', psDigits='', psBusy=false;
+var PS_REASON={code_not_found:'psNotFound',bad_code:'psBadCode',rate_limited:'psRateLimited',
+  unreachable:'psUnreachable',pourstep_error:'psUnreachable',bad_response:'psUnreachable',save_failed:'psSaveFailed'};
+function openPourstepImport(){
+  psDigits=''; psBusy=false; psSay('');
+  var use=document.getElementById('psUse'); if(use) use.checked=false;
+  psDraw(); document.getElementById('psOverlay').classList.add('show'); }
+function psSay(m,err){ var el=document.getElementById('psStatus'); if(!el) return;
+  el.textContent=m||''; el.style.color=err?'var(--red)':''; }
+function psDraw(){
+  var box=document.getElementById('psCode'), go=document.getElementById('psGo');
+  if(box){ var h=''; for(var i=0;i<4;i++){
+    h+='<span class="ps-slot'+(i===psDigits.length&&!psBusy?' next':'')+'">'+(psDigits.charAt(i)||' ')+'</span>'; }
+    box.innerHTML=h; }
+  if(go){ go.disabled=psBusy||psDigits.length!==4; go.textContent=t(psBusy?'psWorking':'psGo'); } }
+function psPress(k){
+  if(psBusy) return;
+  if(k==='del') psDigits=psDigits.slice(0,-1);
+  else if(k==='clear') psDigits='';
+  else if(/^[0-9]$/.test(k)&&psDigits.length<4) psDigits+=k;
+  else return;
+  psSay(''); psDraw();
+  if(/^[0-9]$/.test(k)&&psDigits.length===4) psGo(); }
+function psErrorText(e){
+  var key=e&&e.code&&PS_REASON[e.code];
+  if(key) return t(key)+(e.code==='save_failed'&&e.detail?': '+e.detail:'');
+  if(e&&e.status===404) return t('psNoPlugin');
+  return t('psFailed')+': '+apiErrorText(e); }
+function psGo(){
+  if(psBusy||psDigits.length!==4) return;
+  var use=!!(document.getElementById('psUse')||{}).checked;
+  psBusy=true; psDraw(); psSay(t('psWorking'));
+  api('POST','/api/v1/plugins/'+PS_PLUGIN+'/import',{code:psDigits,use:false},30000).then(function(r){
+    if(!r||!r.profileId) throw new Error(t('psFailed'));
+    return loadProfiles().catch(function(){}).then(function(){
+      renderEpList();
+      closeModal(null,'psOverlay');
+      toast(t('psAdded').replace('{n}',(r.title||r.recipeId||'')+(r.author?' · '+r.author:'')),'ok');
+      if(use){ var rec=allProfiles.find(function(p){ return p.id===r.profileId; }); if(rec) selectProfile(rec); } }); })
+  .catch(function(e){ psSay(psErrorText(e),true); })
+  .then(function(){ psBusy=false; psDraw(); }); }
 function renderEpTools(){
   var bar=document.getElementById('epTools'); if(!bar) return; bar.innerHTML='';
   var kinds=[['espresso','kindEspresso'],['brew','kindBrew'],['other','kindOther'],['all','kindAll'],['hidden','kindHidden'],['trash','kindTrash']];

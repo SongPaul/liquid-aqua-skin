@@ -275,7 +275,8 @@ One action at full screen: the graphs worth watching and the numbers worth readi
 - Profiles are grouped into **Favourites** and **Recently used**, followed by the rest.
 - **Tags** come from each profile's own shape (pressure, flow, mixed, low pressure, bloom, declining, hot, cool), plus any roast level you set. Filled tags are the ones the main screen offers as tabs; hold a tag to change that. **Tags** at the top renames, deletes and picks tags across every profile.
 - **✨ Classify with AI** reads the whole catalogue once and tags each profile with a roast level.
-- **+ New profile** starts one. **Add** imports profiles from Visualizer (a share code, a shot link, or by browsing the community) or from `.tcl` and `.json` files, including a whole folder at once.
+- **+ New profile** starts one. **Add** imports profiles from Visualizer (a share code, a shot link, or by browsing the community), from Pourstep, or from `.tcl` and `.json` files, including a whole folder at once.
+  - **Pourstep** takes the 4-digit code Pourstep shows for an espresso recipe (“Decaid code”, valid 24 hours). Type it on the keypad and the recipe is added as soon as the fourth digit is in; **Use it now** also loads it. It needs the [Pourstep plugin](https://github.com/SongPaul/pourstep-plugin) installed and turned on.
 - **Edit list** selects several profiles to hide, show or delete together. A deleted profile goes to the Bin, where it can be put back. A profile that ships with the app is hidden rather than deleted.
 
 ### The editor
